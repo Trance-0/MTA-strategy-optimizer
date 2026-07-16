@@ -23,10 +23,10 @@ modules/amc_mta/outputs/attribution/amc_mta_model_comparison_summary.csv
 modules/amc_mta/outputs/attribution/amc_mta_recommended_attribution.csv
 ```
 
-前两份是两个模型各自的五段主结果；后三份分别提供 51 行全量触点/outcome
-诊断、五段与四段整体摘要，以及 51 行管理层推荐记录。当前没有滚动窗口稳定性
-证据，因此推荐记录的 `decision_status` 为 `EVIDENCE_UNVERIFIED`、
-`decision_value` 为空，不可用于自动预算。
+前两份是两个模型各自的五段主结果；后三份分别提供 51 行五段触点/outcome
+诊断、三个 outcome 的五段整体摘要，以及 51 行管理层推荐记录。当前没有滚动
+窗口稳定性证据，因此推荐记录的 `decision_status` 为
+`EVIDENCE_UNVERIFIED`、`decision_value` 为空，不可用于自动预算。
 
 ## 文档
 

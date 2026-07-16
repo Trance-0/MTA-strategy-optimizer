@@ -126,7 +126,7 @@ LONG_TAIL_MODEL_SENSITIVE
 处理方式：
 
 - 保留明细；
-- 管理层报表汇总到 `OTHER` 或四段父触点；
+- 管理层报表继续展示完整五段键；
 - 不因相对差大单独触发预算动作；
 - 只有绝对贡献或原始支持度达到门槛后，才升级为独立触点分析。
 
@@ -253,27 +253,17 @@ MIXED_REVIEW
 
 该字段统一命名为 `comparison_status`。它只描述两个模型的点估计关系，不能覆盖触点级状态，也不代表结果已达到决策条件。例如 `comparison_status=MIXED_REVIEW` 时，仍可能存在必须单独处理的 `critical_divergence`；支持度或稳定性未通过时，最终 `decision_status` 仍须阻断。
 
-## 7. 五段与四段父级诊断
+## 7. 五粒度唯一治理口径
 
-五段差异可能只是同一广告在 `IMPRESSION` 和 `CLICK` 之间的内部重分配。
-
-每次比较必须同时生成四段父触点：
+所有比较、支持度、排名、整体指标和推荐状态只使用完整五段键：
 
 ```text
-parent_touchpoint = AD_PRODUCT:FORMAT:PLACEMENT:CREATIVE
+AD_PRODUCT:FORMAT:PLACEMENT:CREATIVE:INTERACTION_TYPE
 ```
 
-分别汇总 Markov 和 Shapley 的曝光、点击 share，再重新计算父级 gap。
-
-| 五段结果 | 四段父级结果 | 解释 |
-| --- | --- | --- |
-| 大差距 | 小差距 | `INTERACTION_ALLOCATION_DIVERGENCE`：模型主要在曝光/点击之间重新分配 |
-| 大差距 | 中/大差距 | `TOUCHPOINT_DIVERGENCE`：整个广告单元贡献存在模型分歧 |
-| 中等差距 | 小差距 | `INTERACTION_ALLOCATION_REVIEW`：轻度曝光/点击重分配 |
-| 中等差距 | 中/大差距 | `PARENT_TOUCHPOINT_REVIEW`：父广告单元也需复核 |
-| 小差距 | 小差距 | 两模型一致 |
-| 小差距/长尾 | 中/大差距 | `PARENT_AGGREGATE_DIVERGENCE`：多个子触点方向叠加，按父级复核 |
-| 长尾 | 小差距/长尾 | 保留长尾状态，不升级业务动作 |
+`IMPRESSION` 和 `CLICK` 即使共享其他广告属性，也始终是两个独立触点。当前输出
+始终保留 `INTERACTION_TYPE`，支持度、差距与原因码均在完整五段键上计算。
+因此触点的 `difference_level` 和 `reason_code` 只描述该五段触点本身。
 
 ## 8. 支持度规则
 
@@ -309,7 +299,7 @@ raw_revenue
 
 - `FULL_SUPPORT`：允许五段独立结论；
 - `LIMITED_SUPPORT`：允许展示，`review_required=true`、`automation_allowed=false`；
-- `LOW_SUPPORT`：汇总到四段父级或 `ad_product + interaction_type` 后重算；
+- `LOW_SUPPORT`：保留五段诊断，但不产生决策值，也不允许自动化；
 - 当前治理输出已从 AMC 聚合路径生成完整原始支持字段；样例的 17 个五段触点中，16 个为 `LOW_SUPPORT`、1 个为 `LIMITED_SUPPORT`，没有 `FULL_SUPPORT`。
 
 只有在外部数据未提供 AMC 路径、无法重算上述字段时，才使用 `SUPPORT_UNVERIFIED`。该状态不等于通过或失败；在补齐证据前：
@@ -352,7 +342,7 @@ difference_level在 >= 75% 窗口中保持同档
 MEDIUM/LARGE触点的gap方向一致率 >= 75%
 ```
 
-长尾触点不单独产生决策稳定性结论，先汇总到父级后评估。
+长尾触点不单独产生决策稳定性结论，只保留五段诊断。
 
 ### 9.3 整体稳定条件
 
@@ -378,7 +368,7 @@ flowchart TD
     B -- 是 --> X{支持度与稳定性证据齐全?}
     X -- 否 --> Q[EVIDENCE_UNVERIFIED<br/>仅输出差异预判<br/>decision_value留空]
     X -- 是 --> C{LOW_SUPPORT?}
-    C -- 是 --> L[LOW_SUPPORT<br/>汇总粒度后重算]
+    C -- 是 --> L[LOW_SUPPORT<br/>仅保留五段诊断]
     C -- 否 --> D{稳定性通过?}
     D -- 否 --> U[UNSTABLE或INSUFFICIENT_EVIDENCE<br/>并列展示<br/>decision_value留空]
     D -- 是 --> E{差距等级}
@@ -407,7 +397,7 @@ VALIDATION_ERROR
 | --- | --- | --- | --- | --- | --- |
 | `VALIDATION_ERROR` | 空 | 空 | 空 | `true` | `false` |
 | `EVIDENCE_UNVERIFIED` 且输入有效 | `MARKOV` | 可展示 Markov 值 | 空 | `true` | `false` |
-| `LOW_SUPPORT` | `MARKOV` | 五段值仅诊断，父级重算 | 空 | `true` | `false` |
+| `LOW_SUPPORT` | `MARKOV` | 五段值仅诊断 | 空 | `true` | `false` |
 | `LIMITED_SUPPORT` + `SMALL/MEDIUM` | `MARKOV` | Markov share | Markov share，仅供人工审批 | `true` | `false` |
 | `ALIGNED` | `MARKOV` | Markov share | Markov share | `false` | `true` |
 | `REVIEW` | `MARKOV` | Markov share | Markov share，仅供人工审批 | `true` | `false` |
@@ -456,7 +446,6 @@ automation_allowed = false
 
 - 展示模型区间；
 - 展示差距方向；
-- 检查四段父级；
 - 不基于 1–2 个百分点的模型差异自动调整预算。
 
 ### 11.3 大差距且稳定
@@ -475,8 +464,7 @@ automation_allowed = false
 - Markov 路径依赖贡献；
 - Shapley 路径参与贡献；
 - 模型区间；
-- 五段与四段父级差异；
-- `INTERACTION_ALLOCATION_DIVERGENCE` 或 `TOUCHPOINT_DIVERGENCE` 原因码。
+- 五段差距方向和原因码。
 
 如果管理报表必须显示一个正式数字，继续显示 Markov，但必须标记：
 
@@ -542,7 +530,6 @@ amc_mta_model_comparison_touchpoints.csv
 
 ```text
 touchpoint
-parent_touchpoint
 interaction_type
 outcome
 markov_share
@@ -569,7 +556,6 @@ difference_level
 stability_level
 comparison_status
 critical_divergence
-parent_difference_level
 operational_status
 decision_status
 official_model
@@ -748,11 +734,10 @@ automation_allowed = false
 
 需要进一步检查：
 
-1. 四段父触点汇总后是否仍为大差距；
-2. 该触点是否主要出现在较长路径中；
-3. 重复点击或相邻路径位置是否提升 Markov 依赖；
-4. 3/7/14 天窗口下差距方向是否一致；
-5. 是否由高复购消费者或特定促销周期集中驱动。
+1. 该五段触点是否主要出现在较长路径中；
+2. 重复点击或相邻路径位置是否提升 Markov 依赖；
+3. 3/7/14 天窗口下差距方向是否一致；
+4. 是否由高复购消费者或特定促销周期集中驱动。
 
 ### 15.3 中等差距触点
 
@@ -830,7 +815,7 @@ reference_window_days = 7
 1. 修复当前 CSV 首尾空白并通过严格数据校验；
 2. 增加原始支持度字段；
 3. 生成两个模型的触点级 comparison 文件；
-4. 增加 TVD、Spearman、Top K、触点差距分类和四段父级诊断；
+4. 增加五段 TVD、Spearman、Top K 和触点差距分类；
 5. 按本文规则输出 `comparison_status=MIXED_REVIEW`、`decision_status=EVIDENCE_UNVERIFIED` 的诊断结果；
 6. 增加 3/7/14 天窗口敏感性；
 7. 增加滚动窗口和重采样稳定性；
@@ -847,5 +832,5 @@ reference_window_days = 7
 - 中等差距时使用 Markov，但附模型区间并人工复核；
 - 大差距时禁止平均，`decision_value` 留空；
 - 差距判断必须服从支持度与稳定性；
-- 五段差异必须同步检查四段父级；
+- 所有差异只按完整五段触点解释；
 - 当前严格校验通过的样例呈现“整体中度差异、排名高度一致、一个关键触点的点估计大分歧”；支持度已从 AMC 路径重算，但在稳定性通过前不得称为结构性分歧，最终状态仍为 `EVIDENCE_UNVERIFIED`。

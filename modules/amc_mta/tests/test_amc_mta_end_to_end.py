@@ -41,6 +41,7 @@ from model_comparison import (  # noqa: E402
     SUMMARY_FIELDS,
     TOUCHPOINT_COMPARISON_FIELDS,
 )
+from touchpoint_key import canonicalize_amc_touchpoint_key  # noqa: E402
 
 
 class EndToEndSampleTests(unittest.TestCase):
@@ -217,8 +218,83 @@ class EndToEndSampleTests(unittest.TestCase):
             summary_rows = read_csv(output_dir / MODEL_COMPARISON_SUMMARY_FILE)
             recommended_rows = read_csv(output_dir / RECOMMENDED_ATTRIBUTION_FILE)
             self.assertEqual(len(comparison_rows), 51)
-            self.assertEqual(len(summary_rows), 6)
+            self.assertEqual(len(summary_rows), 3)
             self.assertEqual(len(recommended_rows), 51)
+            self.assertTrue(all(row["grain"] == "FIVE_PART" for row in summary_rows))
+            self.assertTrue(
+                all(set(row) == set(TOUCHPOINT_COMPARISON_FIELDS) for row in comparison_rows)
+            )
+            self.assertTrue(all(set(row) == set(SUMMARY_FIELDS) for row in summary_rows))
+            self.assertTrue(
+                all(set(row) == set(RECOMMENDED_FIELDS) for row in recommended_rows)
+            )
+            self.assertTrue(
+                all(
+                    canonicalize_amc_touchpoint_key(row["touchpoint"])
+                    == row["touchpoint"]
+                    and row["touchpoint"].rsplit(":", 1)[1] == row["interaction_type"]
+                    for row in comparison_rows + recommended_rows
+                )
+            )
+            forbidden_fields = {
+                "parent_touchpoint",
+                "parent_support_level",
+                "parent_difference_level",
+            }
+            self.assertTrue(forbidden_fields.isdisjoint(comparison_rows[0]))
+            self.assertTrue(forbidden_fields.isdisjoint(recommended_rows[0]))
+            self.assertTrue(
+                all(
+                    not field.startswith("parent_")
+                    for row in comparison_rows + summary_rows + recommended_rows
+                    for field in row
+                )
+            )
+            for filename in (
+                MODEL_COMPARISON_TOUCHPOINTS_FILE,
+                MODEL_COMPARISON_SUMMARY_FILE,
+                RECOMMENDED_ATTRIBUTION_FILE,
+            ):
+                self.assertNotIn("FOUR_PART", (output_dir / filename).read_text())
+            forbidden_reason_codes = {
+                "INTERACTION_ALLOCATION_DIVERGENCE",
+                "INTERACTION_ALLOCATION_REVIEW",
+                "PARENT_TOUCHPOINT_REVIEW",
+                "PARENT_AGGREGATE_DIVERGENCE",
+                "TOUCHPOINT_DIVERGENCE",
+            }
+            allowed_reason_codes = {
+                "NO_OUTCOME",
+                "LONG_TAIL",
+                "LONG_TAIL_MODEL_SENSITIVE",
+                "ALIGNED",
+                "MODEL_REVIEW",
+                "ABSOLUTE_GAP",
+                "RELATIVE_AND_ABSOLUTE_GAP",
+            }
+            reason_tokens = {
+                token
+                for row in comparison_rows + recommended_rows
+                for token in row["reason_code"].split("|")
+            }
+            self.assertTrue(
+                forbidden_reason_codes.isdisjoint(reason_tokens)
+            )
+            self.assertTrue(reason_tokens <= allowed_reason_codes)
+            expected_reasons = {
+                "NO_OUTCOME": {"NO_OUTCOME"},
+                "LONG_TAIL": {"LONG_TAIL", "LONG_TAIL_MODEL_SENSITIVE"},
+                "SMALL": {"ALIGNED"},
+                "MEDIUM": {"MODEL_REVIEW"},
+                "LARGE": {"ABSOLUTE_GAP", "RELATIVE_AND_ABSOLUTE_GAP"},
+            }
+            self.assertTrue(
+                all(
+                    "|" not in row["reason_code"]
+                    and row["reason_code"] in expected_reasons[row["difference_level"]]
+                    for row in comparison_rows + recommended_rows
+                )
+            )
             self.assertEqual(
                 len({(row["touchpoint"], row["outcome"]) for row in comparison_rows}),
                 51,
@@ -228,11 +304,7 @@ class EndToEndSampleTests(unittest.TestCase):
                 all(row["decision_status"] == "EVIDENCE_UNVERIFIED" for row in recommended_rows)
             )
 
-            five_part = {
-                row["outcome"]: row
-                for row in summary_rows
-                if row["grain"] == "FIVE_PART"
-            }
+            five_part = {row["outcome"]: row for row in summary_rows}
             expected = {
                 "converted_users": (0.091599, 0.987699877, "5"),
                 "purchase_count": (0.092277, 0.989551508, "5"),

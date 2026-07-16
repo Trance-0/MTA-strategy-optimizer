@@ -19,7 +19,7 @@
 两份五段归因结果 ◀─ Amazon Ads 日报
           │
           ▼
-触点比较 + 五/四段摘要 + 治理推荐
+五段触点比较 + 五段摘要 + 治理推荐
 ```
 
 真实使用时，第一步应在 AMC clean room 内完成。项目只能接收满足隐私门槛的匿名
@@ -32,7 +32,7 @@
 | `src/touchpoint_key.py` | 构造和严格校验五段键；曝光与点击保持独立 |
 | `src/amc_path_builder.py` | 事件排序、14 天连续间隔、多购买切段、匿名路径聚合 |
 | `src/amc_mta_attribution.py` | 输入校验、Markov、Shapley、Ads 成本聚合、效率指标和原子 CSV 写入 |
-| `src/model_comparison.py` | 支持度、差距等级、四段父级诊断、TVD、排名与治理推荐 |
+| `src/model_comparison.py` | 五段支持度、差距等级、TVD、排名与治理推荐 |
 | `scripts/` | 路径构建、数据生成、归因、独立比较和对齐校验入口 |
 | `run_pipeline.py` | 在临时目录生成完整产物，并在发布失败时恢复旧文件 |
 | `tests/` | 锁定字段契约、边界、守恒、严格解析和发布回滚 |
@@ -48,9 +48,9 @@
 AD_PRODUCT:FORMAT:PLACEMENT:CREATIVE:INTERACTION_TYPE
 ```
 
-前四段使用大写字母、数字和下划线；缺失 placement/creative 归一为
+广告属性段使用大写字母、数字和下划线；缺失 placement/creative 归一为
 `UNSPECIFIED`；第五段只能是 `IMPRESSION` 或 `CLICK`。完整键同时用于 AMC 路径、
-Amazon Ads 行和模型输出，避免曝光、点击和成本在四段层级被错误合并。
+Amazon Ads 行和模型输出，确保曝光、点击和成本始终独立。
 
 ### 三类输入
 
@@ -103,7 +103,7 @@ Amazon Ads 行和模型输出，避免曝光、点击和成本在四段层级被
 | `amc_markov_attribution_results.csv` | 17 | Markov 五段结果 |
 | `amc_shapley_attribution_results.csv` | 17 | Shapley 五段结果 |
 | `amc_mta_model_comparison_touchpoints.csv` | 51 | 17 触点 × 3 outcome 全量诊断 |
-| `amc_mta_model_comparison_summary.csv` | 6 | 3 outcome × 五段/四段摘要 |
+| `amc_mta_model_comparison_summary.csv` | 3 | 3 outcome × 五段摘要 |
 | `amc_mta_recommended_attribution.csv` | 51 | 治理状态与是否允许决策 |
 
 两模型分别对购买用户、购买次数和收入守恒。ROI、ROAS、CPA 与每购买用户成本使用
@@ -119,7 +119,7 @@ Amazon Ads 行和模型输出，避免曝光、点击和成本在四段层级被
 - 非法指标关系、重复时间戳和保留状态；
 - 三个 outcome 的模型守恒和舍入残差；
 - 模型集合、成本、窗口、范围和严格 CSV 表头一致性；
-- 支持度、差距阈值、父级诊断、TVD、Spearman 和 Top K；
+- 五段支持度、差距阈值、TVD、Spearman 和 Top K；
 - 多文件发布失败回滚与按文件名匹配。
 
 测试能证明实现符合当前契约，不能独立证明模型具有因果真实性。模拟事件可精确复现

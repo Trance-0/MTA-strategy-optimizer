@@ -53,7 +53,9 @@ AMC 路径和归因模型使用五段互动键：
 AD_PRODUCT:FORMAT:PLACEMENT:CREATIVE:INTERACTION_TYPE
 ```
 
-前四段转大写，仅允许字母、数字、下划线；第五段只能是 `IMPRESSION` 或 `CLICK`。同一广告先曝光后点击时，两个事件会作为有序且不同的五段触点保留在路径中。
+前置广告属性段转大写，仅允许字母、数字、下划线；`INTERACTION_TYPE` 只能是
+`IMPRESSION` 或 `CLICK`。同一广告先曝光后点击时，两个事件会作为有序且不同的
+五段触点保留在路径中。
 
 Amazon Ads 报告也必须使用同一五段键，并提供 `interaction_type`、`cost_type`
 和完全一致的 `normalizedTouchpoint`。DSP 的 `FORMAT` 来自
@@ -106,9 +108,9 @@ attributed_revenue         = revenue 总量
 
 每个模型仅输出一份五段主结果，包含 `touchpoint`、`interaction_type`、三套归因
 指标、Amazon Ads 表现与成本及效率指标。Markov 与 Shapley 两份模型文件保持
-独立，不生成四段模型归因文件。流程另生成三份治理产物：51 行五段全量比较、
-三个 outcome 的五段/四段整体摘要，以及 51 行管理层推荐记录。四段结果只用于
-差异诊断；四段支持度必须从 AMC 路径重新计算，不能对子触点支持度求和。
+独立。流程另生成三份治理产物：51 行五段全量比较、三个 outcome 的五段整体摘要，
+以及 51 行管理层推荐记录。模型归因、支持度、差距诊断和推荐结果全部使用完整
+五段键。
 
 比较输入必须使用严格无空白表头，两个模型的触点集合、成本和平台表现完全一致，
 且每个非零 outcome 的 share 与归因总量分别守恒。当前未提供滚动窗口或重采样

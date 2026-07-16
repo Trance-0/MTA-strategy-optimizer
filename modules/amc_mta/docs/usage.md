@@ -67,8 +67,8 @@ modules/amc_mta/outputs/attribution/amc_mta_recommended_attribution.csv
 两份结果均按 `AD_PRODUCT:FORMAT:PLACEMENT:CREATIVE:INTERACTION_TYPE` 五段粒度输出，包含 `interaction_type`、三套归因值、Amazon Ads 表现与成本、`roas`、`roi`、`cpa` 和 `cost_per_converted_user`。CPC 成本只出现在 CLICK 行，CPM 成本只出现在 IMPRESSION 行；非计费行的成本和效率指标为 0/空。
 
 触点比较文件固定包含 `17 × 3 = 51` 行，逐项保存 Markov/Shapley share、
-归因值、成本表现、两套效率、差距等级、四段父级诊断和从 AMC 路径重算的
-支持度。摘要文件固定包含三个 outcome 在 `FIVE_PART` 与 `FOUR_PART` 的六行；
+归因值、成本表现、两套效率、差距等级和从五段 AMC 路径重算的支持度。
+摘要文件固定包含三个 outcome 的三行，`grain` 全部为 `FIVE_PART`；
 其中 `tvd` 和 share 均以 0–1 小数保存，`gap_pp` 才是百分点。推荐文件保留
 全部 51 行。稳定性证据缺失时，`official_share` 仅展示 intended Markov 口径，
 所有 `decision_value` 为空且 `automation_allowed=false`。

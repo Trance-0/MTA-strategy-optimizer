@@ -1,18 +1,18 @@
 {
   "schema_version": "1.0",
-  "generated_at": "2026-07-16T09:37:03.626Z",
+  "generated_at": "2026-07-16T18:26:24.336Z",
   "root": "{project-root}",
   "scope": "all regular workspace files excluding .git internals and this generated inventory file",
-  "file_count": 2166,
-  "total_bytes": 43742014,
+  "file_count": 2167,
+  "total_bytes": 43743379,
   "by_top_level": {
-    "_bmad-output": {
-      "files": 9,
-      "bytes": 42913
-    },
     "_bmad": {
       "files": 92,
       "bytes": 926146
+    },
+    "_bmad-output": {
+      "files": 10,
+      "bytes": 50557
     },
     ".agents": {
       "files": 1988,
@@ -32,7 +32,7 @@
     },
     "docs": {
       "files": 35,
-      "bytes": 26478400
+      "bytes": 26478288
     },
     "log.md": {
       "files": 1,
@@ -40,7 +40,7 @@
     },
     "modules": {
       "files": 33,
-      "bytes": 434343
+      "bytes": 428176
     },
     "README.md": {
       "files": 1,
@@ -60,9 +60,9 @@
       "path": "_bmad-output/implementation-artifacts/README.md",
       "top_level": "_bmad-output",
       "extension": ".md",
-      "size_bytes": 807,
+      "size_bytes": 900,
       "mode": "644",
-      "sha256": "bb75e71a131146ff4bb9280100c2abfb3aaadf850848f6283406efa0adafbfa6"
+      "sha256": "0a7cf48bfa0ed8411f1a998b10b8c73a9ea9365a0c8142b11fb394f1086b5d34"
     },
     {
       "path": "_bmad-output/implementation-artifacts/spec-add-interaction-type-granularity-2.md",
@@ -95,6 +95,14 @@
       "size_bytes": 8736,
       "mode": "644",
       "sha256": "f8e9765d17a4f3bdaa0ffc62a028106cd51038b8096a742dc2c06b83ca1b1d24"
+    },
+    {
+      "path": "_bmad-output/implementation-artifacts/spec-five-part-only-model-governance.md",
+      "top_level": "_bmad-output",
+      "extension": ".md",
+      "size_bytes": 7551,
+      "mode": "644",
+      "sha256": "548312230935cb28253c800e66560df609b2e655032878933fbe78493b6eae12"
     },
     {
       "path": "_bmad-output/implementation-artifacts/spec-focus-project-on-amc-mta.md",
@@ -251,7 +259,7 @@
     {
       "path": "_bmad/custom/.gitignore",
       "top_level": "_bmad",
-      "extension": null,
+      "extension": "",
       "size_bytes": 12,
       "mode": "644",
       "sha256": "973b03a33f142c22cf9b65be285bebadd85790b6b55be04637d2f8c716f58fab"
@@ -3771,7 +3779,7 @@
     {
       "path": ".agents/skills/bmad-story-automator/LICENSE",
       "top_level": ".agents",
-      "extension": null,
+      "extension": "",
       "size_bytes": 1061,
       "mode": "644",
       "sha256": "9996844edcb5b44b00645c0753bdb25ca7af86a035a1484df8cb6789ac2893f9"
@@ -3795,7 +3803,7 @@
     {
       "path": ".agents/skills/bmad-story-automator/scripts/story-automator",
       "top_level": ".agents",
-      "extension": null,
+      "extension": "",
       "size_bytes": 248,
       "mode": "755",
       "sha256": "270ba143dce6f3bd65d638c0df333ce4fd8fe47c57da83c70f65b7e713d440ae"
@@ -16763,7 +16771,7 @@
     {
       "path": ".gitignore",
       "top_level": ".gitignore",
-      "extension": null,
+      "extension": "",
       "size_bytes": 937,
       "mode": "644",
       "sha256": "f114e5039db2f6a1c066a80d2fb6fc8927a839ebf7999e8ad489b6dcff6ac5dc"
@@ -16828,17 +16836,17 @@
       "path": "docs/amc-mta-architecture.md",
       "top_level": "docs",
       "extension": ".md",
-      "size_bytes": 7229,
+      "size_bytes": 7188,
       "mode": "644",
-      "sha256": "7ee457923830b5202a7f61daf2039b7d3906ab271e0b0ddbff4a6d6f957d5691"
+      "sha256": "c7bab0d21f4efc356aa2867a3af45b6496afc3b0348b60896b90c8ada4a02b45"
     },
     {
       "path": "docs/amc-mta-capability-assessment.md",
       "top_level": "docs",
       "extension": ".md",
-      "size_bytes": 8512,
+      "size_bytes": 8456,
       "mode": "644",
-      "sha256": "7840f2181f9ca589ef1ce1cc61039ab0e029aebb474b8772e82df61dcf89fccc"
+      "sha256": "358289dc6188e8facdca58a67f72640b8b6c7c97677f74afff1f02a7d9212371"
     },
     {
       "path": "docs/architecture.md",
@@ -16852,25 +16860,25 @@
       "path": "docs/component-inventory.md",
       "top_level": "docs",
       "extension": ".md",
-      "size_bytes": 3016,
+      "size_bytes": 3021,
       "mode": "644",
-      "sha256": "f0b9fafda21d6669f88adeeb6ea706587b8cc138789edbb8881fd45368d03da8"
+      "sha256": "93a227740342ecd818d8ca1554b4b3c4f56fa2d1630351780a90efd3df4ca7fc"
     },
     {
       "path": "docs/development-guide.md",
       "top_level": "docs",
       "extension": ".md",
-      "size_bytes": 2448,
+      "size_bytes": 2447,
       "mode": "644",
-      "sha256": "7cf9022e81562633bb4efe30f47e2780625bc92f60bbe051bd577638b9f0da0b"
+      "sha256": "9c285586c42f5f049149e840b9e8e482425255200ab2161d8e0a2f4c30224e76"
     },
     {
       "path": "docs/index.md",
       "top_level": "docs",
       "extension": ".md",
-      "size_bytes": 4661,
+      "size_bytes": 4642,
       "mode": "644",
-      "sha256": "a0fef60b959a26c10aed5444c1ece88bf23c0d14658dbe4bc9911615ab40a8be"
+      "sha256": "ce282b5817a2d3900c444f2e18296c4b2debe158b4144f9bd81f61547d6e7d1e"
     },
     {
       "path": "docs/product/amc-mta/project-introduction.md",
@@ -16900,9 +16908,9 @@
       "path": "docs/project-overview.md",
       "top_level": "docs",
       "extension": ".md",
-      "size_bytes": 5319,
+      "size_bytes": 5320,
       "mode": "644",
-      "sha256": "b7fd39450ccebfda88a5849fb4091e4aab20e5a6017e391a7982cc24a3a44eff"
+      "sha256": "e250343ad73468eccd73034815cd55ea3d823833341b76960dc8b97ff368280d"
     },
     {
       "path": "docs/project-scan-report.json",
@@ -16921,14 +16929,6 @@
       "sha256": "20b083daba29809d6532b5ba681ab106a2bc79b42ca37331a6cc5091963adf16"
     },
     {
-      "path": "docs/research/ab-testing/阅读顺序.md",
-      "top_level": "docs",
-      "extension": ".md",
-      "size_bytes": 91,
-      "mode": "644",
-      "sha256": "af33b81654825302f8e704efa5100446b4c80eb05afce2a127bdc06fae83c9b7"
-    },
-    {
       "path": "docs/research/ab-testing/Controlled Experiments on the Web Survey and Practical Guide.pdf",
       "top_level": "docs",
       "extension": ".pdf",
@@ -16943,6 +16943,14 @@
       "size_bytes": 829790,
       "mode": "644",
       "sha256": "6c0e3a046b31ae79aee8564da268182d4d4a452c09f1e9a6938a2842b71a88c4"
+    },
+    {
+      "path": "docs/research/ab-testing/阅读顺序.md",
+      "top_level": "docs",
+      "extension": ".md",
+      "size_bytes": 91,
+      "mode": "644",
+      "sha256": "af33b81654825302f8e704efa5100446b4c80eb05afce2a127bdc06fae83c9b7"
     },
     {
       "path": "docs/research/amazon/amc/data-flow.md",
@@ -16993,20 +17001,20 @@
       "sha256": "59e13cbbaa8868c136514826f13797abe18b2ee881d8e39be02ff3fe7a35a2c1"
     },
     {
-      "path": "docs/research/amazon/research/amazon调研.docx",
-      "top_level": "docs",
-      "extension": ".docx",
-      "size_bytes": 792456,
-      "mode": "644",
-      "sha256": "0c443702f76453e91dc9e1996142f230b439518a58fe55c8d88f83c31852fdaf"
-    },
-    {
       "path": "docs/research/amazon/research/AmazonAdsAPIALLMerged_prod_3p_formatted.json",
       "top_level": "docs",
       "extension": ".json",
       "size_bytes": 1558872,
       "mode": "644",
       "sha256": "0b72c4c3a623572a36c515f907ec3e8058d13cb0b4aa6006307a0c1c06c81ca9"
+    },
+    {
+      "path": "docs/research/amazon/research/amazon调研.docx",
+      "top_level": "docs",
+      "extension": ".docx",
+      "size_bytes": 792456,
+      "mode": "644",
+      "sha256": "0c443702f76453e91dc9e1996142f230b439518a58fe55c8d88f83c31852fdaf"
     },
     {
       "path": "docs/research/amazon/research/technical-amazon-attribution-mta-2026-07-06.md",
@@ -17031,14 +17039,6 @@
       "size_bytes": 15855252,
       "mode": "644",
       "sha256": "b3aff1c63527a7c0c91b18aa89aceb8d516f2f486f9a945b1cd6c4e84236fca3"
-    },
-    {
-      "path": "docs/research/mta/阅读顺序.md",
-      "top_level": "docs",
-      "extension": ".md",
-      "size_bytes": 217,
-      "mode": "644",
-      "sha256": "1866b8c32ad41043a8b03a7c94389edfefc71771d9ac8a80ea1b573700d5959a"
     },
     {
       "path": "docs/research/mta/Data-driven Multi-touch Attribution Models.pdf",
@@ -17073,6 +17073,14 @@
       "sha256": "6a4d8c660ffd3762fac384a64a9d44e3510fede6e2eac7e42d032a3e5254843f"
     },
     {
+      "path": "docs/research/mta/阅读顺序.md",
+      "top_level": "docs",
+      "extension": ".md",
+      "size_bytes": 217,
+      "mode": "644",
+      "sha256": "1866b8c32ad41043a8b03a7c94389edfefc71771d9ac8a80ea1b573700d5959a"
+    },
+    {
       "path": "docs/research/ontology/本体论研究（最终）.pdf",
       "top_level": "docs",
       "extension": ".pdf",
@@ -17092,9 +17100,9 @@
       "path": "docs/source-tree-analysis.md",
       "top_level": "docs",
       "extension": ".md",
-      "size_bytes": 4123,
+      "size_bytes": 4122,
       "mode": "644",
-      "sha256": "61a8594474f2ea5ef985e0c63e923d88e59121a68af8946ed584dc91181e4908"
+      "sha256": "947bf405137f35ea5ccac93d131b794efed741fefd272b11b820781f9c764ec4"
     },
     {
       "path": "log.md",
@@ -17156,17 +17164,17 @@
       "path": "modules/amc_mta/docs/amc-data-requirements.md",
       "top_level": "modules",
       "extension": ".md",
-      "size_bytes": 5892,
+      "size_bytes": 5834,
       "mode": "644",
-      "sha256": "1b002e4947f816c20dce9ea773cfd39137b8eb07fad86612b8e781801b1effc0"
+      "sha256": "53fbf363b8c2cf64149f2ef7bbba8a2559d648d0c8304ce37fbaf61e9053aefe"
     },
     {
       "path": "modules/amc_mta/docs/model-comparison-governance.md",
       "top_level": "modules",
       "extension": ".md",
-      "size_bytes": 26754,
+      "size_bytes": 25964,
       "mode": "644",
-      "sha256": "9e3123fba116e939631e1a8526543da555fedccd44e7e729d83dc76ef507fae0"
+      "sha256": "cb95a93c945dec52368e3d8f21e24056ec007859d91a8236df9d6e99087d45a9"
     },
     {
       "path": "modules/amc_mta/docs/README.md",
@@ -17180,9 +17188,9 @@
       "path": "modules/amc_mta/docs/usage.md",
       "top_level": "modules",
       "extension": ".md",
-      "size_bytes": 2650,
+      "size_bytes": 2635,
       "mode": "644",
-      "sha256": "e98c2385bb3b2e9f30d11948cab30ab3c67846025861c0529ba522bdf2f01ecb"
+      "sha256": "7e464e8e44a9ee2c376c9b2d71ca461d6343f370f419f77150626a523ed567a8"
     },
     {
       "path": "modules/amc_mta/outputs/attribution/amc_markov_attribution_results.csv",
@@ -17196,25 +17204,25 @@
       "path": "modules/amc_mta/outputs/attribution/amc_mta_model_comparison_summary.csv",
       "top_level": "modules",
       "extension": ".csv",
-      "size_bytes": 1331,
+      "size_bytes": 845,
       "mode": "644",
-      "sha256": "bf7b7876ca5bd19b61a29e0222da76e89c0f4097e9ed871b7c8e6a2fe899552f"
+      "sha256": "fce8b160ebc6f9235b88bbc40d86faa1894dca49c9e6dc50e8f488c983bd1535"
     },
     {
       "path": "modules/amc_mta/outputs/attribution/amc_mta_model_comparison_touchpoints.csv",
       "top_level": "modules",
       "extension": ".csv",
-      "size_bytes": 24722,
+      "size_bytes": 20881,
       "mode": "644",
-      "sha256": "f1ec59fef74c358b20ba3d5adf377470583cfb54ecc84e8f8182f5ba50d52310"
+      "sha256": "071a60c9bce5146a1d8932aa0d636785571038ee75f3c6735ab72732c7d04f7e"
     },
     {
       "path": "modules/amc_mta/outputs/attribution/amc_mta_recommended_attribution.csv",
       "top_level": "modules",
       "extension": ".csv",
-      "size_bytes": 14274,
+      "size_bytes": 11434,
       "mode": "644",
-      "sha256": "d85af9c3ae2e1c8597e2c1ad89d4ba08929ccf16d14624a9eb6887c69143e066"
+      "sha256": "47b8b8babad97e031301e64e5284a30dc10a9b769895bf09411e6f6b0a0c07ce"
     },
     {
       "path": "modules/amc_mta/outputs/attribution/amc_shapley_attribution_results.csv",
@@ -17228,9 +17236,9 @@
       "path": "modules/amc_mta/README.md",
       "top_level": "modules",
       "extension": ".md",
-      "size_bytes": 2363,
+      "size_bytes": 2371,
       "mode": "644",
-      "sha256": "c7e870f2e8d9062946d844d4ff5bacc20c67a104d3b1e767347df641bc65dfc2"
+      "sha256": "587b3e7aeff68293eb92ea261718e81790080e3bb0b176601855c35a8a202031"
     },
     {
       "path": "modules/amc_mta/run_pipeline.py",
@@ -17308,9 +17316,9 @@
       "path": "modules/amc_mta/src/model_comparison.py",
       "top_level": "modules",
       "extension": ".py",
-      "size_bytes": 32040,
+      "size_bytes": 29350,
       "mode": "644",
-      "sha256": "d888fe23fd93ff96cd42c844a9a1f559f5460e7a70dc570c3a858d8d0ffbca7e"
+      "sha256": "46903353d130d2050e7fffbae7b6ebe5228500c0c0f83e17384ad1867a1df0ba"
     },
     {
       "path": "modules/amc_mta/src/touchpoint_key.py",
@@ -17332,9 +17340,9 @@
       "path": "modules/amc_mta/tests/test_amc_mta_end_to_end.py",
       "top_level": "modules",
       "extension": ".py",
-      "size_bytes": 15437,
+      "size_bytes": 18597,
       "mode": "644",
-      "sha256": "de237fa83371df6ffd5bd02e0173c1bed48e92c3904f143133aea3b87695c7a2"
+      "sha256": "186c2f61bb0afa589cd2e873a4ab9d08fe059a4ca9b02fac9b4a12f0926b188c"
     },
     {
       "path": "modules/amc_mta/tests/test_amc_path_builder.py",
@@ -17348,9 +17356,9 @@
       "path": "modules/amc_mta/tests/test_model_comparison.py",
       "top_level": "modules",
       "extension": ".py",
-      "size_bytes": 14415,
+      "size_bytes": 15800,
       "mode": "644",
-      "sha256": "483a1097e8dea83140d9b0735826aa5fe5a49807733432f9580b4e003c48c5c6"
+      "sha256": "b676bccad10c4f2fde5fff52fa1494ecc3622b0f0953fbfbb8f0ddb0870dcb1e"
     },
     {
       "path": "modules/amc_mta/tests/test_touchpoint_key.py",

@@ -7,7 +7,7 @@
 | 五段触点键 | `modules/amc_mta/src/touchpoint_key.py` | 统一广告产品、形式、位置、创意、互动类型 |
 | 路径构建 | `modules/amc_mta/src/amc_path_builder.py` | 将事件转为 AMC 风格匿名聚合路径 |
 | 归因引擎 | `modules/amc_mta/src/amc_mta_attribution.py` | Markov、Shapley、成本和效率指标 |
-| 模型治理 | `modules/amc_mta/src/model_comparison.py` | 支持度、差距、父级诊断和推荐状态 |
+| 模型治理 | `modules/amc_mta/src/model_comparison.py` | 五段支持度、差距、整体指标和推荐状态 |
 | 完整入口 | `modules/amc_mta/run_pipeline.py` | 重建输入派生物与五份输出 |
 | 命令行脚本 | `modules/amc_mta/scripts/` | 分步生成、归因、比较与校验 |
 | 测试 | `modules/amc_mta/tests/` | 75 项单元、契约和端到端验证 |
@@ -65,4 +65,3 @@
 - 不改成符号链接；
 - 不移动到业务文档目录；
 - 只有在升级或重新打包 BMad 模块时统一处理。
-

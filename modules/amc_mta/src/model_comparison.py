@@ -46,7 +46,6 @@ MODEL_OUTPUT_FIELDS = [
 
 TOUCHPOINT_COMPARISON_FIELDS = [
     "touchpoint",
-    "parent_touchpoint",
     "interaction_type",
     "outcome",
     "markov_share",
@@ -77,7 +76,6 @@ TOUCHPOINT_COMPARISON_FIELDS = [
     "raw_purchase_count",
     "raw_revenue",
     "support_level",
-    "parent_support_level",
     "markov_interval_low",
     "markov_interval_high",
     "shapley_interval_low",
@@ -88,7 +86,6 @@ TOUCHPOINT_COMPARISON_FIELDS = [
     "difference_level",
     "comparison_status",
     "critical_divergence",
-    "parent_difference_level",
     "operational_status",
     "stability_level",
     "decision_status",
@@ -127,7 +124,6 @@ SUMMARY_FIELDS = [
 
 RECOMMENDED_FIELDS = [
     "touchpoint",
-    "parent_touchpoint",
     "interaction_type",
     "outcome",
     "official_model",
@@ -222,10 +218,6 @@ def _finite_non_negative(
         qualifier = "finite" if negative_ok else "finite and non-negative"
         raise ValueError(f"{context} must be {qualifier}")
     return number
-
-
-def _parent_touchpoint(touchpoint: str) -> str:
-    return touchpoint.rsplit(":", 1)[0]
 
 
 def _model_index(rows: Sequence[Mapping[str, object]], expected_model: str) -> dict[str, dict]:
@@ -445,11 +437,8 @@ def _support_level(support: Mapping[str, float]) -> str:
     return "LOW_SUPPORT"
 
 
-def calculate_raw_support(
-    amc_rows: Sequence[Mapping[str, object]], *, grain: str = "FIVE_PART"
-) -> dict[str, dict]:
-    if grain not in {"FIVE_PART", "FOUR_PART"}:
-        raise ValueError("grain must be FIVE_PART or FOUR_PART")
+def calculate_raw_support(amc_rows: Sequence[Mapping[str, object]]) -> dict[str, dict]:
+    """Calculate support for complete five-part touchpoints only."""
     grouped: dict[str, dict] = defaultdict(
         lambda: {
             "path_keys": set(),
@@ -461,12 +450,8 @@ def calculate_raw_support(
     for row_number, row in enumerate(amc_rows, start=2):
         parts = validate_amc_aggregated_row(row, row_number)
         touchpoints = [part for part in parts if part != NULL]
-        projected_path = [
-            touchpoint if grain == "FIVE_PART" else _parent_touchpoint(touchpoint)
-            for touchpoint in touchpoints
-        ]
-        normalized_path = " > ".join(projected_path)
-        keys = set(projected_path)
+        normalized_path = " > ".join(touchpoints)
+        keys = set(touchpoints)
         for key in keys:
             support = grouped[key]
             support["path_keys"].add(normalized_path)
@@ -517,24 +502,6 @@ def _comparison_status(difference_level: str) -> str:
     }[difference_level]
 
 
-def _parent_reason(child_level: str, parent_level: str) -> str:
-    if child_level == "LARGE":
-        return (
-            "INTERACTION_ALLOCATION_DIVERGENCE"
-            if parent_level == "SMALL"
-            else "TOUCHPOINT_DIVERGENCE"
-        )
-    if child_level == "MEDIUM":
-        return (
-            "INTERACTION_ALLOCATION_REVIEW"
-            if parent_level == "SMALL"
-            else "PARENT_TOUCHPOINT_REVIEW"
-        )
-    if child_level in {"SMALL", "LONG_TAIL"} and parent_level in {"MEDIUM", "LARGE"}:
-        return "PARENT_AGGREGATE_DIVERGENCE"
-    return ""
-
-
 def _rank(values: Mapping[str, float]) -> dict[str, float]:
     ordered = sorted(values, key=lambda key: (-values[key], key))
     ranks: dict[str, float] = {}
@@ -566,13 +533,6 @@ def spearman_rho(markov: Mapping[str, float], shapley: Mapping[str, float]) -> f
     right_ss = sum((value - right_mean) ** 2 for value in right.values())
     denominator = math.sqrt(left_ss * right_ss)
     return None if denominator == 0 else covariance / denominator
-
-
-def _aggregate_by_parent(indexed: Mapping[str, Mapping[str, object]], field: str) -> dict[str, float]:
-    totals: dict[str, float] = defaultdict(float)
-    for touchpoint, row in indexed.items():
-        totals[_parent_touchpoint(touchpoint)] += float(row[field])
-    return dict(totals)
 
 
 def _overall_metrics(
@@ -650,8 +610,7 @@ def compare_attribution_models(
         if isinstance(value, bool) or not isinstance(value, int) or value <= 0:
             raise ValueError(f"{name} must be a positive integer")
     markov, shapley, totals = _validate_models(markov_rows, shapley_rows, amc_rows)
-    support_five = calculate_raw_support(amc_rows, grain="FIVE_PART")
-    support_four = calculate_raw_support(amc_rows, grain="FOUR_PART")
+    support_five = calculate_raw_support(amc_rows)
     windows = {
         (str(row.get("report_start_date", "")), str(row.get("report_end_date", "")))
         for row in amc_rows
@@ -664,16 +623,6 @@ def compare_attribution_models(
     summary_rows: list[dict] = []
     for outcome, (share_field, attributed_field) in OUTCOME_FIELDS.items():
         is_zero_outcome = totals[outcome] == 0
-        parent_markov = _aggregate_by_parent(markov, share_field)
-        parent_shapley = _aggregate_by_parent(shapley, share_field)
-        parent_levels = {
-            parent: (
-                "NO_OUTCOME"
-                if is_zero_outcome
-                else classify_difference(parent_markov[parent], parent_shapley[parent])[0]
-            )
-            for parent in parent_markov
-        }
         for touchpoint in sorted(markov):
             markov_row = markov[touchpoint]
             shapley_row = shapley[touchpoint]
@@ -689,18 +638,10 @@ def compare_attribution_models(
                 difference_level, reason, critical = classify_difference(
                     markov_share, shapley_share
                 )
-            parent = _parent_touchpoint(touchpoint)
-            parent_level = parent_levels[parent]
-            parent_reason = (
-                "" if is_zero_outcome else _parent_reason(difference_level, parent_level)
-            )
-            reason_code = "|".join(code for code in (reason, parent_reason) if code)
             support = support_five[touchpoint]
-            parent_support = support_four[parent]
             touchpoint_rows.append(
                 {
                     "touchpoint": touchpoint,
-                    "parent_touchpoint": parent,
                     "interaction_type": touchpoint.rsplit(":", 1)[1],
                     "outcome": outcome,
                     "markov_share": round(markov_share, 9),
@@ -721,7 +662,6 @@ def compare_attribution_models(
                     "raw_purchase_count": support["raw_purchase_count"],
                     "raw_revenue": support["raw_revenue"],
                     "support_level": support["support_level"],
-                    "parent_support_level": parent_support["support_level"],
                     "markov_interval_low": "",
                     "markov_interval_high": "",
                     "shapley_interval_low": "",
@@ -742,7 +682,6 @@ def compare_attribution_models(
                         else _comparison_status(difference_level)
                     ),
                     "critical_divergence": str(critical).lower(),
-                    "parent_difference_level": parent_level,
                     "operational_status": "VALID",
                     "stability_level": "UNVERIFIED",
                     "decision_status": (
@@ -753,49 +692,46 @@ def compare_attribution_models(
                     "decision_value": "",
                     "review_required": "false" if is_zero_outcome else "true",
                     "automation_allowed": "false",
-                    "reason_code": reason_code,
+                    "reason_code": reason,
                 }
             )
 
-        for grain, grain_markov, grain_shapley, support_rows in (
-            ("FIVE_PART", {key: float(row[share_field]) for key, row in markov.items()}, {key: float(row[share_field]) for key, row in shapley.items()}, support_five),
-            ("FOUR_PART", parent_markov, parent_shapley, support_four),
-        ):
-            critical_count = sum(
-                (
-                    False
-                    if is_zero_outcome
-                    else classify_difference(grain_markov[key], grain_shapley[key])[2]
-                )
-                for key in grain_markov
+        grain_markov = {key: float(row[share_field]) for key, row in markov.items()}
+        grain_shapley = {key: float(row[share_field]) for key, row in shapley.items()}
+        critical_count = sum(
+            (
+                False
+                if is_zero_outcome
+                else classify_difference(grain_markov[key], grain_shapley[key])[2]
             )
-            metrics = _overall_metrics(grain_markov, grain_shapley, critical_count)
-            summary_rows.append(
-                {
-                    "outcome": outcome,
-                    "grain": grain,
-                    "report_start_date": report_start_date,
-                    "report_end_date": report_end_date,
-                    "max_touchpoint_gap_days": max_touchpoint_gap_days,
-                    "reference_window_days": reference_window_days,
-                    "touchpoint_count": len(grain_markov),
-                    **metrics,
-                    "critical_divergence_count": critical_count,
-                    "support_status": _aggregate_support_status(support_rows.values()),
-                    "stability_status": "UNVERIFIED",
-                    "operational_status": "VALID",
-                    "validation_error_count": 0,
-                    "validation_reason_code": "",
-                    "decision_status": (
-                        "NO_OUTCOME" if is_zero_outcome else "EVIDENCE_UNVERIFIED"
-                    ),
-                }
-            )
+            for key in grain_markov
+        )
+        metrics = _overall_metrics(grain_markov, grain_shapley, critical_count)
+        summary_rows.append(
+            {
+                "outcome": outcome,
+                "grain": "FIVE_PART",
+                "report_start_date": report_start_date,
+                "report_end_date": report_end_date,
+                "max_touchpoint_gap_days": max_touchpoint_gap_days,
+                "reference_window_days": reference_window_days,
+                "touchpoint_count": len(grain_markov),
+                **metrics,
+                "critical_divergence_count": critical_count,
+                "support_status": _aggregate_support_status(support_five.values()),
+                "stability_status": "UNVERIFIED",
+                "operational_status": "VALID",
+                "validation_error_count": 0,
+                "validation_reason_code": "",
+                "decision_status": (
+                    "NO_OUTCOME" if is_zero_outcome else "EVIDENCE_UNVERIFIED"
+                ),
+            }
+        )
 
     recommended_rows = [
         {
             "touchpoint": row["touchpoint"],
-            "parent_touchpoint": row["parent_touchpoint"],
             "interaction_type": row["interaction_type"],
             "outcome": row["outcome"],
             "official_model": row["official_model"],

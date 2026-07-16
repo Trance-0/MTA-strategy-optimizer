@@ -19,6 +19,8 @@ from compare_attribution_models import read_model_csv_strict  # noqa: E402
 from amc_mta_attribution import write_csv_set_atomic  # noqa: E402
 from model_comparison import (  # noqa: E402
     MODEL_OUTPUT_FIELDS,
+    RECOMMENDED_FIELDS,
+    SUMMARY_FIELDS,
     TOUCHPOINT_COMPARISON_FIELDS,
     calculate_raw_support,
     classify_difference,
@@ -28,9 +30,8 @@ from model_comparison import (  # noqa: E402
 )
 
 
-PARENT_A = "PRODUCT_A:FORMAT:PLACEMENT:CREATIVE"
-A_IMPRESSION = f"{PARENT_A}:IMPRESSION"
-A_CLICK = f"{PARENT_A}:CLICK"
+A_IMPRESSION = "PRODUCT_A:FORMAT:PLACEMENT:CREATIVE:IMPRESSION"
+A_CLICK = "PRODUCT_A:FORMAT:PLACEMENT:CREATIVE:CLICK"
 
 
 def amc_row(path: str, **overrides: object) -> dict:
@@ -97,19 +98,19 @@ class DifferenceRuleTests(unittest.TestCase):
 
 
 class SupportTests(unittest.TestCase):
-    def test_parent_support_is_recomputed_not_summed_from_children(self) -> None:
-        rows = [amc_row(A_IMPRESSION), amc_row(A_CLICK)]
-        child = calculate_raw_support(rows, grain="FIVE_PART")
-        parent = calculate_raw_support(rows, grain="FOUR_PART")
+    def test_impression_and_click_support_remain_separate(self) -> None:
+        rows = [amc_row(f"{A_IMPRESSION} > {A_CLICK}")]
+        support = calculate_raw_support(rows)
 
-        self.assertEqual(child[A_IMPRESSION]["raw_unique_paths"], 1)
-        self.assertEqual(child[A_CLICK]["raw_unique_paths"], 1)
-        self.assertEqual(parent[PARENT_A]["raw_unique_paths"], 1)
-        self.assertEqual(parent[PARENT_A]["raw_purchase_count"], 200)
+        self.assertEqual(set(support), {A_IMPRESSION, A_CLICK})
+        self.assertEqual(support[A_IMPRESSION]["raw_unique_paths"], 1)
+        self.assertEqual(support[A_CLICK]["raw_unique_paths"], 1)
+        self.assertEqual(support[A_IMPRESSION]["raw_purchase_count"], 100)
+        self.assertEqual(support[A_CLICK]["raw_purchase_count"], 100)
 
     def test_repeated_touchpoint_counts_once_per_path_support(self) -> None:
         support = calculate_raw_support(
-            [amc_row(f"{A_IMPRESSION} > {A_IMPRESSION}")], grain="FIVE_PART"
+            [amc_row(f"{A_IMPRESSION} > {A_IMPRESSION}")]
         )
         self.assertEqual(support[A_IMPRESSION]["raw_unique_paths"], 1)
         self.assertEqual(support[A_IMPRESSION]["raw_purchase_count"], 100)
@@ -131,8 +132,13 @@ class CompleteComparisonTests(unittest.TestCase):
         artifacts = compare_attribution_models(self.markov, self.shapley, self.amc_rows)
 
         self.assertEqual(len(artifacts.touchpoints), 6)
-        self.assertEqual(len(artifacts.summary), 6)
+        self.assertEqual(len(artifacts.summary), 3)
         self.assertEqual(len(artifacts.recommended), 6)
+        self.assertTrue(all(row["grain"] == "FIVE_PART" for row in artifacts.summary))
+        self.assertEqual(
+            {row["outcome"] for row in artifacts.summary},
+            {"converted_users", "purchase_count", "revenue"},
+        )
         self.assertEqual(
             {(row["touchpoint"], row["outcome"]) for row in artifacts.touchpoints},
             {
@@ -155,16 +161,48 @@ class CompleteComparisonTests(unittest.TestCase):
         ):
             self.assertIn(field, TOUCHPOINT_COMPARISON_FIELDS)
             self.assertTrue(all(row[field] == "" for row in artifacts.touchpoints))
-
-    def test_parent_diagnosis_detects_interaction_reallocation(self) -> None:
-        artifacts = compare_attribution_models(self.markov, self.shapley, self.amc_rows)
-        impression = next(
-            row
-            for row in artifacts.touchpoints
-            if row["touchpoint"] == A_IMPRESSION and row["outcome"] == "purchase_count"
+        forbidden_fields = {
+            "parent_touchpoint",
+            "parent_support_level",
+            "parent_difference_level",
+        }
+        self.assertTrue(forbidden_fields.isdisjoint(TOUCHPOINT_COMPARISON_FIELDS))
+        self.assertTrue(
+            all(forbidden_fields.isdisjoint(row) for row in artifacts.touchpoints)
         )
-        self.assertEqual(impression["parent_difference_level"], "SMALL")
-        self.assertIn("INTERACTION_ALLOCATION_DIVERGENCE", impression["reason_code"])
+        self.assertTrue(
+            all(forbidden_fields.isdisjoint(row) for row in artifacts.recommended)
+        )
+        self.assertEqual(
+            {
+                row["reason_code"]
+                for row in artifacts.touchpoints
+            },
+            {"ABSOLUTE_GAP"},
+        )
+
+    def test_five_part_governance_contract_is_exact(self) -> None:
+        artifacts = compare_attribution_models(self.markov, self.shapley, self.amc_rows)
+        forbidden_reason_codes = {
+            "INTERACTION_ALLOCATION_DIVERGENCE",
+            "INTERACTION_ALLOCATION_REVIEW",
+            "PARENT_TOUCHPOINT_REVIEW",
+            "PARENT_AGGREGATE_DIVERGENCE",
+            "TOUCHPOINT_DIVERGENCE",
+        }
+
+        self.assertEqual(set(artifacts.touchpoints[0]), set(TOUCHPOINT_COMPARISON_FIELDS))
+        self.assertEqual(set(artifacts.summary[0]), set(SUMMARY_FIELDS))
+        self.assertEqual(set(artifacts.recommended[0]), set(RECOMMENDED_FIELDS))
+        self.assertTrue(all(row["grain"] == "FIVE_PART" for row in artifacts.summary))
+        reason_tokens = {
+            token
+            for row in artifacts.touchpoints
+            for token in row["reason_code"].split("|")
+        }
+        self.assertTrue(
+            forbidden_reason_codes.isdisjoint(reason_tokens)
+        )
 
     def test_gap_direction_tolerance_is_measured_in_percentage_points(self) -> None:
         markov = [

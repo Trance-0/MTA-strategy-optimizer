@@ -100,4 +100,3 @@ _bmad-output/
 - 本地个人覆盖 `_bmad/custom/config.user.toml` 已被正确忽略。
 - 研究二进制文件集中在 `docs/research/`，没有混入业务运行目录。
 - 历史文件没有删除，但通过索引和状态说明与当前能力隔离。
-
