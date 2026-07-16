@@ -1,0 +1,50 @@
+# macOS
+.DS_Store
+.AppleDouble
+._*
+
+# Windows
+Thumbs.db
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Editors
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Temporary files
+.cache/
+*.bak
+*.temp
+*.tmp
+
+# Local configuration and secrets
+.env
+.env.*
+!.env.example
+
+# Generated model outputs
+modules/*/outputs/
+
+# Keep the five AMC contract outputs used by documentation and end-to-end tests.
+!modules/amc_mta/outputs/
+modules/amc_mta/outputs/*
+!modules/amc_mta/outputs/attribution/
+modules/amc_mta/outputs/attribution/*
+!modules/amc_mta/outputs/attribution/amc_markov_attribution_results.csv
+!modules/amc_mta/outputs/attribution/amc_shapley_attribution_results.csv
+!modules/amc_mta/outputs/attribution/amc_mta_model_comparison_touchpoints.csv
+!modules/amc_mta/outputs/attribution/amc_mta_model_comparison_summary.csv
+!modules/amc_mta/outputs/attribution/amc_mta_recommended_attribution.csv

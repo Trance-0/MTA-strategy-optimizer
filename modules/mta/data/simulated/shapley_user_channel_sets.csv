@@ -1,0 +1,3001 @@
+user_id,channels,conversion,revenue,touch_count
+u00001,"Meta,Google Search",0,0,2
+u00002,"Google Search,TikTok",0,0,3
+u00003,"Meta,Email,Google Search",1,767.5,4
+u00004,"Meta,Google Search",1,559.65,5
+u00005,TikTok,0,0,1
+u00006,"Google Search,TikTok,Meta",1,429.65,5
+u00007,"Google Search,TikTok",0,0,5
+u00008,"TikTok,Google Search",1,589.25,2
+u00009,"Meta,Google Search,TikTok",1,370.25,5
+u00010,"TikTok,Meta",0,0,2
+u00011,"Meta,Google Search,TikTok",0,0,5
+u00012,Google Search,0,0,1
+u00013,"Google Search,Email",0,0,2
+u00014,"TikTok,Google Search,Meta",0,0,5
+u00015,TikTok,0,0,1
+u00016,"Meta,Google Search",0,0,3
+u00017,Email,0,0,1
+u00018,Meta,0,0,1
+u00019,"Google Search,TikTok",0,0,3
+u00020,"Meta,Google Search,TikTok,Email",0,0,5
+u00021,"Meta,Email",0,0,2
+u00022,TikTok,0,0,1
+u00023,Google Search,0,0,1
+u00024,"Google Search,Meta",0,0,2
+u00025,"Meta,Google Search",0,0,4
+u00026,Google Search,0,0,1
+u00027,"Google Search,Email,Meta",0,0,4
+u00028,"TikTok,Meta",0,0,4
+u00029,"TikTok,Email",0,0,2
+u00030,"Google Search,Meta",1,635.3,3
+u00031,"TikTok,Meta",0,0,2
+u00032,Google Search,1,556.05,2
+u00033,"Meta,TikTok",0,0,4
+u00034,Meta,0,0,2
+u00035,TikTok,0,0,3
+u00036,TikTok,0,0,2
+u00037,Google Search,0,0,1
+u00038,"Meta,Google Search",0,0,2
+u00039,"TikTok,Google Search",0,0,3
+u00040,"Meta,Google Search",1,666,2
+u00041,"Meta,Email",0,0,2
+u00042,"Meta,TikTok",0,0,3
+u00043,"Meta,TikTok",0,0,5
+u00044,"TikTok,Google Search,Meta",0,0,5
+u00045,Meta,0,0,2
+u00046,"Meta,Google Search",0,0,2
+u00047,"Google Search,TikTok,Meta",0,0,4
+u00048,"Google Search,Meta",0,0,3
+u00049,"Meta,Google Search,TikTok",0,0,3
+u00050,"Google Search,TikTok,Meta",0,0,5
+u00051,Google Search,1,550.4,1
+u00052,Email,0,0,1
+u00053,"Meta,Email,Google Search",1,755.05,4
+u00054,TikTok,0,0,3
+u00055,"Google Search,TikTok",0,0,2
+u00056,"Google Search,TikTok,Email",1,255.95,5
+u00057,"TikTok,Meta",1,613.3,2
+u00058,"Google Search,Meta,TikTok",0,0,5
+u00059,Meta,0,0,2
+u00060,TikTok,0,0,2
+u00061,Meta,0,0,1
+u00062,"TikTok,Google Search",0,0,2
+u00063,TikTok,0,0,2
+u00064,"Meta,Google Search",0,0,2
+u00065,"Meta,TikTok",0,0,2
+u00066,"Meta,TikTok",0,0,4
+u00067,TikTok,0,0,2
+u00068,"TikTok,Meta",1,358.6,2
+u00069,"TikTok,Email,Google Search,Meta",0,0,4
+u00070,Google Search,1,740.15,1
+u00071,"TikTok,Meta",1,499.15,3
+u00072,"TikTok,Google Search,Meta",1,579.4,3
+u00073,"TikTok,Google Search",0,0,2
+u00074,"TikTok,Google Search,Email",1,594.25,5
+u00075,"Meta,Email,TikTok,Google Search",1,865.5,5
+u00076,TikTok,0,0,2
+u00077,"Meta,Google Search",0,0,5
+u00078,"TikTok,Meta,Google Search",1,844.25,3
+u00079,Google Search,0,0,1
+u00080,TikTok,0,0,1
+u00081,"Google Search,Meta",1,475.9,2
+u00082,"Google Search,Meta",0,0,2
+u00083,Meta,1,505.25,2
+u00084,"TikTok,Google Search,Meta",0,0,4
+u00085,"TikTok,Meta",0,0,3
+u00086,"Google Search,Email",0,0,4
+u00087,"TikTok,Email,Google Search,Meta",0,0,4
+u00088,TikTok,0,0,1
+u00089,"TikTok,Google Search",0,0,5
+u00090,"Meta,TikTok",0,0,2
+u00091,TikTok,0,0,2
+u00092,TikTok,0,0,2
+u00093,TikTok,0,0,1
+u00094,"TikTok,Meta,Google Search",1,470.15,3
+u00095,"Meta,Google Search",0,0,2
+u00096,Meta,0,0,1
+u00097,"Meta,Google Search",1,874.2,4
+u00098,Meta,0,0,2
+u00099,"TikTok,Email",0,0,2
+u00100,"Google Search,Meta",0,0,3
+u00101,"TikTok,Google Search,Meta",0,0,3
+u00102,Google Search,0,0,1
+u00103,"Meta,Email",0,0,2
+u00104,"Google Search,Meta,TikTok",0,0,5
+u00105,"TikTok,Google Search",0,0,2
+u00106,TikTok,0,0,3
+u00107,"TikTok,Google Search,Email,Meta",1,387.15,5
+u00108,Email,0,0,1
+u00109,"TikTok,Email,Meta",0,0,3
+u00110,"TikTok,Meta",0,0,3
+u00111,Google Search,0,0,1
+u00112,"Meta,Google Search",0,0,2
+u00113,"Google Search,Meta",1,514.25,5
+u00114,"TikTok,Google Search",0,0,3
+u00115,"TikTok,Meta",0,0,2
+u00116,"TikTok,Meta",0,0,3
+u00117,"TikTok,Google Search,Meta,Email",0,0,4
+u00118,"TikTok,Meta",0,0,3
+u00119,"TikTok,Google Search",0,0,2
+u00120,"Meta,TikTok,Google Search",0,0,3
+u00121,Email,1,315,1
+u00122,"TikTok,Google Search,Email",0,0,4
+u00123,Google Search,0,0,1
+u00124,"Meta,Google Search",1,337.25,3
+u00125,"TikTok,Email",0,0,2
+u00126,"Meta,TikTok",0,0,2
+u00127,"TikTok,Meta,Google Search,Email",0,0,4
+u00128,"Meta,Google Search",0,0,3
+u00129,"Meta,Google Search",0,0,2
+u00130,"TikTok,Google Search",0,0,3
+u00131,"Meta,TikTok",1,634.3,4
+u00132,"Google Search,Meta",0,0,4
+u00133,"Meta,Google Search",1,353.6,4
+u00134,"TikTok,Meta",0,0,2
+u00135,"Meta,TikTok",0,0,2
+u00136,"Meta,TikTok",1,652.7,3
+u00137,"Meta,TikTok,Email",1,496.45,3
+u00138,"TikTok,Meta",0,0,2
+u00139,Meta,0,0,1
+u00140,"Google Search,TikTok,Meta",1,513.75,3
+u00141,"Google Search,Meta",0,0,2
+u00142,"Google Search,Meta",0,0,2
+u00143,"Meta,TikTok",1,378.35,3
+u00144,Meta,0,0,1
+u00145,"TikTok,Meta",0,0,3
+u00146,"Meta,Google Search",0,0,3
+u00147,"Meta,Email",0,0,3
+u00148,"Meta,Google Search",0,0,2
+u00149,"Meta,Google Search",0,0,3
+u00150,"TikTok,Email,Meta",0,0,3
+u00151,"TikTok,Meta",0,0,2
+u00152,Meta,0,0,1
+u00153,"TikTok,Google Search",1,900.2,5
+u00154,"TikTok,Google Search",0,0,2
+u00155,TikTok,0,0,2
+u00156,"Google Search,TikTok",1,661.95,2
+u00157,"TikTok,Meta",0,0,2
+u00158,TikTok,0,0,1
+u00159,"TikTok,Meta,Google Search",1,548.9,3
+u00160,Email,1,523.3,1
+u00161,"Google Search,TikTok",0,0,2
+u00162,"Google Search,Meta",1,408.15,2
+u00163,"Meta,TikTok,Email",0,0,4
+u00164,"TikTok,Google Search",0,0,3
+u00165,"TikTok,Google Search,Email",1,505.7,4
+u00166,"Google Search,TikTok",0,0,3
+u00167,"Meta,Email",1,254.55,2
+u00168,TikTok,0,0,2
+u00169,"TikTok,Meta,Email",1,628.9,4
+u00170,Google Search,0,0,1
+u00171,TikTok,0,0,1
+u00172,Meta,0,0,1
+u00173,"TikTok,Google Search",0,0,2
+u00174,"Meta,TikTok,Email,Google Search",0,0,4
+u00175,"TikTok,Google Search,Email",0,0,4
+u00176,"Meta,TikTok",0,0,2
+u00177,"TikTok,Meta",0,0,2
+u00178,"TikTok,Meta,Email",0,0,3
+u00179,TikTok,1,604.15,1
+u00180,"TikTok,Email,Google Search",1,553.35,3
+u00181,"Meta,TikTok",0,0,3
+u00182,"Google Search,Meta",0,0,5
+u00183,"TikTok,Google Search",0,0,2
+u00184,"TikTok,Meta,Google Search",0,0,3
+u00185,TikTok,0,0,1
+u00186,Email,0,0,1
+u00187,"Meta,Google Search,TikTok",1,896,4
+u00188,"TikTok,Email,Meta",1,496.05,3
+u00189,TikTok,0,0,1
+u00190,Email,0,0,1
+u00191,"TikTok,Meta",0,0,2
+u00192,"Google Search,Meta",0,0,2
+u00193,"Google Search,Meta",1,695.45,3
+u00194,"Google Search,Email,Meta",0,0,4
+u00195,"Meta,Email",1,445.25,4
+u00196,"TikTok,Email,Meta",0,0,3
+u00197,"TikTok,Google Search,Email",0,0,5
+u00198,"TikTok,Google Search",0,0,3
+u00199,Google Search,1,801.05,1
+u00200,"Meta,TikTok,Google Search",1,931.95,3
+u00201,"Google Search,Meta,Email,TikTok",0,0,5
+u00202,"Meta,TikTok",0,0,3
+u00203,"Meta,Google Search",1,825.1,2
+u00204,"Meta,Google Search,TikTok",0,0,4
+u00205,"TikTok,Email",0,0,3
+u00206,"Meta,TikTok",1,327.25,5
+u00207,TikTok,0,0,1
+u00208,Google Search,0,0,1
+u00209,Meta,0,0,2
+u00210,"Meta,Google Search,TikTok",1,860.8,5
+u00211,"TikTok,Meta",1,415.95,2
+u00212,"TikTok,Google Search",0,0,5
+u00213,"TikTok,Google Search",1,628.55,3
+u00214,"TikTok,Meta,Google Search",0,0,5
+u00215,"Google Search,TikTok,Meta",0,0,4
+u00216,Meta,0,0,4
+u00217,TikTok,0,0,2
+u00218,Google Search,0,0,1
+u00219,"TikTok,Google Search,Email",0,0,4
+u00220,TikTok,0,0,3
+u00221,"Google Search,TikTok",0,0,5
+u00222,"Meta,TikTok",0,0,4
+u00223,"Google Search,TikTok,Meta",1,514.45,4
+u00224,"TikTok,Google Search,Meta",0,0,4
+u00225,"Google Search,Meta,TikTok",1,363.45,4
+u00226,"Meta,Email",1,286.05,2
+u00227,"Google Search,TikTok",0,0,2
+u00228,"Google Search,Email",0,0,5
+u00229,"TikTok,Google Search",0,0,3
+u00230,"TikTok,Email",0,0,3
+u00231,Meta,0,0,1
+u00232,"Meta,TikTok",1,423.55,2
+u00233,"Google Search,Meta",1,620,2
+u00234,"TikTok,Email",0,0,2
+u00235,"Google Search,TikTok",0,0,2
+u00236,"Google Search,Meta",0,0,3
+u00237,"TikTok,Meta",0,0,2
+u00238,"Meta,Email,Google Search",1,915.8,3
+u00239,"Meta,TikTok",0,0,2
+u00240,"Meta,Google Search,Email",0,0,3
+u00241,TikTok,0,0,1
+u00242,"TikTok,Meta",0,0,2
+u00243,"Meta,Google Search",1,610.3,3
+u00244,"TikTok,Meta",1,635.85,5
+u00245,Google Search,1,764.6,1
+u00246,"TikTok,Meta",1,615.65,2
+u00247,Meta,1,514.55,2
+u00248,"Meta,Google Search,TikTok",0,0,5
+u00249,"Meta,Google Search,Email",1,483.35,4
+u00250,TikTok,1,496.55,1
+u00251,"Google Search,TikTok",0,0,2
+u00252,"Google Search,TikTok,Meta",0,0,5
+u00253,"TikTok,Meta,Google Search",0,0,5
+u00254,"TikTok,Meta",0,0,5
+u00255,"TikTok,Google Search,Meta,Email",0,0,4
+u00256,"TikTok,Meta",1,495.15,3
+u00257,"TikTok,Google Search",0,0,2
+u00258,"Google Search,Meta,Email",1,333.6,4
+u00259,"Meta,Google Search",1,798.25,2
+u00260,Google Search,0,0,1
+u00261,Meta,0,0,1
+u00262,TikTok,0,0,2
+u00263,TikTok,0,0,2
+u00264,Google Search,0,0,1
+u00265,"Meta,TikTok",0,0,3
+u00266,TikTok,0,0,1
+u00267,Google Search,1,643.75,1
+u00268,Google Search,1,538.55,1
+u00269,"Google Search,Meta",0,0,4
+u00270,Meta,0,0,1
+u00271,"TikTok,Google Search,Meta",0,0,3
+u00272,"Meta,TikTok,Google Search",1,885.65,3
+u00273,"TikTok,Meta,Google Search,Email",1,426.75,4
+u00274,"Meta,Google Search,TikTok",1,614.35,3
+u00275,"TikTok,Meta",0,0,5
+u00276,"Google Search,Meta,TikTok",0,0,3
+u00277,"Meta,Google Search",1,648,2
+u00278,"Meta,Email",0,0,2
+u00279,"Meta,TikTok,Google Search",1,508.4,3
+u00280,"Meta,TikTok",0,0,2
+u00281,"TikTok,Meta,Email",0,0,5
+u00282,"TikTok,Meta",0,0,3
+u00283,TikTok,0,0,2
+u00284,Google Search,0,0,3
+u00285,"Meta,TikTok",0,0,3
+u00286,"Meta,TikTok,Google Search",0,0,4
+u00287,"TikTok,Google Search",0,0,3
+u00288,TikTok,0,0,1
+u00289,"TikTok,Email",0,0,3
+u00290,"Google Search,TikTok,Meta",1,637.35,3
+u00291,TikTok,0,0,3
+u00292,"TikTok,Google Search",0,0,2
+u00293,Meta,0,0,1
+u00294,"Meta,Google Search",0,0,2
+u00295,"TikTok,Email,Google Search",1,818.7,3
+u00296,"Google Search,Meta,TikTok",1,422.3,3
+u00297,"TikTok,Meta,Email,Google Search",1,523.9,5
+u00298,"Meta,TikTok,Email,Google Search",1,253.4,5
+u00299,Meta,0,0,1
+u00300,"Google Search,TikTok",0,0,4
+u00301,"TikTok,Meta",0,0,2
+u00302,"Meta,TikTok",0,0,2
+u00303,"TikTok,Meta",0,0,2
+u00304,"TikTok,Meta,Email",1,578.35,4
+u00305,"Meta,TikTok",0,0,3
+u00306,"Meta,Google Search,Email",1,270,3
+u00307,"TikTok,Google Search",0,0,4
+u00308,"TikTok,Email",1,400.75,3
+u00309,"TikTok,Google Search",0,0,2
+u00310,"Google Search,Email,Meta",0,0,3
+u00311,Google Search,1,672.4,2
+u00312,TikTok,0,0,4
+u00313,Google Search,0,0,1
+u00314,Google Search,0,0,1
+u00315,"Meta,TikTok",0,0,2
+u00316,Meta,0,0,3
+u00317,Meta,0,0,1
+u00318,"Meta,Email",1,523.85,2
+u00319,"TikTok,Meta,Google Search",1,406.95,4
+u00320,Meta,0,0,2
+u00321,Email,0,0,1
+u00322,"TikTok,Meta,Google Search,Email",1,615.75,5
+u00323,"Meta,TikTok",0,0,5
+u00324,"TikTok,Email",0,0,3
+u00325,"Meta,Email,TikTok",0,0,3
+u00326,"TikTok,Meta",0,0,3
+u00327,Google Search,0,0,2
+u00328,"Meta,Email,Google Search",1,405.05,5
+u00329,"TikTok,Email",0,0,2
+u00330,"Google Search,Meta,TikTok",0,0,5
+u00331,"Meta,Google Search",0,0,4
+u00332,"Google Search,Meta",0,0,4
+u00333,"TikTok,Google Search,Meta",1,364.2,4
+u00334,"Meta,Google Search,Email",1,341,4
+u00335,Meta,0,0,3
+u00336,Google Search,0,0,1
+u00337,"TikTok,Email",1,440.35,3
+u00338,"TikTok,Meta,Google Search",1,596.8,4
+u00339,"Google Search,Meta",0,0,2
+u00340,"TikTok,Google Search,Meta",0,0,4
+u00341,"TikTok,Meta,Google Search",0,0,3
+u00342,"TikTok,Meta",0,0,4
+u00343,"TikTok,Meta,Email",1,384.75,3
+u00344,TikTok,0,0,2
+u00345,"Google Search,TikTok",0,0,3
+u00346,"TikTok,Meta",0,0,3
+u00347,"Meta,Email",0,0,2
+u00348,Email,1,627.25,1
+u00349,"TikTok,Google Search",0,0,3
+u00350,Email,0,0,1
+u00351,"TikTok,Meta",0,0,2
+u00352,"Google Search,Meta",0,0,2
+u00353,"Google Search,Email",0,0,4
+u00354,Google Search,0,0,1
+u00355,Meta,0,0,1
+u00356,"TikTok,Google Search",0,0,3
+u00357,"TikTok,Meta",0,0,3
+u00358,Email,0,0,1
+u00359,"TikTok,Google Search",0,0,2
+u00360,"Meta,TikTok",0,0,2
+u00361,Google Search,1,805.15,2
+u00362,TikTok,0,0,1
+u00363,"TikTok,Email",0,0,2
+u00364,Meta,0,0,2
+u00365,Google Search,0,0,2
+u00366,Meta,0,0,1
+u00367,"Meta,Email,Google Search",1,649.45,4
+u00368,TikTok,0,0,1
+u00369,"Google Search,Email",0,0,3
+u00370,Meta,0,0,1
+u00371,"Meta,TikTok,Email,Google Search",0,0,5
+u00372,"TikTok,Google Search",0,0,3
+u00373,"Meta,Google Search",0,0,3
+u00374,"Google Search,TikTok,Meta",0,0,5
+u00375,Google Search,0,0,3
+u00376,"Google Search,TikTok",0,0,3
+u00377,Google Search,0,0,3
+u00378,TikTok,1,574.8,2
+u00379,"Meta,Google Search,Email",0,0,4
+u00380,"Meta,Email",1,356.4,3
+u00381,Google Search,0,0,1
+u00382,"TikTok,Google Search,Meta",1,680.8,5
+u00383,"Meta,Google Search",0,0,4
+u00384,"Meta,TikTok,Google Search",0,0,4
+u00385,"Meta,Google Search",1,523.6,4
+u00386,"TikTok,Email",0,0,2
+u00387,"Google Search,Meta,Email",0,0,3
+u00388,"Google Search,TikTok,Meta",1,646.55,4
+u00389,"TikTok,Email,Meta",1,523.75,3
+u00390,Google Search,0,0,1
+u00391,"Meta,Email",0,0,2
+u00392,"TikTok,Email",0,0,3
+u00393,"TikTok,Email",1,620.05,4
+u00394,TikTok,0,0,2
+u00395,"Meta,TikTok",0,0,3
+u00396,TikTok,0,0,1
+u00397,"TikTok,Google Search,Meta",1,457.1,3
+u00398,"Meta,Google Search",0,0,4
+u00399,Meta,0,0,1
+u00400,TikTok,0,0,1
+u00401,"TikTok,Meta,Google Search",1,872.15,3
+u00402,"TikTok,Google Search",0,0,2
+u00403,"Meta,Email",0,0,2
+u00404,TikTok,0,0,2
+u00405,"Google Search,TikTok",1,689.95,2
+u00406,"Meta,Google Search",1,614.1,2
+u00407,"Meta,Google Search,Email",1,483.45,3
+u00408,TikTok,0,0,2
+u00409,Meta,0,0,2
+u00410,"TikTok,Google Search",1,628.95,2
+u00411,"Google Search,Meta,Email",1,521,3
+u00412,"TikTok,Meta",1,451.3,2
+u00413,"TikTok,Google Search",1,813.65,2
+u00414,Google Search,0,0,2
+u00415,"Meta,TikTok,Email",1,434.55,4
+u00416,"TikTok,Meta",0,0,4
+u00417,"Google Search,Email,TikTok",1,666.75,5
+u00418,"TikTok,Email",1,420.3,2
+u00419,Google Search,0,0,1
+u00420,"TikTok,Google Search",0,0,3
+u00421,TikTok,0,0,1
+u00422,"TikTok,Email",0,0,2
+u00423,TikTok,1,386.45,2
+u00424,"Meta,Google Search",1,799.3,2
+u00425,"Meta,Google Search,TikTok",0,0,4
+u00426,"TikTok,Email",0,0,4
+u00427,Google Search,0,0,1
+u00428,Google Search,0,0,1
+u00429,Meta,0,0,1
+u00430,"Meta,TikTok,Email",0,0,4
+u00431,"TikTok,Meta",1,585,2
+u00432,"Meta,Google Search,Email",0,0,5
+u00433,Meta,0,0,1
+u00434,"Meta,Email",0,0,3
+u00435,"TikTok,Meta,Email",1,329,3
+u00436,"TikTok,Google Search",1,527.95,2
+u00437,"Meta,Email,Google Search,TikTok",0,0,4
+u00438,"TikTok,Meta,Google Search",1,566.25,5
+u00439,TikTok,0,0,1
+u00440,Email,0,0,1
+u00441,"Google Search,Email,TikTok",0,0,4
+u00442,Meta,0,0,1
+u00443,"TikTok,Email,Meta,Google Search",0,0,4
+u00444,Google Search,0,0,1
+u00445,TikTok,0,0,2
+u00446,"Google Search,TikTok",0,0,3
+u00447,"Meta,TikTok",0,0,2
+u00448,Meta,0,0,2
+u00449,Email,0,0,1
+u00450,"Meta,TikTok,Google Search",0,0,3
+u00451,TikTok,0,0,1
+u00452,TikTok,0,0,1
+u00453,"TikTok,Meta",0,0,2
+u00454,"TikTok,Email,Google Search,Meta",0,0,5
+u00455,Google Search,0,0,1
+u00456,"TikTok,Email,Meta,Google Search",0,0,4
+u00457,"Meta,Email",1,445.45,2
+u00458,"TikTok,Meta,Google Search",0,0,3
+u00459,"TikTok,Meta,Google Search",0,0,4
+u00460,"Meta,TikTok",1,613.1,4
+u00461,"Google Search,Email",0,0,2
+u00462,"TikTok,Google Search",1,551.9,2
+u00463,"Google Search,Meta",1,433.4,3
+u00464,"TikTok,Email",1,530.2,2
+u00465,"TikTok,Email,Meta",0,0,4
+u00466,"TikTok,Email,Google Search",0,0,3
+u00467,Google Search,0,0,1
+u00468,"Google Search,Meta,Email",0,0,5
+u00469,"TikTok,Google Search,Email",1,538.95,5
+u00470,"TikTok,Meta",1,656.9,2
+u00471,"TikTok,Google Search",1,783.1,2
+u00472,"Meta,Google Search",0,0,3
+u00473,Meta,0,0,1
+u00474,"Google Search,TikTok",0,0,4
+u00475,Meta,0,0,1
+u00476,"TikTok,Meta",0,0,2
+u00477,"TikTok,Meta",0,0,3
+u00478,"TikTok,Google Search",0,0,3
+u00479,Meta,0,0,1
+u00480,"TikTok,Meta,Email",0,0,5
+u00481,Email,0,0,1
+u00482,TikTok,0,0,1
+u00483,"TikTok,Google Search",0,0,2
+u00484,Meta,0,0,2
+u00485,"Meta,Email",0,0,2
+u00486,"Google Search,TikTok,Meta",1,339.9,3
+u00487,"Google Search,TikTok,Meta",0,0,4
+u00488,"TikTok,Google Search",1,417.8,3
+u00489,Meta,0,0,1
+u00490,"TikTok,Google Search,Meta",0,0,3
+u00491,"Meta,TikTok",0,0,3
+u00492,"TikTok,Meta",0,0,2
+u00493,"Google Search,Meta",0,0,2
+u00494,"TikTok,Google Search,Email",0,0,5
+u00495,"Google Search,Meta",0,0,3
+u00496,"TikTok,Email",0,0,3
+u00497,"Google Search,TikTok",0,0,3
+u00498,"TikTok,Meta,Email",0,0,3
+u00499,"Google Search,Meta",0,0,2
+u00500,"TikTok,Google Search",0,0,5
+u00501,"TikTok,Email,Google Search",0,0,4
+u00502,"TikTok,Meta",0,0,2
+u00503,"Meta,Google Search,TikTok",0,0,3
+u00504,"TikTok,Email",0,0,4
+u00505,"TikTok,Meta,Email",0,0,5
+u00506,"Meta,TikTok",0,0,2
+u00507,"Meta,TikTok,Email",0,0,4
+u00508,"TikTok,Google Search",0,0,2
+u00509,"TikTok,Email,Meta",0,0,4
+u00510,"Meta,Email",1,295.8,2
+u00511,Google Search,0,0,2
+u00512,TikTok,0,0,1
+u00513,"TikTok,Google Search,Meta",1,552.6,3
+u00514,"TikTok,Meta,Google Search",1,491.5,5
+u00515,Meta,0,0,1
+u00516,"TikTok,Meta",0,0,4
+u00517,Meta,0,0,1
+u00518,"TikTok,Google Search",1,741.8,4
+u00519,"Google Search,Meta",0,0,2
+u00520,"TikTok,Google Search",0,0,2
+u00521,"Meta,TikTok",0,0,2
+u00522,"Meta,Google Search",0,0,2
+u00523,"Google Search,Meta",1,484.7,2
+u00524,"TikTok,Meta",0,0,3
+u00525,TikTok,0,0,1
+u00526,"Google Search,Meta",1,355.1,3
+u00527,Google Search,0,0,1
+u00528,"TikTok,Google Search,Meta",1,677.75,5
+u00529,"TikTok,Meta,Email",0,0,5
+u00530,"TikTok,Meta",0,0,2
+u00531,"Meta,Google Search",0,0,3
+u00532,"Meta,TikTok",0,0,4
+u00533,TikTok,0,0,2
+u00534,"TikTok,Meta",0,0,3
+u00535,"Meta,Email,Google Search",0,0,3
+u00536,Email,0,0,1
+u00537,"TikTok,Meta,Email",1,365.05,4
+u00538,TikTok,0,0,1
+u00539,"TikTok,Meta",0,0,2
+u00540,"TikTok,Google Search,Meta,Email",0,0,5
+u00541,"TikTok,Email",0,0,2
+u00542,"Meta,TikTok",0,0,2
+u00543,"TikTok,Google Search",0,0,5
+u00544,TikTok,0,0,3
+u00545,"TikTok,Google Search",1,658.45,3
+u00546,Meta,0,0,1
+u00547,Meta,0,0,2
+u00548,"Meta,Email",1,301.75,3
+u00549,"TikTok,Email",1,275.75,3
+u00550,"TikTok,Google Search",1,668.75,2
+u00551,"Meta,Google Search",1,723.3,2
+u00552,"Meta,TikTok,Google Search",0,0,5
+u00553,Google Search,0,0,1
+u00554,Meta,0,0,1
+u00555,"Meta,Google Search",0,0,4
+u00556,"Meta,Email,Google Search",0,0,4
+u00557,"Meta,Google Search",0,0,2
+u00558,"Google Search,Email,TikTok",0,0,3
+u00559,"Meta,TikTok,Email",0,0,3
+u00560,"TikTok,Google Search,Meta",0,0,5
+u00561,"Google Search,Meta",0,0,2
+u00562,"TikTok,Email,Meta",1,477.4,4
+u00563,"TikTok,Meta",0,0,2
+u00564,"TikTok,Email,Google Search",1,809.15,4
+u00565,"Meta,TikTok",0,0,2
+u00566,"Google Search,Meta,Email,TikTok",1,746.95,5
+u00567,"Meta,Google Search",0,0,4
+u00568,"Meta,Google Search",0,0,5
+u00569,"Meta,TikTok,Google Search",0,0,5
+u00570,"Meta,Google Search",0,0,3
+u00571,"Meta,Email",0,0,2
+u00572,"TikTok,Meta",0,0,4
+u00573,Google Search,0,0,2
+u00574,TikTok,0,0,1
+u00575,Meta,0,0,2
+u00576,"Meta,TikTok,Google Search,Email",1,583.55,5
+u00577,"Google Search,Email,Meta",0,0,4
+u00578,"Google Search,Email",1,768.15,4
+u00579,"TikTok,Google Search",0,0,3
+u00580,"Google Search,Meta",0,0,3
+u00581,"TikTok,Google Search",1,702.25,2
+u00582,"Google Search,TikTok",0,0,3
+u00583,"TikTok,Meta",0,0,2
+u00584,"TikTok,Meta",0,0,2
+u00585,"Meta,Google Search,TikTok",0,0,4
+u00586,"Meta,Google Search,Email",0,0,3
+u00587,"TikTok,Email",0,0,4
+u00588,"TikTok,Meta",0,0,4
+u00589,"TikTok,Google Search,Email",0,0,3
+u00590,"TikTok,Google Search,Email",0,0,3
+u00591,Meta,0,0,2
+u00592,"Google Search,Meta",0,0,5
+u00593,"TikTok,Email",0,0,3
+u00594,Google Search,0,0,1
+u00595,"Google Search,TikTok",0,0,2
+u00596,"Meta,Email",0,0,5
+u00597,TikTok,0,0,1
+u00598,Google Search,0,0,1
+u00599,"TikTok,Google Search",0,0,2
+u00600,"Meta,Google Search,TikTok",0,0,4
+u00601,TikTok,0,0,1
+u00602,"TikTok,Meta,Email",0,0,5
+u00603,"Google Search,TikTok,Meta",0,0,5
+u00604,Email,0,0,1
+u00605,"Meta,Google Search",0,0,2
+u00606,"Meta,Email",0,0,2
+u00607,"Meta,Google Search,Email",1,503.2,4
+u00608,"TikTok,Google Search",1,499.15,3
+u00609,TikTok,0,0,1
+u00610,"Meta,Google Search",0,0,2
+u00611,"Google Search,Meta",1,595.45,2
+u00612,TikTok,0,0,1
+u00613,Meta,0,0,1
+u00614,TikTok,0,0,2
+u00615,"Google Search,Meta",0,0,2
+u00616,"TikTok,Meta",0,0,2
+u00617,"TikTok,Email",1,406,2
+u00618,"Meta,TikTok",0,0,3
+u00619,"TikTok,Meta,Email",0,0,5
+u00620,"TikTok,Google Search",1,903.65,2
+u00621,"Meta,Google Search",1,734.65,2
+u00622,Meta,0,0,3
+u00623,TikTok,0,0,2
+u00624,"TikTok,Meta,Google Search",1,843.7,4
+u00625,"Meta,TikTok",0,0,4
+u00626,"TikTok,Meta",0,0,4
+u00627,Meta,0,0,2
+u00628,"TikTok,Email,Google Search",0,0,3
+u00629,"Google Search,Meta",1,586.95,5
+u00630,"Meta,Google Search",0,0,2
+u00631,"Meta,TikTok",1,712,2
+u00632,"Meta,TikTok,Google Search",0,0,3
+u00633,"TikTok,Email",0,0,2
+u00634,"TikTok,Meta",0,0,2
+u00635,"TikTok,Meta",0,0,3
+u00636,"TikTok,Google Search",0,0,2
+u00637,Meta,0,0,2
+u00638,"Google Search,Meta,Email",1,613.9,5
+u00639,Google Search,1,892.3,1
+u00640,"TikTok,Email",0,0,2
+u00641,"TikTok,Meta",0,0,2
+u00642,"TikTok,Email,Google Search",0,0,4
+u00643,Google Search,1,678.9,1
+u00644,"Google Search,TikTok",1,701.05,4
+u00645,"Meta,Google Search",0,0,2
+u00646,"Meta,Email,TikTok",1,641.85,5
+u00647,"TikTok,Google Search",0,0,3
+u00648,Meta,0,0,1
+u00649,Meta,0,0,1
+u00650,"TikTok,Email,Meta",0,0,4
+u00651,"TikTok,Google Search",1,818.2,4
+u00652,TikTok,0,0,1
+u00653,"TikTok,Email,Meta",0,0,4
+u00654,"Meta,Email",1,471.3,2
+u00655,"Google Search,TikTok",0,0,5
+u00656,"Google Search,Email",0,0,2
+u00657,"TikTok,Meta,Email",0,0,4
+u00658,"TikTok,Meta",0,0,4
+u00659,"Google Search,Meta",0,0,3
+u00660,"Google Search,Email",1,580.5,2
+u00661,"Google Search,TikTok",1,647.7,3
+u00662,"TikTok,Meta,Google Search",0,0,4
+u00663,"TikTok,Google Search,Meta",1,453.1,5
+u00664,TikTok,0,0,2
+u00665,TikTok,0,0,1
+u00666,"TikTok,Email,Google Search,Meta",0,0,5
+u00667,"TikTok,Meta,Google Search",0,0,5
+u00668,"TikTok,Meta,Google Search,Email",0,0,4
+u00669,Google Search,0,0,3
+u00670,"Google Search,TikTok",0,0,4
+u00671,Meta,0,0,1
+u00672,Google Search,0,0,2
+u00673,"TikTok,Google Search",0,0,2
+u00674,Meta,0,0,1
+u00675,"Google Search,TikTok,Email",1,393.35,5
+u00676,"TikTok,Meta,Google Search",0,0,3
+u00677,"Meta,Email",0,0,3
+u00678,"TikTok,Meta",0,0,2
+u00679,"Meta,TikTok",0,0,4
+u00680,"Google Search,Meta",0,0,3
+u00681,Meta,0,0,2
+u00682,"TikTok,Meta,Email",1,405.25,3
+u00683,Meta,0,0,2
+u00684,"Google Search,TikTok",0,0,2
+u00685,"Meta,TikTok,Email",1,251.35,3
+u00686,"Meta,TikTok",0,0,4
+u00687,"Google Search,Meta",1,653.45,3
+u00688,"TikTok,Meta",0,0,2
+u00689,"Meta,TikTok",1,503.7,2
+u00690,"Meta,TikTok",0,0,2
+u00691,"Meta,Google Search",0,0,4
+u00692,"TikTok,Meta,Google Search",1,460,5
+u00693,"TikTok,Meta",0,0,2
+u00694,Google Search,0,0,1
+u00695,"TikTok,Meta,Email",1,402.25,5
+u00696,"Meta,Google Search",0,0,3
+u00697,Google Search,0,0,1
+u00698,TikTok,0,0,1
+u00699,"Meta,TikTok,Google Search",1,803.15,4
+u00700,TikTok,0,0,4
+u00701,Google Search,0,0,2
+u00702,"Meta,Email",0,0,2
+u00703,"TikTok,Meta",0,0,4
+u00704,"TikTok,Google Search",0,0,2
+u00705,Google Search,0,0,1
+u00706,"TikTok,Email,Meta",1,688.15,5
+u00707,Google Search,0,0,2
+u00708,Google Search,0,0,3
+u00709,Google Search,0,0,1
+u00710,"Meta,Google Search,Email",0,0,3
+u00711,"Google Search,Meta,TikTok",1,724.75,3
+u00712,TikTok,0,0,2
+u00713,Google Search,0,0,1
+u00714,TikTok,0,0,1
+u00715,Meta,1,335.8,1
+u00716,"TikTok,Google Search",0,0,5
+u00717,"TikTok,Google Search",0,0,3
+u00718,TikTok,0,0,2
+u00719,"TikTok,Google Search,Meta",1,695.85,5
+u00720,"Google Search,Email",0,0,4
+u00721,"Google Search,Email,TikTok",0,0,5
+u00722,TikTok,0,0,1
+u00723,TikTok,0,0,1
+u00724,"Meta,TikTok,Google Search",0,0,5
+u00725,"TikTok,Email",0,0,2
+u00726,"Meta,Email,Google Search",0,0,4
+u00727,"TikTok,Google Search",0,0,3
+u00728,"TikTok,Meta,Google Search",0,0,5
+u00729,"TikTok,Meta",1,496.1,2
+u00730,"Meta,TikTok,Google Search",0,0,5
+u00731,"Meta,TikTok",0,0,3
+u00732,"Google Search,TikTok",0,0,4
+u00733,"TikTok,Meta",0,0,3
+u00734,"Meta,Email,Google Search",0,0,3
+u00735,"TikTok,Email,Google Search",1,763.45,4
+u00736,Meta,0,0,1
+u00737,"Meta,TikTok,Google Search",0,0,4
+u00738,"Google Search,Meta",0,0,3
+u00739,"TikTok,Meta",0,0,2
+u00740,Meta,0,0,2
+u00741,"Meta,TikTok,Google Search,Email",0,0,4
+u00742,TikTok,0,0,1
+u00743,Google Search,0,0,2
+u00744,"Meta,Email",0,0,2
+u00745,"Meta,Google Search",0,0,2
+u00746,Google Search,0,0,1
+u00747,TikTok,0,0,1
+u00748,"TikTok,Meta,Email",0,0,4
+u00749,"Meta,TikTok",0,0,2
+u00750,Google Search,0,0,1
+u00751,"Google Search,Meta",1,604.3,2
+u00752,"TikTok,Meta",1,519.2,3
+u00753,"Meta,TikTok,Google Search",0,0,5
+u00754,Meta,0,0,2
+u00755,"Meta,Google Search",0,0,2
+u00756,"Meta,Google Search,TikTok",0,0,3
+u00757,"TikTok,Google Search,Meta",0,0,4
+u00758,Meta,0,0,2
+u00759,TikTok,0,0,2
+u00760,"TikTok,Google Search",1,456.05,4
+u00761,"Google Search,TikTok",0,0,2
+u00762,"TikTok,Google Search",0,0,3
+u00763,"TikTok,Meta,Email",0,0,4
+u00764,"Meta,Email",0,0,2
+u00765,"Google Search,Meta",0,0,2
+u00766,Google Search,1,451.05,1
+u00767,"Meta,Google Search",0,0,2
+u00768,"Google Search,TikTok",0,0,2
+u00769,"TikTok,Meta",1,693.85,2
+u00770,TikTok,1,639.1,1
+u00771,Meta,0,0,2
+u00772,TikTok,0,0,1
+u00773,"Google Search,Meta",0,0,2
+u00774,TikTok,0,0,1
+u00775,"TikTok,Google Search",0,0,2
+u00776,"Meta,Email",0,0,3
+u00777,"TikTok,Google Search",0,0,2
+u00778,"TikTok,Meta,Email,Google Search",1,722.55,5
+u00779,"TikTok,Meta",1,339.05,2
+u00780,TikTok,0,0,3
+u00781,"TikTok,Google Search",0,0,4
+u00782,"TikTok,Google Search",0,0,2
+u00783,TikTok,0,0,1
+u00784,"TikTok,Google Search",1,579.15,4
+u00785,"TikTok,Meta",1,539.8,2
+u00786,"TikTok,Google Search",1,778.95,4
+u00787,"Meta,TikTok",0,0,5
+u00788,"Meta,TikTok",1,512.2,4
+u00789,Google Search,1,473.3,1
+u00790,"Meta,Google Search,TikTok",1,545.55,5
+u00791,"TikTok,Google Search",0,0,2
+u00792,"Meta,Google Search",0,0,4
+u00793,Email,0,0,1
+u00794,"Meta,Google Search",0,0,4
+u00795,"Meta,Google Search,Email",0,0,3
+u00796,Google Search,0,0,1
+u00797,"TikTok,Meta",1,539.35,3
+u00798,"Meta,Google Search,TikTok",0,0,3
+u00799,"Meta,TikTok,Google Search",1,763.55,3
+u00800,"TikTok,Meta",1,531.2,4
+u00801,"TikTok,Meta,Google Search,Email",0,0,4
+u00802,"Google Search,TikTok",0,0,3
+u00803,TikTok,0,0,1
+u00804,Google Search,0,0,1
+u00805,TikTok,0,0,1
+u00806,"TikTok,Google Search,Meta",0,0,3
+u00807,"TikTok,Meta",1,548.65,2
+u00808,"Meta,TikTok",0,0,3
+u00809,"TikTok,Meta",1,540.85,2
+u00810,"Meta,Email",1,377.55,4
+u00811,TikTok,0,0,2
+u00812,"Meta,TikTok,Google Search",0,0,4
+u00813,"Google Search,Email",1,340.35,2
+u00814,"TikTok,Email,Meta",0,0,3
+u00815,"Google Search,TikTok",0,0,3
+u00816,TikTok,0,0,2
+u00817,"Google Search,Email,TikTok",1,538.9,3
+u00818,"TikTok,Google Search,Meta",1,857.45,5
+u00819,TikTok,0,0,1
+u00820,"TikTok,Meta,Google Search",0,0,5
+u00821,"Meta,TikTok",1,600.55,2
+u00822,"Meta,Email,Google Search",1,526.45,5
+u00823,"Meta,Google Search",0,0,2
+u00824,"Meta,Google Search",0,0,4
+u00825,TikTok,0,0,1
+u00826,"TikTok,Google Search",0,0,5
+u00827,"TikTok,Google Search",0,0,2
+u00828,"TikTok,Google Search",0,0,3
+u00829,"TikTok,Meta",0,0,2
+u00830,"TikTok,Meta,Email",1,601.95,4
+u00831,"Google Search,Meta,Email",0,0,4
+u00832,Google Search,0,0,1
+u00833,Meta,0,0,3
+u00834,TikTok,0,0,1
+u00835,"Google Search,Email",0,0,2
+u00836,"TikTok,Google Search",0,0,3
+u00837,"Meta,Google Search",1,764.15,2
+u00838,"TikTok,Google Search",0,0,3
+u00839,"TikTok,Google Search,Meta",0,0,5
+u00840,"Meta,Google Search,TikTok,Email",0,0,5
+u00841,Email,0,0,1
+u00842,"TikTok,Email,Google Search",1,777.4,3
+u00843,"TikTok,Meta,Google Search",0,0,4
+u00844,Google Search,0,0,1
+u00845,Google Search,0,0,1
+u00846,"Meta,TikTok",0,0,2
+u00847,Google Search,0,0,1
+u00848,"Meta,Email,Google Search,TikTok",1,644.2,5
+u00849,"Google Search,Meta",1,303.05,2
+u00850,"Meta,Email,TikTok",0,0,3
+u00851,"TikTok,Google Search",1,626.95,4
+u00852,"Meta,Google Search",0,0,3
+u00853,"Meta,Google Search",0,0,4
+u00854,"Google Search,Email,Meta",1,313.5,5
+u00855,"TikTok,Meta",0,0,3
+u00856,Google Search,0,0,1
+u00857,Meta,0,0,1
+u00858,"Meta,TikTok,Google Search",0,0,3
+u00859,"Meta,Google Search",0,0,4
+u00860,Meta,0,0,1
+u00861,Email,0,0,1
+u00862,"TikTok,Google Search",1,647.45,3
+u00863,Google Search,0,0,2
+u00864,"TikTok,Meta",0,0,2
+u00865,"Google Search,TikTok,Meta",0,0,3
+u00866,Meta,0,0,3
+u00867,"TikTok,Google Search,Email",0,0,4
+u00868,Meta,0,0,1
+u00869,TikTok,0,0,1
+u00870,Google Search,0,0,1
+u00871,"TikTok,Google Search",0,0,3
+u00872,"TikTok,Meta",0,0,3
+u00873,Google Search,0,0,1
+u00874,"Google Search,TikTok",0,0,3
+u00875,"TikTok,Google Search,Meta",0,0,4
+u00876,"TikTok,Email",0,0,2
+u00877,Meta,0,0,1
+u00878,"TikTok,Google Search",0,0,3
+u00879,Email,0,0,1
+u00880,TikTok,1,637.9,1
+u00881,TikTok,0,0,3
+u00882,"TikTok,Meta",0,0,3
+u00883,TikTok,0,0,2
+u00884,Meta,0,0,2
+u00885,"Meta,TikTok",0,0,3
+u00886,"TikTok,Meta",0,0,2
+u00887,"Meta,TikTok,Google Search",0,0,4
+u00888,TikTok,0,0,1
+u00889,Meta,0,0,1
+u00890,"Google Search,Meta,Email",0,0,5
+u00891,"TikTok,Meta,Google Search",0,0,3
+u00892,"Meta,Google Search",0,0,3
+u00893,"Meta,TikTok",0,0,2
+u00894,"TikTok,Meta",0,0,3
+u00895,"TikTok,Email",0,0,3
+u00896,"TikTok,Email,Meta,Google Search",1,450.2,5
+u00897,"TikTok,Meta,Google Search",1,464.15,3
+u00898,"Meta,Email,Google Search",1,947.65,4
+u00899,"TikTok,Meta",0,0,2
+u00900,"Google Search,Meta",0,0,3
+u00901,"TikTok,Google Search",1,707.35,2
+u00902,TikTok,0,0,2
+u00903,"TikTok,Meta",0,0,3
+u00904,"TikTok,Email,Meta",0,0,4
+u00905,TikTok,0,0,1
+u00906,TikTok,1,505.3,2
+u00907,Google Search,0,0,1
+u00908,"TikTok,Email",0,0,4
+u00909,"Google Search,Meta",0,0,3
+u00910,"TikTok,Google Search,Meta",0,0,5
+u00911,"Meta,TikTok,Email",0,0,3
+u00912,Meta,0,0,1
+u00913,"Google Search,TikTok,Email",0,0,4
+u00914,"Google Search,Meta",0,0,4
+u00915,"Meta,Email",0,0,3
+u00916,"Google Search,Meta,Email",1,733.3,4
+u00917,Google Search,0,0,1
+u00918,Meta,0,0,1
+u00919,TikTok,0,0,1
+u00920,"Meta,Google Search",0,0,5
+u00921,Google Search,0,0,1
+u00922,"Meta,Google Search,Email",0,0,4
+u00923,Meta,0,0,1
+u00924,"Meta,Google Search,TikTok",0,0,3
+u00925,TikTok,0,0,2
+u00926,Email,0,0,1
+u00927,"Meta,Google Search",0,0,2
+u00928,"Google Search,Meta,TikTok",1,622.4,3
+u00929,"Meta,TikTok",0,0,2
+u00930,TikTok,0,0,2
+u00931,"Google Search,TikTok",0,0,3
+u00932,"Meta,Google Search,Email,TikTok",1,702.1,5
+u00933,"Google Search,TikTok",0,0,2
+u00934,"Meta,Email",0,0,2
+u00935,Google Search,0,0,1
+u00936,"TikTok,Meta,Email",1,645.9,3
+u00937,Meta,0,0,1
+u00938,"TikTok,Meta",0,0,2
+u00939,TikTok,0,0,1
+u00940,"TikTok,Google Search",0,0,4
+u00941,"Meta,Email,Google Search,TikTok",0,0,5
+u00942,"Meta,Google Search",0,0,5
+u00943,"TikTok,Google Search",0,0,2
+u00944,"Meta,TikTok",0,0,2
+u00945,"Google Search,Meta,TikTok",1,431.25,5
+u00946,Meta,0,0,1
+u00947,TikTok,0,0,1
+u00948,Google Search,0,0,1
+u00949,"Meta,TikTok,Email",1,408.1,5
+u00950,"Meta,Email,TikTok",0,0,4
+u00951,"Meta,TikTok,Email",0,0,3
+u00952,"Google Search,Meta",0,0,3
+u00953,"Meta,Google Search,Email",0,0,5
+u00954,"Google Search,Email",1,807.2,3
+u00955,"Meta,Email,TikTok",0,0,3
+u00956,"TikTok,Google Search",0,0,2
+u00957,"Google Search,TikTok",0,0,3
+u00958,Meta,0,0,1
+u00959,"TikTok,Meta",0,0,5
+u00960,"TikTok,Email,Meta,Google Search",0,0,4
+u00961,"Meta,Email,Google Search",0,0,3
+u00962,"Google Search,Email",1,356.85,2
+u00963,"Meta,Google Search",0,0,3
+u00964,"TikTok,Meta",0,0,5
+u00965,"TikTok,Meta,Google Search,Email",1,572.25,5
+u00966,Meta,0,0,3
+u00967,"TikTok,Google Search",0,0,2
+u00968,Email,0,0,1
+u00969,Email,0,0,1
+u00970,Email,0,0,1
+u00971,"TikTok,Meta",0,0,3
+u00972,Meta,0,0,1
+u00973,"Google Search,Meta",0,0,3
+u00974,Meta,0,0,1
+u00975,Meta,1,375,1
+u00976,Email,0,0,1
+u00977,"Meta,Google Search,Email",0,0,4
+u00978,TikTok,0,0,1
+u00979,"TikTok,Google Search",0,0,2
+u00980,"TikTok,Google Search,Meta",1,454.15,3
+u00981,"TikTok,Google Search,Meta",1,331,3
+u00982,"Meta,Google Search",0,0,3
+u00983,Google Search,1,923.3,1
+u00984,"TikTok,Email",0,0,2
+u00985,"TikTok,Google Search",0,0,2
+u00986,"TikTok,Meta",0,0,3
+u00987,"Meta,TikTok",1,726.4,3
+u00988,"TikTok,Email",0,0,3
+u00989,"TikTok,Google Search",1,745,3
+u00990,"Google Search,Meta",1,543,4
+u00991,"Google Search,Email",1,418.05,2
+u00992,"Meta,Email",0,0,3
+u00993,Meta,0,0,3
+u00994,"Google Search,TikTok",0,0,4
+u00995,"TikTok,Google Search,Meta",1,643.2,3
+u00996,TikTok,0,0,2
+u00997,"Meta,Google Search,Email",0,0,5
+u00998,"TikTok,Meta,Email",0,0,5
+u00999,"TikTok,Email,Meta,Google Search",0,0,5
+u01000,"Meta,Google Search,Email,TikTok",1,598.9,5
+u01001,"TikTok,Email,Meta",0,0,3
+u01002,"Google Search,Meta",0,0,3
+u01003,"Google Search,Meta,TikTok",1,537.75,4
+u01004,"Meta,TikTok",0,0,2
+u01005,"Meta,Google Search,TikTok",1,416.5,3
+u01006,"TikTok,Google Search,Email",1,324,3
+u01007,Meta,0,0,1
+u01008,Meta,0,0,1
+u01009,"TikTok,Google Search",1,617.6,3
+u01010,"TikTok,Google Search",1,525.9,3
+u01011,"Google Search,TikTok,Meta",1,695.55,3
+u01012,Email,0,0,1
+u01013,"Meta,Email,Google Search",1,692.8,5
+u01014,Google Search,0,0,1
+u01015,Meta,1,300.85,1
+u01016,Meta,0,0,1
+u01017,"Meta,TikTok",0,0,2
+u01018,Google Search,0,0,2
+u01019,"TikTok,Meta,Google Search",0,0,5
+u01020,"Meta,TikTok",0,0,3
+u01021,Google Search,0,0,1
+u01022,"TikTok,Email,Meta",0,0,3
+u01023,"TikTok,Email",0,0,2
+u01024,"Meta,Google Search",0,0,2
+u01025,Meta,0,0,2
+u01026,Google Search,0,0,1
+u01027,"Meta,Google Search",1,647.25,2
+u01028,"TikTok,Meta,Email",0,0,4
+u01029,"TikTok,Google Search,Meta",0,0,3
+u01030,Email,0,0,1
+u01031,"Google Search,Email",0,0,3
+u01032,"TikTok,Google Search",1,621.45,2
+u01033,"TikTok,Email,Meta,Google Search",1,710.3,5
+u01034,"Meta,Google Search",0,0,2
+u01035,Google Search,0,0,1
+u01036,"Meta,Email,Google Search",0,0,3
+u01037,Meta,0,0,2
+u01038,"TikTok,Meta",0,0,4
+u01039,"Google Search,TikTok",0,0,2
+u01040,"Google Search,Meta,TikTok",1,624.85,5
+u01041,Meta,0,0,1
+u01042,Google Search,0,0,1
+u01043,"Google Search,TikTok",0,0,2
+u01044,Google Search,0,0,2
+u01045,"TikTok,Google Search,Email",0,0,4
+u01046,"Meta,Google Search,Email",0,0,3
+u01047,TikTok,0,0,1
+u01048,"Meta,TikTok",0,0,3
+u01049,Google Search,0,0,3
+u01050,"Meta,Google Search",1,510.65,4
+u01051,"Google Search,Email",0,0,3
+u01052,"TikTok,Google Search,Meta",1,888.6,5
+u01053,"Meta,Google Search,Email",1,553.85,5
+u01054,"Google Search,TikTok",0,0,2
+u01055,"Google Search,Meta",1,308.65,2
+u01056,"TikTok,Google Search",0,0,2
+u01057,"TikTok,Google Search,Meta",0,0,5
+u01058,"TikTok,Meta,Google Search",1,768.45,3
+u01059,"TikTok,Google Search",0,0,2
+u01060,"TikTok,Google Search",0,0,4
+u01061,"Meta,TikTok",0,0,3
+u01062,"Meta,TikTok",0,0,3
+u01063,"Google Search,Meta",1,323.95,2
+u01064,"TikTok,Google Search",0,0,3
+u01065,TikTok,0,0,1
+u01066,Google Search,0,0,1
+u01067,"TikTok,Email",0,0,2
+u01068,"Meta,Google Search",0,0,5
+u01069,"TikTok,Meta",1,515.45,3
+u01070,"Meta,TikTok",1,679.55,5
+u01071,TikTok,0,0,1
+u01072,Google Search,0,0,1
+u01073,"Meta,Email,TikTok",1,587.5,3
+u01074,"Meta,TikTok",1,586.55,4
+u01075,"TikTok,Email",0,0,3
+u01076,Google Search,0,0,1
+u01077,"TikTok,Google Search",0,0,3
+u01078,"Google Search,Meta",0,0,2
+u01079,"Meta,TikTok",0,0,5
+u01080,TikTok,0,0,1
+u01081,"Google Search,Meta,TikTok",0,0,4
+u01082,"Google Search,Meta",1,590.15,3
+u01083,"TikTok,Google Search",0,0,2
+u01084,Meta,0,0,2
+u01085,"TikTok,Google Search",0,0,2
+u01086,"Meta,TikTok",1,472.9,4
+u01087,Meta,0,0,1
+u01088,Meta,0,0,1
+u01089,TikTok,0,0,3
+u01090,Meta,0,0,2
+u01091,"TikTok,Google Search,Email",0,0,3
+u01092,"Meta,Email,TikTok",0,0,3
+u01093,"Meta,Email,TikTok",0,0,4
+u01094,TikTok,0,0,2
+u01095,TikTok,0,0,1
+u01096,"TikTok,Meta,Google Search",0,0,3
+u01097,Google Search,0,0,1
+u01098,"Meta,Google Search",0,0,3
+u01099,"Google Search,TikTok,Meta",0,0,3
+u01100,"TikTok,Meta",1,441.45,3
+u01101,"TikTok,Google Search",0,0,2
+u01102,TikTok,0,0,1
+u01103,"Google Search,TikTok,Meta",1,527.4,4
+u01104,"TikTok,Meta",0,0,3
+u01105,Meta,0,0,2
+u01106,"Google Search,Meta",1,354.45,4
+u01107,"TikTok,Google Search",1,714.5,2
+u01108,"TikTok,Meta,Email",0,0,3
+u01109,"Google Search,Meta,Email",0,0,3
+u01110,"Meta,Email,TikTok,Google Search",1,893.5,4
+u01111,"TikTok,Meta",0,0,2
+u01112,Google Search,0,0,1
+u01113,"TikTok,Google Search",0,0,3
+u01114,Google Search,0,0,1
+u01115,"TikTok,Google Search",0,0,2
+u01116,"TikTok,Meta",0,0,3
+u01117,"TikTok,Meta",1,481.05,2
+u01118,"TikTok,Google Search",0,0,2
+u01119,"Google Search,Email",1,591.4,4
+u01120,"TikTok,Google Search,Email",0,0,5
+u01121,"TikTok,Email,Google Search",0,0,4
+u01122,"TikTok,Meta",0,0,4
+u01123,"Meta,Email,Google Search",1,769.9,5
+u01124,"Meta,Google Search",0,0,4
+u01125,"TikTok,Meta",0,0,2
+u01126,Meta,0,0,1
+u01127,"TikTok,Google Search",0,0,3
+u01128,"TikTok,Google Search,Email",1,359.4,4
+u01129,TikTok,0,0,1
+u01130,"Google Search,Meta",0,0,2
+u01131,"Meta,TikTok,Google Search",1,344.35,4
+u01132,TikTok,0,0,1
+u01133,"TikTok,Meta",1,337.25,2
+u01134,Meta,0,0,1
+u01135,"TikTok,Email",0,0,2
+u01136,Meta,0,0,1
+u01137,TikTok,0,0,1
+u01138,TikTok,0,0,2
+u01139,Meta,0,0,2
+u01140,"Meta,Email,TikTok",1,482.25,4
+u01141,"TikTok,Meta",0,0,2
+u01142,"TikTok,Google Search,Email,Meta",0,0,5
+u01143,Google Search,0,0,1
+u01144,"Google Search,Meta",0,0,2
+u01145,Meta,0,0,3
+u01146,"Google Search,Meta",1,606,2
+u01147,"TikTok,Meta",1,413.9,3
+u01148,"Google Search,TikTok",0,0,2
+u01149,Google Search,0,0,1
+u01150,"TikTok,Meta,Google Search",0,0,3
+u01151,"Meta,Google Search,TikTok",1,458.45,3
+u01152,"Meta,Email,TikTok",0,0,3
+u01153,"TikTok,Meta",1,360.1,2
+u01154,"Meta,Google Search",0,0,3
+u01155,"Meta,TikTok",0,0,2
+u01156,"Meta,Google Search",0,0,2
+u01157,"Meta,TikTok,Google Search",1,675.65,4
+u01158,"TikTok,Email,Meta",1,649.5,4
+u01159,Meta,0,0,2
+u01160,"Meta,Email",0,0,2
+u01161,"TikTok,Email,Google Search",1,907.4,3
+u01162,"Google Search,Meta",0,0,3
+u01163,"TikTok,Google Search",0,0,3
+u01164,"TikTok,Meta",0,0,2
+u01165,"Meta,Google Search",1,528.1,3
+u01166,Email,0,0,1
+u01167,"TikTok,Google Search,Email",0,0,4
+u01168,TikTok,0,0,2
+u01169,"Meta,Google Search",1,692.15,2
+u01170,"Google Search,Email,Meta",0,0,3
+u01171,"Meta,Google Search,Email",0,0,4
+u01172,"TikTok,Google Search",0,0,3
+u01173,"Google Search,Meta",0,0,4
+u01174,"Meta,Google Search,TikTok",1,321.35,5
+u01175,"Meta,Email,TikTok",0,0,5
+u01176,Google Search,1,562.95,1
+u01177,"TikTok,Meta",0,0,2
+u01178,Google Search,0,0,1
+u01179,"Meta,Google Search",0,0,2
+u01180,"TikTok,Meta",0,0,2
+u01181,"TikTok,Google Search,Meta",0,0,4
+u01182,"Meta,TikTok",1,736.8,2
+u01183,"Google Search,Email",0,0,2
+u01184,"Meta,Google Search",0,0,3
+u01185,"TikTok,Google Search",1,660.8,2
+u01186,"TikTok,Meta",1,398.1,4
+u01187,Meta,0,0,1
+u01188,"Meta,Google Search",0,0,2
+u01189,TikTok,0,0,1
+u01190,TikTok,0,0,3
+u01191,Google Search,0,0,1
+u01192,"TikTok,Google Search",1,669.65,2
+u01193,Meta,0,0,2
+u01194,"Meta,TikTok",0,0,4
+u01195,Google Search,0,0,1
+u01196,"TikTok,Google Search,Email",0,0,4
+u01197,"TikTok,Google Search",0,0,2
+u01198,Google Search,0,0,1
+u01199,"Google Search,Meta,TikTok",0,0,5
+u01200,Google Search,0,0,2
+u01201,Google Search,0,0,2
+u01202,"Google Search,TikTok,Email",0,0,4
+u01203,"Meta,Google Search",0,0,4
+u01204,Google Search,0,0,1
+u01205,"TikTok,Google Search,Meta",1,660.35,5
+u01206,"Google Search,Email",0,0,2
+u01207,"Meta,Google Search",0,0,2
+u01208,"TikTok,Meta",0,0,2
+u01209,TikTok,1,716.5,1
+u01210,"Meta,Google Search",1,872.3,3
+u01211,"Meta,TikTok,Google Search",1,367.45,5
+u01212,"TikTok,Email",0,0,4
+u01213,"TikTok,Meta",0,0,5
+u01214,"TikTok,Google Search,Meta",0,0,3
+u01215,"Meta,TikTok,Google Search",0,0,5
+u01216,Google Search,0,0,1
+u01217,"Google Search,TikTok",0,0,4
+u01218,"TikTok,Meta,Google Search",0,0,3
+u01219,"Meta,TikTok,Email",0,0,3
+u01220,"TikTok,Google Search,Meta",0,0,4
+u01221,Google Search,1,814.8,1
+u01222,"Google Search,Meta",0,0,2
+u01223,TikTok,0,0,1
+u01224,"Meta,TikTok",0,0,2
+u01225,"TikTok,Google Search,Meta,Email",1,642.5,5
+u01226,"Meta,Google Search,TikTok",1,415.45,5
+u01227,"Google Search,Meta",0,0,2
+u01228,TikTok,0,0,2
+u01229,"Google Search,Email",1,359.4,2
+u01230,"Google Search,TikTok,Meta",0,0,3
+u01231,"Meta,Google Search",1,570.25,3
+u01232,"TikTok,Google Search",0,0,4
+u01233,TikTok,0,0,2
+u01234,TikTok,0,0,2
+u01235,"TikTok,Google Search",0,0,4
+u01236,"TikTok,Google Search,Email",1,562.65,3
+u01237,"TikTok,Google Search,Meta",0,0,4
+u01238,"Google Search,Meta",0,0,2
+u01239,"TikTok,Meta",0,0,3
+u01240,Meta,1,576.55,1
+u01241,"TikTok,Google Search",1,876.45,4
+u01242,"Meta,TikTok",1,451.55,4
+u01243,"TikTok,Email,Google Search",1,546.65,3
+u01244,"TikTok,Google Search,Meta,Email",0,0,5
+u01245,"Meta,TikTok",0,0,2
+u01246,"TikTok,Google Search,Meta",1,533.05,5
+u01247,"TikTok,Google Search,Meta",0,0,5
+u01248,"Meta,TikTok",0,0,3
+u01249,"Meta,TikTok,Email",0,0,3
+u01250,Google Search,0,0,2
+u01251,"TikTok,Meta",0,0,3
+u01252,"TikTok,Google Search",0,0,4
+u01253,"Meta,TikTok",0,0,4
+u01254,"Google Search,TikTok",1,567.4,5
+u01255,Google Search,1,790.9,1
+u01256,"TikTok,Email,Google Search",1,664.35,4
+u01257,Google Search,0,0,1
+u01258,TikTok,1,514.4,1
+u01259,"Google Search,Meta,Email",1,531.9,3
+u01260,"TikTok,Google Search",0,0,2
+u01261,"TikTok,Email,Meta",0,0,4
+u01262,"Google Search,Email,Meta",0,0,3
+u01263,"TikTok,Meta",1,413.55,2
+u01264,Email,0,0,1
+u01265,"Google Search,TikTok",1,402.5,2
+u01266,"Meta,Email,Google Search",1,488.6,3
+u01267,"TikTok,Google Search,Meta",0,0,4
+u01268,"Meta,TikTok,Google Search",0,0,4
+u01269,"Meta,Google Search",0,0,4
+u01270,TikTok,0,0,1
+u01271,"TikTok,Google Search",1,821.95,3
+u01272,TikTok,1,726.9,1
+u01273,"Meta,Google Search",0,0,2
+u01274,"Meta,Google Search",0,0,2
+u01275,"TikTok,Meta,Email,Google Search",1,859.7,5
+u01276,TikTok,0,0,1
+u01277,TikTok,0,0,1
+u01278,"TikTok,Google Search,Meta",1,479.8,3
+u01279,"Meta,Email,TikTok",0,0,4
+u01280,"TikTok,Meta",1,580.1,2
+u01281,"Meta,Google Search,TikTok",1,410.45,3
+u01282,Email,0,0,1
+u01283,Google Search,0,0,1
+u01284,"Meta,Google Search,Email",1,621.25,4
+u01285,"TikTok,Meta",0,0,3
+u01286,"TikTok,Google Search,Email,Meta",1,467.5,5
+u01287,Google Search,1,748.65,1
+u01288,Meta,0,0,2
+u01289,"Meta,Google Search",0,0,2
+u01290,"Meta,TikTok",0,0,3
+u01291,Meta,0,0,2
+u01292,"Google Search,TikTok,Email",0,0,4
+u01293,TikTok,1,716.4,1
+u01294,"Meta,Google Search",1,504.15,2
+u01295,Google Search,0,0,2
+u01296,TikTok,0,0,1
+u01297,"Meta,Google Search",0,0,3
+u01298,"TikTok,Email",1,530.7,2
+u01299,"TikTok,Google Search,Email",0,0,5
+u01300,"TikTok,Meta",0,0,2
+u01301,"Meta,TikTok",0,0,2
+u01302,"Google Search,Meta",0,0,2
+u01303,"Google Search,Meta,Email",1,567.35,3
+u01304,Email,0,0,1
+u01305,Meta,1,418.1,1
+u01306,"Meta,Google Search",0,0,2
+u01307,"TikTok,Meta,Google Search",0,0,3
+u01308,"TikTok,Google Search",0,0,3
+u01309,Meta,0,0,1
+u01310,"TikTok,Meta",0,0,4
+u01311,"TikTok,Meta",0,0,2
+u01312,Google Search,0,0,1
+u01313,Google Search,0,0,1
+u01314,Meta,0,0,1
+u01315,"TikTok,Google Search,Email",0,0,4
+u01316,TikTok,0,0,1
+u01317,Google Search,0,0,2
+u01318,"Meta,Google Search",0,0,2
+u01319,"Google Search,Email,TikTok",0,0,4
+u01320,"Meta,Google Search",0,0,2
+u01321,Google Search,0,0,2
+u01322,"Meta,Google Search",1,725.15,3
+u01323,"TikTok,Meta",1,519.6,2
+u01324,TikTok,1,543.15,1
+u01325,"Google Search,Email,Meta,TikTok",1,550.6,5
+u01326,Google Search,0,0,1
+u01327,"TikTok,Google Search",1,634.25,4
+u01328,"TikTok,Email",0,0,2
+u01329,"Meta,Email,Google Search",0,0,5
+u01330,"TikTok,Meta",0,0,5
+u01331,"Meta,Email,TikTok,Google Search",1,520.95,5
+u01332,"Meta,Google Search",1,946.25,2
+u01333,TikTok,0,0,2
+u01334,"TikTok,Google Search",0,0,3
+u01335,TikTok,0,0,2
+u01336,Google Search,0,0,1
+u01337,TikTok,0,0,1
+u01338,Meta,0,0,1
+u01339,"TikTok,Meta,Email",0,0,4
+u01340,"Meta,Google Search",0,0,3
+u01341,"Meta,Google Search,TikTok",0,0,5
+u01342,"TikTok,Meta,Google Search",1,513.25,4
+u01343,"Meta,Google Search,TikTok",0,0,4
+u01344,Meta,0,0,3
+u01345,"Meta,Google Search",0,0,2
+u01346,"Meta,Google Search",1,844.4,2
+u01347,TikTok,0,0,3
+u01348,"TikTok,Google Search,Email",0,0,3
+u01349,Google Search,0,0,1
+u01350,Google Search,1,584.5,1
+u01351,"Meta,TikTok",1,508.15,3
+u01352,Meta,1,466.1,1
+u01353,"TikTok,Meta",0,0,2
+u01354,"TikTok,Google Search",0,0,3
+u01355,"Meta,TikTok,Google Search",1,493.2,4
+u01356,"TikTok,Meta",0,0,4
+u01357,Email,1,430.65,1
+u01358,TikTok,1,680.95,1
+u01359,"Meta,Google Search",1,340.8,4
+u01360,"Meta,Email,Google Search",0,0,3
+u01361,"Google Search,Meta",1,691.2,2
+u01362,"TikTok,Email",0,0,3
+u01363,"TikTok,Google Search,Meta",1,664.3,4
+u01364,Google Search,0,0,1
+u01365,Email,0,0,1
+u01366,TikTok,0,0,2
+u01367,"Meta,Google Search",0,0,3
+u01368,"TikTok,Email,Meta",0,0,4
+u01369,Email,0,0,1
+u01370,"TikTok,Meta",0,0,3
+u01371,Google Search,0,0,1
+u01372,Google Search,0,0,1
+u01373,Meta,0,0,2
+u01374,"Meta,TikTok",0,0,2
+u01375,"TikTok,Meta",0,0,3
+u01376,"Meta,TikTok",1,473.85,3
+u01377,"TikTok,Email",0,0,3
+u01378,"TikTok,Google Search",0,0,3
+u01379,"TikTok,Meta",0,0,4
+u01380,"Meta,Email,TikTok",1,446.55,4
+u01381,TikTok,0,0,1
+u01382,"TikTok,Meta,Email",0,0,4
+u01383,Email,0,0,1
+u01384,"TikTok,Meta,Google Search",1,603.65,5
+u01385,"Meta,Google Search",1,764.45,2
+u01386,"Meta,TikTok",1,703.1,2
+u01387,Meta,0,0,2
+u01388,"Google Search,Email",0,0,5
+u01389,TikTok,0,0,2
+u01390,Meta,0,0,1
+u01391,Meta,0,0,2
+u01392,"Meta,TikTok",0,0,4
+u01393,"TikTok,Meta",0,0,2
+u01394,"Meta,Email",0,0,3
+u01395,"Meta,TikTok",0,0,3
+u01396,"TikTok,Email",1,371,2
+u01397,"TikTok,Email",0,0,2
+u01398,"TikTok,Email",0,0,2
+u01399,Meta,0,0,2
+u01400,"Meta,TikTok,Email",0,0,4
+u01401,"Google Search,TikTok",0,0,4
+u01402,TikTok,0,0,2
+u01403,Google Search,0,0,1
+u01404,"Meta,TikTok,Google Search",1,603.4,3
+u01405,Meta,0,0,1
+u01406,"Meta,TikTok,Google Search",1,465.25,4
+u01407,"TikTok,Meta,Google Search",0,0,5
+u01408,Meta,0,0,1
+u01409,"Google Search,TikTok",0,0,2
+u01410,"Google Search,TikTok,Meta",0,0,5
+u01411,"Meta,TikTok",0,0,2
+u01412,"TikTok,Email,Google Search",0,0,3
+u01413,"Meta,Google Search",0,0,3
+u01414,"TikTok,Google Search",0,0,2
+u01415,"Google Search,Meta,TikTok,Email",0,0,4
+u01416,Email,0,0,1
+u01417,"TikTok,Meta",1,515,2
+u01418,"TikTok,Meta,Google Search",0,0,3
+u01419,"Meta,Email,Google Search",0,0,4
+u01420,Email,0,0,1
+u01421,"TikTok,Google Search",0,0,2
+u01422,Google Search,0,0,1
+u01423,"TikTok,Meta,Email,Google Search",0,0,5
+u01424,"Meta,Google Search",0,0,2
+u01425,"TikTok,Meta",1,599.35,2
+u01426,"Google Search,TikTok",0,0,4
+u01427,"Meta,Google Search,TikTok",0,0,3
+u01428,"TikTok,Meta",0,0,5
+u01429,"Google Search,TikTok",1,451.8,2
+u01430,"TikTok,Meta",0,0,3
+u01431,"TikTok,Meta,Google Search",1,622.75,4
+u01432,"Meta,Google Search",1,511.35,3
+u01433,Meta,0,0,1
+u01434,Meta,0,0,3
+u01435,"TikTok,Meta",0,0,2
+u01436,"Meta,Email",1,592.9,2
+u01437,"TikTok,Google Search",1,931.65,2
+u01438,"Meta,Google Search",0,0,2
+u01439,"Google Search,TikTok",0,0,4
+u01440,"Meta,Email,Google Search",0,0,3
+u01441,"Meta,Google Search",0,0,3
+u01442,"TikTok,Meta,Google Search",0,0,5
+u01443,"TikTok,Meta,Google Search",0,0,3
+u01444,Meta,0,0,1
+u01445,Meta,0,0,4
+u01446,"Meta,TikTok",0,0,2
+u01447,"Google Search,Meta",1,618.35,2
+u01448,"Meta,Google Search",0,0,3
+u01449,"Google Search,Email",0,0,2
+u01450,"TikTok,Email",0,0,4
+u01451,Google Search,1,931.6,1
+u01452,"Meta,TikTok",0,0,3
+u01453,"Meta,TikTok",0,0,4
+u01454,Meta,1,611.8,1
+u01455,"Google Search,TikTok",1,554.7,2
+u01456,"TikTok,Meta,Email",0,0,3
+u01457,Meta,0,0,1
+u01458,Google Search,0,0,1
+u01459,"TikTok,Google Search,Email",0,0,4
+u01460,"TikTok,Meta,Google Search,Email",0,0,5
+u01461,"TikTok,Meta,Google Search",0,0,4
+u01462,"Meta,Email,Google Search",0,0,4
+u01463,Meta,0,0,4
+u01464,TikTok,0,0,1
+u01465,"TikTok,Email",1,409.35,2
+u01466,"TikTok,Email,Meta",1,492.5,3
+u01467,"TikTok,Email,Meta",0,0,5
+u01468,"Meta,Email",0,0,3
+u01469,"TikTok,Meta",0,0,2
+u01470,"TikTok,Google Search",0,0,2
+u01471,"Meta,TikTok",0,0,3
+u01472,"TikTok,Google Search,Email",0,0,4
+u01473,"TikTok,Email,Google Search",1,797.25,4
+u01474,TikTok,0,0,1
+u01475,"Meta,TikTok",0,0,2
+u01476,TikTok,0,0,1
+u01477,Meta,0,0,1
+u01478,"Meta,TikTok,Email",1,370.25,4
+u01479,Meta,0,0,2
+u01480,Google Search,1,548.25,1
+u01481,Google Search,0,0,2
+u01482,"Meta,Email,TikTok",1,577.55,4
+u01483,Email,0,0,1
+u01484,"TikTok,Email,Google Search",0,0,5
+u01485,"Google Search,Meta,TikTok",0,0,5
+u01486,Meta,0,0,1
+u01487,Google Search,0,0,1
+u01488,"TikTok,Google Search",0,0,3
+u01489,Google Search,0,0,3
+u01490,"TikTok,Meta,Google Search",0,0,3
+u01491,Google Search,0,0,2
+u01492,"Meta,Google Search",0,0,2
+u01493,"Meta,TikTok",0,0,5
+u01494,"Google Search,TikTok",0,0,3
+u01495,"Meta,Google Search,TikTok",0,0,3
+u01496,"Google Search,Meta",0,0,2
+u01497,TikTok,0,0,2
+u01498,"Meta,TikTok",0,0,3
+u01499,"TikTok,Meta",0,0,4
+u01500,"Meta,Email",0,0,3
+u01501,TikTok,0,0,2
+u01502,"TikTok,Google Search",0,0,3
+u01503,"Meta,TikTok",0,0,4
+u01504,"Meta,TikTok",1,475.95,3
+u01505,Meta,1,699.75,1
+u01506,"Meta,TikTok",0,0,4
+u01507,"Meta,Google Search",0,0,2
+u01508,"TikTok,Google Search",0,0,5
+u01509,Meta,0,0,1
+u01510,"Google Search,TikTok",0,0,2
+u01511,TikTok,0,0,1
+u01512,TikTok,0,0,2
+u01513,"Meta,Google Search",0,0,3
+u01514,"TikTok,Meta",0,0,3
+u01515,"Google Search,TikTok",0,0,3
+u01516,"Meta,Email",0,0,3
+u01517,Google Search,0,0,2
+u01518,"Meta,TikTok,Email,Google Search",1,859,5
+u01519,"TikTok,Meta",0,0,3
+u01520,Google Search,0,0,1
+u01521,Google Search,0,0,1
+u01522,"TikTok,Email",0,0,3
+u01523,TikTok,0,0,1
+u01524,"TikTok,Meta",0,0,3
+u01525,Meta,0,0,2
+u01526,"TikTok,Email,Google Search",0,0,4
+u01527,"Meta,TikTok,Google Search",0,0,3
+u01528,"Google Search,Email",0,0,2
+u01529,"Meta,Google Search",0,0,3
+u01530,Google Search,0,0,1
+u01531,"TikTok,Email,Meta",0,0,4
+u01532,Email,0,0,1
+u01533,"TikTok,Meta",1,326.5,4
+u01534,"TikTok,Meta",0,0,3
+u01535,Google Search,0,0,1
+u01536,"Meta,Email,Google Search,TikTok",0,0,4
+u01537,"TikTok,Meta",0,0,5
+u01538,Google Search,0,0,1
+u01539,"Google Search,Email,Meta",0,0,3
+u01540,TikTok,0,0,3
+u01541,"Google Search,TikTok,Email",1,646.65,3
+u01542,"Meta,Email,TikTok",0,0,4
+u01543,"Meta,TikTok",0,0,4
+u01544,"Meta,TikTok",0,0,2
+u01545,Google Search,0,0,2
+u01546,"TikTok,Google Search,Email",0,0,4
+u01547,"Meta,Email,Google Search",0,0,3
+u01548,"TikTok,Google Search",0,0,2
+u01549,"TikTok,Google Search,Meta",0,0,5
+u01550,Meta,0,0,1
+u01551,"TikTok,Meta",0,0,3
+u01552,Email,0,0,1
+u01553,"TikTok,Google Search",1,628.45,3
+u01554,"TikTok,Meta",0,0,5
+u01555,TikTok,0,0,1
+u01556,"Meta,TikTok",1,352.65,2
+u01557,"TikTok,Google Search",0,0,4
+u01558,Meta,0,0,1
+u01559,"TikTok,Meta",0,0,5
+u01560,"TikTok,Meta",1,481.6,3
+u01561,Meta,0,0,2
+u01562,"Google Search,Meta",0,0,3
+u01563,"TikTok,Google Search",0,0,2
+u01564,"Google Search,Email",1,568.65,2
+u01565,Meta,1,422.25,3
+u01566,Meta,0,0,1
+u01567,Google Search,1,450.6,2
+u01568,Meta,0,0,1
+u01569,"Meta,Google Search",1,444.85,3
+u01570,"TikTok,Meta",0,0,2
+u01571,"TikTok,Meta,Google Search",0,0,3
+u01572,"Meta,Google Search,TikTok",1,662.4,3
+u01573,"Meta,Google Search",0,0,4
+u01574,TikTok,0,0,1
+u01575,"Meta,Google Search",0,0,2
+u01576,"TikTok,Google Search",0,0,3
+u01577,Google Search,0,0,1
+u01578,"TikTok,Google Search",0,0,2
+u01579,"Google Search,Email",0,0,3
+u01580,TikTok,0,0,2
+u01581,"TikTok,Meta,Email,Google Search",0,0,5
+u01582,"TikTok,Google Search",0,0,3
+u01583,Meta,0,0,2
+u01584,"Google Search,TikTok,Email",0,0,4
+u01585,"Meta,Google Search,Email",0,0,5
+u01586,"Google Search,Meta,Email",0,0,5
+u01587,Email,0,0,1
+u01588,"Meta,Google Search,TikTok",0,0,5
+u01589,"TikTok,Google Search",0,0,2
+u01590,TikTok,0,0,2
+u01591,"Google Search,Meta,Email",0,0,4
+u01592,"TikTok,Google Search",0,0,2
+u01593,TikTok,0,0,1
+u01594,Google Search,0,0,1
+u01595,"TikTok,Google Search",0,0,2
+u01596,"Google Search,Meta",0,0,2
+u01597,"Google Search,TikTok",0,0,2
+u01598,"Meta,Email,Google Search",1,507.35,3
+u01599,TikTok,0,0,2
+u01600,TikTok,0,0,1
+u01601,"TikTok,Google Search",0,0,4
+u01602,TikTok,0,0,1
+u01603,Google Search,1,734.1,1
+u01604,"TikTok,Google Search,Email,Meta",1,334.85,5
+u01605,"TikTok,Google Search,Email",0,0,4
+u01606,TikTok,0,0,1
+u01607,Google Search,0,0,2
+u01608,"Meta,Email,TikTok",1,455.4,3
+u01609,"Meta,Google Search",0,0,2
+u01610,TikTok,0,0,3
+u01611,"TikTok,Meta",0,0,4
+u01612,"TikTok,Meta",1,705.75,5
+u01613,"TikTok,Email",1,467.05,2
+u01614,"Meta,Google Search",1,660.55,2
+u01615,"TikTok,Meta",0,0,5
+u01616,Meta,0,0,1
+u01617,Google Search,1,904.9,1
+u01618,"TikTok,Google Search",0,0,3
+u01619,Email,0,0,1
+u01620,"TikTok,Google Search,Email",0,0,5
+u01621,"TikTok,Meta,Google Search",1,795.5,3
+u01622,"Meta,Email,TikTok",0,0,3
+u01623,TikTok,1,458.35,1
+u01624,"TikTok,Meta",1,478,3
+u01625,"TikTok,Google Search,Meta",0,0,3
+u01626,"Google Search,Meta",0,0,5
+u01627,"Meta,Google Search,TikTok",0,0,3
+u01628,"TikTok,Google Search",1,698.5,2
+u01629,"Meta,TikTok,Google Search",1,714.25,5
+u01630,"Meta,Google Search",0,0,5
+u01631,Google Search,1,670.15,2
+u01632,Meta,0,0,1
+u01633,"TikTok,Google Search",0,0,2
+u01634,"TikTok,Meta,Google Search",0,0,4
+u01635,"TikTok,Google Search",1,810.05,2
+u01636,"Meta,TikTok",1,393.25,4
+u01637,"Google Search,TikTok",0,0,3
+u01638,"Google Search,TikTok",0,0,3
+u01639,"TikTok,Email",0,0,2
+u01640,"Meta,Google Search,TikTok",1,532.75,4
+u01641,"Meta,TikTok",1,482.65,2
+u01642,"Meta,Google Search",0,0,3
+u01643,TikTok,0,0,1
+u01644,"Meta,Email",1,394.9,2
+u01645,"TikTok,Google Search",1,802.25,3
+u01646,"Meta,Google Search,TikTok",1,757,5
+u01647,Google Search,0,0,1
+u01648,"Meta,TikTok",0,0,2
+u01649,"Google Search,TikTok,Email",1,267.35,4
+u01650,"TikTok,Google Search",1,561.35,3
+u01651,Meta,1,383.85,1
+u01652,Google Search,1,490.55,2
+u01653,"TikTok,Google Search,Email",0,0,5
+u01654,"Meta,Google Search",1,597.15,2
+u01655,"Meta,Email,Google Search",0,0,5
+u01656,"Meta,TikTok,Email",0,0,3
+u01657,"TikTok,Google Search",1,556.6,2
+u01658,"TikTok,Google Search,Meta",1,471.75,3
+u01659,"TikTok,Google Search,Meta",0,0,3
+u01660,"Meta,Google Search,Email",1,293.1,3
+u01661,TikTok,1,512,1
+u01662,TikTok,0,0,1
+u01663,Google Search,0,0,1
+u01664,Google Search,0,0,3
+u01665,"TikTok,Google Search",0,0,5
+u01666,"TikTok,Google Search",0,0,2
+u01667,Google Search,0,0,1
+u01668,"Google Search,Email",0,0,3
+u01669,"TikTok,Email",0,0,2
+u01670,Meta,0,0,1
+u01671,TikTok,0,0,1
+u01672,"Meta,TikTok",1,439,3
+u01673,"TikTok,Email",0,0,4
+u01674,"Meta,Google Search",0,0,5
+u01675,"Meta,Google Search",0,0,3
+u01676,Meta,0,0,1
+u01677,"TikTok,Google Search",1,778.35,2
+u01678,"TikTok,Google Search,Meta",0,0,4
+u01679,"TikTok,Meta",0,0,2
+u01680,"Meta,Google Search",0,0,3
+u01681,"TikTok,Meta,Email",0,0,3
+u01682,"Google Search,Email",0,0,3
+u01683,"TikTok,Email",0,0,3
+u01684,"TikTok,Google Search",1,830.25,2
+u01685,"Meta,Email,TikTok",0,0,4
+u01686,"TikTok,Google Search",0,0,3
+u01687,TikTok,0,0,1
+u01688,Meta,0,0,2
+u01689,"Meta,Email",1,492.75,2
+u01690,TikTok,1,423.35,1
+u01691,TikTok,0,0,1
+u01692,"Google Search,TikTok",0,0,4
+u01693,"Meta,TikTok",0,0,4
+u01694,"Meta,TikTok",0,0,2
+u01695,"Meta,Google Search",1,585.75,3
+u01696,Meta,0,0,1
+u01697,Meta,0,0,2
+u01698,TikTok,0,0,2
+u01699,"Meta,Email,TikTok",0,0,4
+u01700,"Meta,Google Search",0,0,3
+u01701,"TikTok,Meta,Email",0,0,4
+u01702,TikTok,0,0,1
+u01703,Meta,0,0,2
+u01704,"TikTok,Meta,Email",0,0,4
+u01705,"TikTok,Google Search",0,0,4
+u01706,"Meta,TikTok",0,0,2
+u01707,TikTok,0,0,2
+u01708,"Meta,Email,Google Search",0,0,4
+u01709,"Meta,Google Search",0,0,2
+u01710,Google Search,0,0,1
+u01711,Meta,0,0,1
+u01712,"Google Search,TikTok,Meta",1,351.2,5
+u01713,"Meta,Google Search",1,552.3,4
+u01714,"TikTok,Meta",0,0,3
+u01715,"Meta,Google Search",0,0,3
+u01716,Meta,0,0,2
+u01717,"TikTok,Meta",0,0,2
+u01718,"Google Search,Meta",0,0,3
+u01719,Google Search,0,0,2
+u01720,Meta,0,0,2
+u01721,TikTok,0,0,3
+u01722,"TikTok,Email",0,0,3
+u01723,"TikTok,Email",0,0,2
+u01724,Meta,0,0,1
+u01725,"TikTok,Google Search",0,0,2
+u01726,"Google Search,Email,Meta,TikTok",1,584.95,5
+u01727,Meta,0,0,2
+u01728,Meta,0,0,2
+u01729,Google Search,0,0,1
+u01730,"TikTok,Meta,Google Search",1,336.75,4
+u01731,"TikTok,Google Search",1,659.15,2
+u01732,"Meta,Google Search,TikTok",0,0,4
+u01733,"Meta,TikTok",0,0,4
+u01734,"Meta,Google Search,Email",1,397.45,5
+u01735,"Meta,Google Search",0,0,3
+u01736,"Meta,Google Search,TikTok",0,0,4
+u01737,TikTok,0,0,1
+u01738,TikTok,0,0,2
+u01739,"Meta,Google Search",0,0,2
+u01740,Google Search,1,849.9,2
+u01741,TikTok,0,0,2
+u01742,"Meta,Email,Google Search",1,711.3,4
+u01743,TikTok,0,0,2
+u01744,"TikTok,Meta",0,0,4
+u01745,"Google Search,Meta",0,0,4
+u01746,Meta,0,0,3
+u01747,"Meta,Google Search",0,0,3
+u01748,Email,0,0,1
+u01749,"Google Search,TikTok",0,0,2
+u01750,"Meta,TikTok,Google Search",0,0,4
+u01751,"Meta,Google Search",0,0,2
+u01752,"Google Search,TikTok",0,0,3
+u01753,TikTok,0,0,2
+u01754,Meta,0,0,1
+u01755,"Meta,Email",0,0,2
+u01756,"Google Search,Email",0,0,5
+u01757,Google Search,0,0,2
+u01758,"Google Search,TikTok,Meta",1,386.7,4
+u01759,"Meta,TikTok",0,0,4
+u01760,"Meta,TikTok",1,638.5,2
+u01761,"TikTok,Email,Google Search",0,0,3
+u01762,Meta,0,0,1
+u01763,"TikTok,Google Search,Email",0,0,3
+u01764,"TikTok,Email,Google Search,Meta",0,0,4
+u01765,Google Search,1,848.3,2
+u01766,"Google Search,Meta",0,0,2
+u01767,TikTok,0,0,2
+u01768,Google Search,0,0,2
+u01769,"Google Search,Meta,Email,TikTok",0,0,4
+u01770,"TikTok,Google Search",0,0,3
+u01771,"TikTok,Google Search",1,492.8,2
+u01772,"Google Search,Meta,TikTok",1,352.3,3
+u01773,Meta,1,547.3,1
+u01774,"Meta,TikTok",0,0,3
+u01775,"Google Search,TikTok",0,0,3
+u01776,"TikTok,Meta",0,0,3
+u01777,Email,0,0,1
+u01778,"TikTok,Meta",0,0,2
+u01779,Google Search,0,0,1
+u01780,"TikTok,Meta",1,563.05,4
+u01781,"TikTok,Google Search",1,775.35,2
+u01782,"TikTok,Google Search,Meta",1,302.75,3
+u01783,Google Search,0,0,1
+u01784,"TikTok,Email",1,393.6,2
+u01785,"TikTok,Google Search",0,0,2
+u01786,"TikTok,Google Search,Meta",0,0,5
+u01787,"Google Search,TikTok",0,0,2
+u01788,"Google Search,Email,TikTok",0,0,3
+u01789,TikTok,0,0,1
+u01790,"TikTok,Google Search,Meta",0,0,3
+u01791,Meta,0,0,2
+u01792,"Meta,TikTok",1,376.25,2
+u01793,"TikTok,Google Search",0,0,2
+u01794,"Meta,TikTok",0,0,2
+u01795,"TikTok,Meta",0,0,2
+u01796,"TikTok,Meta",0,0,2
+u01797,"TikTok,Email,Google Search,Meta",1,356.1,4
+u01798,TikTok,0,0,1
+u01799,"Meta,TikTok",1,623,2
+u01800,"TikTok,Google Search",1,743.9,2
+u01801,"Meta,TikTok,Google Search,Email",1,417.4,5
+u01802,"Google Search,Email",1,561.45,2
+u01803,"Meta,Google Search,TikTok",0,0,4
+u01804,"Meta,Google Search",0,0,2
+u01805,"Google Search,TikTok",1,587.85,2
+u01806,Meta,0,0,2
+u01807,"Meta,TikTok",1,423.7,4
+u01808,"TikTok,Google Search",0,0,5
+u01809,Google Search,0,0,1
+u01810,Meta,0,0,1
+u01811,"TikTok,Google Search",0,0,3
+u01812,Meta,0,0,2
+u01813,"Google Search,Meta,TikTok",0,0,4
+u01814,"TikTok,Meta",0,0,4
+u01815,"TikTok,Meta,Google Search",0,0,4
+u01816,"TikTok,Email",0,0,2
+u01817,Google Search,0,0,1
+u01818,Google Search,0,0,1
+u01819,Google Search,0,0,2
+u01820,"TikTok,Email,Google Search,Meta",0,0,5
+u01821,"Meta,TikTok",0,0,3
+u01822,"Google Search,Email,Meta",1,343.2,4
+u01823,"TikTok,Email",0,0,2
+u01824,TikTok,1,515.4,3
+u01825,"Google Search,Email,Meta",0,0,4
+u01826,TikTok,1,630.25,1
+u01827,Google Search,0,0,2
+u01828,TikTok,0,0,1
+u01829,"Meta,Google Search",0,0,2
+u01830,"TikTok,Meta,Email",0,0,3
+u01831,"Google Search,TikTok,Meta",0,0,3
+u01832,"TikTok,Google Search",0,0,2
+u01833,Google Search,0,0,1
+u01834,"Meta,Google Search",0,0,3
+u01835,Google Search,0,0,1
+u01836,Google Search,0,0,1
+u01837,"Meta,Google Search",1,707.8,2
+u01838,"Google Search,Meta",0,0,3
+u01839,"Meta,Google Search,Email",0,0,3
+u01840,TikTok,0,0,2
+u01841,TikTok,1,603.2,2
+u01842,"Google Search,Meta,Email",1,395.35,4
+u01843,"TikTok,Meta",0,0,3
+u01844,"TikTok,Meta",0,0,2
+u01845,Meta,1,523.3,1
+u01846,TikTok,0,0,3
+u01847,Meta,0,0,1
+u01848,"TikTok,Google Search,Email",1,303.35,3
+u01849,TikTok,0,0,1
+u01850,"TikTok,Meta,Google Search",1,406.35,4
+u01851,"Meta,TikTok,Google Search",0,0,3
+u01852,"TikTok,Email",0,0,2
+u01853,"Google Search,Meta",0,0,3
+u01854,"TikTok,Meta,Email",0,0,4
+u01855,"TikTok,Meta,Email",0,0,5
+u01856,"TikTok,Meta,Email",1,352.9,4
+u01857,"Google Search,Meta",0,0,2
+u01858,"Google Search,TikTok",0,0,3
+u01859,"Meta,TikTok",1,620.8,5
+u01860,"TikTok,Email,Meta,Google Search",0,0,5
+u01861,Email,0,0,1
+u01862,"Meta,TikTok,Google Search",1,880.25,3
+u01863,"Meta,TikTok",1,423.5,2
+u01864,"Meta,Email,Google Search",1,655.9,5
+u01865,"TikTok,Google Search,Meta",1,588.15,3
+u01866,"TikTok,Meta",0,0,2
+u01867,Google Search,0,0,1
+u01868,Google Search,0,0,1
+u01869,"Meta,Google Search,TikTok",1,471.4,3
+u01870,"TikTok,Email,Google Search",0,0,3
+u01871,Meta,0,0,1
+u01872,TikTok,0,0,1
+u01873,"TikTok,Google Search",0,0,2
+u01874,"TikTok,Meta,Google Search",0,0,4
+u01875,"TikTok,Email",1,583.05,3
+u01876,Google Search,1,452.95,2
+u01877,TikTok,0,0,1
+u01878,"TikTok,Meta",1,604.25,3
+u01879,TikTok,0,0,1
+u01880,"TikTok,Google Search,Email,Meta",1,662.45,5
+u01881,"Meta,Email",0,0,3
+u01882,Google Search,0,0,1
+u01883,TikTok,1,552.2,3
+u01884,"Meta,Google Search,Email,TikTok",1,728.15,4
+u01885,"TikTok,Google Search",1,676.05,3
+u01886,"TikTok,Meta",0,0,3
+u01887,"Meta,TikTok,Google Search",0,0,3
+u01888,Meta,1,335.5,1
+u01889,"Google Search,Email",0,0,5
+u01890,TikTok,0,0,2
+u01891,"Meta,Email,Google Search,TikTok",0,0,5
+u01892,"Google Search,Email",0,0,2
+u01893,"TikTok,Meta,Google Search",0,0,3
+u01894,Google Search,0,0,1
+u01895,TikTok,0,0,2
+u01896,"TikTok,Google Search,Meta",0,0,3
+u01897,"Google Search,Email",1,575.2,2
+u01898,TikTok,0,0,2
+u01899,"Google Search,TikTok,Meta",1,692.65,4
+u01900,"TikTok,Meta",0,0,2
+u01901,"Meta,Google Search",0,0,2
+u01902,Meta,0,0,2
+u01903,TikTok,0,0,2
+u01904,"Meta,TikTok,Email",0,0,5
+u01905,TikTok,1,606.65,1
+u01906,"Google Search,TikTok,Email",1,620,4
+u01907,"Meta,Google Search,TikTok",1,353.35,4
+u01908,"TikTok,Google Search,Email",0,0,3
+u01909,"Google Search,Meta,Email",1,559.15,3
+u01910,"Google Search,Email,Meta",0,0,4
+u01911,TikTok,0,0,2
+u01912,"Meta,Google Search",0,0,2
+u01913,"Meta,Email",0,0,2
+u01914,"TikTok,Google Search,Meta",1,539.55,3
+u01915,Meta,0,0,1
+u01916,TikTok,0,0,1
+u01917,Meta,0,0,2
+u01918,TikTok,0,0,1
+u01919,"Google Search,Meta",0,0,2
+u01920,"TikTok,Google Search",1,776.4,3
+u01921,"TikTok,Google Search,Meta",1,643.9,5
+u01922,"Meta,TikTok",0,0,4
+u01923,"Meta,Google Search,TikTok",0,0,3
+u01924,"Google Search,Meta,TikTok",1,472.55,5
+u01925,"Meta,TikTok,Google Search,Email",0,0,5
+u01926,"Google Search,Meta",1,574.9,3
+u01927,"Google Search,Meta",0,0,2
+u01928,"Google Search,Meta",0,0,4
+u01929,TikTok,0,0,1
+u01930,"Meta,Google Search",0,0,4
+u01931,"TikTok,Email",1,580.2,2
+u01932,Meta,0,0,1
+u01933,"Meta,Google Search",0,0,2
+u01934,"TikTok,Email",1,740.25,5
+u01935,"TikTok,Google Search,Meta",1,675.7,3
+u01936,"Meta,Google Search",0,0,2
+u01937,"Meta,Google Search",0,0,3
+u01938,"TikTok,Meta,Google Search",0,0,5
+u01939,"TikTok,Google Search",0,0,3
+u01940,"Google Search,Meta",0,0,3
+u01941,"Google Search,Meta",0,0,2
+u01942,"TikTok,Meta",0,0,2
+u01943,Google Search,1,613.6,1
+u01944,"TikTok,Email",1,254.55,2
+u01945,"TikTok,Email,Meta",1,480.25,5
+u01946,"Meta,Google Search",0,0,3
+u01947,"TikTok,Email,Meta",0,0,4
+u01948,Email,1,617.05,1
+u01949,"TikTok,Google Search",0,0,2
+u01950,TikTok,1,667.2,1
+u01951,Email,0,0,1
+u01952,"TikTok,Google Search",0,0,3
+u01953,"Google Search,Meta,Email",0,0,4
+u01954,"Meta,Google Search,Email",0,0,4
+u01955,"TikTok,Google Search",0,0,2
+u01956,"TikTok,Meta,Google Search,Email",1,325.75,4
+u01957,"Meta,TikTok,Google Search",0,0,5
+u01958,"Google Search,TikTok",0,0,2
+u01959,"TikTok,Meta,Google Search",0,0,4
+u01960,Email,0,0,1
+u01961,"TikTok,Meta,Google Search",0,0,4
+u01962,"Meta,Google Search",1,811.95,2
+u01963,"Google Search,TikTok",0,0,5
+u01964,"TikTok,Email",1,394.1,2
+u01965,TikTok,0,0,3
+u01966,"Google Search,Meta,TikTok",0,0,3
+u01967,Google Search,0,0,1
+u01968,Meta,0,0,2
+u01969,"Meta,TikTok",0,0,3
+u01970,Google Search,0,0,1
+u01971,"TikTok,Email",0,0,3
+u01972,Meta,0,0,2
+u01973,"TikTok,Meta",0,0,3
+u01974,"TikTok,Meta",1,678.3,4
+u01975,"Meta,TikTok",0,0,2
+u01976,"TikTok,Google Search",0,0,2
+u01977,"Meta,Google Search",1,628.2,4
+u01978,TikTok,0,0,2
+u01979,"Meta,TikTok",0,0,4
+u01980,"Meta,Email",0,0,2
+u01981,TikTok,0,0,2
+u01982,"TikTok,Meta,Email,Google Search",1,475.65,4
+u01983,"Meta,TikTok,Google Search",0,0,3
+u01984,"Google Search,Meta",0,0,3
+u01985,"Meta,Google Search",0,0,2
+u01986,"TikTok,Meta,Google Search",0,0,5
+u01987,"TikTok,Google Search",0,0,3
+u01988,TikTok,0,0,1
+u01989,"Meta,TikTok,Email",0,0,4
+u01990,Meta,0,0,3
+u01991,"TikTok,Google Search,Meta",1,533.7,4
+u01992,"TikTok,Google Search",0,0,3
+u01993,"Google Search,Email,Meta",0,0,3
+u01994,"Meta,TikTok",0,0,2
+u01995,TikTok,0,0,1
+u01996,"Google Search,Meta,TikTok",0,0,3
+u01997,Google Search,0,0,1
+u01998,"TikTok,Email",0,0,2
+u01999,Meta,1,577.5,2
+u02000,"Meta,TikTok",0,0,2
+u02001,"TikTok,Google Search",0,0,2
+u02002,Email,0,0,1
+u02003,TikTok,0,0,2
+u02004,"Google Search,Meta",0,0,2
+u02005,Email,0,0,1
+u02006,"TikTok,Meta",0,0,2
+u02007,"Meta,Google Search",1,483.05,2
+u02008,TikTok,0,0,1
+u02009,TikTok,0,0,1
+u02010,"TikTok,Google Search",0,0,3
+u02011,Google Search,0,0,1
+u02012,"TikTok,Google Search",1,655.45,5
+u02013,"Google Search,TikTok,Email",0,0,4
+u02014,TikTok,1,491.6,2
+u02015,"Google Search,TikTok,Meta",0,0,4
+u02016,TikTok,0,0,1
+u02017,TikTok,0,0,1
+u02018,"TikTok,Meta",0,0,3
+u02019,"TikTok,Google Search",0,0,3
+u02020,"Meta,Google Search",0,0,3
+u02021,"Google Search,TikTok",0,0,2
+u02022,"TikTok,Google Search",0,0,3
+u02023,"TikTok,Email,Meta,Google Search",1,405.45,5
+u02024,Meta,0,0,1
+u02025,"Meta,TikTok,Google Search",1,551.2,5
+u02026,"Meta,Email,Google Search",1,676.15,4
+u02027,"TikTok,Meta,Email",0,0,4
+u02028,"Meta,TikTok",0,0,2
+u02029,"Meta,Google Search",1,610.9,3
+u02030,"Meta,Google Search",1,690.4,4
+u02031,TikTok,0,0,1
+u02032,"TikTok,Google Search,Email",1,583.2,3
+u02033,Google Search,1,685.15,1
+u02034,Meta,0,0,1
+u02035,Meta,0,0,2
+u02036,"TikTok,Email",1,641.7,3
+u02037,Meta,0,0,1
+u02038,Meta,0,0,1
+u02039,"Google Search,Email",0,0,2
+u02040,"TikTok,Email",0,0,3
+u02041,Google Search,0,0,2
+u02042,Meta,0,0,2
+u02043,"Meta,Google Search,TikTok",1,578.75,3
+u02044,Meta,0,0,1
+u02045,"TikTok,Google Search,Meta",0,0,3
+u02046,"Meta,Google Search,Email",0,0,3
+u02047,"Google Search,Meta",0,0,2
+u02048,"Meta,TikTok",0,0,2
+u02049,"Google Search,Email",0,0,3
+u02050,TikTok,0,0,1
+u02051,"TikTok,Email",1,567.3,2
+u02052,"TikTok,Meta,Email",0,0,5
+u02053,Meta,0,0,1
+u02054,"TikTok,Google Search",0,0,2
+u02055,"Meta,Email",0,0,4
+u02056,"Meta,Email,TikTok",0,0,4
+u02057,TikTok,0,0,1
+u02058,"TikTok,Google Search,Email",1,350.05,5
+u02059,"Meta,Google Search",0,0,2
+u02060,"TikTok,Meta",1,581.7,3
+u02061,"Meta,TikTok",0,0,3
+u02062,Meta,0,0,1
+u02063,"Meta,Google Search",0,0,3
+u02064,TikTok,0,0,2
+u02065,TikTok,0,0,1
+u02066,"TikTok,Email",0,0,2
+u02067,TikTok,0,0,1
+u02068,"Meta,TikTok",0,0,5
+u02069,Google Search,0,0,2
+u02070,"Meta,Google Search",1,639.5,3
+u02071,Meta,0,0,1
+u02072,"TikTok,Email",0,0,2
+u02073,"TikTok,Google Search,Meta",1,439.8,5
+u02074,"Meta,Google Search",0,0,3
+u02075,"TikTok,Google Search",0,0,2
+u02076,"TikTok,Email",0,0,3
+u02077,"TikTok,Meta,Google Search",0,0,4
+u02078,"Meta,Google Search",1,658.7,2
+u02079,"TikTok,Meta",0,0,2
+u02080,"Meta,TikTok,Google Search",0,0,4
+u02081,Meta,0,0,2
+u02082,TikTok,0,0,1
+u02083,Google Search,0,0,2
+u02084,"Google Search,Meta",1,479.55,4
+u02085,"Google Search,Email",0,0,3
+u02086,"Google Search,TikTok",0,0,2
+u02087,"Meta,TikTok",0,0,4
+u02088,"Meta,TikTok",0,0,2
+u02089,"Google Search,Email",0,0,2
+u02090,"Meta,Google Search",1,881.4,2
+u02091,Email,0,0,1
+u02092,"Google Search,TikTok",1,596.05,2
+u02093,"TikTok,Email,Meta",0,0,3
+u02094,"TikTok,Meta,Google Search",0,0,5
+u02095,"TikTok,Meta",1,344.85,2
+u02096,"TikTok,Meta",0,0,4
+u02097,"TikTok,Email,Meta",0,0,3
+u02098,Meta,0,0,2
+u02099,Google Search,0,0,1
+u02100,Google Search,1,502.7,2
+u02101,Google Search,0,0,1
+u02102,"Meta,Google Search",0,0,2
+u02103,"TikTok,Meta",0,0,2
+u02104,TikTok,0,0,2
+u02105,TikTok,0,0,1
+u02106,"Google Search,Meta",0,0,3
+u02107,TikTok,0,0,1
+u02108,"TikTok,Google Search",0,0,2
+u02109,"TikTok,Email",1,314.95,4
+u02110,"Google Search,Meta",1,657.75,2
+u02111,"TikTok,Email",1,366.65,2
+u02112,"TikTok,Google Search",0,0,4
+u02113,"Meta,Google Search",1,662.65,4
+u02114,"Meta,Google Search,TikTok",0,0,5
+u02115,"Meta,TikTok,Google Search",0,0,3
+u02116,"TikTok,Google Search",0,0,2
+u02117,"Google Search,TikTok,Meta,Email",1,388.55,4
+u02118,Google Search,0,0,3
+u02119,"TikTok,Google Search,Email",1,533.35,5
+u02120,"Meta,Email",1,345.4,2
+u02121,"TikTok,Google Search,Meta",1,639.35,3
+u02122,"TikTok,Google Search",1,613.9,3
+u02123,Meta,0,0,1
+u02124,"Meta,TikTok",1,631.55,2
+u02125,"TikTok,Google Search",1,637.9,3
+u02126,"TikTok,Meta,Google Search",1,820.2,3
+u02127,"TikTok,Google Search,Meta",1,349.75,4
+u02128,"TikTok,Email",0,0,3
+u02129,"Google Search,Email",1,556.2,2
+u02130,"Meta,Google Search,Email",1,719.25,5
+u02131,"TikTok,Meta,Google Search",0,0,5
+u02132,Google Search,0,0,1
+u02133,"Google Search,Meta",0,0,2
+u02134,Google Search,0,0,2
+u02135,"TikTok,Meta,Email",1,353,3
+u02136,Meta,0,0,3
+u02137,"TikTok,Google Search,Meta",0,0,3
+u02138,TikTok,1,418.25,1
+u02139,"TikTok,Google Search,Meta",1,493.7,3
+u02140,"Meta,Google Search,Email",1,901.3,4
+u02141,"Meta,TikTok,Email",0,0,5
+u02142,"TikTok,Email",0,0,3
+u02143,"TikTok,Meta,Google Search,Email",1,630.15,4
+u02144,"Google Search,TikTok",1,764.2,3
+u02145,"Google Search,Meta,TikTok",1,497.4,3
+u02146,"Meta,Google Search,Email",1,626.9,3
+u02147,"TikTok,Google Search",0,0,2
+u02148,"Meta,Google Search,Email",0,0,4
+u02149,"Meta,Email,Google Search",1,519.8,3
+u02150,"Meta,Email",0,0,5
+u02151,"Google Search,TikTok",0,0,3
+u02152,"TikTok,Google Search",0,0,3
+u02153,TikTok,0,0,1
+u02154,"TikTok,Google Search,Email",0,0,3
+u02155,"TikTok,Google Search",0,0,3
+u02156,Meta,0,0,2
+u02157,"Meta,Google Search",0,0,3
+u02158,"Google Search,TikTok,Meta",0,0,3
+u02159,Google Search,0,0,1
+u02160,"Meta,TikTok",0,0,2
+u02161,"TikTok,Meta",0,0,2
+u02162,"Meta,TikTok",1,696.05,5
+u02163,"TikTok,Meta",0,0,2
+u02164,"Meta,TikTok",0,0,2
+u02165,"Meta,Email,Google Search",0,0,5
+u02166,Google Search,0,0,1
+u02167,Meta,0,0,1
+u02168,TikTok,0,0,1
+u02169,"Google Search,Email",1,566.4,2
+u02170,"TikTok,Meta",1,357.2,2
+u02171,"TikTok,Email",0,0,3
+u02172,TikTok,1,682.7,2
+u02173,"Google Search,TikTok,Meta",0,0,3
+u02174,"Meta,TikTok,Google Search",1,548.15,3
+u02175,"Meta,TikTok,Google Search",0,0,4
+u02176,"Meta,Email",0,0,2
+u02177,Email,0,0,1
+u02178,"TikTok,Google Search",1,943.45,2
+u02179,Google Search,0,0,2
+u02180,"Meta,TikTok,Email,Google Search",0,0,4
+u02181,"TikTok,Google Search",0,0,2
+u02182,"Meta,TikTok",0,0,2
+u02183,"TikTok,Meta",1,383.9,3
+u02184,"TikTok,Meta",0,0,2
+u02185,TikTok,0,0,1
+u02186,Email,0,0,1
+u02187,TikTok,0,0,1
+u02188,"Meta,Email",1,340.45,2
+u02189,"Meta,TikTok,Email",0,0,5
+u02190,"TikTok,Google Search,Meta",1,937.85,5
+u02191,Google Search,0,0,1
+u02192,TikTok,0,0,1
+u02193,"TikTok,Meta",0,0,3
+u02194,"Meta,Google Search,Email",1,325.25,5
+u02195,"Meta,Email",0,0,3
+u02196,"Google Search,Meta",0,0,2
+u02197,"Meta,Google Search",0,0,3
+u02198,TikTok,1,519,1
+u02199,"Google Search,Meta",1,659.15,3
+u02200,"TikTok,Meta,Google Search",0,0,4
+u02201,Google Search,0,0,1
+u02202,"TikTok,Meta",0,0,5
+u02203,Email,0,0,1
+u02204,"TikTok,Google Search",0,0,2
+u02205,"TikTok,Meta,Google Search",0,0,4
+u02206,Meta,1,631.2,1
+u02207,Email,1,385.95,1
+u02208,Meta,0,0,2
+u02209,"Meta,Google Search",0,0,2
+u02210,"Google Search,TikTok",0,0,2
+u02211,TikTok,0,0,1
+u02212,"TikTok,Email,Google Search",0,0,3
+u02213,"TikTok,Google Search,Email",0,0,3
+u02214,"TikTok,Email",1,609.2,5
+u02215,"Meta,Email,Google Search",0,0,4
+u02216,"TikTok,Google Search",1,575.5,3
+u02217,"TikTok,Email",0,0,2
+u02218,"Meta,TikTok",0,0,2
+u02219,Google Search,1,609.65,2
+u02220,"Meta,Email",1,302.05,2
+u02221,"Meta,Email,TikTok",0,0,5
+u02222,Meta,0,0,1
+u02223,"Google Search,TikTok",1,920.4,5
+u02224,"Google Search,Meta",1,423.1,3
+u02225,TikTok,0,0,4
+u02226,"Meta,TikTok,Email,Google Search",0,0,4
+u02227,"Meta,TikTok",0,0,2
+u02228,"Google Search,TikTok,Meta,Email",1,440.75,5
+u02229,"Google Search,TikTok",0,0,2
+u02230,TikTok,0,0,1
+u02231,"Google Search,Meta,TikTok",1,474.25,4
+u02232,Meta,0,0,1
+u02233,"TikTok,Google Search,Email",1,885.05,4
+u02234,Meta,0,0,1
+u02235,"TikTok,Email,Meta",0,0,5
+u02236,"Meta,TikTok",0,0,3
+u02237,"TikTok,Google Search,Email,Meta",0,0,4
+u02238,"TikTok,Meta,Google Search",0,0,4
+u02239,TikTok,0,0,1
+u02240,"TikTok,Google Search",0,0,4
+u02241,"Google Search,Meta,TikTok,Email",1,311.45,4
+u02242,"Meta,Email",0,0,2
+u02243,"TikTok,Google Search",0,0,3
+u02244,"TikTok,Email,Google Search",0,0,4
+u02245,TikTok,0,0,1
+u02246,"TikTok,Email",0,0,3
+u02247,"TikTok,Meta",1,302.6,2
+u02248,"TikTok,Google Search",0,0,2
+u02249,"Meta,Google Search",0,0,3
+u02250,"TikTok,Google Search,Email",0,0,3
+u02251,"Meta,Email,Google Search",0,0,5
+u02252,"TikTok,Google Search",0,0,2
+u02253,"Meta,Google Search",0,0,3
+u02254,Meta,1,506.5,2
+u02255,"TikTok,Meta",0,0,2
+u02256,"TikTok,Meta",0,0,3
+u02257,Google Search,0,0,1
+u02258,"TikTok,Google Search,Meta",0,0,3
+u02259,"Google Search,TikTok,Email",0,0,3
+u02260,"Google Search,Meta",0,0,4
+u02261,"Meta,Email",0,0,2
+u02262,"TikTok,Meta",0,0,2
+u02263,Meta,0,0,1
+u02264,"TikTok,Email,Google Search",0,0,5
+u02265,"Google Search,TikTok,Email",1,541.7,3
+u02266,Google Search,0,0,1
+u02267,"TikTok,Google Search",0,0,3
+u02268,Google Search,1,605.05,1
+u02269,Google Search,1,787.75,1
+u02270,"TikTok,Meta,Google Search",0,0,3
+u02271,"TikTok,Email",0,0,2
+u02272,Google Search,0,0,1
+u02273,Google Search,0,0,3
+u02274,"Meta,Google Search,TikTok",0,0,4
+u02275,"Meta,Google Search,TikTok",1,506.15,4
+u02276,"TikTok,Email",1,480.4,2
+u02277,"TikTok,Email",0,0,3
+u02278,"TikTok,Google Search,Email,Meta",1,617.7,5
+u02279,"Google Search,Meta,TikTok",1,513.75,3
+u02280,"Meta,Google Search,TikTok",0,0,4
+u02281,"Meta,Google Search,Email",0,0,4
+u02282,"TikTok,Google Search",1,907.35,2
+u02283,"TikTok,Meta",1,463.65,2
+u02284,"TikTok,Meta",0,0,3
+u02285,Google Search,0,0,1
+u02286,Email,0,0,1
+u02287,"TikTok,Google Search",1,917.2,3
+u02288,Meta,0,0,3
+u02289,"Google Search,TikTok,Meta",0,0,3
+u02290,Meta,0,0,2
+u02291,Google Search,0,0,1
+u02292,TikTok,0,0,2
+u02293,"Meta,Email,TikTok",0,0,3
+u02294,"TikTok,Google Search",1,947.05,2
+u02295,"Meta,TikTok",0,0,2
+u02296,"TikTok,Google Search",0,0,3
+u02297,"Meta,TikTok,Email",1,528,3
+u02298,TikTok,0,0,3
+u02299,Google Search,0,0,1
+u02300,"Google Search,TikTok,Email",0,0,3
+u02301,"TikTok,Google Search,Meta",1,424.8,5
+u02302,"TikTok,Meta",0,0,5
+u02303,"Meta,TikTok,Google Search",0,0,5
+u02304,"TikTok,Meta",0,0,2
+u02305,"Meta,Email,Google Search",0,0,3
+u02306,Meta,0,0,1
+u02307,"Google Search,TikTok",1,597.9,2
+u02308,"TikTok,Google Search,Meta",0,0,4
+u02309,"TikTok,Google Search",1,532.35,3
+u02310,"TikTok,Email",0,0,2
+u02311,"Meta,Email",0,0,2
+u02312,Google Search,0,0,1
+u02313,"Meta,Google Search",1,752.4,3
+u02314,Google Search,0,0,1
+u02315,TikTok,0,0,2
+u02316,"Meta,TikTok",0,0,2
+u02317,TikTok,0,0,2
+u02318,"TikTok,Meta",1,543.7,3
+u02319,Meta,0,0,2
+u02320,"Google Search,Email",0,0,3
+u02321,"Meta,TikTok",0,0,2
+u02322,"TikTok,Google Search",0,0,2
+u02323,"TikTok,Meta",1,307.5,3
+u02324,"TikTok,Meta",1,505.6,3
+u02325,Google Search,0,0,2
+u02326,"TikTok,Google Search,Meta",0,0,5
+u02327,"Google Search,Meta",0,0,2
+u02328,TikTok,0,0,2
+u02329,"TikTok,Google Search,Email",0,0,4
+u02330,"Meta,Google Search,TikTok",0,0,3
+u02331,"TikTok,Google Search",0,0,3
+u02332,"Meta,TikTok",0,0,3
+u02333,"Meta,Google Search,TikTok",0,0,4
+u02334,"TikTok,Google Search,Meta",0,0,5
+u02335,"TikTok,Meta,Google Search",0,0,3
+u02336,TikTok,0,0,1
+u02337,"Meta,TikTok,Email",0,0,4
+u02338,"Meta,TikTok,Google Search",0,0,4
+u02339,"Google Search,TikTok,Email,Meta",1,646.3,5
+u02340,"Google Search,TikTok,Email,Meta",1,640.4,5
+u02341,"Google Search,Meta",0,0,2
+u02342,TikTok,1,440.1,3
+u02343,"Meta,Google Search,Email",0,0,3
+u02344,Google Search,0,0,1
+u02345,"TikTok,Meta",1,561.6,3
+u02346,"Google Search,TikTok",0,0,4
+u02347,"Google Search,TikTok",0,0,3
+u02348,"TikTok,Email,Google Search",0,0,3
+u02349,"TikTok,Google Search",1,617.85,2
+u02350,"TikTok,Meta",0,0,2
+u02351,"TikTok,Google Search",1,669.95,2
+u02352,Google Search,0,0,3
+u02353,"TikTok,Meta,Email",0,0,3
+u02354,Email,0,0,1
+u02355,"Meta,Email",0,0,3
+u02356,"Meta,TikTok",0,0,2
+u02357,"TikTok,Google Search",1,912.35,2
+u02358,"Google Search,Email,Meta",1,537.1,4
+u02359,Meta,0,0,1
+u02360,Meta,0,0,2
+u02361,"TikTok,Meta",0,0,2
+u02362,"TikTok,Email,Google Search",0,0,3
+u02363,"Meta,TikTok,Google Search",0,0,3
+u02364,Meta,0,0,1
+u02365,"TikTok,Meta,Google Search",0,0,4
+u02366,Google Search,0,0,1
+u02367,TikTok,0,0,1
+u02368,"Meta,TikTok",0,0,3
+u02369,TikTok,0,0,1
+u02370,"Google Search,Meta",1,593.55,2
+u02371,"TikTok,Meta,Email",1,493.75,3
+u02372,"TikTok,Google Search",0,0,3
+u02373,"Meta,TikTok,Google Search",0,0,3
+u02374,"Meta,Email",0,0,3
+u02375,Email,0,0,1
+u02376,"Meta,Google Search",1,662.15,4
+u02377,"TikTok,Google Search,Meta",1,658.5,3
+u02378,"TikTok,Email,Google Search,Meta",0,0,4
+u02379,"TikTok,Meta",0,0,2
+u02380,Google Search,0,0,2
+u02381,"TikTok,Meta",0,0,2
+u02382,TikTok,0,0,1
+u02383,"Meta,Google Search",0,0,2
+u02384,Google Search,0,0,1
+u02385,Google Search,0,0,2
+u02386,"Google Search,Meta",1,320.65,2
+u02387,TikTok,0,0,3
+u02388,"TikTok,Email,Google Search",0,0,3
+u02389,Google Search,0,0,1
+u02390,Email,0,0,1
+u02391,"TikTok,Email",1,644.65,3
+u02392,Google Search,1,835.75,2
+u02393,"Meta,TikTok",0,0,3
+u02394,TikTok,0,0,2
+u02395,"Meta,Google Search",1,317.4,3
+u02396,Email,0,0,1
+u02397,Meta,0,0,2
+u02398,TikTok,0,0,1
+u02399,"TikTok,Google Search",0,0,2
+u02400,"Meta,TikTok",0,0,2
+u02401,"TikTok,Google Search",0,0,4
+u02402,TikTok,1,521.85,1
+u02403,"TikTok,Google Search",0,0,4
+u02404,"TikTok,Meta",0,0,3
+u02405,"Meta,Google Search,TikTok",1,582,4
+u02406,"Meta,TikTok",0,0,2
+u02407,"Meta,Email",0,0,2
+u02408,"Meta,TikTok",1,365.35,3
+u02409,"TikTok,Google Search",0,0,2
+u02410,"TikTok,Meta",1,411.8,2
+u02411,"Meta,TikTok,Email",0,0,3
+u02412,Meta,0,0,3
+u02413,"Meta,Google Search",0,0,4
+u02414,"TikTok,Google Search",0,0,3
+u02415,"Google Search,Meta",0,0,2
+u02416,"Google Search,Meta,TikTok",1,509.9,4
+u02417,Google Search,0,0,2
+u02418,Meta,0,0,2
+u02419,"Meta,Google Search,TikTok",1,461.8,3
+u02420,TikTok,0,0,1
+u02421,Meta,1,620.3,2
+u02422,"Meta,TikTok",0,0,3
+u02423,"Meta,Google Search,TikTok",1,439.1,5
+u02424,"TikTok,Google Search",0,0,4
+u02425,"Meta,Google Search",0,0,5
+u02426,"Google Search,Meta,TikTok",1,524.95,3
+u02427,"Google Search,TikTok",0,0,2
+u02428,"Meta,TikTok",0,0,2
+u02429,Meta,0,0,1
+u02430,"TikTok,Meta,Email",1,294.15,3
+u02431,"Meta,Google Search,TikTok",0,0,3
+u02432,"Meta,TikTok,Google Search",1,474,3
+u02433,"Meta,Google Search",0,0,2
+u02434,"TikTok,Meta,Google Search",0,0,3
+u02435,"Meta,TikTok,Google Search",0,0,5
+u02436,"TikTok,Meta",0,0,3
+u02437,"TikTok,Google Search",1,569.65,2
+u02438,"Meta,Google Search",0,0,3
+u02439,"Google Search,Meta",0,0,3
+u02440,Google Search,0,0,1
+u02441,"Google Search,Email",0,0,3
+u02442,"TikTok,Google Search",0,0,2
+u02443,"Meta,Google Search",1,649.75,3
+u02444,"TikTok,Google Search,Meta",0,0,5
+u02445,"Meta,TikTok",0,0,3
+u02446,TikTok,0,0,2
+u02447,TikTok,0,0,1
+u02448,"TikTok,Email",0,0,3
+u02449,"TikTok,Email,Google Search,Meta",0,0,5
+u02450,"TikTok,Email",0,0,4
+u02451,TikTok,0,0,2
+u02452,Meta,1,464.95,1
+u02453,"Google Search,Meta,TikTok",0,0,5
+u02454,Meta,0,0,3
+u02455,"TikTok,Google Search,Email",1,541.4,3
+u02456,"Google Search,TikTok,Email",0,0,3
+u02457,"Meta,Google Search",0,0,3
+u02458,"Meta,TikTok",0,0,3
+u02459,"TikTok,Meta",0,0,4
+u02460,"Meta,Google Search",0,0,3
+u02461,"Google Search,Meta,TikTok",0,0,5
+u02462,"Meta,Email,Google Search",1,639.1,5
+u02463,Email,0,0,1
+u02464,TikTok,0,0,1
+u02465,"Meta,Email",0,0,2
+u02466,TikTok,0,0,1
+u02467,"Google Search,Meta",0,0,4
+u02468,"TikTok,Google Search,Email",0,0,5
+u02469,"TikTok,Google Search,Email",0,0,3
+u02470,Google Search,0,0,1
+u02471,"Meta,TikTok,Email",0,0,4
+u02472,"Google Search,Email",0,0,3
+u02473,"Google Search,Email",0,0,2
+u02474,"TikTok,Google Search",0,0,2
+u02475,"Meta,Email",1,593.4,2
+u02476,"TikTok,Email",0,0,2
+u02477,TikTok,1,742.9,3
+u02478,"TikTok,Google Search,Meta",0,0,4
+u02479,TikTok,0,0,2
+u02480,TikTok,0,0,1
+u02481,TikTok,0,0,1
+u02482,"TikTok,Email",1,379.3,3
+u02483,TikTok,0,0,1
+u02484,TikTok,0,0,1
+u02485,"TikTok,Google Search,Meta",0,0,5
+u02486,"Meta,TikTok",0,0,5
+u02487,Google Search,0,0,1
+u02488,"TikTok,Google Search",0,0,2
+u02489,"TikTok,Meta",0,0,3
+u02490,"Meta,TikTok",0,0,2
+u02491,"TikTok,Meta",0,0,3
+u02492,TikTok,0,0,1
+u02493,"Meta,Google Search",0,0,2
+u02494,"TikTok,Email,Meta",0,0,3
+u02495,"Meta,Google Search",1,779.1,2
+u02496,Email,0,0,1
+u02497,"Meta,TikTok,Google Search",1,635.05,5
+u02498,"Meta,Email",1,558.45,5
+u02499,TikTok,0,0,2
+u02500,Meta,0,0,2
+u02501,"TikTok,Email",0,0,2
+u02502,"TikTok,Meta,Google Search",0,0,4
+u02503,"TikTok,Email",1,429.1,2
+u02504,"Meta,Google Search",0,0,2
+u02505,"TikTok,Meta,Google Search",0,0,4
+u02506,"Meta,TikTok",1,488.95,3
+u02507,Meta,0,0,3
+u02508,TikTok,0,0,2
+u02509,"Google Search,Meta",1,672.45,4
+u02510,"Google Search,TikTok",0,0,2
+u02511,TikTok,0,0,1
+u02512,"TikTok,Meta,Google Search",0,0,5
+u02513,"TikTok,Email",0,0,2
+u02514,"Meta,Google Search",0,0,2
+u02515,Meta,0,0,1
+u02516,"Google Search,Meta",1,394.15,2
+u02517,"TikTok,Meta",0,0,4
+u02518,"TikTok,Meta",1,499.85,2
+u02519,"Meta,Google Search",1,447.7,3
+u02520,TikTok,0,0,1
+u02521,TikTok,0,0,1
+u02522,"TikTok,Google Search",1,699.35,2
+u02523,"TikTok,Meta,Google Search",0,0,3
+u02524,"Meta,Google Search",0,0,3
+u02525,Meta,0,0,1
+u02526,"TikTok,Meta,Google Search,Email",1,575.35,5
+u02527,"Meta,Google Search,Email",0,0,4
+u02528,"Meta,Email,Google Search",0,0,3
+u02529,Meta,0,0,1
+u02530,TikTok,0,0,1
+u02531,"Meta,Google Search",1,936.65,2
+u02532,"TikTok,Meta",1,367.3,2
+u02533,"TikTok,Email,Meta",0,0,3
+u02534,Meta,0,0,1
+u02535,"Meta,Email,Google Search,TikTok",1,575.7,4
+u02536,"Meta,TikTok,Email,Google Search",1,684.8,5
+u02537,Google Search,0,0,1
+u02538,"TikTok,Google Search",0,0,2
+u02539,"Google Search,Email",0,0,3
+u02540,"TikTok,Meta",0,0,5
+u02541,"TikTok,Meta",0,0,3
+u02542,"Meta,Email",0,0,2
+u02543,"TikTok,Meta",0,0,3
+u02544,"Google Search,Meta",0,0,5
+u02545,"Meta,Email",1,373.7,2
+u02546,"Meta,Email",0,0,2
+u02547,"TikTok,Google Search",0,0,2
+u02548,TikTok,0,0,1
+u02549,"Meta,TikTok",1,596.75,2
+u02550,"Meta,Google Search",1,862.35,2
+u02551,"Meta,Google Search",0,0,4
+u02552,"Meta,Email",0,0,3
+u02553,"Meta,TikTok",0,0,5
+u02554,Google Search,0,0,1
+u02555,Google Search,0,0,3
+u02556,TikTok,0,0,1
+u02557,Google Search,0,0,1
+u02558,"Google Search,TikTok,Email,Meta",0,0,5
+u02559,"Google Search,Email",0,0,5
+u02560,Google Search,0,0,1
+u02561,"TikTok,Google Search",1,477.9,3
+u02562,"Google Search,TikTok",1,420.85,4
+u02563,Google Search,0,0,1
+u02564,Google Search,0,0,2
+u02565,"Meta,Email",0,0,2
+u02566,"TikTok,Meta",1,649.05,2
+u02567,"TikTok,Google Search",0,0,3
+u02568,Google Search,0,0,1
+u02569,"Meta,TikTok,Google Search",1,786.45,4
+u02570,"TikTok,Email,Meta",0,0,3
+u02571,"Meta,TikTok,Google Search",0,0,3
+u02572,"TikTok,Meta",0,0,3
+u02573,Meta,0,0,3
+u02574,"TikTok,Meta",0,0,2
+u02575,"Meta,Email",0,0,4
+u02576,"Google Search,Meta",1,449.85,2
+u02577,Meta,0,0,1
+u02578,Email,0,0,1
+u02579,"Meta,Email,Google Search",0,0,3
+u02580,"TikTok,Google Search",0,0,3
+u02581,"Meta,TikTok,Google Search",0,0,4
+u02582,"Meta,Email,Google Search",0,0,3
+u02583,TikTok,0,0,2
+u02584,"Google Search,Meta,TikTok",0,0,5
+u02585,TikTok,0,0,1
+u02586,"TikTok,Google Search",0,0,2
+u02587,Meta,0,0,2
+u02588,"TikTok,Google Search",1,452.85,3
+u02589,TikTok,0,0,1
+u02590,Meta,0,0,2
+u02591,"TikTok,Email,Google Search",0,0,5
+u02592,"TikTok,Meta,Email",0,0,4
+u02593,Email,0,0,1
+u02594,Meta,0,0,1
+u02595,"Meta,Google Search,Email",0,0,3
+u02596,"Meta,Email,TikTok",1,596.2,5
+u02597,TikTok,0,0,2
+u02598,"TikTok,Meta,Google Search,Email",0,0,5
+u02599,"Meta,Google Search,TikTok",0,0,5
+u02600,Meta,0,0,2
+u02601,"TikTok,Meta",0,0,2
+u02602,"Google Search,TikTok",0,0,3
+u02603,TikTok,0,0,1
+u02604,Google Search,0,0,1
+u02605,"Google Search,TikTok,Email,Meta",1,488.95,5
+u02606,"Meta,TikTok",1,399.15,3
+u02607,"Google Search,TikTok",0,0,2
+u02608,"Meta,Google Search",0,0,3
+u02609,"Meta,Google Search",0,0,3
+u02610,"Meta,TikTok,Google Search,Email",0,0,4
+u02611,"Google Search,TikTok",1,709.9,2
+u02612,"Google Search,Meta",0,0,4
+u02613,"TikTok,Google Search,Email,Meta",1,759.55,5
+u02614,"TikTok,Meta",0,0,2
+u02615,TikTok,0,0,2
+u02616,"Meta,Google Search",0,0,2
+u02617,TikTok,0,0,1
+u02618,"Meta,Google Search,TikTok,Email",0,0,5
+u02619,"Google Search,TikTok",1,364.4,5
+u02620,"TikTok,Meta,Email",0,0,5
+u02621,"Google Search,Email,TikTok,Meta",0,0,5
+u02622,"TikTok,Google Search",0,0,2
+u02623,Email,1,352.8,1
+u02624,"TikTok,Meta",0,0,2
+u02625,Google Search,0,0,2
+u02626,"Google Search,Meta",1,354.6,4
+u02627,"TikTok,Meta",0,0,2
+u02628,"Google Search,Email",0,0,3
+u02629,"Meta,Google Search",1,750.05,3
+u02630,"Meta,Google Search,TikTok",0,0,3
+u02631,"Meta,Google Search,TikTok",0,0,4
+u02632,"Google Search,Email,Meta",1,344.8,3
+u02633,"Meta,Google Search",0,0,5
+u02634,Email,0,0,1
+u02635,Google Search,0,0,1
+u02636,"Meta,Google Search",0,0,3
+u02637,"TikTok,Meta",0,0,2
+u02638,"Meta,Google Search",0,0,2
+u02639,TikTok,0,0,1
+u02640,"Meta,TikTok",0,0,4
+u02641,TikTok,0,0,2
+u02642,TikTok,0,0,2
+u02643,"TikTok,Google Search,Meta,Email",1,586.65,5
+u02644,Google Search,0,0,1
+u02645,Google Search,1,774,1
+u02646,"TikTok,Email,Meta",0,0,5
+u02647,"TikTok,Google Search",0,0,2
+u02648,Meta,0,0,2
+u02649,Google Search,0,0,2
+u02650,"TikTok,Email",0,0,2
+u02651,"Meta,Google Search",0,0,3
+u02652,Meta,0,0,1
+u02653,"TikTok,Meta",1,398.4,3
+u02654,"Meta,TikTok",0,0,3
+u02655,TikTok,1,387.2,1
+u02656,"TikTok,Meta",1,579.95,2
+u02657,"Google Search,Email,TikTok",0,0,3
+u02658,Meta,0,0,2
+u02659,TikTok,0,0,2
+u02660,"Meta,Google Search,Email",0,0,4
+u02661,"Google Search,Meta",0,0,4
+u02662,"Google Search,Email,TikTok,Meta",1,339.6,5
+u02663,"TikTok,Email",1,594.1,2
+u02664,"TikTok,Meta",0,0,3
+u02665,"TikTok,Meta,Google Search",0,0,4
+u02666,"TikTok,Email,Meta",1,566.05,4
+u02667,"Meta,Email,TikTok",0,0,4
+u02668,Meta,0,0,2
+u02669,"Google Search,Email",0,0,3
+u02670,"TikTok,Meta",1,492.55,3
+u02671,"Meta,Email",0,0,2
+u02672,"Meta,TikTok,Google Search",0,0,3
+u02673,"TikTok,Email",0,0,2
+u02674,"Meta,TikTok,Google Search",0,0,3
+u02675,"Meta,TikTok,Google Search",0,0,5
+u02676,Meta,0,0,1
+u02677,"TikTok,Meta,Google Search",0,0,3
+u02678,"Meta,Google Search",0,0,2
+u02679,"Meta,TikTok,Google Search",1,501.25,4
+u02680,"TikTok,Google Search",0,0,2
+u02681,Email,0,0,1
+u02682,"TikTok,Meta",0,0,3
+u02683,Email,0,0,1
+u02684,"TikTok,Meta,Google Search",1,644.75,3
+u02685,"Meta,Google Search",1,648.35,3
+u02686,"Meta,TikTok",0,0,3
+u02687,"Meta,Email,TikTok",0,0,5
+u02688,"TikTok,Email,Google Search",1,896.45,3
+u02689,Meta,0,0,1
+u02690,"TikTok,Google Search,Email,Meta",0,0,4
+u02691,TikTok,0,0,1
+u02692,"TikTok,Email",1,711.4,3
+u02693,Google Search,0,0,1
+u02694,"TikTok,Meta",0,0,4
+u02695,"Meta,Google Search,TikTok",0,0,5
+u02696,Meta,0,0,2
+u02697,TikTok,1,483.8,1
+u02698,Google Search,0,0,2
+u02699,"Meta,Google Search,TikTok",0,0,4
+u02700,"Meta,Email,Google Search",1,387.7,4
+u02701,TikTok,0,0,1
+u02702,"TikTok,Meta,Google Search",0,0,3
+u02703,"Meta,TikTok",0,0,5
+u02704,"Meta,TikTok",0,0,3
+u02705,"TikTok,Google Search",1,564.3,3
+u02706,Meta,0,0,1
+u02707,"Google Search,Meta",1,552,2
+u02708,"Google Search,Email,TikTok,Meta",0,0,4
+u02709,"Google Search,Email",0,0,2
+u02710,"TikTok,Email",1,478.7,2
+u02711,TikTok,0,0,2
+u02712,"TikTok,Meta,Email,Google Search",1,504.6,5
+u02713,Meta,0,0,1
+u02714,Google Search,0,0,1
+u02715,"TikTok,Email",0,0,2
+u02716,Email,1,466.35,1
+u02717,"TikTok,Google Search",0,0,3
+u02718,Meta,0,0,1
+u02719,Google Search,0,0,1
+u02720,"TikTok,Meta",0,0,4
+u02721,Google Search,0,0,3
+u02722,"TikTok,Meta",1,601,2
+u02723,Google Search,0,0,2
+u02724,"Meta,TikTok",0,0,2
+u02725,"TikTok,Meta",0,0,2
+u02726,"Meta,TikTok,Google Search",1,467.95,4
+u02727,TikTok,0,0,4
+u02728,TikTok,0,0,5
+u02729,Meta,1,631.85,2
+u02730,"TikTok,Meta",1,314.05,3
+u02731,"TikTok,Meta",0,0,2
+u02732,TikTok,0,0,2
+u02733,"Google Search,Email",0,0,2
+u02734,TikTok,0,0,2
+u02735,"Google Search,Meta",0,0,2
+u02736,"Meta,Google Search",1,380.4,4
+u02737,TikTok,0,0,1
+u02738,"Meta,Google Search,Email",0,0,5
+u02739,"Meta,Google Search,TikTok",1,437.65,4
+u02740,"TikTok,Google Search",0,0,4
+u02741,"Google Search,Meta",0,0,3
+u02742,Google Search,1,802.95,1
+u02743,"TikTok,Meta,Google Search",1,834.3,4
+u02744,TikTok,0,0,1
+u02745,"Meta,Email",1,565.85,2
+u02746,"TikTok,Meta",1,330.45,2
+u02747,"TikTok,Meta",0,0,2
+u02748,"TikTok,Google Search",0,0,2
+u02749,"TikTok,Google Search,Meta,Email",1,510.3,5
+u02750,"TikTok,Google Search",0,0,2
+u02751,Meta,0,0,2
+u02752,"TikTok,Google Search",0,0,3
+u02753,"Google Search,Meta",0,0,3
+u02754,"TikTok,Meta",1,592.7,2
+u02755,"TikTok,Email,Meta",1,385.05,3
+u02756,"TikTok,Google Search,Meta,Email",1,529.5,4
+u02757,"Google Search,TikTok",0,0,3
+u02758,"Google Search,Meta,TikTok",1,502.3,4
+u02759,"TikTok,Google Search",0,0,3
+u02760,Google Search,0,0,1
+u02761,"TikTok,Google Search",0,0,4
+u02762,"TikTok,Meta",1,363.5,2
+u02763,"TikTok,Email,Google Search",1,700.2,3
+u02764,"Meta,Google Search,TikTok",1,716.3,3
+u02765,Google Search,0,0,1
+u02766,"Google Search,Meta",0,0,4
+u02767,"Google Search,Meta",0,0,3
+u02768,"Meta,Google Search",0,0,2
+u02769,"TikTok,Google Search",1,579.15,3
+u02770,"TikTok,Meta",0,0,3
+u02771,"Meta,Google Search",0,0,2
+u02772,Email,0,0,1
+u02773,Email,1,440.85,1
+u02774,TikTok,0,0,1
+u02775,"Meta,Google Search",1,572.25,4
+u02776,Meta,0,0,1
+u02777,"Meta,Google Search",1,489.1,3
+u02778,"Meta,TikTok",0,0,4
+u02779,"TikTok,Email",0,0,3
+u02780,"TikTok,Google Search,Meta",0,0,4
+u02781,"Google Search,Meta",0,0,3
+u02782,"Meta,Google Search,TikTok",1,435.2,5
+u02783,"Meta,Email",0,0,4
+u02784,TikTok,0,0,1
+u02785,Email,1,393.1,1
+u02786,Email,0,0,1
+u02787,"Google Search,TikTok",0,0,3
+u02788,"Meta,Google Search",0,0,3
+u02789,"Meta,TikTok",1,359.3,2
+u02790,Google Search,0,0,2
+u02791,"Meta,TikTok",0,0,2
+u02792,"Meta,TikTok,Google Search,Email",1,417.45,5
+u02793,"Google Search,Meta",0,0,4
+u02794,Meta,0,0,1
+u02795,"TikTok,Meta,Email,Google Search",1,567.05,5
+u02796,"Meta,Google Search",0,0,3
+u02797,"TikTok,Email",0,0,2
+u02798,"TikTok,Meta",0,0,3
+u02799,"TikTok,Meta,Email",0,0,3
+u02800,TikTok,1,362.75,1
+u02801,"TikTok,Google Search",1,629.15,4
+u02802,"Meta,TikTok,Google Search",0,0,3
+u02803,Google Search,0,0,3
+u02804,"Google Search,Email",1,476.85,2
+u02805,TikTok,0,0,1
+u02806,"TikTok,Google Search",0,0,2
+u02807,"TikTok,Google Search",1,567.9,4
+u02808,"Google Search,TikTok",0,0,2
+u02809,Google Search,0,0,2
+u02810,TikTok,0,0,1
+u02811,"Meta,Email,Google Search",0,0,3
+u02812,"TikTok,Meta",1,385.5,3
+u02813,Meta,0,0,1
+u02814,Google Search,0,0,1
+u02815,"Google Search,Meta,TikTok",1,678.65,4
+u02816,TikTok,0,0,2
+u02817,TikTok,0,0,1
+u02818,"TikTok,Meta",0,0,3
+u02819,"Meta,TikTok",0,0,3
+u02820,"TikTok,Google Search,Email",0,0,4
+u02821,"Meta,Google Search",0,0,3
+u02822,"TikTok,Meta",1,698.6,3
+u02823,"TikTok,Meta",0,0,2
+u02824,"TikTok,Google Search,Meta",0,0,4
+u02825,"TikTok,Meta",0,0,2
+u02826,"Google Search,Meta",1,676.4,2
+u02827,"Google Search,Meta,TikTok",0,0,3
+u02828,Meta,0,0,2
+u02829,Meta,0,0,1
+u02830,"Meta,TikTok",1,395.15,3
+u02831,"TikTok,Google Search,Meta",0,0,3
+u02832,"Meta,Google Search",0,0,4
+u02833,"Google Search,Email",1,268.85,2
+u02834,Google Search,1,471.75,1
+u02835,Meta,0,0,1
+u02836,Google Search,0,0,1
+u02837,Email,1,392.1,1
+u02838,"TikTok,Meta",0,0,2
+u02839,"Meta,Google Search,TikTok,Email",0,0,5
+u02840,"Google Search,Meta",1,635.45,3
+u02841,"TikTok,Meta,Google Search",0,0,5
+u02842,"Meta,Email,Google Search",0,0,4
+u02843,"Meta,Google Search",0,0,2
+u02844,"TikTok,Google Search,Meta",1,609.15,4
+u02845,"Google Search,Meta",0,0,2
+u02846,"TikTok,Google Search",0,0,2
+u02847,Meta,1,646.3,2
+u02848,TikTok,0,0,1
+u02849,"Meta,Email",1,368.15,3
+u02850,"Google Search,Meta",0,0,2
+u02851,Google Search,0,0,1
+u02852,"TikTok,Meta,Email,Google Search",1,587.75,5
+u02853,"TikTok,Meta",1,389.35,3
+u02854,TikTok,0,0,1
+u02855,"TikTok,Google Search",0,0,3
+u02856,"TikTok,Google Search",0,0,3
+u02857,"Google Search,Email",1,756.45,3
+u02858,TikTok,0,0,3
+u02859,"Meta,TikTok,Google Search",0,0,4
+u02860,"Meta,Email,TikTok",0,0,3
+u02861,"TikTok,Meta",0,0,2
+u02862,"TikTok,Meta",0,0,2
+u02863,"Meta,TikTok",0,0,2
+u02864,"Meta,Google Search",0,0,2
+u02865,Google Search,0,0,1
+u02866,TikTok,0,0,3
+u02867,"TikTok,Meta,Email",1,475.95,3
+u02868,"Meta,Google Search,Email,TikTok",1,434.65,4
+u02869,TikTok,1,658.9,1
+u02870,Meta,0,0,1
+u02871,"TikTok,Meta,Google Search",1,636.65,3
+u02872,"Meta,TikTok,Google Search",0,0,5
+u02873,"Meta,Google Search",0,0,3
+u02874,"Google Search,Email",0,0,2
+u02875,"Google Search,Meta",1,700.1,3
+u02876,"Meta,Google Search",0,0,4
+u02877,"TikTok,Meta",1,345.1,4
+u02878,"TikTok,Google Search,Meta",0,0,5
+u02879,TikTok,0,0,2
+u02880,Meta,0,0,1
+u02881,"Google Search,TikTok,Meta",1,586.75,3
+u02882,"Meta,Google Search",0,0,2
+u02883,"TikTok,Google Search",0,0,3
+u02884,"Google Search,Email",0,0,2
+u02885,"TikTok,Meta",1,577.1,4
+u02886,"Meta,TikTok",0,0,2
+u02887,"Meta,Google Search",0,0,3
+u02888,"TikTok,Meta",1,483.8,3
+u02889,"Meta,Email,TikTok",0,0,5
+u02890,Google Search,1,865,1
+u02891,"TikTok,Email,Google Search",1,916.65,4
+u02892,Meta,0,0,1
+u02893,"TikTok,Email",1,637.55,3
+u02894,TikTok,0,0,1
+u02895,"TikTok,Google Search,Meta",0,0,5
+u02896,"TikTok,Email",1,589.75,3
+u02897,TikTok,0,0,1
+u02898,TikTok,0,0,2
+u02899,Email,0,0,1
+u02900,"TikTok,Google Search",0,0,2
+u02901,Google Search,0,0,1
+u02902,Meta,0,0,4
+u02903,"Meta,Google Search",1,712.65,3
+u02904,"TikTok,Google Search",1,482.1,2
+u02905,"TikTok,Meta,Email",1,260.55,5
+u02906,Google Search,0,0,1
+u02907,"Meta,TikTok,Google Search,Email",1,437.8,5
+u02908,"TikTok,Google Search",0,0,3
+u02909,Meta,0,0,2
+u02910,TikTok,0,0,1
+u02911,"TikTok,Google Search",0,0,3
+u02912,"TikTok,Meta",0,0,2
+u02913,"Meta,Google Search,TikTok",1,520.5,3
+u02914,"TikTok,Meta",1,365.1,2
+u02915,"TikTok,Google Search",0,0,4
+u02916,TikTok,0,0,1
+u02917,TikTok,0,0,1
+u02918,Email,0,0,1
+u02919,"Meta,Email",0,0,2
+u02920,"Meta,TikTok,Email",1,486.6,5
+u02921,TikTok,0,0,1
+u02922,"Google Search,Meta",0,0,3
+u02923,"TikTok,Email",0,0,2
+u02924,Meta,0,0,1
+u02925,"Meta,TikTok",0,0,2
+u02926,TikTok,0,0,1
+u02927,"TikTok,Meta",0,0,2
+u02928,"Google Search,Meta",1,614.6,2
+u02929,"TikTok,Meta,Google Search",0,0,3
+u02930,Google Search,0,0,1
+u02931,"Google Search,Meta",0,0,2
+u02932,"Meta,TikTok",0,0,3
+u02933,Google Search,0,0,2
+u02934,"TikTok,Google Search,Email",1,298.4,4
+u02935,"TikTok,Meta,Email",1,625.05,4
+u02936,Meta,0,0,1
+u02937,Meta,0,0,1
+u02938,"TikTok,Meta",0,0,2
+u02939,"Meta,Google Search,Email,TikTok",1,615.7,5
+u02940,"Google Search,Email",0,0,3
+u02941,"Meta,Google Search",0,0,3
+u02942,TikTok,0,0,1
+u02943,"Meta,Google Search",1,505.95,2
+u02944,"Meta,Google Search",0,0,2
+u02945,"Google Search,TikTok",0,0,5
+u02946,"TikTok,Email,Google Search",0,0,3
+u02947,"Meta,Google Search",1,555.35,2
+u02948,"TikTok,Meta",0,0,2
+u02949,"TikTok,Google Search",0,0,2
+u02950,"TikTok,Google Search",1,701.6,2
+u02951,"Meta,Email,Google Search",0,0,3
+u02952,"Google Search,TikTok",1,460.05,2
+u02953,"TikTok,Google Search",0,0,2
+u02954,"TikTok,Email",0,0,2
+u02955,Google Search,1,709.2,1
+u02956,Meta,0,0,2
+u02957,"TikTok,Google Search",0,0,2
+u02958,"Meta,Google Search",1,628.9,4
+u02959,"Google Search,Email,Meta",0,0,4
+u02960,"Google Search,TikTok",1,715.15,2
+u02961,Email,0,0,1
+u02962,"TikTok,Meta,Google Search",0,0,3
+u02963,Google Search,0,0,2
+u02964,"TikTok,Google Search,Meta",0,0,3
+u02965,"TikTok,Meta,Google Search",0,0,4
+u02966,"Meta,Google Search",0,0,2
+u02967,"TikTok,Meta",1,433.45,3
+u02968,TikTok,0,0,2
+u02969,Google Search,0,0,1
+u02970,"TikTok,Google Search",1,657.75,2
+u02971,TikTok,0,0,3
+u02972,"Meta,Google Search",0,0,3
+u02973,"Google Search,Meta",0,0,5
+u02974,"Meta,Google Search",1,665.4,4
+u02975,"Meta,Google Search",1,839.55,4
+u02976,"Meta,TikTok",0,0,3
+u02977,"TikTok,Meta",0,0,2
+u02978,TikTok,0,0,2
+u02979,TikTok,0,0,2
+u02980,"Google Search,Email",1,492.4,2
+u02981,"TikTok,Google Search,Email",0,0,4
+u02982,Meta,0,0,2
+u02983,"Meta,Google Search",0,0,2
+u02984,Meta,0,0,1
+u02985,TikTok,0,0,1
+u02986,"Meta,TikTok,Google Search",1,634.95,5
+u02987,Email,1,307.7,1
+u02988,"TikTok,Meta",0,0,2
+u02989,"TikTok,Email",0,0,2
+u02990,"Meta,TikTok",0,0,3
+u02991,Meta,0,0,1
+u02992,Google Search,0,0,1
+u02993,"TikTok,Google Search",0,0,4
+u02994,TikTok,0,0,1
+u02995,"TikTok,Google Search,Email",1,518.25,3
+u02996,"TikTok,Meta",0,0,2
+u02997,"TikTok,Meta,Google Search",1,907.8,4
+u02998,"TikTok,Meta",0,0,3
+u02999,"TikTok,Email,Google Search",0,0,3
+u03000,Meta,0,0,2
