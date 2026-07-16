@@ -1,6 +1,9 @@
 # Marketing ROI Analysis
 
-本仓库当前只交付一项业务能力：基于 Amazon Marketing Cloud（AMC）匿名聚合路径的多触点归因与双模型诊断 Demo。唯一正式实现位于 [`modules/amc_mta/`](modules/amc_mta/)。
+本工作区包含一项当前业务能力、一套本地 Agent/BMad 开发工具以及完整的研究和
+历史追溯资料。业务能力是基于 Amazon Marketing Cloud（AMC）匿名聚合路径的
+多触点归因与双模型诊断 Demo，唯一正式实现位于
+[`modules/amc_mta/`](modules/amc_mta/)。
 
 该实现使用五段互动键区分广告产品、形式、位置、创意和曝光/点击，分别运行 Markov 与 Path-level Shapley，关联 Amazon Ads 成本并生成 ROI、ROAS、CPA 等诊断指标。它不是生产级因果归因、效果预测或自动预算优化系统。
 
@@ -8,7 +11,9 @@
 
 | 目标 | 入口 |
 | --- | --- |
-| 理解当前项目事实与阅读顺序 | [当前文档总索引](docs/index.md) |
+| 查看全工作区盘点、评价与风险 | [工作区总览](docs/project-overview.md) |
+| 理解所有目录与阅读顺序 | [全工作区文档总索引](docs/index.md) |
+| 查看逐文件大小、权限和哈希 | [全量文件清单](docs/workspace-file-inventory.json) |
 | 运行唯一正式模块 | [AMC MTA 模块说明](modules/amc_mta/README.md) |
 | 查看架构与数据流 | [AMC MTA 架构](docs/amc-mta-architecture.md) |
 | 查看成熟度、风险与路线 | [AMC MTA 能力评价](docs/amc-mta-capability-assessment.md) |
@@ -75,6 +80,9 @@ python3 -m unittest discover -s modules/amc_mta/tests -p 'test*.py'
 ├── _bmad/                    # BMad 工作流配置
 └── _bmad-output/             # 规格、评审状态和实现记录
 ```
+
+`.agents` 和 `_bmad` 是安装型开发工具，不参与 AMC MTA 运行；`design-artifacts`
+和 `_bmad-output` 用于历史追溯；`docs/research` 的外部原件不是模型输入。
 
 ## 明确边界
 
