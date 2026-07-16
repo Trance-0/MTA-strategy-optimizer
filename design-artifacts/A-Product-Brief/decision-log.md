@@ -1,5 +1,8 @@
 # Decision Log: AI驱动营销投放优化平台 PRD
 
+> 历史决策记录：以下内容用于追溯早期平台范围，不代表当前已经实现。当前项目状态
+> 见 [`docs/index.md`](../../docs/index.md)。
+
 Created: 2026-06-20
 Updated: 2026-07-16
 

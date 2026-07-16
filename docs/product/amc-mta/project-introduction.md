@@ -1,8 +1,15 @@
 # AMC MTA 项目介绍
 
-AMC MTA 是一个面向 Amazon 广告场景的可复现多触点归因 Demo。它从 AMC 风格匿名聚合路径估算广告曝光与点击对购买用户、订单次数和收入的贡献，并在相同五段互动粒度关联 Amazon Ads 成本和计算效率指标。
+AMC MTA 是本仓库唯一正式业务实现：一个面向 Amazon 广告场景的可复现多触点归因与双模型诊断 Demo。它从 AMC 风格匿名聚合路径估算广告曝光与点击对购买用户、订单次数和收入的贡献，并在相同五段互动粒度关联 Amazon Ads 成本和计算效率指标。
 
 模型结果表示特定归因方法下的贡献分配，不等同于广告的因果增量效果。
+
+当前阅读入口：
+
+- [文档总索引](../../index.md)
+- [架构说明](../../amc-mta-architecture.md)
+- [能力评价](../../amc-mta-capability-assessment.md)
+- [模块运行说明](../../../modules/amc_mta/README.md)
 
 ## 项目如何工作
 
@@ -32,7 +39,9 @@ Amazon Ads 报告中的 `impressions` 和 `clicks` 是汇总表现指标，不�
 
 路径从购买向前回溯。相邻触点以及最后触点到购买的间隔最多为 14 天；正好 14 天有效，首次超过 14 天时截断更早触点。只要每一段合格，路径总长度不设上限。
 
-输入明确区分 `converted_users`（至少购买一次的去重用户）和 `purchase_count`（订单次数）。Markov 与 Shapley 分别归因这两个指标和收入；每个模型输出一份包含互动类型、贡献、成本与效率指标的五段结果，共两份结果。CPA 使用订单次数，另行输出每购买用户成本。完整边界见[数据契约](../../../modules/amc_mta/docs/amc-data-requirements.md)。
+输入明确区分 `converted_users`（至少购买一次的去重用户）和 `purchase_count`（订单次数）。Markov 与 Shapley 分别归因这两个指标和收入；每个模型输出一份包含互动类型、贡献、成本与效率指标的五段结果。流程还生成触点比较、整体摘要和治理推荐，共五份正式输出。CPA 使用订单次数，另行输出每购买用户成本。完整边界见[数据契约](../../../modules/amc_mta/docs/amc-data-requirements.md)。
+
+当前样例的 51 条推荐记录全部处于 `EVIDENCE_UNVERIFIED`：`decision_value` 为空、`automation_allowed=false`。原因是尚无滚动窗口和重采样稳定性证据，且触点支持度有限。详细规则见[模型比较治理规范](../../../modules/amc_mta/docs/model-comparison-governance.md)。
 
 ## 项目价值
 
@@ -40,4 +49,6 @@ Amazon Ads 报告中的 `impressions` 和 `clicks` 是汇总表现指标，不�
 - 对比 Markov 与 Shapley，观察结果对不同模型假设的敏感性。
 - 分开观察曝光与点击贡献，并按 CPC/CLICK、CPM/IMPRESSION 规则唯一关联成本。
 - 将归因收入与广告成本关联，统一查看 ROI、ROAS、订单 CPA 和每购买用户成本。
-- 为预算讨论、广告组合分析和后续真实 AMC 聚合数据接入提供可复现基础。
+- 为人工预算讨论、广告组合分析和后续真实 AMC 聚合数据接入提供可复现诊断基础。
+
+本项目当前不提供效果预测、预算优化、投放执行、因果增量估计或 AI 问答能力。

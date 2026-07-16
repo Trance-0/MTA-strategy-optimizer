@@ -1,11 +1,10 @@
 # 模块索引
 
-`modules/` 保存可运行的分析能力。每个模块自行管理代码、输入数据、输出、测试和使用文档。
+`modules/` 保存当前可运行的业务实现。每个模块自行管理代码、输入、输出、测试和使用文档。
 
 | 模块 | 用途 | 状态 | 入口 |
 | --- | --- | --- | --- |
-| 通用 MTA | 使用 Markov 和 Shapley 进行多触点归因 | 已有初步实现 | [mta/README.md](mta/README.md) |
-| AMC MTA | 基于 AMC 匿名聚合路径进行五段互动粒度归因和双模型评估 | 已有初步实现 | [amc_mta/README.md](amc_mta/README.md) |
+| AMC MTA | 基于 AMC 匿名聚合路径进行五段互动粒度归因和双模型诊断 | 唯一正式实现 | [amc_mta/README.md](amc_mta/README.md) |
 
 ## 目录约定
 
@@ -19,5 +18,6 @@ modules/<module>/
 └── tests/      # 自动化测试（若有）
 ```
 
-项目级产品说明放在 [`docs/product/`](../docs/product/)，论文和外部参考资料放在 [`docs/research/`](../docs/research/)，不与模块运行输入混放。
+当前架构、能力评价和阅读顺序见[文档总索引](../docs/index.md)。外部论文和参考资料放在 [`docs/research/`](../docs/research/)，不与模块运行输入混放。
 
+已删除的旧通用 MTA 模块不属于当前项目范围，不恢复、不评价，也不作为新开发入口。

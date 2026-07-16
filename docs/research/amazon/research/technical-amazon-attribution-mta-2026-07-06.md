@@ -72,9 +72,9 @@ source_verification: true
 - [Amazon Ads API 官方说明](https://advertising.amazon.com/about-api)
 - [AMC API 纳入 Amazon Ads API](https://advertising.amazon.com/resources/whats-new/amc-api-available-on-amazon-ads-api/)
 
-### 当前 Demo 编程技术
+### 研究时的 Demo 编程技术
 
-研究时的 MTA Demo 使用 Python 标准库实现：
+2026-07-06 研究时的旧 Demo 使用 Python 标准库实现：
 
 - CSV 作为模型输入与归因结果交换格式；
 - Python 模块实现 Markov Chain 和简化的 Shapley 归因；
@@ -90,12 +90,16 @@ AMC 查询聚合结果 ──┘
                                    └──> 路径构造 ──> Markov / Shapley
 ```
 
+当前 AMC MTA 已改为五段互动粒度、五份 CSV 输出和治理阻断；没有 SVG 或
+Bootstrap 稳定性产物。当前实现见
+[`modules/amc_mta`](../../../../modules/amc_mta/README.md)。
+
 ### 数据与存储技术
 
-Demo 阶段可继续使用模块内 CSV：
+当前 Demo 使用模块内 CSV：
 
 ```text
-modules/mta/data/simulated/
+modules/amc_mta/data/simulated/
 ```
 
 但需要区分三类数据：
@@ -103,8 +107,8 @@ modules/mta/data/simulated/
 | 数据类型 | 推荐格式 | 用途 |
 | --- | --- | --- |
 | Amazon Attribution 聚合报告 | CSV | 渠道、publisher、campaign、ad group、ASIN 的漏斗和转化分析 |
-| 模拟用户触点路径 | CSV | 演示 Markov 和 Shapley MTA |
-| 模型输出 | CSV + SVG | 渠道贡献、归因收入、ROAS 和稳定性图 |
+| AMC 风格匿名聚合路径 | CSV | 演示五段 Markov 和 Path-level Shapley |
+| 模型输出 | CSV | 归因结果、模型差异、支持度和治理状态 |
 
 生产化后，原始 API 响应宜以不可变快照保存，标准化表再进入分析数据库；AMC 原始用户级信号不能直接导出，系统应保存查询版本、参数和聚合结果，而不是假设可以下载完整用户日志。
 

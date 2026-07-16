@@ -7,6 +7,11 @@ updated: 2026-06-20
 
 # PRD: AI驱动营销投放优化平台
 
+> 历史愿景：本文定义的是早期平台方案，其中预测、预算优化、实验平台、Dashboard
+> 和 AI 问答均未实现。当前唯一正式实现与事实入口见
+> [`modules/amc_mta`](../../modules/amc_mta/README.md) 和
+> [`docs/index.md`](../../docs/index.md)。
+
 ## 0. Document Purpose
 
 本文档面向产品、数据分析、UX、架构和后续 BMAD 实现流程，定义 `marketing-roi-analysis` 项目的 MVP 产品需求。本文档基于现有 Product Brief、MTA 学习笔记和模型讨论生成，重点描述产品能力、用户价值、功能需求、非功能要求、MVP 范围、成功指标与开放问题。模型技术细节与算法选择补充见 `addendum.md`。
@@ -351,4 +356,3 @@ MVP 的目标是形成一个可演示、可解释、可迭代的营销 ROI 分�
 - §4.1 — v1 首先使用 CSV 导入，后续再接广告平台 API。
 - §4.2 — MVP 可能先使用聚合数据进行示范归因，用户级路径数据将在后续版本接入。
 - §5 — MVP 面向 demo 和中小型数据集。
-

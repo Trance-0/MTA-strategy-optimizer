@@ -1,25 +1,26 @@
 # 文档索引
 
-`docs/` 保存项目级说明与研究资料。模块的运行参数、字段契约和命令仍放在对应模块的 `docs/` 内。
+当前项目事实、阅读顺序和文档状态统一从[当前文档总索引](index.md)进入。模块参数、字段契约和命令仍放在 `modules/amc_mta/docs/`。
 
-## 产品文档
+## 当前事实
 
-- [产品文档索引](product/README.md)
-- [模型功能与关系说明](product/model-relationship-guide.md)
+- [当前文档总索引](index.md)
+- [AMC MTA 架构](amc-mta-architecture.md)
+- [AMC MTA 能力评价](amc-mta-capability-assessment.md)
 - [AMC MTA 项目介绍](product/amc-mta/project-introduction.md)
+- [项目扫描状态](project-scan-report.json)
 
-## 研究资料
+## 契约与运行
 
-- [研究资料总览](research/README.md)
-- [Amazon Ads 与 AMC](research/amazon/README.md)
-- [AMC 背景与数据流](research/amazon/amc/README.md)
-- [MTA 论文与学习资料](research/mta/阅读顺序.md)
-- [A/B 测试资料](research/ab-testing/阅读顺序.md)
+- [模块说明](../modules/amc_mta/README.md)
+- [数据契约](../modules/amc_mta/docs/amc-data-requirements.md)
+- [运行说明](../modules/amc_mta/docs/usage.md)
+- [模型比较治理](../modules/amc_mta/docs/model-comparison-governance.md)
 
-## 边界
+## 历史与研究
 
-- 项目级产品判断放在 `docs/product/`。
-- 外部论文、平台调研和 API 参考资料放在 `docs/research/`。
-- 可运行模块的字段定义和使用方式放在 `modules/<module>/docs/`。
-- Product Brief、PRD 和阶段性设计产物放在 `design-artifacts/`。
+- [产品文档状态](product/README.md)
+- [历史设计产物](../design-artifacts/README.md)
+- [研究资料分级索引](research/README.md)
 
+历史愿景和研究快照用于追溯，不覆盖当前模块的代码、数据契约和治理规范。

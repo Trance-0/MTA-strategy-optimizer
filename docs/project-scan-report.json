@@ -1,0 +1,89 @@
+{
+  "workflow_version": "1.2.0",
+  "timestamps": {
+    "started": "2026-07-16T16:39:57+08:00",
+    "last_updated": "2026-07-16T18:30:00+08:00"
+  },
+  "mode": "initial_scan",
+  "scan_level": "exhaustive",
+  "project_root": "{project-root}",
+  "project_knowledge": "docs",
+  "validated_baseline_commit": "734ff73b4f2c3e841fedee33311a2eecf704d888",
+  "worktree_state": "intentional user deletion of modules/mta plus AMC-focused documentation changes",
+  "execution_status": "complete",
+  "review_status": "complete",
+  "completed_steps": [
+    {
+      "step": "step_1",
+      "status": "completed",
+      "timestamp": "2026-07-16T16:39:57+08:00",
+      "summary": "Classified as a Python data-analysis repository whose only active business implementation is the AMC MTA module; the user intentionally removed the obsolete generic MTA module."
+    },
+    {
+      "step": "step_2",
+      "status": "completed",
+      "timestamp": "2026-07-16T16:39:57+08:00",
+      "summary": "Inventoried 41 business Markdown documents before reorganization plus external PDF, DOCX, JSON, TXT and CSV references; user focus is the complete MTA attribution capability."
+    },
+    {
+      "step": "step_3",
+      "status": "completed",
+      "timestamp": "2026-07-16T17:45:00+08:00",
+      "summary": "Audited the AMC MTA source, scripts, five test files, three simulated inputs, five formal outputs, project/design documentation and external research references; reran 75 tests, the full pipeline and strict data alignment successfully."
+    },
+    {
+      "step": "step_4",
+      "status": "completed",
+      "timestamp": "2026-07-16T17:45:00+08:00",
+      "summary": "Established the target information architecture: AMC MTA is the sole current implementation; broad product documents are historical vision; research is classified by direct relevance; obsolete generic MTA references must be removed from current navigation."
+    },
+    {
+      "step": "step_5",
+      "status": "completed",
+      "timestamp": "2026-07-16T18:20:00+08:00",
+      "summary": "Generated the current documentation index, AMC MTA architecture and capability assessment; updated main navigation, product status and research relevance around the sole active module."
+    },
+    {
+      "step": "step_6",
+      "status": "completed",
+      "timestamp": "2026-07-16T18:30:00+08:00",
+      "summary": "Validated the 39 Markdown files remaining after the approved reorganization with no broken local links; reran all 75 AMC MTA tests, the full pipeline and strict 17-touchpoint/61-day data alignment; confirmed all 51 recommendations remain evidence-blocked with no decision value."
+    }
+  ],
+  "current_step": "complete",
+  "findings": {
+    "project_classification": {
+      "repository_type": "monolith",
+      "primary_project_type": "data",
+      "active_business_part": "modules/amc_mta",
+      "excluded_out_of_scope_part": "modules/mta (intentionally deleted by user; do not restore or evaluate)",
+      "tool_assets": [
+        ".agents",
+        "_bmad"
+      ]
+    },
+    "user_context": "Exhaustively inspect all files, organize the repository around the current MTA attribution capability, and evaluate overall project maturity."
+  },
+  "project_types": [
+    {
+      "part_id": "amc_mta",
+      "project_type_id": "data",
+      "display_name": "AMC MTA attribution pipeline"
+    }
+  ],
+  "new_files": [
+    "docs/project-scan-report.json",
+    "docs/index.md",
+    "docs/amc-mta-architecture.md",
+    "docs/amc-mta-capability-assessment.md",
+    "_bmad-output/implementation-artifacts/spec-focus-project-on-amc-mta.md"
+  ],
+  "validation_commands": [
+    "python3 -m unittest discover -s modules/amc_mta/tests -p 'test*.py'",
+    "python3 modules/amc_mta/run_pipeline.py",
+    "python3 modules/amc_mta/scripts/validate_data_alignment.py",
+    "local-link-check: 39 Markdown files, 0 failures",
+    "git diff --check"
+  ],
+  "resume_instructions": "Full exhaustive scan and AMC-focused documentation reorganization are complete. Use docs/index.md as the current project entry point."
+}

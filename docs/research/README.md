@@ -1,41 +1,42 @@
-# Research Docs
+# 研究资料分级索引
 
-这个目录保存项目研究资料、外部参考文件和数据源方案。这里的内容主要用于背景研究、方案判断和数据口径定义，不直接等同于可运行模型模块。
+这里保存外部论文、平台调研和背景材料。所有文件均保留，但研究资料不等于当前实现，
+也不是 `modules/amc_mta` 的运行输入。
 
-## Directory Map
+## 与 AMC MTA 的相关性
 
-```text
-docs/research/
-├── amazon/            # Amazon Ads / AMC 调研、方案和外部参考数据
-├── ab-testing/        # A/B testing 与实验验证资料
-├── mta/               # Multi-touch attribution 论文和学习笔记
-├── machine-learning/  # Machine learning 背景资料
-├── ontology/          # 本体论相关研究
-└── industry/          # 行业资料和营销 AI 背景材料
-```
+| 等级 | 目录 | 用途 |
+| --- | --- | --- |
+| 核心方法 | [`mta/`](mta/) | Markov、Shapley、稳定性和 MTA 方法依据 |
+| 核心平台 | [`amazon/`](amazon/) | AMC、Amazon Ads、广告产品和数据边界 |
+| 后续验证 | [`ab-testing/`](ab-testing/) | 未来验证归因/预算结论，不参与当前模型计算 |
+| 背景 | [`machine-learning/`](machine-learning/) | 通用机器学习常识，不直接支撑当前算法 |
+| 背景 | [`ontology/`](ontology/) | 知识组织研究，与当前归因运行无直接依赖 |
+| 背景 | [`industry/`](industry/) | 早期跨行业营销 AI 方案和项目背景 |
 
-## Boundary
+### 核心 MTA 资料
 
-- `research/` 放外部资料、调研结论、数据源分析和方案计划。
-- `modules/` 放可运行模型代码、模块级输入样例、输出和使用文档。
-- `design-artifacts/` 放 Product Brief、PRD、设计决策和产品侧说明。
+- [Data-driven Multi-touch Attribution Models](mta/Data-driven%20Multi-touch%20Attribution%20Models.pdf)：强调归因估计稳定性，研究模型与当前实现不同。
+- [Mapping the customer journey](mta/Mapping%20the%20customer%20journey.pdf)：图与高阶 Markov 归因研究。
+- [Shapley Value Methods for Attribution Modeling](mta/Shapley%20Value%20Methodsfor%20Attribution%20Modeling%20in%20Online%20Advertising.pdf)：Shapley 归因背景。
+- [学习笔记](mta/Data-driven_MTA_Models_study_note.md)：个人学习记录，不作为代码事实源。
 
-Amazon AMC 的背景和数据链路放在：
+### Amazon 平台资料
 
-```text
-docs/research/amazon/amc/
-```
+- [AMC 背景](amazon/amc/README.md)与[数据流](amazon/amc/data-flow.md)直接支撑 clean room 边界。
+- `amazon/research/amazon调研.docx` 对 SP、SB、SD、DSP、CPC/CPM 和 AMC 边界有直接参考价值。
+- `amazon/research/Amazon_Attribution_Report_FULL.docx` 主要讨论站外 Amazon Attribution 与 ROAS，不可替代 AMC 路径。
+- OpenAPI JSON、Marketing Stream 字段和格式示例用于上游数据研究，不是当前运行输入。
+- [2026-07-06 技术调研](amazon/research/technical-amazon-attribution-mta-2026-07-06.md)是历史快照，当前行为以模块契约为准。
 
-Amazon API 调研文档与外部参考 JSON 放在：
+### 后续验证与背景
 
-```text
-docs/research/amazon/research/
-```
+- 两篇 A/B 测试论文用于未来因果验证和实验设计，不能验证当前样例归因是否正确。
+- machine-learning、ontology 和 industry 文件保留为团队背景资料；它们不应出现在当前运行链路或核心阅读顺序中。
 
-AMC MTA 的可运行样例数据放在 `modules/amc_mta/data/simulated/`，不放在研究目录。
+## 边界
 
-MTA 模型的运行方式和输入输出 contract 放在：
-
-```text
-modules/mta/docs/
-```
+- 可运行样例只放在 [`modules/amc_mta/data/simulated/`](../../modules/amc_mta/data/simulated/)。
+- 当前输入输出契约只看 [`modules/amc_mta/docs/`](../../modules/amc_mta/docs/)。
+- 研究原件不由流水线读取，不从 Amazon Attribution 聚合报告反推 AMC 用户路径。
+- 新增研究资料时，应在本索引标注“核心、后续验证或背景”。

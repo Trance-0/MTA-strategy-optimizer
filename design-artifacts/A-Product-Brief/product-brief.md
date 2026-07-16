@@ -1,5 +1,9 @@
 # Product Brief: AI驱动营销投放优化平台
 
+> 历史愿景：本文不代表当前交付范围。当前唯一正式实现是
+> [`modules/amc_mta`](../../modules/amc_mta/README.md)，当前事实入口见
+> [`docs/index.md`](../../docs/index.md)。
+
 ## Executive Summary
 
 本项目旨在构建一个AI驱动的营销投放决策平台，通过 Multi-Touch Attribution（MTA）解释多渠道投放贡献，并结合机器学习预测预算优化结果。目标是让营销团队不再依赖经验判断，而是通过数据和AI分析，清晰理解各渠道的真实ROI、优化预算分配，并提前预测下一轮campaign的投放效果。
