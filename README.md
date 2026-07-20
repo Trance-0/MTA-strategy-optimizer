@@ -46,6 +46,7 @@ Markov + Path-level Shapley
 - 三个独立 outcome：购买用户、购买次数和收入。
 - 五份正式输出：两份模型结果、触点比较、整体摘要和治理推荐。
 - 当前样例有 17 个五段触点；推荐文件包含 51 条触点/outcome 记录。
+- 三份双模型产物直接给出三项可靠性标准，摘要按 outcome 对触点布尔值做 AND；当前为 `0 RELIABLE / 51 UNRELIABLE`。
 - 稳定性证据尚未建立，全部推荐保持 `EVIDENCE_UNVERIFIED`，不产生决策值，不允许自动预算。
 
 ## 快速验证
@@ -62,7 +63,7 @@ python3 -m unittest discover -s modules/amc_mta/tests -p 'test*.py'
 
 - 流水线重建匿名聚合路径并发布五份契约输出；
 - 17 个 AMC 与 Amazon Ads 五段触点、61 天覆盖和账户/币种范围严格对齐；
-- 75 项测试通过；
+- 86 项测试通过；
 - 51 条推荐的 `decision_value` 为空、`automation_allowed=false`。
 
 ## 项目结构

@@ -19,7 +19,7 @@
 
 ## 工作区整理审查发现的既有 AMC 问题
 
-- `modules/amc_mta/docs/usage.md` 与触点可靠性指南中的“正式 Markov”措辞可能被误读为已经通过证据治理；应与 `EVIDENCE_UNVERIFIED`、空 `decision_value` 和 `automation_allowed=false` 的阻断语义统一。
-- 触点可靠性等级未覆盖所有支持度、稳定性、差距等级和 outcome spread 组合；应补全确定性决策表、`stability_level` 通过条件及缺失值处理。
-- `difference_level` 的组合门槛、相对差公式、零均值规则以及“重要贡献来源”的判据尚未完整定义，需与代码中的唯一阈值事实源对齐。
-- 四份既有 AMC 输出 CSV 含尾随空格，导致完整 `git diff --check` 和严格表头读取失败；本次整理按保护边界未重写输出，应另行决定恢复规范生成格式。
+- **已解决（2026-07-20）：** 使用说明和可靠性指南已明确区分当前窗口归因可靠性、长期稳定性与自动决策权限；`EVIDENCE_UNVERIFIED`、空 `decision_value` 和 `automation_allowed=false` 继续作为独立决策约束。
+- **已取代（2026-07-20）：** 原高/中/低多级可靠性方案及稳定性、跨 outcome 组合不再作为可靠性标准。当前只使用计算有效、最低数据支持、模型一致三个布尔值及二元 `RELIABLE/UNRELIABLE` 状态。
+- **已解决（2026-07-20）：** `difference_level` 继续作为独立模型差异诊断；可靠性中的 `models_consistent` 已使用独立且确定的 `gap_pp<=1.0`、`relative_gap<=0.20` 公式，不受长尾分类顺序影响。
+- **已解决（2026-07-20）：** 完整 pipeline 已规范重建五份 AMC 输出，物理表头和值无首尾空白并通过严格读取。

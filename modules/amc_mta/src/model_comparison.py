@@ -4,6 +4,8 @@ import csv
 import math
 from collections import defaultdict
 from dataclasses import dataclass
+from datetime import date
+from decimal import Decimal, InvalidOperation
 from pathlib import Path
 from typing import Iterable, Mapping, Sequence
 
@@ -95,6 +97,11 @@ TOUCHPOINT_COMPARISON_FIELDS = [
     "review_required",
     "automation_allowed",
     "reason_code",
+    "calculation_valid",
+    "data_support_sufficient",
+    "models_consistent",
+    "reliability_status",
+    "reliability_reason",
 ]
 
 SUMMARY_FIELDS = [
@@ -120,6 +127,11 @@ SUMMARY_FIELDS = [
     "validation_reason_code",
     "comparison_status",
     "decision_status",
+    "calculation_valid",
+    "data_support_sufficient",
+    "models_consistent",
+    "reliability_status",
+    "reliability_reason",
 ]
 
 RECOMMENDED_FIELDS = [
@@ -141,6 +153,11 @@ RECOMMENDED_FIELDS = [
     "review_required",
     "automation_allowed",
     "reason_code",
+    "calculation_valid",
+    "data_support_sufficient",
+    "models_consistent",
+    "reliability_status",
+    "reliability_reason",
 ]
 
 _SHARED_PERFORMANCE_FIELDS = (
@@ -154,6 +171,15 @@ _EFFICIENCY_FIELDS = ("roas", "roi", "cpa", "cost_per_converted_user")
 _SHARE_TOLERANCE = 1e-6
 _GAP_PP_TOLERANCE = 1e-6
 _EFFICIENCY_TOLERANCE = 5e-7
+_MIN_SUPPORT_PURCHASE_COUNT = 30
+_MIN_SUPPORT_CONVERTED_USERS = 20
+_MIN_SUPPORT_UNIQUE_PATHS = 5
+_MAX_CONSISTENT_GAP_PP = Decimal("1.0")
+_MAX_CONSISTENT_RELATIVE_GAP = Decimal("0.20")
+_DECIMAL_SHARE_KEYS = {
+    share_field: f"__decimal_{share_field}"
+    for share_field, _ in OUTCOME_FIELDS.values()
+}
 
 
 @dataclass(frozen=True)
@@ -220,6 +246,16 @@ def _finite_non_negative(
     return number
 
 
+def _preserve_share_decimal(value: object, normalized: float) -> Decimal:
+    """Preserve text/Decimal share precision while retaining the legacy float path."""
+    if isinstance(value, (str, Decimal)):
+        try:
+            return Decimal(value)
+        except (InvalidOperation, ValueError):
+            pass
+    return Decimal(str(normalized))
+
+
 def _model_index(rows: Sequence[Mapping[str, object]], expected_model: str) -> dict[str, dict]:
     if not rows:
         raise ValueError(f"{expected_model} model output must contain at least one row")
@@ -248,8 +284,13 @@ def _model_index(rows: Sequence[Mapping[str, object]], expected_model: str) -> d
                 f"{expected_model} row {row_number}: interaction_type does not match touchpoint"
             )
         for share_field, attributed_field in OUTCOME_FIELDS.values():
-            row[share_field] = _finite_non_negative(
-                row.get(share_field), f"{expected_model} {touchpoint} {share_field}"
+            raw_share = row.get(share_field)
+            normalized_share = _finite_non_negative(
+                raw_share, f"{expected_model} {touchpoint} {share_field}"
+            )
+            row[share_field] = normalized_share
+            row[_DECIMAL_SHARE_KEYS[share_field]] = _preserve_share_decimal(
+                raw_share, normalized_share
             )
             row[attributed_field] = _finite_non_negative(
                 row.get(attributed_field), f"{expected_model} {touchpoint} {attributed_field}"
@@ -360,6 +401,15 @@ def _validate_models(
             if not value:
                 raise ValueError(f"AMC row {row_number}: {field} is required")
             scope_values.append(value)
+        try:
+            report_start_date = date.fromisoformat(scope_values[0])
+            report_end_date = date.fromisoformat(scope_values[1])
+        except ValueError as exc:
+            raise ValueError(
+                f"AMC row {row_number}: report dates must be ISO dates"
+            ) from exc
+        if report_start_date > report_end_date:
+            raise ValueError(f"AMC row {row_number}: report window is inverted")
         scopes.add(tuple(scope_values))
         totals["converted_users"] += safe_int(row.get("converted_users"))
         totals["purchase_count"] += safe_int(row.get("purchase_count"))
@@ -435,6 +485,79 @@ def _support_level(support: Mapping[str, float]) -> str:
     ):
         return "LIMITED_SUPPORT"
     return "LOW_SUPPORT"
+
+
+def data_support_is_sufficient(support: Mapping[str, float]) -> bool:
+    """Return whether all three minimum raw-support thresholds pass."""
+    return (
+        support["raw_purchase_count"] >= _MIN_SUPPORT_PURCHASE_COUNT
+        and support["raw_converted_users"] >= _MIN_SUPPORT_CONVERTED_USERS
+        and support["raw_unique_paths"] >= _MIN_SUPPORT_UNIQUE_PATHS
+    )
+
+
+def models_are_consistent(
+    gap_pp: float | Decimal,
+    relative_gap: float | Decimal,
+    *,
+    has_outcome: bool,
+) -> bool:
+    """Judge point-estimate consistency independently of difference labels."""
+    if not has_outcome:
+        return False
+    try:
+        gap = gap_pp if isinstance(gap_pp, Decimal) else Decimal(str(gap_pp))
+        relative = (
+            relative_gap
+            if isinstance(relative_gap, Decimal)
+            else Decimal(str(relative_gap))
+        )
+    except (InvalidOperation, TypeError, ValueError):
+        return False
+    if not gap.is_finite() or not relative.is_finite() or gap < 0 or relative < 0:
+        return False
+    return bool(
+        gap <= _MAX_CONSISTENT_GAP_PP
+        and relative <= _MAX_CONSISTENT_RELATIVE_GAP
+    )
+
+
+def _decimal_gap_metrics(
+    markov_share: Decimal,
+    shapley_share: Decimal,
+) -> tuple[Decimal, Decimal, Decimal, Decimal]:
+    """Calculate gap metrics from preserved, unrounded decimal shares."""
+    mean_share = (markov_share + shapley_share) / Decimal("2")
+    absolute_gap = abs(markov_share - shapley_share)
+    relative_gap = Decimal("0") if mean_share == 0 else absolute_gap / mean_share
+    return (
+        mean_share,
+        absolute_gap * Decimal("100"),
+        (markov_share - shapley_share) * Decimal("100"),
+        relative_gap,
+    )
+
+
+def reliability_fields(
+    calculation_valid: bool,
+    data_support_sufficient: bool,
+    models_consistent: bool,
+) -> dict[str, str]:
+    """Compose the fixed three-criterion reliability contract."""
+    failures = []
+    if not calculation_valid:
+        failures.append("CALCULATION_INVALID")
+    if not data_support_sufficient:
+        failures.append("INSUFFICIENT_DATA_SUPPORT")
+    if not models_consistent:
+        failures.append("MODELS_INCONSISTENT")
+    return {
+        "calculation_valid": str(calculation_valid).lower(),
+        "data_support_sufficient": str(data_support_sufficient).lower(),
+        "models_consistent": str(models_consistent).lower(),
+        "reliability_status": "UNRELIABLE" if failures else "RELIABLE",
+        "reliability_reason": "|".join(failures) if failures else "ALL_CRITERIA_PASSED",
+    }
 
 
 def calculate_raw_support(amc_rows: Sequence[Mapping[str, object]]) -> dict[str, dict]:
@@ -623,15 +746,25 @@ def compare_attribution_models(
     summary_rows: list[dict] = []
     for outcome, (share_field, attributed_field) in OUTCOME_FIELDS.items():
         is_zero_outcome = totals[outcome] == 0
+        outcome_reliability_rows: list[dict[str, str]] = []
         for touchpoint in sorted(markov):
             markov_row = markov[touchpoint]
             shapley_row = shapley[touchpoint]
             markov_share = float(markov_row[share_field])
             shapley_share = float(shapley_row[share_field])
-            mean_share = (markov_share + shapley_share) / 2
-            gap_pp = abs(markov_share - shapley_share) * 100
-            signed_gap_pp = (markov_share - shapley_share) * 100
-            relative_gap = 0.0 if mean_share == 0 else abs(markov_share - shapley_share) / mean_share
+            (
+                mean_share_decimal,
+                gap_pp_decimal,
+                signed_gap_pp_decimal,
+                relative_gap_decimal,
+            ) = _decimal_gap_metrics(
+                markov_row[_DECIMAL_SHARE_KEYS[share_field]],
+                shapley_row[_DECIMAL_SHARE_KEYS[share_field]],
+            )
+            mean_share = float(mean_share_decimal)
+            gap_pp = float(gap_pp_decimal)
+            signed_gap_pp = float(signed_gap_pp_decimal)
+            relative_gap = float(relative_gap_decimal)
             if is_zero_outcome:
                 difference_level, reason, critical = "NO_OUTCOME", "NO_OUTCOME", False
             else:
@@ -639,6 +772,18 @@ def compare_attribution_models(
                     markov_share, shapley_share
                 )
             support = support_five[touchpoint]
+            reliability = reliability_fields(
+                calculation_valid=True,
+                data_support_sufficient=(
+                    not is_zero_outcome and data_support_is_sufficient(support)
+                ),
+                models_consistent=models_are_consistent(
+                    gap_pp_decimal,
+                    relative_gap_decimal,
+                    has_outcome=not is_zero_outcome,
+                ),
+            )
+            outcome_reliability_rows.append(reliability)
             touchpoint_rows.append(
                 {
                     "touchpoint": touchpoint,
@@ -693,6 +838,7 @@ def compare_attribution_models(
                     "review_required": "false" if is_zero_outcome else "true",
                     "automation_allowed": "false",
                     "reason_code": reason,
+                    **reliability,
                 }
             )
 
@@ -707,6 +853,21 @@ def compare_attribution_models(
             for key in grain_markov
         )
         metrics = _overall_metrics(grain_markov, grain_shapley, critical_count)
+        support_status = _aggregate_support_status(support_five.values())
+        summary_reliability = reliability_fields(
+            calculation_valid=all(
+                row["calculation_valid"] == "true"
+                for row in outcome_reliability_rows
+            ),
+            data_support_sufficient=all(
+                row["data_support_sufficient"] == "true"
+                for row in outcome_reliability_rows
+            ),
+            models_consistent=all(
+                row["models_consistent"] == "true"
+                for row in outcome_reliability_rows
+            ),
+        )
         summary_rows.append(
             {
                 "outcome": outcome,
@@ -718,7 +879,7 @@ def compare_attribution_models(
                 "touchpoint_count": len(grain_markov),
                 **metrics,
                 "critical_divergence_count": critical_count,
-                "support_status": _aggregate_support_status(support_five.values()),
+                "support_status": support_status,
                 "stability_status": "UNVERIFIED",
                 "operational_status": "VALID",
                 "validation_error_count": 0,
@@ -726,6 +887,7 @@ def compare_attribution_models(
                 "decision_status": (
                     "NO_OUTCOME" if is_zero_outcome else "EVIDENCE_UNVERIFIED"
                 ),
+                **summary_reliability,
             }
         )
 
@@ -749,6 +911,11 @@ def compare_attribution_models(
             "review_required": row["review_required"],
             "automation_allowed": row["automation_allowed"],
             "reason_code": row["reason_code"],
+            "calculation_valid": row["calculation_valid"],
+            "data_support_sufficient": row["data_support_sufficient"],
+            "models_consistent": row["models_consistent"],
+            "reliability_status": row["reliability_status"],
+            "reliability_reason": row["reliability_reason"],
         }
         for row in touchpoint_rows
     ]

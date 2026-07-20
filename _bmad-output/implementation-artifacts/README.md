@@ -9,6 +9,7 @@
 | [从 AMC MTA 全链路删除售出件数字段](spec-remove-units-sold.md) | done |
 | [全量评估 AMC MTA 双模型输出](spec-evaluate-all-mta-outputs.md) | done |
 | [AMC MTA 治理输出仅保留五粒度](spec-five-part-only-model-governance.md) | done |
+| [简化 AMC MTA 可靠性判断并写入输出](spec-simplify-amc-reliability-judgment.md) | done |
 
 ## 当前整理
 

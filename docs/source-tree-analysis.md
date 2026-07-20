@@ -30,9 +30,9 @@ modules/amc_mta/
 │   ├── touchpoint_key.py             # 五段键解析与校验
 │   ├── amc_path_builder.py           # 概念事件到匿名聚合路径
 │   ├── amc_mta_attribution.py        # Markov、Shapley 与成本关联
-│   └── model_comparison.py           # 差距、支持度和治理推荐
+│   └── model_comparison.py           # 差距、支持度、三项可靠性和治理推荐
 ├── scripts/                          # 各步骤 CLI
-├── tests/                            # 5 个测试文件，75 项测试
+├── tests/                            # 5 个测试文件，86 项测试
 ├── data/simulated/                   # 3 份可复现输入
 ├── outputs/attribution/              # 5 份正式生成输出
 └── docs/                             # 数据、运行和治理契约

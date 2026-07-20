@@ -1,6 +1,6 @@
 {
   "schema_version": "1.1",
-  "generated_at": "2026-07-20T11:19:51.728Z",
+  "generated_at": "2026-07-20T13:30:53.320Z",
   "root": "{project-root}",
   "scope": "all regular workspace files excluding declared protected or generated paths",
   "exclusions": [
@@ -21,12 +21,12 @@
       "reason": "human-owned no-touch file; content and hash are not read"
     }
   ],
-  "file_count": 2169,
-  "total_bytes": 43800509,
+  "file_count": 2170,
+  "total_bytes": 43811916,
   "by_top_level": {
     "_bmad-output": {
-      "files": 11,
-      "bytes": 57582
+      "files": 12,
+      "bytes": 66647
     },
     "_bmad": {
       "files": 91,
@@ -50,15 +50,15 @@
     },
     "docs": {
       "files": 36,
-      "bytes": 26474605
+      "bytes": 26477081
     },
     "modules": {
       "files": 34,
-      "bytes": 470474
+      "bytes": 470193
     },
     "README.md": {
       "files": 1,
-      "bytes": 5015
+      "bytes": 5162
     }
   },
   "files": [
@@ -66,17 +66,17 @@
       "path": "_bmad-output/implementation-artifacts/deferred-work.md",
       "top_level": "_bmad-output",
       "extension": ".md",
-      "size_bytes": 2799,
+      "size_bytes": 2887,
       "mode": "644",
-      "sha256": "b0d423575494b50233b7ffa6386e1bb688179573744a8dcca3c0eff1a0af527b"
+      "sha256": "d223049c6f4336e6b3ae37b9873402118260a74dac99d4ed69c597f8d3369cad"
     },
     {
       "path": "_bmad-output/implementation-artifacts/README.md",
       "top_level": "_bmad-output",
       "extension": ".md",
-      "size_bytes": 990,
+      "size_bytes": 1092,
       "mode": "644",
-      "sha256": "10df6f12573d9a8ae3f33ad815aecdf18add17e8067b28568b191ede87a6a9af"
+      "sha256": "134bb7befccae455c8498437cbb9d3eb6bdf24cd1fafc511e0c5f8ba9bc07670"
     },
     {
       "path": "_bmad-output/implementation-artifacts/spec-add-interaction-type-granularity-2.md",
@@ -141,6 +141,14 @@
       "size_bytes": 5610,
       "mode": "644",
       "sha256": "a93781300ac20ef312233d1dad10b32be7af30e837b7abade787d613a92fcfd2"
+    },
+    {
+      "path": "_bmad-output/implementation-artifacts/spec-simplify-amc-reliability-judgment.md",
+      "top_level": "_bmad-output",
+      "extension": ".md",
+      "size_bytes": 8875,
+      "mode": "644",
+      "sha256": "513f20fd6a48087a50abd5ec385eed947492cf3e526d4f68bd3080d0b91ea506"
     },
     {
       "path": "_bmad-output/README.md",
@@ -16858,17 +16866,17 @@
       "path": "docs/amc-mta-architecture.md",
       "top_level": "docs",
       "extension": ".md",
-      "size_bytes": 7188,
+      "size_bytes": 7632,
       "mode": "644",
-      "sha256": "c7bab0d21f4efc356aa2867a3af45b6496afc3b0348b60896b90c8ada4a02b45"
+      "sha256": "527dafb8ddc49ecd0e951ec8db08a060d507c3eaedc70618d2e89263cda18a36"
     },
     {
       "path": "docs/amc-mta-capability-assessment.md",
       "top_level": "docs",
       "extension": ".md",
-      "size_bytes": 8456,
+      "size_bytes": 8814,
       "mode": "644",
-      "sha256": "358289dc6188e8facdca58a67f72640b8b6c7c97677f74afff1f02a7d9212371"
+      "sha256": "3f252f3c41151b63d9f03f8d1be650edc9fc1822ad94f6f30e6744b8055c30ef"
     },
     {
       "path": "docs/architecture.md",
@@ -16882,9 +16890,9 @@
       "path": "docs/component-inventory.md",
       "top_level": "docs",
       "extension": ".md",
-      "size_bytes": 3181,
+      "size_bytes": 3199,
       "mode": "644",
-      "sha256": "e9e0194f2fc59fc0d0d211a1741fc3662df7bb9806c094ab20140eb9018c0f19"
+      "sha256": "371a96e6453825e42c7e95b9029988c2443d1d6e605013ce81d9574b46b9400c"
     },
     {
       "path": "docs/development-guide.md",
@@ -16892,23 +16900,23 @@
       "extension": ".md",
       "size_bytes": 2551,
       "mode": "644",
-      "sha256": "e0585d46c4d40c621a39fcee6239ab6d0f4a5946bd59360331846b43db44acc8"
+      "sha256": "417d9a606d6243ac417d3fa9a7ff52c06f246f61d2c4d58f4966ef0cc3fc6147"
     },
     {
       "path": "docs/index.md",
       "top_level": "docs",
       "extension": ".md",
-      "size_bytes": 5034,
+      "size_bytes": 5111,
       "mode": "644",
-      "sha256": "570485ce95983e48586510ac6c2125e42159c2c15f39acdda406c16f31c1fa31"
+      "sha256": "8dbaf0d35e4e339b90ad7a2904f2500ad37bbfbd20b8dd88c509788a47c9d5e6"
     },
     {
       "path": "docs/product/amc-mta/project-introduction.md",
       "top_level": "docs",
       "extension": ".md",
-      "size_bytes": 3415,
+      "size_bytes": 3834,
       "mode": "644",
-      "sha256": "08ca00155640480cb310d4338b3a6286c9d725aa16f0dae0f89cd207d3f3debd"
+      "sha256": "1e54bd21b5aca6b09775cbe4a850659dc3926471b98da7c1b6c807aac65ef794"
     },
     {
       "path": "docs/product/README.md",
@@ -16924,15 +16932,15 @@
       "extension": ".md",
       "size_bytes": 5562,
       "mode": "644",
-      "sha256": "26067148d125b6a31f24fcd11f565e8b29b0efd7d431df15db2023a8a97f0e6d"
+      "sha256": "80eb186aaaa096d2e5b62fae10e18ac5e476b42c0b89d21a6f4df1603c2d97e6"
     },
     {
       "path": "docs/project-scan-report.json",
       "top_level": "docs",
       "extension": ".json",
-      "size_bytes": 4509,
+      "size_bytes": 5651,
       "mode": "644",
-      "sha256": "1e487ae449ddcef0b4a1b0276f9fd731845126da0baf43f24bf97eb9d4c8fbe2"
+      "sha256": "47d7af821a43f879fdd25f695afd29c7a382c82c4971d695f591ef78b03bc827"
     },
     {
       "path": "docs/README.md",
@@ -17122,9 +17130,9 @@
       "path": "docs/source-tree-analysis.md",
       "top_level": "docs",
       "extension": ".md",
-      "size_bytes": 4523,
+      "size_bytes": 4541,
       "mode": "644",
-      "sha256": "932751cccc81e7a4735cc79840c3a465aaca14e9e04220a74fb47df4520174c4"
+      "sha256": "d380bc7c3ef3f79aa573ebb0e7ac4abc519c6cbd53b9698573df81bce5e60214"
     },
     {
       "path": "docs/workspace-file-management.md",
@@ -17154,9 +17162,9 @@
       "path": "modules/amc_mta/data/simulated/amc_mta_path_report_raw_sample.csv",
       "top_level": "modules",
       "extension": ".csv",
-      "size_bytes": 2666,
+      "size_bytes": 2652,
       "mode": "600",
-      "sha256": "7a22434a5877657f8407fd86d7c5bcb483db5b545605904e0a8b9cdcba6960fb"
+      "sha256": "bc95efa8e7450f99215741a32e9e6aadf5dc54ff10e0c97d0bbdd63df3d2fab1"
     },
     {
       "path": "modules/amc_mta/data/simulated/amc_touchpoint_events_sample.csv",
@@ -17186,17 +17194,17 @@
       "path": "modules/amc_mta/docs/amc-data-requirements.md",
       "top_level": "modules",
       "extension": ".md",
-      "size_bytes": 5834,
+      "size_bytes": 6675,
       "mode": "644",
-      "sha256": "53fbf363b8c2cf64149f2ef7bbba8a2559d648d0c8304ce37fbaf61e9053aefe"
+      "sha256": "2bbd16f32f901657f7de36bca92dd34c4a8d3c9a5616a6e935a01d1500d89f84"
     },
     {
       "path": "modules/amc_mta/docs/model-comparison-governance.md",
       "top_level": "modules",
       "extension": ".md",
-      "size_bytes": 25964,
+      "size_bytes": 30843,
       "mode": "644",
-      "sha256": "cb95a93c945dec52368e3d8f21e24056ec007859d91a8236df9d6e99087d45a9"
+      "sha256": "13167e4341af356e260ebefedb4c08a6ee395fc6dee008d68914bec31adf513c"
     },
     {
       "path": "modules/amc_mta/docs/README.md",
@@ -17204,71 +17212,71 @@
       "extension": ".md",
       "size_bytes": 854,
       "mode": "644",
-      "sha256": "dd4078057a42186c367ae74e255fd4414e4db0033a41f3c3289b4c2d28021474"
+      "sha256": "c5c0561e9006b460f8caaff4748fcb14657578a270b54231ade1fd702d05fe91"
     },
     {
       "path": "modules/amc_mta/docs/touchpoint-reliability-guide.md",
       "top_level": "modules",
       "extension": ".md",
-      "size_bytes": 5138,
+      "size_bytes": 5084,
       "mode": "644",
-      "sha256": "d516d42e69e8eb6808c56a05852839ca74b0380a19b2714aa15ad931ccf8a6bb"
+      "sha256": "943ae058eb2ecc41f8fa86848cbcd5df7da3cfbd05bfca2e7a49464372a123a9"
     },
     {
       "path": "modules/amc_mta/docs/usage.md",
       "top_level": "modules",
       "extension": ".md",
-      "size_bytes": 2862,
+      "size_bytes": 3386,
       "mode": "644",
-      "sha256": "edb4ee118065cd0cad79639f0ac3b6f00d2a8f230cbab183381c165d7cb8a007"
+      "sha256": "5d2b609d62db8ea623e5338ee159a376bc2b935a9c2ba05ec924626945319886"
     },
     {
       "path": "modules/amc_mta/outputs/attribution/amc_markov_attribution_results.csv",
       "top_level": "modules",
       "extension": ".csv",
-      "size_bytes": 6508,
+      "size_bytes": 3243,
       "mode": "644",
-      "sha256": "f99eb7217fa41b01798a42bd49cb9bd1e79208d8f68568bf9cc1f2285565570b"
+      "sha256": "8db9ef519db3ad8f517871411e5ab5c32c0a8f0209017ae2b3d0990097f606e2"
     },
     {
       "path": "modules/amc_mta/outputs/attribution/amc_mta_model_comparison_summary.csv",
       "top_level": "modules",
       "extension": ".csv",
-      "size_bytes": 1600,
+      "size_bytes": 1161,
       "mode": "644",
-      "sha256": "632cfbdc7cb36f2d7f078e3d1918de32033bcdaf783cd4b7bb969644f504ca4f"
+      "sha256": "6b24de275914b6e86531b88086ef2a3b0958f5647e54b6437fff191ac6e69c90"
     },
     {
       "path": "modules/amc_mta/outputs/attribution/amc_mta_model_comparison_touchpoints.csv",
       "top_level": "modules",
       "extension": ".csv",
-      "size_bytes": 47146,
+      "size_bytes": 23948,
       "mode": "644",
-      "sha256": "8919ac1a4822d3a5a1148e1a3127558950bec05330627a0bf993bb3be0a47b4b"
+      "sha256": "cfa6f92c9f55de7a0906884a6fc619ea4503dad0ad6a03eef45e7da705cf5b64"
     },
     {
       "path": "modules/amc_mta/outputs/attribution/amc_mta_recommended_attribution.csv",
       "top_level": "modules",
       "extension": ".csv",
-      "size_bytes": 17714,
+      "size_bytes": 14501,
       "mode": "644",
-      "sha256": "122ef775972bb5302762dc8a938088615aa5a8fcec0ff7bfafb5da10913231b8"
+      "sha256": "e0af841693a5066a1c47d96968e3cc1942c187af0905f06762736755c51f5836"
     },
     {
       "path": "modules/amc_mta/outputs/attribution/amc_shapley_attribution_results.csv",
       "top_level": "modules",
       "extension": ".csv",
-      "size_bytes": 3242,
+      "size_bytes": 3224,
       "mode": "644",
-      "sha256": "014dd2b81638419a5f7f27ade171956b0525d6ed7ea1ab4ddd132ecc19027521"
+      "sha256": "1ba620eae8676e250975914d90537d28799ebba0d20c83e50b401635f1ecfc4d"
     },
     {
       "path": "modules/amc_mta/README.md",
       "top_level": "modules",
       "extension": ".md",
-      "size_bytes": 2599,
+      "size_bytes": 3066,
       "mode": "644",
-      "sha256": "c33c7da673f7e7d07add6b04e4eebb4e7a7ffb8be2a9fbc3bcf678383ca03867"
+      "sha256": "c2c1a9ded69c02dbc61868c7ab2cc2158673d27f504306d78c573b848f48c08c"
     },
     {
       "path": "modules/amc_mta/run_pipeline.py",
@@ -17330,9 +17338,9 @@
       "path": "modules/amc_mta/src/amc_mta_attribution.py",
       "top_level": "modules",
       "extension": ".py",
-      "size_bytes": 31810,
+      "size_bytes": 31831,
       "mode": "644",
-      "sha256": "c6d924c0be3c6853785c78b452edb342ada8e1779ac87fdb5a331700989584bd"
+      "sha256": "56b1b4432f6b82c7931088df150896095afd459298c43f5e8c7396be5a9e13c5"
     },
     {
       "path": "modules/amc_mta/src/amc_path_builder.py",
@@ -17346,9 +17354,9 @@
       "path": "modules/amc_mta/src/model_comparison.py",
       "top_level": "modules",
       "extension": ".py",
-      "size_bytes": 29350,
+      "size_bytes": 35469,
       "mode": "644",
-      "sha256": "46903353d130d2050e7fffbae7b6ebe5228500c0c0f83e17384ad1867a1df0ba"
+      "sha256": "9fdf49e40aca0783f35fe52838bf795e1c68c5f4e39c467d12911885ea12d81e"
     },
     {
       "path": "modules/amc_mta/src/touchpoint_key.py",
@@ -17370,9 +17378,9 @@
       "path": "modules/amc_mta/tests/test_amc_mta_end_to_end.py",
       "top_level": "modules",
       "extension": ".py",
-      "size_bytes": 18597,
+      "size_bytes": 21860,
       "mode": "644",
-      "sha256": "186c2f61bb0afa589cd2e873a4ab9d08fe059a4ca9b02fac9b4a12f0926b188c"
+      "sha256": "aa2baf5b78ce13ab313e210e839c3bd48afa93a3198d5e58f511ad1154ae6313"
     },
     {
       "path": "modules/amc_mta/tests/test_amc_path_builder.py",
@@ -17386,9 +17394,9 @@
       "path": "modules/amc_mta/tests/test_model_comparison.py",
       "top_level": "modules",
       "extension": ".py",
-      "size_bytes": 15800,
+      "size_bytes": 29606,
       "mode": "644",
-      "sha256": "b676bccad10c4f2fde5fff52fa1494ecc3622b0f0953fbfbb8f0ddb0870dcb1e"
+      "sha256": "c32fb28859994ac9e6f91508049fd58807e49d0050d5b4a9093e81d4fa6aeb0f"
     },
     {
       "path": "modules/amc_mta/tests/test_touchpoint_key.py",
@@ -17410,9 +17418,9 @@
       "path": "README.md",
       "top_level": "README.md",
       "extension": ".md",
-      "size_bytes": 5015,
+      "size_bytes": 5162,
       "mode": "644",
-      "sha256": "ba04381ed0dcfcc55f853ed0b68040e763dd779d9fc71f15def4066db2e584bd"
+      "sha256": "08149233fe342f22027e4729c047cfa4c46dc16abfd226ceb0a164704161de98"
     }
   ]
 }

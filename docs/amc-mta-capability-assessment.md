@@ -14,7 +14,7 @@
 
 | 维度 | 等级 | 证据 |
 | --- | --- | --- |
-| 工程可靠性 | 较高 | 流程可复现、校验严格，75 项测试覆盖守恒与回滚 |
+| 工程可靠性 | 较高 | 流程可复现、校验严格，86 项测试覆盖守恒、可靠性与回滚 |
 | 归因方法 | 中等 | 双模型互补且语义清楚，但仍需手算基准和真实数据校准 |
 | 数据证据 | 低 | 只有确定性模拟样例，没有真实 AMC 查询与跨窗口证据 |
 | 业务决策 | 很低 | 治理机制存在，但全部决策值都被证据门槛阻断 |
@@ -110,11 +110,18 @@ SPONSORED_PRODUCTS:PRODUCT_AD:PRODUCT_PAGE:UNSPECIFIED:CLICK
 全部 51 条触点/outcome 记录为：
 
 ```text
+calculation_valid = true
+data_support_sufficient = 48 false / 3 true
+models_consistent = 32 true / 19 false
+reliability_status = 0 RELIABLE / 51 UNRELIABLE
 stability_level = UNVERIFIED
 decision_status = EVIDENCE_UNVERIFIED
 decision_value = 空
 automation_allowed = false
 ```
+
+三个 outcome 摘要分别对本 outcome 全部触点的三项可靠性布尔值做 AND；
+`support_status`、`comparison_status` 与整体差异指标仍是诊断，不改变该结果。
 
 因此当前输出可以用于模型诊断、人工讨论和真实数据接入验收，不可直接用于自动预算。
 

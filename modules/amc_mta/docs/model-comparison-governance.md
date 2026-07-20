@@ -15,6 +15,11 @@
 
 本文中的阈值是 **v1 治理线**，用于当前项目落地。积累至少 12 周真实数据后，应使用滚动窗口和重采样结果重新校准。
 
+可靠性与决策治理是两个不同层次。可靠性只由 `calculation_valid`、
+`data_support_sufficient`、`models_consistent` 三个布尔值按 AND 合成；稳定性、
+差距等级、跨 outcome 表现、`decision_status` 和 `automation_allowed` 均不参与
+可靠性计算。
+
 ### 1.1 一页结论
 
 | 场景 | 正式输出 |
@@ -25,6 +30,9 @@
 | 中等差距且稳定 | Markov 作为人工决策值，同时展示 Shapley 和模型区间 |
 | 大差距且稳定 | 两模型并列，不平均，阻断自动决策 |
 | 任意差距但结果不稳定 | 仅作诊断，阻断决策 |
+
+上表描述决策治理，不是可靠性等级。可靠性只有 `RELIABLE` 与 `UNRELIABLE`：
+计算有效、数据支撑充分、模型一致三项全真才是 `RELIABLE`。
 
 ## 2. 核心原则
 
@@ -73,6 +81,10 @@ Shapley 用于识别模型敏感性和路径参与度，不自动与 Markov 合�
 - 无重复触点行。
 
 零 outcome 是合法边界：如果两模型某 outcome 总量同时为 0，则该 outcome 记为 `NO_OUTCOME`，不要求 share 合计为 1，也不参与 TVD 和排名计算；如果只有一个模型为 0，则记为 `VALIDATION_ERROR`。
+
+只有本节全部严格校验通过，产物中的 `calculation_valid` 才写为 `true`。任一
+校验失败继续 fail-fast，不发布新的比较产物，因此不会生成
+`calculation_valid=false` 的正式预览行。
 
 ## 4. 触点级量化公式
 
@@ -193,6 +205,19 @@ MEDIUM / REVIEW
 
 这些线是运营治理阈值，不是统计显著性检验，也不替代支持度和稳定性证据。
 
+可靠性字段 `models_consistent` 不直接复用上述分类结果。对非零 outcome，它只
+检查：
+
+```text
+gap_pp <= 1.0
+且 relative_gap <= 0.20
+```
+
+因此非零长尾触点只要两个数值门槛均通过，也可得到
+`models_consistent=true`。门槛用解析时保留的未舍入原始十进制 share 精确计算，
+不先按输出显示值舍入，也不使用容差放宽；严格大于任一门槛即为 `false`。零 outcome 固定为
+`models_consistent=false`。
+
 ## 6. 整体模型差异
 
 ### 6.1 Total Variation Distance
@@ -251,7 +276,12 @@ MIXED_REVIEW
   其他情况
 ```
 
-该字段统一命名为 `comparison_status`。它只描述两个模型的点估计关系，不能覆盖触点级状态，也不代表结果已达到决策条件。例如 `comparison_status=MIXED_REVIEW` 时，仍可能存在必须单独处理的 `critical_divergence`；支持度或稳定性未通过时，最终 `decision_status` 仍须阻断。
+该字段统一命名为 `comparison_status`。它只描述两个模型的整体点估计诊断，不能
+覆盖触点级状态，也不代表结果已达到决策条件或可靠性条件。例如
+`comparison_status=MIXED_REVIEW` 时，仍可能存在必须单独处理的
+`critical_divergence`；支持度或稳定性未通过时，最终 `decision_status` 仍须
+阻断。`comparison_status`、TVD、Spearman、Top-K 和关键分歧均不参与第 8.1 节
+的可靠性计算。
 
 ## 7. 五粒度唯一治理口径
 
@@ -310,9 +340,47 @@ decision_value = 空
 automation_allowed = false
 ```
 
+### 8.1 数据支撑布尔值
+
+可靠性字段 `data_support_sufficient` 使用最低门槛：
+
+```text
+raw_purchase_count >= 30
+且 raw_converted_users >= 20
+且 raw_unique_paths >= 5
+```
+
+三个条件全部满足为 `true`；因此 `FULL_SUPPORT` 与 `LIMITED_SUPPORT` 都通过，
+`LOW_SUPPORT` 不通过。零 outcome 固定为 `false`。
+
+可靠性最终字段只使用三项标准：
+
+```text
+calculation_valid
+AND data_support_sufficient
+AND models_consistent
+```
+
+三项全真时：
+
+```text
+reliability_status = RELIABLE
+reliability_reason = ALL_CRITERIA_PASSED
+```
+
+否则为 `UNRELIABLE`，失败原因只允许以下代码，并按固定顺序连接：
+
+```text
+CALCULATION_INVALID
+INSUFFICIENT_DATA_SUPPORT
+MODELS_INCONSISTENT
+```
+
 ## 9. 稳定性规则
 
 差距小但不稳定，不能称为共识；差距大但稳定，才是结构性分歧。
+
+本节只约束决策与长期解释，不参与第 8.1 节的可靠性计算。
 
 ### 9.1 推荐运行方法
 
@@ -360,6 +428,9 @@ stability_level = UNVERIFIED
 稳定性为 `UNVERIFIED` 时，与支持度未验证采用相同处理：只输出差异预判，`decision_value` 留空。
 
 ## 10. 输出状态机
+
+本状态机管理 `decision_status`、`decision_value` 和自动化权限，与二元
+`reliability_status` 并行存在，不是可靠性合成规则。
 
 ```mermaid
 flowchart TD
@@ -564,6 +635,11 @@ decision_value
 review_required
 automation_allowed
 reason_code
+calculation_valid
+data_support_sufficient
+models_consistent
+reliability_status
+reliability_reason
 ```
 
 ### 13.2 整体摘要文件
@@ -599,6 +675,11 @@ validation_error_count
 validation_reason_code
 comparison_status
 decision_status
+calculation_valid
+data_support_sufficient
+models_consistent
+reliability_status
+reliability_reason
 ```
 
 ### 13.3 管理层结果文件
@@ -616,8 +697,16 @@ amc_mta_recommended_attribution.csv
 - 模型区间；
 - 决策状态；
 - 人工复核标志。
+- 三项可靠性布尔值、二元状态和固定顺序原因。
 
 只有支持度与稳定性通过的记录才允许产生 `decision_value`：`ALIGNED` 可直接使用，`REVIEW` 仅供人工审批后使用。`DIVERGENT`、`UNSTABLE`、`INSUFFICIENT_EVIDENCE`、`LOW_SUPPORT`、`EVIDENCE_UNVERIFIED` 记录仍保留作诊断，但 `decision_value` 必须为空。
+
+触点比较与推荐文件中相同 `touchpoint + outcome` 的五个可靠性字段必须完全
+一致。摘要按 outcome 汇总：分别对该 outcome 全部触点的
+`calculation_valid`、`data_support_sufficient`、`models_consistent` 做 AND，
+再调用相同的三项可靠性合成规则。摘要不得从 `support_status`、
+`comparison_status`、TVD、Spearman、Top-K、关键分歧或差距等级反推可靠性；
+这些字段只是并行诊断。原始 Markov 与 Shapley 文件不增加可靠性字段。
 
 ## 14. 判定伪代码
 
@@ -642,6 +731,41 @@ def classify_touchpoint(markov_share, shapley_share):
 
     return "MEDIUM", "MODEL_REVIEW"
 ```
+
+可靠性独立合成：
+
+```python
+calculation_valid = True  # 只有全部严格校验通过才会生成产物
+data_support_sufficient = (
+    has_outcome
+    and raw_purchase_count >= 30
+    and raw_converted_users >= 20
+    and raw_unique_paths >= 5
+)
+models_consistent = (
+    has_outcome
+    and gap_pp <= 1.0
+    and relative_gap <= 0.20
+)
+
+passed = calculation_valid and data_support_sufficient and models_consistent
+reliability_status = "RELIABLE" if passed else "UNRELIABLE"
+
+# 按 outcome 汇总时，先逐字段 AND 触点级布尔值，再复用同一合成函数。
+summary_calculation_valid = all(row.calculation_valid for row in outcome_rows)
+summary_data_support_sufficient = all(
+    row.data_support_sufficient for row in outcome_rows
+)
+summary_models_consistent = all(row.models_consistent for row in outcome_rows)
+summary_reliability = reliability_fields(
+    summary_calculation_valid,
+    summary_data_support_sufficient,
+    summary_models_consistent,
+)
+```
+
+`gap_pp` 与 `relative_gap` 的门槛判断基于 share 的十进制表示，不增加 epsilon；
+展示字段可以舍入，但门槛使用未舍入的十进制计算结果。
 
 ## 15. 当前输出的实际评估
 
@@ -687,7 +811,16 @@ touchpoint_support = 16 LOW_SUPPORT / 1 LIMITED_SUPPORT
 stability_status = UNVERIFIED
 decision_status = EVIDENCE_UNVERIFIED
 decision_value = 空
+calculation_valid = true
+data_support_sufficient = false
+models_consistent = false
+reliability_status = UNRELIABLE
+reliability_reason = INSUFFICIENT_DATA_SUPPORT|MODELS_INCONSISTENT
 ```
+
+51 条触点/outcome 记录中，51 条计算有效，3 条达到最低数据支持门槛，但这 3 条
+均未通过模型一致性门槛。因此当前样例为 `0 RELIABLE / 51 UNRELIABLE`，三个
+outcome 摘要也全部为 `UNRELIABLE`。
 
 因此不能描述为“两模型完全一致”，也不能描述为“整体严重冲突”。准确表述是：
 
@@ -828,9 +961,10 @@ reference_window_days = 7
 
 - Markov 是正式归因模型；
 - Shapley 是路径参与和模型敏感性参照；
+- 可靠性只由计算有效、最低数据支持和模型一致三个布尔值按 AND 合成；
 - 小差距且稳定时使用 Markov 正式值；
 - 中等差距时使用 Markov，但附模型区间并人工复核；
 - 大差距时禁止平均，`decision_value` 留空；
-- 差距判断必须服从支持度与稳定性；
+- 决策值与自动化权限继续服从支持度和稳定性，但它们不改变二元可靠性公式；
 - 所有差异只按完整五段触点解释；
-- 当前严格校验通过的样例呈现“整体中度差异、排名高度一致、一个关键触点的点估计大分歧”；支持度已从 AMC 路径重算，但在稳定性通过前不得称为结构性分歧，最终状态仍为 `EVIDENCE_UNVERIFIED`。
+- 当前严格校验通过的样例呈现“整体中度差异、排名高度一致、一个关键触点的点估计大分歧”；可靠性为 `0 RELIABLE / 51 UNRELIABLE`。支持度已从 AMC 路径重算，但在稳定性通过前不得称为结构性分歧，独立决策状态仍为 `EVIDENCE_UNVERIFIED`。

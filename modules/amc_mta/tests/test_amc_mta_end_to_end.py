@@ -44,6 +44,15 @@ from model_comparison import (  # noqa: E402
 from touchpoint_key import canonicalize_amc_touchpoint_key  # noqa: E402
 
 
+RELIABILITY_FIELDS = {
+    "calculation_valid",
+    "data_support_sufficient",
+    "models_consistent",
+    "reliability_status",
+    "reliability_reason",
+}
+
+
 class EndToEndSampleTests(unittest.TestCase):
     def test_removed_sales_quantity_is_absent_from_public_csv_schemas(self) -> None:
         paths = [
@@ -164,6 +173,9 @@ class EndToEndSampleTests(unittest.TestCase):
             self.assertEqual(
                 {path.name for path in generated_paths}, set(stored_paths)
             )
+            self.assertTrue(
+                all(b"\r\n" not in path.read_bytes() for path in generated_paths)
+            )
             for generated_path in generated_paths[:2]:
                 with self.subTest(model=generated_path.name):
                     generated = read_csv(generated_path)
@@ -206,6 +218,7 @@ class EndToEndSampleTests(unittest.TestCase):
                     self.assertTrue(
                         all(row["interaction_type"] in {"IMPRESSION", "CLICK"} for row in generated)
                     )
+                    self.assertTrue(RELIABILITY_FIELDS.isdisjoint(generated[0]))
 
             for generated_path in generated_paths[2:]:
                 with self.subTest(comparison=generated_path.name):
@@ -227,6 +240,52 @@ class EndToEndSampleTests(unittest.TestCase):
             self.assertTrue(all(set(row) == set(SUMMARY_FIELDS) for row in summary_rows))
             self.assertTrue(
                 all(set(row) == set(RECOMMENDED_FIELDS) for row in recommended_rows)
+            )
+            self.assertTrue(
+                all(row["calculation_valid"] == "true" for row in comparison_rows)
+            )
+            self.assertEqual(
+                sum(row["data_support_sufficient"] == "true" for row in comparison_rows),
+                3,
+            )
+            supported_rows = [
+                row for row in comparison_rows if row["data_support_sufficient"] == "true"
+            ]
+            self.assertTrue(all(row["models_consistent"] == "false" for row in supported_rows))
+            self.assertEqual(
+                sum(row["reliability_status"] == "RELIABLE" for row in comparison_rows),
+                0,
+            )
+            self.assertTrue(
+                all(row["reliability_status"] == "UNRELIABLE" for row in comparison_rows)
+            )
+            comparison_reliability = {
+                (row["touchpoint"], row["outcome"]): tuple(
+                    row[field] for field in RELIABILITY_FIELDS
+                )
+                for row in comparison_rows
+            }
+            self.assertTrue(
+                all(
+                    comparison_reliability[(row["touchpoint"], row["outcome"])]
+                    == tuple(row[field] for field in RELIABILITY_FIELDS)
+                    for row in recommended_rows
+                )
+            )
+            self.assertTrue(all(row["calculation_valid"] == "true" for row in summary_rows))
+            self.assertTrue(
+                all(row["data_support_sufficient"] == "false" for row in summary_rows)
+            )
+            self.assertTrue(all(row["models_consistent"] == "false" for row in summary_rows))
+            self.assertTrue(
+                all(row["reliability_status"] == "UNRELIABLE" for row in summary_rows)
+            )
+            self.assertTrue(
+                all(
+                    row["reliability_reason"]
+                    == "INSUFFICIENT_DATA_SUPPORT|MODELS_INCONSISTENT"
+                    for row in summary_rows
+                )
             )
             self.assertTrue(
                 all(
@@ -340,6 +399,26 @@ class EndToEndSampleTests(unittest.TestCase):
                     invalid_ads,
                     Path(tmp) / "outputs",
                 )
+
+    def test_invalid_amc_report_date_fails_before_comparison_publication(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            invalid_rows = read_csv(AMC_REPORT_FILE)
+            invalid_rows[0]["report_start_date"] = "not-a-date"
+            invalid_amc = Path(tmp) / "invalid-amc.csv"
+            write_csv(invalid_amc, invalid_rows, PATH_REPORT_FIELDS)
+            output_dir = Path(tmp) / "outputs"
+            attribution_dir = ROOT / "outputs" / "attribution"
+
+            with self.assertRaisesRegex(ValueError, "ISO dates"):
+                compare_model_files(
+                    attribution_dir / MARKOV_OUTPUT_FILE,
+                    attribution_dir / SHAPLEY_OUTPUT_FILE,
+                    invalid_amc,
+                    AMAZON_ADS_REPORT_FILE,
+                    output_dir,
+                )
+
+            self.assertFalse(output_dir.exists())
 
     def test_publication_failure_restores_previous_artifact_set(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

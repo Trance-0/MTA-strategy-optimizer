@@ -43,6 +43,11 @@ Amazon Ads 报告中的 `impressions` 和 `clicks` 是汇总表现指标，不�
 
 当前样例的 51 条推荐记录全部处于 `EVIDENCE_UNVERIFIED`：`decision_value` 为空、`automation_allowed=false`。原因是尚无滚动窗口和重采样稳定性证据，且触点支持度有限。详细规则见[模型比较治理规范](../../../modules/amc_mta/docs/model-comparison-governance.md)。
 
+独立的当前窗口可靠性只检查计算有效、最低数据支持和模型一致三个标准。当前
+51 条记录中没有任何一条同时通过三项，因此为 `0 RELIABLE / 51 UNRELIABLE`；
+摘要按 outcome 分别 AND 聚合全部触点的三个布尔值，整体差异指标只保留为诊断；
+详细解释见[触点可靠性指南](../../../modules/amc_mta/docs/touchpoint-reliability-guide.md)。
+
 ## 项目价值
 
 - 从多触点视角补充 last-touch 报告无法展示的路径贡献。

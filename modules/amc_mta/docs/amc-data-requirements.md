@@ -86,7 +86,7 @@ Amazon Ads 报告也必须使用同一五段键，并提供 `interaction_type`�
 当前一次运行只接受一个 `marketplace + advertiser_id + currency` 范围。AMC 与 Ads 必须具备：
 
 - 相同账户和 marketplace；
-- 相同报告起止日期；
+- 相同报告起止日期；AMC 起止日期必须是有效 ISO 日期，且起点不晚于终点；
 - 完全相同的五段互动触点集合；
 - 每个五段互动触点在窗口内每一天都有 Ads 数据。
 
@@ -113,9 +113,19 @@ attributed_revenue         = revenue 总量
 五段键。
 
 比较输入必须使用严格无空白表头，两个模型的触点集合、成本和平台表现完全一致，
-且每个非零 outcome 的 share 与归因总量分别守恒。当前未提供滚动窗口或重采样
-稳定性证据，因此治理产物标记 `stability_level=UNVERIFIED`、
-`decision_status=EVIDENCE_UNVERIFIED`，所有 `decision_value` 为空。
+且每个非零 outcome 的 share 与归因总量分别守恒。三份双模型治理产物追加五个
+可靠性字段：`calculation_valid`、`data_support_sufficient`、
+`models_consistent`、`reliability_status`、`reliability_reason`。计算有效、原始
+支持同时达到 `30` 次购买、`20` 位购买用户、`5` 条唯一路径，且非零 outcome
+的模型差距同时满足 `gap_pp<=1.0`、`relative_gap<=0.20` 时，结果才是
+`RELIABLE`。摘要按 outcome 分别 AND 聚合所有触点的三个基础布尔值，再使用
+相同公式生成摘要可靠性。`support_status`、`comparison_status`、TVD、
+Spearman、Top-K、关键分歧和差距等级仅作诊断，不参与可靠性计算。两份单模型
+结果不含这些字段。
+
+当前未提供滚动窗口或重采样稳定性证据，因此治理产物仍标记
+`stability_level=UNVERIFIED`、`decision_status=EVIDENCE_UNVERIFIED`，所有
+`decision_value` 为空。这些字段属于独立决策治理，不参与上述可靠性计算。
 
 零成本行的 ROAS、ROI、CPA 和每转化用户成本为空。
 

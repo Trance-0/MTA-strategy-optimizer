@@ -32,7 +32,7 @@
 | `src/touchpoint_key.py` | 构造和严格校验五段键；曝光与点击保持独立 |
 | `src/amc_path_builder.py` | 事件排序、14 天连续间隔、多购买切段、匿名路径聚合 |
 | `src/amc_mta_attribution.py` | 输入校验、Markov、Shapley、Ads 成本聚合、效率指标和原子 CSV 写入 |
-| `src/model_comparison.py` | 五段支持度、差距等级、TVD、排名与治理推荐 |
+| `src/model_comparison.py` | 五段支持度、模型差距、三项可靠性、TVD、排名与治理推荐 |
 | `scripts/` | 路径构建、数据生成、归因、独立比较和对齐校验入口 |
 | `run_pipeline.py` | 在临时目录生成完整产物，并在发布失败时恢复旧文件 |
 | `tests/` | 锁定字段契约、边界、守恒、严格解析和发布回滚 |
@@ -109,10 +109,13 @@ Amazon Ads 行和模型输出，确保曝光、点击和成本始终独立。
 两模型分别对购买用户、购买次数和收入守恒。ROI、ROAS、CPA 与每购买用户成本使用
 同一五段成本计算；零成本行的效率指标为空。推荐文件不是第三套归因模型，而是治理
 视图：当前 Markov 仅作为展示口径，Shapley 作为参照，所有决策值均被证据门槛阻断。
+三份双模型产物另输出计算有效、数据支撑充分、模型一致及其二元可靠性状态；当前
+样例为 `0 RELIABLE / 51 UNRELIABLE`。摘要按 outcome 对三个触点级布尔值分别
+做 AND；TVD、Spearman、Top-K、整体比较状态和差距等级保留为诊断，不参与合成。
 
 ## 可靠性与测试
 
-当前 75 项测试覆盖：
+当前 86 项测试覆盖：
 
 - 五段键和 CPC/CPM 计费冲突；
 - 路径排序、14 天边界、报告起点和多购买不复用；
@@ -120,6 +123,7 @@ Amazon Ads 行和模型输出，确保曝光、点击和成本始终独立。
 - 三个 outcome 的模型守恒和舍入残差；
 - 模型集合、成本、窗口、范围和严格 CSV 表头一致性；
 - 五段支持度、差距阈值、TVD、Spearman 和 Top K；
+- 三项可靠性阈值、固定原因顺序、长尾和零 outcome 边界；
 - 多文件发布失败回滚与按文件名匹配。
 
 测试能证明实现符合当前契约，不能独立证明模型具有因果真实性。模拟事件可精确复现
@@ -132,11 +136,11 @@ Amazon Ads 行和模型输出，确保曝光、点击和成本始终独立。
 | 五段键与 CPC/CPM 归属 | `src/touchpoint_key.py`, `aggregate_spend_by_touchpoint` | `test_touchpoint_key.py` |
 | 14 天路径、起点和多购买切段 | `src/amc_path_builder.py` | `test_amc_path_builder.py` |
 | Markov/Shapley 语义与守恒 | `src/amc_mta_attribution.py` | `test_amc_mta_attribution.py` |
-| 差距、支持度与治理阻断 | `src/model_comparison.py` | `test_model_comparison.py` |
+| 差距、支持度、可靠性与治理阻断 | `src/model_comparison.py` | `test_model_comparison.py` |
 | 全流程复现和发布回滚 | `run_pipeline.py`, `scripts/` | `test_amc_mta_end_to_end.py` |
 
-本文核对基线为 `734ff73` 加本轮纯文档整理；验收时 `modules/amc_mta` 相对该基线
-没有代码差异。
+本文核对基线为 `1000bcc` 加本轮可靠性实现；代码、测试、文档和五份输出已按
+当前三项可靠性契约同步更新。
 
 ## 生产化边界
 

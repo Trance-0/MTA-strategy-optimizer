@@ -2,9 +2,7 @@
 
 ## 用途
 
-本文用于判断一个五段触点的归因结果是否值得信任、应该如何解释。
-
-本模型只用于归因分析，不用于预算分配或投放优化。归因结果也不代表因果增量。
+本文用于判断一个五段触点在当前报告窗口、指定 outcome 下的归因结果是否可靠。
 
 五段触点格式：
 
@@ -12,163 +10,170 @@
 AD_PRODUCT:FORMAT:PLACEMENT:CREATIVE:INTERACTION_TYPE
 ```
 
-`IMPRESSION` 和 `CLICK` 是两个独立触点，必须分别判断。
+`IMPRESSION` 和 `CLICK` 是两个独立触点，必须分别判断。三个 outcome 也分别形成
+记录：`converted_users`、`purchase_count`、`revenue`。
 
-## 查看顺序
+可靠性只由以下三个布尔标准组成：
 
-1. 在 `amc_mta_model_comparison_summary.csv` 确认对应 outcome 计算有效。
-2. 在 `amc_mta_recommended_attribution.csv` 查看 Markov 正式份额和 Shapley 参照份额。
-3. 在 `amc_mta_model_comparison_touchpoints.csv` 判断支持度、稳定性和模型差距。
+1. 计算是否有效；
+2. 数据支撑是否充分；
+3. Markov 与 Shapley 是否一致。
 
-快消品 outcome 查看顺序：
+三个标准全部通过才是 `RELIABLE`；任一不通过就是 `UNRELIABLE`。不再使用
+高、中、低等级，也不增加其他条件。
 
-```text
-purchase_count → revenue → converted_users
-```
+## 1. 计算是否有效
 
-## 判断步骤
-
-### 1. 计算是否有效
-
-检查：
+字段：
 
 ```text
-operational_status = VALID
-validation_error_count = 0
+calculation_valid
 ```
 
-如果校验失败，不解释该归因结果。
+只有完整流程通过以下严格校验，才会生成新结果：
 
-### 2. 数据支持是否充分
+- AMC、Amazon Ads、Markov 和 Shapley 使用同一窗口、账户和五段触点集合；
+- AMC `report_start_date` 与 `report_end_date` 是有效 ISO 日期，且起点不晚于终点；
+- 输入字段完整，数值有限、非负且关系合法；
+- 两个模型的 share 和 attributed outcome 分别守恒；
+- 成本、平台表现和效率指标一致；
+- 无重复触点，CSV 表头和值没有首尾空白。
 
-| 支持等级 | 购买次数 | 购买用户 | 唯一路径数 | 解释 |
-| --- | ---: | ---: | ---: | --- |
-| `FULL_SUPPORT` | `>= 100` | `>= 50` | `>= 10` | 支持较充分 |
-| `LIMITED_SUPPORT` | `>= 30` | `>= 20` | `>= 5` | 证据有限 |
-| `LOW_SUPPORT` | 任一低于 LIMITED 门槛 | 任一低于 LIMITED 门槛 | 任一低于 LIMITED 门槛 | 仅作探索性归因 |
+校验通过的输出记录为 `true`。任一校验失败时流程 fail-fast，不发布新产物，
+因此不会把无效预览写成正式结果。
 
-三个条件必须同时满足。购买量很大但唯一路径很少，仍属于低支持度。
+## 2. 数据支撑是否充分
 
-### 3. 时间是否稳定
-
-检查：
+字段：
 
 ```text
-stability_level
-markov_interval_low / markov_interval_high
-shapley_interval_low / shapley_interval_high
-gap_direction_rate
-top5_entry_rate
+data_support_sufficient
 ```
 
-如果 `stability_level=UNVERIFIED`，只能说明当前窗口的归因结果，不能表述为长期
-稳定贡献。
+同一五段触点必须同时满足：
 
-当前项目尚未完成滚动窗口和重采样验证，因此所有结果都属于探索性归因。
+```text
+raw_purchase_count >= 30
+raw_converted_users >= 20
+raw_unique_paths >= 5
+```
 
-### 4. 两个模型是否一致
+三个条件均满足为 `true`，任一条件不足为 `false`。门槛值本身算通过。
 
-| 等级 | 判断 | 解释方式 |
-| --- | --- | --- |
-| `LONG_TAIL` | 平均份额 `< 1%` | 贡献很小，避免放大相对差 |
-| `SMALL` | `gap_pp <= 1` 且相对差 `<= 20%` | 两模型对贡献量级判断接近 |
-| `MEDIUM` | 不属于其他等级 | 归因份额对模型假设有一定敏感性 |
-| `LARGE` | `gap_pp >= 3` 或达到组合门槛 | 两模型对贡献大小存在明显分歧 |
+支持量从原始 AMC 聚合路径计算。同一触点在一条规范化路径中重复出现只计一次
+支持；一条路径可以同时支持多个触点，所以这些支持量不要求跨触点守恒。
+既有 `FULL_SUPPORT` 与 `LIMITED_SUPPORT` 都达到最低门槛，`LOW_SUPPORT` 未达到。
 
-其中：
+## 3. 两个模型是否一致
+
+字段：
+
+```text
+models_consistent
+```
+
+对非零 outcome：
 
 ```text
 gap_pp = 100 × |markov_share - shapley_share|
+mean_share = (markov_share + shapley_share) / 2
+relative_gap = |markov_share - shapley_share| / mean_share
 ```
 
-处理方法：
-
-- `SMALL`：以 Markov 为正式归因值，Shapley 作为参照。
-- `MEDIUM`：同时展示两个模型和 `model_low ~ model_high`。
-- `LARGE`：并列展示两个模型，不取平均。
-- `critical_divergence=true`：优先调查路径、窗口和人群结构。
-
-### 5. 三个 outcome 是否一致
-
-定义：
+同时满足以下条件为 `true`：
 
 ```text
-markov_outcome_spread_pp
-= 100 × (Markov三个outcome最大share - 最小share)
-
-shapley_outcome_spread_pp
-= 100 × (Shapley三个outcome最大share - 最小share)
-
-outcome_spread_pp
-= max(markov_outcome_spread_pp, shapley_outcome_spread_pp)
+gap_pp <= 1.0
+relative_gap <= 0.20
 ```
 
-| `outcome_spread_pp` | 结论 |
-| ---: | --- |
-| `<= 2pp` | 三个 outcome 基本一致 |
-| `> 2pp` 且 `<= 5pp` | 存在一定 outcome 差异 |
-| `> 5pp` | outcome 明显不一致，应分别解释 |
+任一条件超界为 `false`。两个门槛值本身算通过。该判断直接使用数值，不受
+`LONG_TAIL`、`SMALL`、`MEDIUM` 或 `LARGE` 的分类顺序影响；因此非零长尾触点
+只要两个差距门槛均通过，也可以得到 `models_consistent=true`。门槛比较使用
+解析时保留的未舍入原始十进制 share 精确计算，不先按输出显示值舍入，也不使用
+容差放宽；任何严格大于 `1.0` 或 `0.20` 的值都不通过。
 
-该指标取两个模型中较大的极差，避免只看 Markov 或只看 Shapley。如果任一 outcome
-为 `NO_OUTCOME`，则不计算该指标。
+当整个 outcome 合法地为零时，`calculation_valid=true`，但
+`data_support_sufficient=false`、`models_consistent=false`，最终结果不可靠。
 
-## 可靠性等级
+## 最终状态与原因
 
-| 等级 | 条件 | 呈现方式 |
-| --- | --- | --- |
-| 高 | 计算有效、`FULL_SUPPORT`、稳定性通过、差距小、`outcome_spread_pp <= 2pp` | Markov 正式展示，Shapley 参照 |
-| 中 | 计算有效、至少 `LIMITED_SUPPORT`、稳定性通过，但存在中等差距 | 同时展示两个模型和模型区间 |
-| 低 | `LOW_SUPPORT`、稳定性未验证/不稳定、差距大或存在关键分歧 | 标记为探索性归因 |
-| 无效 | 输入、守恒、窗口或字段校验失败 | 不展示归因结论 |
-
-最终等级取最弱的一项。例如：
+输出字段：
 
 ```text
-FULL_SUPPORT + SMALL + UNVERIFIED = 低可靠
+calculation_valid
+data_support_sufficient
+models_consistent
+reliability_status
+reliability_reason
 ```
+
+合并规则：
+
+```text
+calculation_valid
+AND data_support_sufficient
+AND models_consistent
+```
+
+三项全真：
+
+```text
+reliability_status = RELIABLE
+reliability_reason = ALL_CRITERIA_PASSED
+```
+
+任一项为假：
+
+```text
+reliability_status = UNRELIABLE
+```
+
+失败原因只使用以下三个代码，并按固定顺序连接：
+
+```text
+CALCULATION_INVALID
+INSUFFICIENT_DATA_SUPPORT
+MODELS_INCONSISTENT
+```
+
+例如支持不足且模型不一致：
+
+```text
+reliability_reason = INSUFFICIENT_DATA_SUPPORT|MODELS_INCONSISTENT
+```
+
+## 在哪里查看
+
+五个字段写入三份双模型产物：
+
+```text
+amc_mta_model_comparison_touchpoints.csv
+amc_mta_model_comparison_summary.csv
+amc_mta_recommended_attribution.csv
+```
+
+推荐表和触点比较表中的同一 `touchpoint + outcome` 必须具有完全相同的五个值。
+摘要表按 outcome 汇总：分别对该 outcome 下所有触点的
+`calculation_valid`、`data_support_sufficient`、`models_consistent` 做 AND，
+再使用完全相同的三项 AND 公式生成摘要可靠性。
+
+`support_status`、`comparison_status`、TVD、Spearman、Top-K、
+`critical_divergence` 和差距等级都保留为诊断信息，但不参与可靠性计算。
+
+原始 Markov、Shapley 单模型结果不包含可靠性字段，因为可靠性需要两个模型及
+AMC 原始支持共同判断。
 
 ## 当前样例
 
-触点：
+当前样例共有 17 个五段触点和三个 outcome，即 51 条触点结果：
 
-```text
-SPONSORED_PRODUCTS:PRODUCT_AD:PRODUCT_PAGE:UNSPECIFIED:CLICK
-```
+- 51 条 `calculation_valid=true`；
+- 3 条 `data_support_sufficient=true`；
+- 这 3 条的 `models_consistent=false`；
+- 最终 `0 RELIABLE / 51 UNRELIABLE`；
+- 三条 outcome 摘要均为 `UNRELIABLE`。
 
-购买次数归因：
-
-| 字段 | 当前值 |
-| --- | ---: |
-| Markov | 13.249% |
-| Shapley | 19.757% |
-| `gap_pp` | 6.508pp |
-| `difference_level` | `LARGE` |
-| `critical_divergence` | `true` |
-| `raw_unique_paths` | 4 |
-| `support_level` | `LOW_SUPPORT` |
-| `stability_level` | `UNVERIFIED` |
-| `outcome_spread_pp` | 1.633pp |
-
-结论：
-
-```text
-归因可靠性：低
-```
-
-三个 outcome 本身基本一致，但支持度、时间稳定性和双模型差距仍未通过，所以不能
-提升整体可靠性等级。
-
-推荐表述：
-
-> 两个模型都认为该触点是重要贡献来源，但对贡献大小存在明显分歧。由于独立路径
-> 和时间稳定性证据不足，该结果只代表当前样例中的探索性归因。
-
-## 快速检查
-
-- [ ] 整体计算有效；
-- [ ] 支持度不是 `LOW_SUPPORT`；
-- [ ] 稳定性已经验证；
-- [ ] 已比较 Markov 和 Shapley；
-- [ ] 已查看 `gap_pp` 和 `critical_divergence`；
-- [ ] 已检查三个 outcome；
-- [ ] 未把归因结果解释为因果增量。
+`RELIABLE` 只表示当前窗口满足上述三项归因证据标准，不代表因果增量、长期稳定
+贡献，也不会开放自动预算或投放执行。既有稳定性和决策字段是独立治理约束，
+不参与这里的可靠性计算。

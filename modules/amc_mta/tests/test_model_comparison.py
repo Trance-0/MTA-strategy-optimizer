@@ -1,9 +1,11 @@
 from __future__ import annotations
 
 import csv
+import math
 import sys
 import tempfile
 import unittest
+from decimal import Decimal
 from pathlib import Path
 from unittest.mock import patch
 
@@ -25,7 +27,10 @@ from model_comparison import (  # noqa: E402
     calculate_raw_support,
     classify_difference,
     compare_attribution_models,
+    data_support_is_sufficient,
+    models_are_consistent,
     read_amc_csv_strict,
+    reliability_fields,
     spearman_rho,
 )
 
@@ -75,6 +80,34 @@ def model_row(model: str, touchpoint: str, share: float, **overrides: object) ->
     return row
 
 
+def high_support_amc_rows() -> list[dict]:
+    return [
+        amc_row(path)
+        for path in (
+            f"{A_IMPRESSION} > {A_CLICK}",
+            f"{A_CLICK} > {A_IMPRESSION}",
+            f"{A_IMPRESSION} > {A_IMPRESSION} > {A_CLICK}",
+            f"{A_IMPRESSION} > {A_CLICK} > {A_IMPRESSION}",
+            f"{A_CLICK} > {A_IMPRESSION} > {A_CLICK}",
+        )
+    ]
+
+
+def high_support_model_row(model: str, touchpoint: str, share: float) -> dict:
+    return model_row(
+        model,
+        touchpoint,
+        share,
+        attributed_converted_users=share * 250,
+        attributed_purchase_count=share * 500,
+        attributed_revenue=share * 5000,
+        roas=share * 500,
+        roi=share * 500 - 1,
+        cpa=10 / (share * 500),
+        cost_per_converted_user=10 / (share * 250),
+    )
+
+
 class DifferenceRuleTests(unittest.TestCase):
     def test_thresholds_apply_in_documented_order(self) -> None:
         self.assertEqual(classify_difference(0.009, 0.008)[0], "LONG_TAIL")
@@ -108,12 +141,75 @@ class SupportTests(unittest.TestCase):
         self.assertEqual(support[A_IMPRESSION]["raw_purchase_count"], 100)
         self.assertEqual(support[A_CLICK]["raw_purchase_count"], 100)
 
+    def test_sufficient_support_requires_all_inclusive_minimums(self) -> None:
+        minimum = {
+            "raw_purchase_count": 30,
+            "raw_converted_users": 20,
+            "raw_unique_paths": 5,
+        }
+        self.assertTrue(data_support_is_sufficient(minimum))
+        for field in minimum:
+            with self.subTest(field=field):
+                below = dict(minimum)
+                below[field] -= 1
+                self.assertFalse(data_support_is_sufficient(below))
+
     def test_repeated_touchpoint_counts_once_per_path_support(self) -> None:
         support = calculate_raw_support(
             [amc_row(f"{A_IMPRESSION} > {A_IMPRESSION}")]
         )
         self.assertEqual(support[A_IMPRESSION]["raw_unique_paths"], 1)
         self.assertEqual(support[A_IMPRESSION]["raw_purchase_count"], 100)
+
+
+class ReliabilityRuleTests(unittest.TestCase):
+    def test_model_consistency_uses_both_inclusive_thresholds(self) -> None:
+        self.assertTrue(models_are_consistent(1.0, 0.20, has_outcome=True))
+        self.assertFalse(
+            models_are_consistent(
+                math.nextafter(1.0, math.inf), 0.20, has_outcome=True
+            )
+        )
+        self.assertFalse(
+            models_are_consistent(
+                1.0, math.nextafter(0.20, math.inf), has_outcome=True
+            )
+        )
+        self.assertFalse(models_are_consistent(1.000001, 0.20, has_outcome=True))
+        self.assertFalse(models_are_consistent(1.0, 0.200001, has_outcome=True))
+        for gap_pp, relative_gap in (
+            (math.nan, 0.0),
+            (0.0, math.nan),
+            (math.inf, 0.0),
+            (0.0, math.inf),
+            (-math.inf, 0.0),
+            (0.0, -math.inf),
+            (-0.000001, 0.0),
+            (0.0, -0.000001),
+        ):
+            with self.subTest(gap_pp=gap_pp, relative_gap=relative_gap):
+                self.assertFalse(
+                    models_are_consistent(
+                        gap_pp, relative_gap, has_outcome=True
+                    )
+                )
+        self.assertFalse(models_are_consistent(0.0, 0.0, has_outcome=False))
+
+    def test_reliability_is_and_with_fixed_reason_order(self) -> None:
+        self.assertEqual(
+            reliability_fields(True, True, True),
+            {
+                "calculation_valid": "true",
+                "data_support_sufficient": "true",
+                "models_consistent": "true",
+                "reliability_status": "RELIABLE",
+                "reliability_reason": "ALL_CRITERIA_PASSED",
+            },
+        )
+        self.assertEqual(
+            reliability_fields(False, False, False)["reliability_reason"],
+            "CALCULATION_INVALID|INSUFFICIENT_DATA_SUPPORT|MODELS_INCONSISTENT",
+        )
 
 
 class CompleteComparisonTests(unittest.TestCase):
@@ -180,6 +276,243 @@ class CompleteComparisonTests(unittest.TestCase):
             },
             {"ABSOLUTE_GAP"},
         )
+        self.assertTrue(
+            all(row["calculation_valid"] == "true" for row in artifacts.touchpoints)
+        )
+        self.assertTrue(
+            all(row["data_support_sufficient"] == "false" for row in artifacts.touchpoints)
+        )
+        self.assertTrue(
+            all(row["models_consistent"] == "false" for row in artifacts.touchpoints)
+        )
+        self.assertTrue(
+            all(row["reliability_status"] == "UNRELIABLE" for row in artifacts.touchpoints)
+        )
+        self.assertTrue(
+            all(
+                row["reliability_reason"]
+                == "INSUFFICIENT_DATA_SUPPORT|MODELS_INCONSISTENT"
+                for row in artifacts.touchpoints
+            )
+        )
+        touchpoint_reliability = {
+            (row["touchpoint"], row["outcome"]): (
+                row["calculation_valid"],
+                row["data_support_sufficient"],
+                row["models_consistent"],
+                row["reliability_status"],
+                row["reliability_reason"],
+            )
+            for row in artifacts.touchpoints
+        }
+        self.assertTrue(
+            all(
+                touchpoint_reliability[(row["touchpoint"], row["outcome"])]
+                == (
+                    row["calculation_valid"],
+                    row["data_support_sufficient"],
+                    row["models_consistent"],
+                    row["reliability_status"],
+                    row["reliability_reason"],
+                )
+                for row in artifacts.recommended
+            )
+        )
+
+    def test_nonzero_equal_long_tail_is_model_consistent(self) -> None:
+        markov = [
+            model_row("markov", A_IMPRESSION, 0.005),
+            model_row("markov", A_CLICK, 0.995),
+        ]
+        shapley = [
+            model_row("shapley", A_IMPRESSION, 0.005),
+            model_row("shapley", A_CLICK, 0.995),
+        ]
+        artifacts = compare_attribution_models(markov, shapley, self.amc_rows)
+        rows = [
+            row for row in artifacts.touchpoints if row["touchpoint"] == A_IMPRESSION
+        ]
+        self.assertTrue(all(row["difference_level"] == "LONG_TAIL" for row in rows))
+        self.assertTrue(all(row["models_consistent"] == "true" for row in rows))
+        self.assertTrue(all(row["reliability_status"] == "UNRELIABLE" for row in rows))
+        self.assertTrue(
+            all(row["reliability_reason"] == "INSUFFICIENT_DATA_SUPPORT" for row in rows)
+        )
+
+    def test_all_three_criteria_produce_reliable_outputs(self) -> None:
+        markov = [
+            high_support_model_row("markov", A_IMPRESSION, 0.4),
+            high_support_model_row("markov", A_CLICK, 0.6),
+        ]
+        shapley = [
+            high_support_model_row("shapley", A_IMPRESSION, 0.4),
+            high_support_model_row("shapley", A_CLICK, 0.6),
+        ]
+        artifacts = compare_attribution_models(
+            markov, shapley, high_support_amc_rows()
+        )
+
+        for rows in (artifacts.touchpoints, artifacts.summary, artifacts.recommended):
+            self.assertTrue(all(row["calculation_valid"] == "true" for row in rows))
+            self.assertTrue(
+                all(row["data_support_sufficient"] == "true" for row in rows)
+            )
+            self.assertTrue(all(row["models_consistent"] == "true" for row in rows))
+            self.assertTrue(all(row["reliability_status"] == "RELIABLE" for row in rows))
+            self.assertTrue(
+                all(row["reliability_reason"] == "ALL_CRITERIA_PASSED" for row in rows)
+            )
+
+    def test_summary_ands_touchpoint_booleans_not_overall_diagnostics(self) -> None:
+        markov = [
+            high_support_model_row("markov", A_IMPRESSION, 0.4),
+            high_support_model_row("markov", A_CLICK, 0.6),
+        ]
+        shapley = [
+            high_support_model_row("shapley", A_IMPRESSION, 0.42),
+            high_support_model_row("shapley", A_CLICK, 0.58),
+        ]
+
+        artifacts = compare_attribution_models(
+            markov, shapley, high_support_amc_rows()
+        )
+
+        self.assertTrue(
+            all(row["models_consistent"] == "false" for row in artifacts.touchpoints)
+        )
+        self.assertTrue(
+            all(row["comparison_status"] == "CONSISTENT" for row in artifacts.summary)
+        )
+        self.assertTrue(
+            all(row["models_consistent"] == "false" for row in artifacts.summary)
+        )
+        self.assertTrue(
+            all(row["reliability_status"] == "UNRELIABLE" for row in artifacts.summary)
+        )
+        self.assertTrue(
+            all(
+                row["reliability_reason"] == "MODELS_INCONSISTENT"
+                for row in artifacts.summary
+            )
+        )
+
+    def test_uniform_identical_models_remain_reliable_when_spearman_is_undefined(self) -> None:
+        markov = [
+            high_support_model_row("markov", A_IMPRESSION, 0.5),
+            high_support_model_row("markov", A_CLICK, 0.5),
+        ]
+        shapley = [
+            high_support_model_row("shapley", A_IMPRESSION, 0.5),
+            high_support_model_row("shapley", A_CLICK, 0.5),
+        ]
+
+        artifacts = compare_attribution_models(
+            markov, shapley, high_support_amc_rows()
+        )
+
+        self.assertTrue(all(row["spearman_rho"] == "" for row in artifacts.summary))
+        self.assertTrue(
+            all(row["comparison_status"] == "MIXED_REVIEW" for row in artifacts.summary)
+        )
+        self.assertTrue(
+            all(row["models_consistent"] == "true" for row in artifacts.summary)
+        )
+        self.assertTrue(
+            all(row["reliability_status"] == "RELIABLE" for row in artifacts.summary)
+        )
+
+    def test_share_derived_exact_boundary_is_not_misclassified_by_binary_float(self) -> None:
+        markov = [
+            high_support_model_row("markov", A_IMPRESSION, 0.055),
+            high_support_model_row("markov", A_CLICK, 0.945),
+        ]
+        shapley = [
+            high_support_model_row("shapley", A_IMPRESSION, 0.045),
+            high_support_model_row("shapley", A_CLICK, 0.955),
+        ]
+
+        artifacts = compare_attribution_models(
+            markov, shapley, high_support_amc_rows()
+        )
+        boundary_rows = [
+            row
+            for row in artifacts.touchpoints
+            if row["touchpoint"] == A_IMPRESSION
+        ]
+
+        self.assertTrue(all(row["gap_pp"] == 1.0 for row in boundary_rows))
+        self.assertTrue(all(row["relative_gap"] == 0.2 for row in boundary_rows))
+        self.assertTrue(
+            all(row["models_consistent"] == "true" for row in boundary_rows)
+        )
+
+    def test_unrounded_text_shares_above_boundary_remain_unreliable_everywhere(self) -> None:
+        share_fields = (
+            "converted_user_share",
+            "purchase_count_share",
+            "revenue_share",
+        )
+
+        def with_raw_share(row: dict, raw_share: str) -> dict:
+            result = dict(row)
+            for field in share_fields:
+                result[field] = raw_share
+            return result
+
+        markov = [
+            with_raw_share(
+                high_support_model_row("markov", A_IMPRESSION, 0.055),
+                "0.055000000000000001",
+            ),
+            with_raw_share(
+                high_support_model_row("markov", A_CLICK, 0.945),
+                "0.944999999999999999",
+            ),
+        ]
+        shapley = [
+            with_raw_share(
+                high_support_model_row("shapley", A_IMPRESSION, 0.045),
+                "0.045",
+            ),
+            with_raw_share(
+                high_support_model_row("shapley", A_CLICK, 0.955),
+                "0.955",
+            ),
+        ]
+        for left, right in (
+            ("0.055000000000000001", "0.045"),
+            ("0.944999999999999999", "0.955"),
+        ):
+            self.assertGreater(
+                abs(Decimal(left) - Decimal(right)) * Decimal("100"),
+                Decimal("1.0"),
+            )
+
+        artifacts = compare_attribution_models(
+            markov, shapley, high_support_amc_rows()
+        )
+
+        for rows, schema in (
+            (artifacts.touchpoints, TOUCHPOINT_COMPARISON_FIELDS),
+            (artifacts.summary, SUMMARY_FIELDS),
+            (artifacts.recommended, RECOMMENDED_FIELDS),
+        ):
+            self.assertTrue(all(set(row) == set(schema) for row in rows))
+            self.assertTrue(
+                all(
+                    not any(field.startswith("__decimal_") for field in row)
+                    for row in rows
+                )
+            )
+            self.assertTrue(
+                all(row["models_consistent"] == "false" for row in rows)
+            )
+            self.assertTrue(
+                all(row["reliability_status"] == "UNRELIABLE" for row in rows)
+            )
+            self.assertTrue(
+                all(row["reliability_reason"] == "MODELS_INCONSISTENT" for row in rows)
+            )
 
     def test_five_part_governance_contract_is_exact(self) -> None:
         artifacts = compare_attribution_models(self.markov, self.shapley, self.amc_rows)
@@ -264,6 +597,24 @@ class CompleteComparisonTests(unittest.TestCase):
                 self.markov, self.shapley, self.amc_rows, reference_window_days=0
             )
 
+    def test_rejects_invalid_or_inverted_amc_report_dates(self) -> None:
+        invalid_cases = (
+            ({"report_start_date": "not-a-date"}, "ISO dates"),
+            ({"report_end_date": "2026-02-30"}, "ISO dates"),
+            (
+                {
+                    "report_start_date": "2026-07-01",
+                    "report_end_date": "2026-06-30",
+                },
+                "inverted",
+            ),
+        )
+        for overrides, expected_message in invalid_cases:
+            with self.subTest(overrides=overrides):
+                invalid_amc = [dict(self.amc_rows[0], **overrides)]
+                with self.assertRaisesRegex(ValueError, expected_message):
+                    compare_attribution_models(self.markov, self.shapley, invalid_amc)
+
     def test_zero_outcome_is_reported_without_distribution_metrics(self) -> None:
         amc_rows = [
             amc_row(
@@ -294,6 +645,20 @@ class CompleteComparisonTests(unittest.TestCase):
         self.assertTrue(
             all(row["decision_status"] == "NO_OUTCOME" for row in artifacts.recommended)
         )
+        for rows in (artifacts.touchpoints, artifacts.summary, artifacts.recommended):
+            self.assertTrue(all(row["calculation_valid"] == "true" for row in rows))
+            self.assertTrue(
+                all(row["data_support_sufficient"] == "false" for row in rows)
+            )
+            self.assertTrue(all(row["models_consistent"] == "false" for row in rows))
+            self.assertTrue(all(row["reliability_status"] == "UNRELIABLE" for row in rows))
+            self.assertTrue(
+                all(
+                    row["reliability_reason"]
+                    == "INSUFFICIENT_DATA_SUPPORT|MODELS_INCONSISTENT"
+                    for row in rows
+                )
+            )
 
 
 class StrictCsvTests(unittest.TestCase):

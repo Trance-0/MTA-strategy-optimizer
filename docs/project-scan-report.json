@@ -1,15 +1,15 @@
 {
   "workflow_version": "1.3.0",
   "timestamps": {
-    "started": "2026-07-16T17:25:36+08:00",
-    "last_updated": "2026-07-20T11:17:10Z"
+    "started": "2026-07-20T11:20:00Z",
+    "last_updated": "2026-07-20T13:25:20Z"
   },
-  "mode": "workspace_organization_refresh",
+  "mode": "amc_reliability_refresh",
   "scan_level": "exhaustive",
   "project_root": "{project-root}",
   "project_knowledge": "docs",
   "scope": "entire workspace excluding declared protected or generated paths",
-  "validated_baseline_commit": "2c00f19fa640bb65d7ccf99714f11f912904a85a",
+  "validated_baseline_commit": "1000bcc06086acac99680997ac5abbece0c621b1",
   "exclusions": [
     {
       "path": ".git/",
@@ -30,24 +30,24 @@
   ],
   "completed_steps": [
     {
-      "step": "classify",
+      "step": "inspect",
       "status": "completed",
-      "summary": "Kept the established business, current knowledge, history, research, and installed-tool boundaries."
+      "summary": "Traced calculation validation, raw support, model consistency, schemas, publication, tests, and current documentation."
     },
     {
-      "step": "relocate",
+      "step": "implement",
       "status": "completed",
-      "summary": "Moved the historical model guide, normalized two research entry names, and corrected the Shapley PDF filename."
+      "summary": "Corrected summary reliability to AND the three touchpoint-level booleans, preserved unrounded original decimal shares for exact thresholds, safely rejected invalid gap metrics, and added direct AMC report-date validation."
     },
     {
-      "step": "govern",
+      "step": "publish",
       "status": "completed",
-      "summary": "Added workspace placement rules and complete research, module, documentation, and root navigation."
+      "summary": "Atomically rebuilt the AMC path report and five outputs with deterministic LF CSV serialization."
     },
     {
       "step": "validate",
       "status": "completed",
-      "summary": "Validated tests, links, reachability, JSON, file hygiene, research-original integrity, and inventory parity without running the output-writing pipeline."
+      "summary": "Validated 86 tests, strict original-decimal threshold/date counterexamples, summary aggregation, output contracts, determinism, data alignment, links, file hygiene, and inventory parity."
     }
   ],
   "current_step": "complete",
@@ -62,51 +62,71 @@
         "_bmad-output",
         "design-artifacts",
         "docs/research"
-      ],
-      "excluded_from_model_evaluation": "all parts except modules/amc_mta"
+      ]
     },
     "inventory": {
-      "files_after_exclusions": 2169,
-      "bytes_after_exclusions": 43800509,
+      "files_after_exclusions": 2170,
+      "bytes_after_exclusions": 43811916,
       "symbolic_links": 0,
       "empty_files": 0,
       "installed_skills": 119
     },
-    "relocations": {
-      "historical_model_guide": "design-artifacts/A-Product-Brief/model-relationship-guide.md",
-      "mta_entry": "docs/research/mta/README.md",
-      "ab_testing_entry": "docs/research/ab-testing/README.md",
-      "shapley_pdf": "docs/research/mta/Shapley Value Methods for Attribution Modeling in Online Advertising.pdf",
-      "shapley_pdf_sha256_before_and_after": "6a4d8c660ffd3762fac384a64a9d44e3510fede6e2eac7e42d032a3e5254843f"
+    "reliability_contract": {
+      "criteria": [
+        "calculation_valid",
+        "data_support_sufficient",
+        "models_consistent"
+      ],
+      "combination": "all three criteria must be true",
+      "statuses": [
+        "RELIABLE",
+        "UNRELIABLE"
+      ],
+      "minimum_support": "raw_purchase_count >= 30 and raw_converted_users >= 20 and raw_unique_paths >= 5",
+      "model_consistency": "non-zero outcome and gap_pp <= 1.0 and relative_gap <= 0.20",
+      "threshold_arithmetic": "Decimal calculations from preserved unrounded original string/Decimal shares; float inputs retain their string representation; no epsilon beyond either inclusive boundary",
+      "summary_aggregation": "for each outcome, AND each of the three touchpoint-level booleans and reuse the same reliability composition",
+      "diagnostics_excluded": "support_status, comparison_status, TVD, Spearman, Top-K, critical divergence, and difference levels",
+      "legacy_stability_and_decision_fields": "preserved but excluded from reliability"
+    },
+    "output_summary": {
+      "touchpoint_comparison_rows": 51,
+      "summary_rows": 3,
+      "recommended_rows": 51,
+      "calculation_valid_rows": 51,
+      "data_support_sufficient_rows": 3,
+      "supported_but_model_inconsistent_rows": 3,
+      "reliable_rows": 0,
+      "unreliable_rows": 51,
+      "reliable_summary_rows": 0,
+      "single_model_reliability_fields": 0
     },
     "validation_summary": {
-      "amc_tests": "75 passed",
-      "project_markdown": "41 reachable, 0 broken links, 0 orphans",
+      "amc_tests": "86 passed",
+      "data_alignment": "17 touchpoints, 61 days, one US / adv_demo_001 / USD scope",
+      "project_markdown": "41 reachable non-spec documents, 0 broken local links, 0 orphans",
+      "csv_contracts": "51/3/51 rows, exact headers, no internal Decimal keys, lowercase booleans, summary touchpoint-AND parity, no surrounding whitespace or CRLF",
+      "pipeline_determinism": "six generated artifact SHA-256 values unchanged across consecutive runs",
       "inventory_mismatches": 0,
       "new_cache_or_temporary_files": 0,
-      "amc_pipeline": "not run to preserve existing CSV changes",
-      "pre_existing_csv_whitespace": "preserved; excluded from the task-scoped diff check",
-      "preserved_historical_markdown_hard_break": "one existing two-space Markdown line break retained in the relocated model guide",
-      "protected_log": "excluded without content read or hash"
+      "protected_log": "excluded without content read, hash, move, or modification"
     }
   },
   "scan_outputs_refreshed": [
     "docs/project-scan-report.json",
     "docs/workspace-file-inventory.json",
-    "docs/project-overview.md",
-    "docs/source-tree-analysis.md",
-    "docs/architecture.md",
-    "docs/component-inventory.md",
-    "docs/workspace-file-management.md"
+    "modules/amc_mta/outputs/attribution/*.csv",
+    "modules/amc_mta/docs/*.md"
   ],
-  "resume_instructions": "Use README.md as the root entry, docs/index.md for project knowledge, and docs/workspace-file-management.md for placement or migration decisions.",
+  "resume_instructions": "Use modules/amc_mta/docs/touchpoint-reliability-guide.md as the reliability contract and docs/workspace-file-management.md for file placement decisions.",
   "execution_status": "complete",
-  "review_status": "complete",
+  "review_status": "ready",
   "validation_commands": [
-    "python3 -B -m unittest discover -s modules/amc_mta/tests -p test*.py: 75 passed",
+    "python3 -B -m unittest discover -s modules/amc_mta/tests -p test*.py: 86 passed",
+    "python3 -B modules/amc_mta/run_pipeline.py: passed and deterministic",
+    "python3 -B modules/amc_mta/scripts/validate_data_alignment.py: 17 touchpoints and 61 days aligned",
+    "strict CSV header, whitespace, count, threshold, summary-AND, and reliability checks: passed",
     "project Markdown local-link and reachability scan: 41 reachable, 0 broken links, 0 orphans",
-    "JSON parse and inventory parity check: passed",
-    "file hygiene scan: 0 symbolic links, empty files, caches, or temporary files",
-    "task-scoped git diff --check excluding protected log, pre-existing formatted CSVs, and one preserved historical Markdown hard break; newly authored text checks: passed"
+    "JSON parse, inventory parity, file hygiene, and git diff --check excluding protected log: passed"
   ]
 }

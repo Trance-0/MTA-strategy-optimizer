@@ -4,7 +4,7 @@
 
 - [数据契约](amc-data-requirements.md)：当前字段与业务规则的唯一完整事实源。
 - [使用说明](usage.md)：运行命令、参数和输出。
-- [单触点归因可靠性判断](touchpoint-reliability-guide.md)：按支持度、稳定性、模型差距和跨 outcome 一致性解释单触点结果。
+- [单触点归因可靠性判断](touchpoint-reliability-guide.md)：按计算有效、数据支撑充分、模型一致三个标准解释单触点结果。
 - [Amazon Ads 样例](amazon-ads-report-sample.md)：五段表现与成本输入及计费归属方式。
 - [双模型差异量化与输出规范](model-comparison-governance.md)：面向快消品的 Markov 与 Path-level Shapley 差距阈值、证据门槛和输出状态机。
 

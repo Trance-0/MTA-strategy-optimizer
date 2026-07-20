@@ -1,6 +1,7 @@
 # AMC MTA 使用说明
 
 所有命令均从项目根目录运行。字段与路径规则见[数据契约](amc-data-requirements.md)。
+本模块只用于归因分析，不用于预算分配或投放优化。
 
 ## 运行
 
@@ -70,5 +71,15 @@ modules/amc_mta/outputs/attribution/amc_mta_recommended_attribution.csv
 归因值、成本表现、两套效率、差距等级和从五段 AMC 路径重算的支持度。
 摘要文件固定包含三个 outcome 的三行，`grain` 全部为 `FIVE_PART`；
 其中 `tvd` 和 share 均以 0–1 小数保存，`gap_pp` 才是百分点。推荐文件保留
-全部 51 行。稳定性证据缺失时，`official_share` 仅展示 intended Markov 口径，
-所有 `decision_value` 为空且 `automation_allowed=false`。
+全部 51 行。三份双模型产物均追加 `calculation_valid`、
+`data_support_sufficient`、`models_consistent`、`reliability_status` 和
+`reliability_reason`；两份单模型结果不含这些字段。三个布尔值全部为 `true`
+时才是 `RELIABLE`。摘要按 outcome 分别 AND 聚合全部触点的三个布尔值；
+`support_status`、`comparison_status` 及整体差异指标只作诊断。Markov 是正式
+归因展示口径，Shapley 用于判断模型敏感性。
+
+当前样例为 `0 RELIABLE / 51 UNRELIABLE`。稳定性证据缺失时，结果只能解释为
+当前窗口中的探索性归因；稳定性与自动决策字段是独立治理约束，不参与可靠性计算。
+
+单个触点的归因是否可靠、应该如何解释，见
+[单触点归因可靠性判断说明](touchpoint-reliability-guide.md)。

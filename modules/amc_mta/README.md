@@ -4,6 +4,8 @@
 
 > `amc_touchpoint_events_sample.csv` 只用于演示路径构建；真实 AMC 应在 clean room 内处理事件，只导出满足隐私门槛的聚合结果。
 
+本模块只用于归因分析，不承担预算分配、投放优化或自动执行。
+
 ## 快速运行
 
 在项目根目录执行：
@@ -24,14 +26,21 @@ modules/amc_mta/outputs/attribution/amc_mta_recommended_attribution.csv
 ```
 
 前两份是两个模型各自的五段主结果；后三份分别提供 51 行五段触点/outcome
-诊断、三个 outcome 的五段整体摘要，以及 51 行管理层推荐记录。当前没有滚动
-窗口稳定性证据，因此推荐记录的 `decision_status` 为
-`EVIDENCE_UNVERIFIED`、`decision_value` 为空，不可用于自动预算。
+诊断、三个 outcome 的五段整体摘要，以及 51 行归因推荐记录。三份双模型产物
+均直接给出“计算有效、数据支撑充分、模型一致”三个布尔值及二元可靠性结果；
+三项全真才是 `RELIABLE`。摘要分别 AND 聚合同一 outcome 全部触点的三个布尔
+值；整体比较状态和其他差异指标只作诊断。当前样例为
+`0 RELIABLE / 51 UNRELIABLE`。
+
+当前没有滚动窗口稳定性证据，因此现有结果仍只能解释为当前窗口的探索性归因，
+不能表述为长期稳定贡献或因果增量。稳定性和自动决策约束不参与可靠性计算，也
+不会因 `RELIABLE` 自动开放预算执行。
 
 ## 文档
 
 - [数据契约](docs/amc-data-requirements.md)：字段、14 天路径规则、AMC/Ads 五段键、计费归属和模型语义的唯一完整说明。
 - [运行方式](docs/usage.md)：命令、参数和输出。
+- [单触点归因可靠性判断](docs/touchpoint-reliability-guide.md)：按计算有效、数据支撑充分、模型一致三个标准判断归因结果。
 - [Amazon Ads 样例](docs/amazon-ads-report-sample.md)：成本表及关联键。
 - [模拟数据](data/simulated/README.md)：三个样例文件的角色。
 - [AMC 背景与数据流](../../docs/research/amazon/amc/README.md)：平台边界与整体链路。
