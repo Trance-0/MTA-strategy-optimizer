@@ -61,14 +61,15 @@ docs/
 ├── architecture.md                   # 工作区级架构
 ├── source-tree-analysis.md           # 本文
 ├── component-inventory.md            # 组件和资产清单
+├── workspace-file-management.md      # 文件位置、命名、归档和移动规则
 ├── development-guide.md              # 开发与验证指南
 ├── workspace-file-inventory.json     # 全量机器清单
 ├── amc-mta-*.md                      # 当前业务架构与评价
-├── product/                          # 当前介绍与历史功能说明
+├── product/                          # 当前 AMC MTA 项目介绍
 └── research/                         # PDF、DOCX、JSON、TXT 和研究笔记
 
 design-artifacts/
-└── A-Product-Brief/                  # 早期平台愿景、PRD、补充与决策
+└── A-Product-Brief/                  # 早期平台愿景、PRD、模型说明、补充与决策
 
 _bmad-output/
 └── implementation-artifacts/         # 已完成整改规格与延期事项
@@ -95,8 +96,12 @@ _bmad-output/
 
 ## 文件组织判断
 
-- 没有空文件、符号链接、子模块或未跟踪业务资产。
+- 没有空文件、符号链接、子模块或未归位的业务资产。
 - 生成型 AMC 输出只保留五份正式契约文件，其余 `modules/*/outputs/` 被忽略。
 - 本地个人覆盖 `_bmad/custom/config.user.toml` 已被正确忽略。
 - 研究二进制文件集中在 `docs/research/`，没有混入业务运行目录。
 - 历史文件没有删除，但通过索引和状态说明与当前能力隔离。
+
+新增或移动文件必须遵循[工作区文件位置管理](workspace-file-management.md)。承担导航
+职责的多文件或核心研究子目录统一用 `README.md` 作为入口；历史模型功能说明现位于
+`design-artifacts/A-Product-Brief/`，不再与当前产品介绍混放。

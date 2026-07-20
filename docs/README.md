@@ -10,6 +10,7 @@
 - [工作区总览与现状评价](project-overview.md)
 - [工作区级架构](architecture.md)
 - [目录结构分析](source-tree-analysis.md)
+- [工作区文件位置管理](workspace-file-management.md)
 - [组件与资产清单](component-inventory.md)
 - [开发与验证指南](development-guide.md)
 - [全量文件清单](workspace-file-inventory.json)
@@ -24,6 +25,7 @@
 - [数据契约](../modules/amc_mta/docs/amc-data-requirements.md)
 - [运行说明](../modules/amc_mta/docs/usage.md)
 - [模型比较治理](../modules/amc_mta/docs/model-comparison-governance.md)
+- [触点可靠性指南](../modules/amc_mta/docs/touchpoint-reliability-guide.md)
 
 ## 历史与研究
 

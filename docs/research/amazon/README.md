@@ -5,7 +5,7 @@
 ## 目录
 
 - [`amc/`](amc/README.md)：精简后的 AMC 背景、平台边界和 MTA/ROI 数据流。
-- [`research/`](research/)：Amazon Ads API schema、Marketing Stream 字段研究、历史技术研究和原始调研材料。
+- [研究原件索引](research/README.md)：Amazon Ads API schema、Marketing Stream 字段研究、历史技术研究和原始调研材料。
 
 当前可运行的 AMC MTA 代码、CSV 和输出位于 [`modules/amc_mta`](../../../modules/amc_mta/README.md)；当前产品边界见 [AMC MTA 项目介绍](../../product/amc-mta/project-introduction.md)。
 
@@ -15,3 +15,4 @@
 2. [AMC、MTA 与 ROI 数据流](amc/data-flow.md)
 3. [当前数据契约](../../../modules/amc_mta/docs/amc-data-requirements.md)
 4. [历史技术研究（2026-07-06）](research/technical-amazon-attribution-mta-2026-07-06.md)
+5. [Amazon 研究原件索引](research/README.md)

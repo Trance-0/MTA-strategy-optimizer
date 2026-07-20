@@ -7,6 +7,7 @@
 - [Product Brief](A-Product-Brief/product-brief.md)
 - [PRD](A-Product-Brief/prd.md)
 - [模型与技术补充](A-Product-Brief/addendum.md)
+- [模型功能与关系说明](A-Product-Brief/model-relationship-guide.md)
 - [决策记录](A-Product-Brief/decision-log.md)
 
 这些历史材料不能用于判断当前输入、路径窗口、归因公式、治理阈值或输出契约。

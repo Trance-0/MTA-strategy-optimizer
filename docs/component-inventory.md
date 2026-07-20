@@ -26,10 +26,12 @@
 ## 文档资产
 
 - 当前项目入口与评价：`docs/index.md`、`docs/project-overview.md`。
+- 文件位置与移动规则：`docs/workspace-file-management.md`。
 - 当前业务架构与契约：`docs/amc-mta-*.md`、`modules/amc_mta/docs/`。
 - 历史产品愿景：`design-artifacts/A-Product-Brief/`。
 - 已完成实现规格：`_bmad-output/implementation-artifacts/`。
 - 全量机器清单：`docs/workspace-file-inventory.json`。
+- 研究分级与原件索引：`docs/research/README.md` 及各子目录 `README.md`。
 
 ## Agent/BMad 组件
 

@@ -48,6 +48,8 @@ AMC MTA 是纯 Python 标准库数据流水线：
 ```
 
 这条优先级解决了历史愿景比当前实现更宽、旧规格记录过去字段与粒度的问题。
+文件职责、稳定入口和归档流程由
+[工作区文件位置管理](workspace-file-management.md)统一约束。
 
 ## 工具架构
 
@@ -92,4 +94,3 @@ docs、design-artifacts、_bmad-output 或源码改动
 - 没有滚动窗口、重采样和跨时间稳定性数据层。
 - 工具测试没有统一环境声明，至少一项需要未安装的 `pytest`。
 - standalone module scaffold 的插件命名实现与测试断言不一致。
-

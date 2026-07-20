@@ -16,3 +16,10 @@
 ## 全量评估 AMC MTA 双模型输出审查
 
 - 当前整组发布可在失败时回滚，但多个并发读取者仍可能在连续文件替换之间观察到瞬时的新旧混合；如需强一致读取，应另行设计版本目录加原子 manifest/指针切换。
+
+## 工作区整理审查发现的既有 AMC 问题
+
+- `modules/amc_mta/docs/usage.md` 与触点可靠性指南中的“正式 Markov”措辞可能被误读为已经通过证据治理；应与 `EVIDENCE_UNVERIFIED`、空 `decision_value` 和 `automation_allowed=false` 的阻断语义统一。
+- 触点可靠性等级未覆盖所有支持度、稳定性、差距等级和 outcome spread 组合；应补全确定性决策表、`stability_level` 通过条件及缺失值处理。
+- `difference_level` 的组合门槛、相对差公式、零均值规则以及“重要贡献来源”的判据尚未完整定义，需与代码中的唯一阈值事实源对齐。
+- 四份既有 AMC 输出 CSV 含尾随空格，导致完整 `git diff --check` 和严格表头读取失败；本次整理按保护边界未重写输出，应另行决定恢复规范生成格式。

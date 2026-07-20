@@ -1,1 +1,112 @@
-{"workflow_version":"1.2.0","timestamps":{"started":"2026-07-16T17:25:36+08:00","last_updated":"2026-07-16T17:36:31+08:00"},"mode":"full_rescan","scan_level":"exhaustive","project_root":"{project-root}","project_knowledge":"docs","scope":"entire workspace excluding Git object internals","validated_baseline_commit":"81cf561","completed_steps":[{"step":"step_1","status":"completed","timestamp":"2026-07-16T17:26:00+08:00","summary":"Classified the repository as one active data-analysis business module plus project knowledge/history and an embedded Agent/BMad development toolchain."},{"step":"step_2","status":"completed","timestamp":"2026-07-16T17:27:00+08:00","summary":"Inventoried all workspace files, formats, sizes, permissions, hashes, executables, research binaries and duplicate groups; generated the machine-readable file inventory."},{"step":"step_3","status":"completed","timestamp":"2026-07-16T17:29:38+08:00","summary":"Audited AMC source/data/outputs/tests, all project documentation, BMad manifests/configuration, 119 installed skills, Python/JavaScript/Bash sources and Git repository health."},{"step":"step_4","status":"completed","timestamp":"2026-07-16T17:30:30+08:00","summary":"Established the three-layer architecture and preservation rules: business execution, knowledge/history, and installer-managed development tooling."},{"step":"step_5","status":"completed","timestamp":"2026-07-16T17:31:31+08:00","summary":"Generated full-workspace overview, architecture, source-tree, component inventory and development guide; expanded root and docs navigation to cover every workspace zone."},{"step":"step_6","status":"completed","timestamp":"2026-07-16T17:36:31+08:00","summary":"Validated all generated documentation and JSON, confirmed zero project-document link failures, reran 75 AMC tests, the pipeline, strict data alignment and the BMad configuration test, and removed generated cache files."}],"current_step":"complete","findings":{"project_classification":{"repository_type":"single active business module with embedded development toolchain","primary_project_type":"data","active_business_part":"modules/amc_mta","preserved_non_business_parts":[".agents","_bmad","_bmad-output","design-artifacts","docs/research"],"excluded_from_model_evaluation":"all parts except modules/amc_mta"},"inventory":{"files_excluding_git_and_inventory_itself":2166,"bytes":43742014,"symbolic_links":0,"empty_files":0,"duplicate_groups":127,"installed_skills":119},"validation_summary":{"amc_tests":"75 passed","bmad_config_tests":"1 passed","python_syntax":"94 passed","javascript_syntax":"7 passed","project_markdown_broken_links":0,"known_tool_test_issue":"standalone scaffold plugin-name assertion mismatch","tool_test_not_run":"test_memlog.py requires pytest"}},"outputs_generated":["docs/project-scan-report.json","docs/.archive/project-scan-report-2026-07-16-amc-focused.json","docs/workspace-file-inventory.json","docs/project-overview.md","docs/source-tree-analysis.md","docs/architecture.md","docs/component-inventory.md","docs/development-guide.md"],"resume_instructions":"Full-workspace exhaustive scan, documentation organization and assessment are complete. Use docs/index.md as the master entry point and docs/project-overview.md for the current evaluation.","execution_status":"complete","review_status":"complete","validation_commands":["python3 -m unittest discover -s modules/amc_mta/tests -p test*.py: 75 passed","python3 modules/amc_mta/run_pipeline.py: passed","python3 modules/amc_mta/scripts/validate_data_alignment.py: 17 touchpoints and 61 days aligned","python3 -m unittest discover -s _bmad/scripts/tests -p test*.py: 1 passed","Python AST syntax scan: 94 passed","Node syntax scan: 7 passed","project Markdown local-link scan: 45 files and 0 failures","git diff --check: passed"]}
+{
+  "workflow_version": "1.3.0",
+  "timestamps": {
+    "started": "2026-07-16T17:25:36+08:00",
+    "last_updated": "2026-07-20T11:17:10Z"
+  },
+  "mode": "workspace_organization_refresh",
+  "scan_level": "exhaustive",
+  "project_root": "{project-root}",
+  "project_knowledge": "docs",
+  "scope": "entire workspace excluding declared protected or generated paths",
+  "validated_baseline_commit": "2c00f19fa640bb65d7ccf99714f11f912904a85a",
+  "exclusions": [
+    {
+      "path": ".git/",
+      "reason": "Git internals are not project content"
+    },
+    {
+      "path": "docs/workspace-file-inventory.json",
+      "reason": "generated inventory excludes itself"
+    },
+    {
+      "path": "_bmad/custom/*.user.toml",
+      "reason": "ignored personal configuration overrides"
+    },
+    {
+      "path": "log.md",
+      "reason": "human-owned no-touch file; content and hash are not read"
+    }
+  ],
+  "completed_steps": [
+    {
+      "step": "classify",
+      "status": "completed",
+      "summary": "Kept the established business, current knowledge, history, research, and installed-tool boundaries."
+    },
+    {
+      "step": "relocate",
+      "status": "completed",
+      "summary": "Moved the historical model guide, normalized two research entry names, and corrected the Shapley PDF filename."
+    },
+    {
+      "step": "govern",
+      "status": "completed",
+      "summary": "Added workspace placement rules and complete research, module, documentation, and root navigation."
+    },
+    {
+      "step": "validate",
+      "status": "completed",
+      "summary": "Validated tests, links, reachability, JSON, file hygiene, research-original integrity, and inventory parity without running the output-writing pipeline."
+    }
+  ],
+  "current_step": "complete",
+  "findings": {
+    "project_classification": {
+      "repository_type": "single active business module with embedded development toolchain",
+      "primary_project_type": "data",
+      "active_business_part": "modules/amc_mta",
+      "preserved_non_business_parts": [
+        ".agents",
+        "_bmad",
+        "_bmad-output",
+        "design-artifacts",
+        "docs/research"
+      ],
+      "excluded_from_model_evaluation": "all parts except modules/amc_mta"
+    },
+    "inventory": {
+      "files_after_exclusions": 2169,
+      "bytes_after_exclusions": 43800509,
+      "symbolic_links": 0,
+      "empty_files": 0,
+      "installed_skills": 119
+    },
+    "relocations": {
+      "historical_model_guide": "design-artifacts/A-Product-Brief/model-relationship-guide.md",
+      "mta_entry": "docs/research/mta/README.md",
+      "ab_testing_entry": "docs/research/ab-testing/README.md",
+      "shapley_pdf": "docs/research/mta/Shapley Value Methods for Attribution Modeling in Online Advertising.pdf",
+      "shapley_pdf_sha256_before_and_after": "6a4d8c660ffd3762fac384a64a9d44e3510fede6e2eac7e42d032a3e5254843f"
+    },
+    "validation_summary": {
+      "amc_tests": "75 passed",
+      "project_markdown": "41 reachable, 0 broken links, 0 orphans",
+      "inventory_mismatches": 0,
+      "new_cache_or_temporary_files": 0,
+      "amc_pipeline": "not run to preserve existing CSV changes",
+      "pre_existing_csv_whitespace": "preserved; excluded from the task-scoped diff check",
+      "preserved_historical_markdown_hard_break": "one existing two-space Markdown line break retained in the relocated model guide",
+      "protected_log": "excluded without content read or hash"
+    }
+  },
+  "scan_outputs_refreshed": [
+    "docs/project-scan-report.json",
+    "docs/workspace-file-inventory.json",
+    "docs/project-overview.md",
+    "docs/source-tree-analysis.md",
+    "docs/architecture.md",
+    "docs/component-inventory.md",
+    "docs/workspace-file-management.md"
+  ],
+  "resume_instructions": "Use README.md as the root entry, docs/index.md for project knowledge, and docs/workspace-file-management.md for placement or migration decisions.",
+  "execution_status": "complete",
+  "review_status": "complete",
+  "validation_commands": [
+    "python3 -B -m unittest discover -s modules/amc_mta/tests -p test*.py: 75 passed",
+    "project Markdown local-link and reachability scan: 41 reachable, 0 broken links, 0 orphans",
+    "JSON parse and inventory parity check: passed",
+    "file hygiene scan: 0 symbolic links, empty files, caches, or temporary files",
+    "task-scoped git diff --check excluding protected log, pre-existing formatted CSVs, and one preserved historical Markdown hard break; newly authored text checks: passed"
+  ]
+}

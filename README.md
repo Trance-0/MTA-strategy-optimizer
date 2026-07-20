@@ -13,12 +13,16 @@
 | --- | --- |
 | 查看全工作区盘点、评价与风险 | [工作区总览](docs/project-overview.md) |
 | 理解所有目录与阅读顺序 | [全工作区文档总索引](docs/index.md) |
-| 查看逐文件大小、权限和哈希 | [全量文件清单](docs/workspace-file-inventory.json) |
+| 查看项目文档入口说明 | [文档索引说明](docs/README.md) |
+| 管理新增、移动和归档文件 | [工作区文件位置管理](docs/workspace-file-management.md) |
+| 查看声明范围内文件的大小、权限和哈希 | [工作区文件清单](docs/workspace-file-inventory.json)（排除 Git、`log.md`、ignored 个人覆盖及清单自身） |
 | 运行唯一正式模块 | [AMC MTA 模块说明](modules/amc_mta/README.md) |
+| 查看业务模块目录约定 | [模块索引](modules/README.md) |
 | 查看架构与数据流 | [AMC MTA 架构](docs/amc-mta-architecture.md) |
 | 查看成熟度、风险与路线 | [AMC MTA 能力评价](docs/amc-mta-capability-assessment.md) |
 | 查看输入、路径和指标契约 | [AMC MTA 数据契约](modules/amc_mta/docs/amc-data-requirements.md) |
 | 查看双模型治理与证据阻断 | [模型比较治理规范](modules/amc_mta/docs/model-comparison-governance.md) |
+| 判断单触点归因是否可靠 | [触点可靠性指南](modules/amc_mta/docs/touchpoint-reliability-guide.md) |
 | 查看外部研究资料 | [研究资料分级索引](docs/research/README.md) |
 | 查看历史产品愿景 | [历史设计产物](design-artifacts/README.md) |
 | 查看规格与实现记录 | [BMad 产物索引](_bmad-output/README.md) |
@@ -71,7 +75,7 @@ python3 -m unittest discover -s modules/amc_mta/tests -p 'test*.py'
 │   ├── index.md
 │   ├── amc-mta-architecture.md
 │   ├── amc-mta-capability-assessment.md
-│   ├── product/              # 当前介绍与历史愿景说明
+│   ├── product/              # 当前项目介绍
 │   └── research/             # 外部研究原件和相关性索引
 ├── modules/
 │   └── amc_mta/              # 唯一正式业务实现

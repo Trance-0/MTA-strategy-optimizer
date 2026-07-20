@@ -1,18 +1,36 @@
 {
-  "schema_version": "1.0",
-  "generated_at": "2026-07-16T18:26:24.336Z",
+  "schema_version": "1.1",
+  "generated_at": "2026-07-20T11:19:51.728Z",
   "root": "{project-root}",
-  "scope": "all regular workspace files excluding .git internals and this generated inventory file",
-  "file_count": 2167,
-  "total_bytes": 43743379,
-  "by_top_level": {
-    "_bmad": {
-      "files": 92,
-      "bytes": 926146
+  "scope": "all regular workspace files excluding declared protected or generated paths",
+  "exclusions": [
+    {
+      "path": ".git/",
+      "reason": "Git internals are not project content"
     },
+    {
+      "path": "docs/workspace-file-inventory.json",
+      "reason": "generated inventory excludes itself"
+    },
+    {
+      "path": "_bmad/custom/*.user.toml",
+      "reason": "ignored personal configuration overrides"
+    },
+    {
+      "path": "log.md",
+      "reason": "human-owned no-touch file; content and hash are not read"
+    }
+  ],
+  "file_count": 2169,
+  "total_bytes": 43800509,
+  "by_top_level": {
     "_bmad-output": {
-      "files": 10,
-      "bytes": 50557
+      "files": 11,
+      "bytes": 57582
+    },
+    "_bmad": {
+      "files": 91,
+      "bytes": 925984
     },
     ".agents": {
       "files": 1988,
@@ -27,24 +45,20 @@
       "bytes": 39
     },
     "design-artifacts": {
-      "files": 5,
-      "bytes": 28346
+      "files": 6,
+      "bytes": 41386
     },
     "docs": {
-      "files": 35,
-      "bytes": 26478288
-    },
-    "log.md": {
-      "files": 1,
-      "bytes": 1827
+      "files": 36,
+      "bytes": 26474605
     },
     "modules": {
-      "files": 33,
-      "bytes": 428176
+      "files": 34,
+      "bytes": 470474
     },
     "README.md": {
       "files": 1,
-      "bytes": 4576
+      "bytes": 5015
     }
   },
   "files": [
@@ -52,17 +66,17 @@
       "path": "_bmad-output/implementation-artifacts/deferred-work.md",
       "top_level": "_bmad-output",
       "extension": ".md",
-      "size_bytes": 1941,
+      "size_bytes": 2799,
       "mode": "644",
-      "sha256": "0bbcbc997b62166c3c73b37baf36ead3a920e0fd4f377678129d01376bbf13fc"
+      "sha256": "b0d423575494b50233b7ffa6386e1bb688179573744a8dcca3c0eff1a0af527b"
     },
     {
       "path": "_bmad-output/implementation-artifacts/README.md",
       "top_level": "_bmad-output",
       "extension": ".md",
-      "size_bytes": 900,
+      "size_bytes": 990,
       "mode": "644",
-      "sha256": "0a7cf48bfa0ed8411f1a998b10b8c73a9ea9365a0c8142b11fb394f1086b5d34"
+      "sha256": "10df6f12573d9a8ae3f33ad815aecdf18add17e8067b28568b191ede87a6a9af"
     },
     {
       "path": "_bmad-output/implementation-artifacts/spec-add-interaction-type-granularity-2.md",
@@ -111,6 +125,14 @@
       "size_bytes": 5960,
       "mode": "644",
       "sha256": "7e770252ed69c30c2fb3aa7037b6613a8b1cda8b5ae182e8a61732aa3f15dd2d"
+    },
+    {
+      "path": "_bmad-output/implementation-artifacts/spec-organize-workspace-files.md",
+      "top_level": "_bmad-output",
+      "extension": ".md",
+      "size_bytes": 6077,
+      "mode": "644",
+      "sha256": "4f1d3d521f06d5a8d16a2297ecafcf362ff7ed5a05eef78b9e40e5e5f9072b70"
     },
     {
       "path": "_bmad-output/implementation-artifacts/spec-remove-units-sold.md",
@@ -271,14 +293,6 @@
       "size_bytes": 348,
       "mode": "644",
       "sha256": "d00d0bb7e0e03a7e32a9c7c935f2509e17107bb9949162450e408adef01878df"
-    },
-    {
-      "path": "_bmad/custom/config.user.toml",
-      "top_level": "_bmad",
-      "extension": ".toml",
-      "size_bytes": 162,
-      "mode": "644",
-      "sha256": "92af88b1942ddfd6e9954f2591e160618bb3e74ca55c292b35ab4c411f79f0e0"
     },
     {
       "path": "_bmad/gds/config.yaml",
@@ -16801,6 +16815,14 @@
       "sha256": "927eab3f20c3be77bb67f4aa9863eab015ae4c4fe9e5276a8a53e6a9770818de"
     },
     {
+      "path": "design-artifacts/A-Product-Brief/model-relationship-guide.md",
+      "top_level": "design-artifacts",
+      "extension": ".md",
+      "size_bytes": 12963,
+      "mode": "644",
+      "sha256": "d06559ee7b1508b11735db9b1b09b1edff4bd36d7bcb4637e9b569442c6ebc6a"
+    },
+    {
       "path": "design-artifacts/A-Product-Brief/prd.md",
       "top_level": "design-artifacts",
       "extension": ".md",
@@ -16820,9 +16842,9 @@
       "path": "design-artifacts/README.md",
       "top_level": "design-artifacts",
       "extension": ".md",
-      "size_bytes": 711,
+      "size_bytes": 788,
       "mode": "644",
-      "sha256": "349c83ea4926b9767dbe0937960ec1a13b2151a841b56adf3cfaf4546b0b428e"
+      "sha256": "8c927f6dfc465e799670a157cc618dbd72de914464c1860dc82987e282432c14"
     },
     {
       "path": "docs/.archive/project-scan-report-2026-07-16-amc-focused.json",
@@ -16852,33 +16874,33 @@
       "path": "docs/architecture.md",
       "top_level": "docs",
       "extension": ".md",
-      "size_bytes": 3162,
+      "size_bytes": 3282,
       "mode": "644",
-      "sha256": "602f2d206f18b1582dd6ebc631fde8dbc3ebaf424d3897ab00176b791948d986"
+      "sha256": "1dbc846ca062d2c2245f3c2845d8c32da96290c28773cfe44c514ee8e64f03b1"
     },
     {
       "path": "docs/component-inventory.md",
       "top_level": "docs",
       "extension": ".md",
-      "size_bytes": 3021,
+      "size_bytes": 3181,
       "mode": "644",
-      "sha256": "93a227740342ecd818d8ca1554b4b3c4f56fa2d1630351780a90efd3df4ca7fc"
+      "sha256": "e9e0194f2fc59fc0d0d211a1741fc3662df7bb9806c094ab20140eb9018c0f19"
     },
     {
       "path": "docs/development-guide.md",
       "top_level": "docs",
       "extension": ".md",
-      "size_bytes": 2447,
+      "size_bytes": 2551,
       "mode": "644",
-      "sha256": "9c285586c42f5f049149e840b9e8e482425255200ab2161d8e0a2f4c30224e76"
+      "sha256": "e0585d46c4d40c621a39fcee6239ab6d0f4a5946bd59360331846b43db44acc8"
     },
     {
       "path": "docs/index.md",
       "top_level": "docs",
       "extension": ".md",
-      "size_bytes": 4642,
+      "size_bytes": 5034,
       "mode": "644",
-      "sha256": "ce282b5817a2d3900c444f2e18296c4b2debe158b4144f9bd81f61547d6e7d1e"
+      "sha256": "570485ce95983e48586510ac6c2125e42159c2c15f39acdda406c16f31c1fa31"
     },
     {
       "path": "docs/product/amc-mta/project-introduction.md",
@@ -16889,44 +16911,36 @@
       "sha256": "08ca00155640480cb310d4338b3a6286c9d725aa16f0dae0f89cd207d3f3debd"
     },
     {
-      "path": "docs/product/model-relationship-guide.md",
-      "top_level": "docs",
-      "extension": ".md",
-      "size_bytes": 12955,
-      "mode": "644",
-      "sha256": "6b9a3345ec40d23e8a692f8d3516335939cb278ec051523c1a1d223a8c3b8bca"
-    },
-    {
       "path": "docs/product/README.md",
       "top_level": "docs",
       "extension": ".md",
-      "size_bytes": 668,
+      "size_bytes": 554,
       "mode": "644",
-      "sha256": "643bf3191a00da3867e148542d943f7f2823ea2943e82558f6f31c747c83bc3c"
+      "sha256": "f8e0b7a66dc44575ca9e89c01f6c964f9f3ab0735d1a393d08703bd31b2d9e0a"
     },
     {
       "path": "docs/project-overview.md",
       "top_level": "docs",
       "extension": ".md",
-      "size_bytes": 5320,
+      "size_bytes": 5562,
       "mode": "644",
-      "sha256": "e250343ad73468eccd73034815cd55ea3d823833341b76960dc8b97ff368280d"
+      "sha256": "26067148d125b6a31f24fcd11f565e8b29b0efd7d431df15db2023a8a97f0e6d"
     },
     {
       "path": "docs/project-scan-report.json",
       "top_level": "docs",
       "extension": ".json",
-      "size_bytes": 3821,
+      "size_bytes": 4509,
       "mode": "644",
-      "sha256": "4720d44bfa868fca09fc438f0365c4f2df25b109601b1e887ab49d73438cc371"
+      "sha256": "1e487ae449ddcef0b4a1b0276f9fd731845126da0baf43f24bf97eb9d4c8fbe2"
     },
     {
       "path": "docs/README.md",
       "top_level": "docs",
       "extension": ".md",
-      "size_bytes": 1322,
+      "size_bytes": 1467,
       "mode": "644",
-      "sha256": "20b083daba29809d6532b5ba681ab106a2bc79b42ca37331a6cc5091963adf16"
+      "sha256": "5ac0116bc8f48956796c755d0e5411dda2c30f5e4590be2802cfda4e31beb0cb"
     },
     {
       "path": "docs/research/ab-testing/Controlled Experiments on the Web Survey and Practical Guide.pdf",
@@ -16945,12 +16959,12 @@
       "sha256": "6c0e3a046b31ae79aee8564da268182d4d4a452c09f1e9a6938a2842b71a88c4"
     },
     {
-      "path": "docs/research/ab-testing/阅读顺序.md",
+      "path": "docs/research/ab-testing/README.md",
       "top_level": "docs",
       "extension": ".md",
-      "size_bytes": 91,
+      "size_bytes": 526,
       "mode": "644",
-      "sha256": "af33b81654825302f8e704efa5100446b4c80eb05afce2a127bdc06fae83c9b7"
+      "sha256": "13a8550abf86e81faaaee03f680f2b1ec2bde3e1737455eee5c47473c3856bee"
     },
     {
       "path": "docs/research/amazon/amc/data-flow.md",
@@ -16972,9 +16986,9 @@
       "path": "docs/research/amazon/README.md",
       "top_level": "docs",
       "extension": ".md",
-      "size_bytes": 840,
+      "size_bytes": 907,
       "mode": "644",
-      "sha256": "cbdc60222589c201aac76f6d1c0af38283b2c91ad53d43ad41814fd2cde65f6f"
+      "sha256": "3b68b94101b9b2afe0161caec68ddc3655cdd334ffa9157d2f5f356e2cfdc4d6"
     },
     {
       "path": "docs/research/amazon/research/Amazon_Attribution_Report_FULL.docx",
@@ -17015,6 +17029,14 @@
       "size_bytes": 792456,
       "mode": "644",
       "sha256": "0c443702f76453e91dc9e1996142f230b439518a58fe55c8d88f83c31852fdaf"
+    },
+    {
+      "path": "docs/research/amazon/research/README.md",
+      "top_level": "docs",
+      "extension": ".md",
+      "size_bytes": 1219,
+      "mode": "644",
+      "sha256": "cc258a7b30697cf0fbb964ddfd0097809b271037321682141847e9065a943b92"
     },
     {
       "path": "docs/research/amazon/research/technical-amazon-attribution-mta-2026-07-06.md",
@@ -17065,20 +17087,20 @@
       "sha256": "d717b85b8674ec3c4f495d9839411c017e4e608fb6909faf9e797480527ca330"
     },
     {
-      "path": "docs/research/mta/Shapley Value Methodsfor Attribution Modeling in Online Advertising.pdf",
+      "path": "docs/research/mta/README.md",
+      "top_level": "docs",
+      "extension": ".md",
+      "size_bytes": 835,
+      "mode": "644",
+      "sha256": "ffc1e030d72cd26f49021e18bdccb67ccd2bdc3b1209bf646057261b957184c4"
+    },
+    {
+      "path": "docs/research/mta/Shapley Value Methods for Attribution Modeling in Online Advertising.pdf",
       "top_level": "docs",
       "extension": ".pdf",
       "size_bytes": 1089260,
       "mode": "644",
       "sha256": "6a4d8c660ffd3762fac384a64a9d44e3510fede6e2eac7e42d032a3e5254843f"
-    },
-    {
-      "path": "docs/research/mta/阅读顺序.md",
-      "top_level": "docs",
-      "extension": ".md",
-      "size_bytes": 217,
-      "mode": "644",
-      "sha256": "1866b8c32ad41043a8b03a7c94389edfefc71771d9ac8a80ea1b573700d5959a"
     },
     {
       "path": "docs/research/ontology/本体论研究（最终）.pdf",
@@ -17092,25 +17114,25 @@
       "path": "docs/research/README.md",
       "top_level": "docs",
       "extension": ".md",
-      "size_bytes": 2766,
+      "size_bytes": 3086,
       "mode": "644",
-      "sha256": "9b95f96a991a319eb9d067c7331fb8e70f1c73487f136d8ea61a74c245606cc9"
+      "sha256": "5e030332d136e1bac43bdb54a31c474b8236e3e7b5c2a29415836acd3ac9d726"
     },
     {
       "path": "docs/source-tree-analysis.md",
       "top_level": "docs",
       "extension": ".md",
-      "size_bytes": 4122,
+      "size_bytes": 4523,
       "mode": "644",
-      "sha256": "947bf405137f35ea5ccac93d131b794efed741fefd272b11b820781f9c764ec4"
+      "sha256": "932751cccc81e7a4735cc79840c3a465aaca14e9e04220a74fb47df4520174c4"
     },
     {
-      "path": "log.md",
-      "top_level": "log.md",
+      "path": "docs/workspace-file-management.md",
+      "top_level": "docs",
       "extension": ".md",
-      "size_bytes": 1827,
+      "size_bytes": 4475,
       "mode": "644",
-      "sha256": "0673d0566051a8c04da40e5b739d6f6f4758f0dff6e23b95826d56d3fc112a49"
+      "sha256": "6c22f1a4a0d95e069ea0421153cf2e638bc78f3d05a71d01997613bc58fc25dc"
     },
     {
       "path": "modules/amc_mta/config.py",
@@ -17180,49 +17202,57 @@
       "path": "modules/amc_mta/docs/README.md",
       "top_level": "modules",
       "extension": ".md",
-      "size_bytes": 696,
+      "size_bytes": 854,
       "mode": "644",
-      "sha256": "4bc2371d27801f71e0fec0a34c564c07387d8882529e3deb60c4d7761c541889"
+      "sha256": "dd4078057a42186c367ae74e255fd4414e4db0033a41f3c3289b4c2d28021474"
+    },
+    {
+      "path": "modules/amc_mta/docs/touchpoint-reliability-guide.md",
+      "top_level": "modules",
+      "extension": ".md",
+      "size_bytes": 5138,
+      "mode": "644",
+      "sha256": "d516d42e69e8eb6808c56a05852839ca74b0380a19b2714aa15ad931ccf8a6bb"
     },
     {
       "path": "modules/amc_mta/docs/usage.md",
       "top_level": "modules",
       "extension": ".md",
-      "size_bytes": 2635,
+      "size_bytes": 2862,
       "mode": "644",
-      "sha256": "7e464e8e44a9ee2c376c9b2d71ca461d6343f370f419f77150626a523ed567a8"
+      "sha256": "edb4ee118065cd0cad79639f0ac3b6f00d2a8f230cbab183381c165d7cb8a007"
     },
     {
       "path": "modules/amc_mta/outputs/attribution/amc_markov_attribution_results.csv",
       "top_level": "modules",
       "extension": ".csv",
-      "size_bytes": 3261,
+      "size_bytes": 6508,
       "mode": "644",
-      "sha256": "d6535bb8fe7ea63ec32ff3124956511c79ee63b215c9974ab2070887878410b5"
+      "sha256": "f99eb7217fa41b01798a42bd49cb9bd1e79208d8f68568bf9cc1f2285565570b"
     },
     {
       "path": "modules/amc_mta/outputs/attribution/amc_mta_model_comparison_summary.csv",
       "top_level": "modules",
       "extension": ".csv",
-      "size_bytes": 845,
+      "size_bytes": 1600,
       "mode": "644",
-      "sha256": "fce8b160ebc6f9235b88bbc40d86faa1894dca49c9e6dc50e8f488c983bd1535"
+      "sha256": "632cfbdc7cb36f2d7f078e3d1918de32033bcdaf783cd4b7bb969644f504ca4f"
     },
     {
       "path": "modules/amc_mta/outputs/attribution/amc_mta_model_comparison_touchpoints.csv",
       "top_level": "modules",
       "extension": ".csv",
-      "size_bytes": 20881,
+      "size_bytes": 47146,
       "mode": "644",
-      "sha256": "071a60c9bce5146a1d8932aa0d636785571038ee75f3c6735ab72732c7d04f7e"
+      "sha256": "8919ac1a4822d3a5a1148e1a3127558950bec05330627a0bf993bb3be0a47b4b"
     },
     {
       "path": "modules/amc_mta/outputs/attribution/amc_mta_recommended_attribution.csv",
       "top_level": "modules",
       "extension": ".csv",
-      "size_bytes": 11434,
+      "size_bytes": 17714,
       "mode": "644",
-      "sha256": "47b8b8babad97e031301e64e5284a30dc10a9b769895bf09411e6f6b0a0c07ce"
+      "sha256": "122ef775972bb5302762dc8a938088615aa5a8fcec0ff7bfafb5da10913231b8"
     },
     {
       "path": "modules/amc_mta/outputs/attribution/amc_shapley_attribution_results.csv",
@@ -17236,9 +17266,9 @@
       "path": "modules/amc_mta/README.md",
       "top_level": "modules",
       "extension": ".md",
-      "size_bytes": 2371,
+      "size_bytes": 2599,
       "mode": "644",
-      "sha256": "587b3e7aeff68293eb92ea261718e81790080e3bb0b176601855c35a8a202031"
+      "sha256": "c33c7da673f7e7d07add6b04e4eebb4e7a7ffb8be2a9fbc3bcf678383ca03867"
     },
     {
       "path": "modules/amc_mta/run_pipeline.py",
@@ -17380,9 +17410,9 @@
       "path": "README.md",
       "top_level": "README.md",
       "extension": ".md",
-      "size_bytes": 4576,
+      "size_bytes": 5015,
       "mode": "644",
-      "sha256": "37bde993d8387a426818e6f4b2f66c039f54e34551b85e04578f08854f6f3db3"
+      "sha256": "ba04381ed0dcfcc55f853ed0b68040e763dd779d9fc71f15def4066db2e584bd"
     }
   ]
 }

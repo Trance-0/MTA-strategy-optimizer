@@ -14,6 +14,7 @@
 
 - [全工作区清理与一致性修复](spec-clean-workspace.md) — done
 - [将项目整理为单一 AMC MTA 归因能力](spec-focus-project-on-amc-mta.md) — done
+- [整理并建立工作区文件位置治理](spec-organize-workspace-files.md) — done
 
 ## 待办
 

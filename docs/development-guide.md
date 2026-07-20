@@ -65,6 +65,7 @@ JSON/TOML: 实际配置和数据文件解析
 
 ## 修改原则
 
+- 新增、移动或归档文件先遵循[工作区文件位置管理](workspace-file-management.md)。
 - 当前业务能力只在 `modules/amc_mta` 中扩展。
 - 输入字段、五段键或输出列变化时，同步更新代码、样例、测试和模块契约。
 - `docs/research` 的外部原件不作为运行输入。

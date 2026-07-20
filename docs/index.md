@@ -9,10 +9,11 @@ Agent/BMad 工具链。项目只有一个正式业务实现：
 
 1. [工作区总览与现状评价](project-overview.md)：查看全范围结论、健康度与风险。
 2. [目录结构分析](source-tree-analysis.md)：理解所有顶层目录和边界。
-3. [工作区级架构](architecture.md)：理解业务、知识和工具三层关系。
-4. [组件与资产清单](component-inventory.md)：查看代码、数据、研究和技能资产。
-5. [开发与验证指南](development-guide.md)：运行项目并复现验证。
-6. [AMC MTA 能力评价](amc-mta-capability-assessment.md)：深入判断归因能力。
+3. [工作区文件位置管理](workspace-file-management.md)：新增、移动和归档文件。
+4. [工作区级架构](architecture.md)：理解业务、知识和工具三层关系。
+5. [组件与资产清单](component-inventory.md)：查看代码、数据、研究和技能资产。
+6. [开发与验证指南](development-guide.md)：运行项目并复现验证。
+7. [AMC MTA 能力评价](amc-mta-capability-assessment.md)：深入判断归因能力。
 
 ## 当前入口与权威层级
 
@@ -21,9 +22,11 @@ Agent/BMad 工具链。项目只有一个正式业务实现：
 | 全工作区现状 | [工作区总览与现状评价](project-overview.md) |
 | 全量逐文件清单 | [工作区文件清单](workspace-file-inventory.json) |
 | 顶层架构与分区 | [工作区级架构](architecture.md) |
+| 文件位置与移动规则 | [工作区文件位置管理](workspace-file-management.md) |
 | 可运行模块与命令 | [`modules/amc_mta/README.md`](../modules/amc_mta/README.md) |
 | 输入字段、路径和成本规则 | [AMC MTA 数据契约](../modules/amc_mta/docs/amc-data-requirements.md) |
 | Markov/Shapley 差距与决策状态 | [模型比较治理规范](../modules/amc_mta/docs/model-comparison-governance.md) |
+| 单触点结果可靠性 | [触点可靠性指南](../modules/amc_mta/docs/touchpoint-reliability-guide.md) |
 | 代码结构与数据流 | [AMC MTA 架构](amc-mta-architecture.md) |
 | 项目成熟度与后续优先级 | [AMC MTA 能力评价](amc-mta-capability-assessment.md) |
 | 尚未解决的技术问题 | [延期事项](../_bmad-output/implementation-artifacts/deferred-work.md) |
@@ -55,7 +58,8 @@ docs/
 ├── index.md
 ├── amc-mta-architecture.md
 ├── amc-mta-capability-assessment.md
-├── product/   # 当前项目介绍与明确标记的历史愿景
+├── workspace-file-management.md
+├── product/   # 当前项目介绍
 └── research/  # 外部研究原件，不是运行输入
 ```
 
@@ -63,12 +67,13 @@ docs/
 
 ## 内容状态
 
-- **当前**：本索引、架构、能力评价、AMC MTA 项目介绍及模块文档。
+- **当前**：本索引、架构、能力评价、[产品文档状态](product/README.md)、
+  AMC MTA 项目介绍及模块文档。
 - **研究支撑**：`docs/research/mta/`、`docs/research/amazon/`。
 - **后续验证**：`docs/research/ab-testing/`。
 - **背景资料**：machine-learning、ontology、industry。
-- **历史愿景**：`design-artifacts/` 与
-  [模型功能与关系说明](product/model-relationship-guide.md)。
+- **历史愿景**：`design-artifacts/`，包括
+  [模型功能与关系说明](../design-artifacts/A-Product-Brief/model-relationship-guide.md)。
 - **历史实现记录**：`_bmad-output/implementation-artifacts/`；冻结规格记录当时意图，
   不自动代表当前能力。
 - **安装工具**：`.agents` 与 `_bmad`；保持安装结构，不按业务重复文件清理。
