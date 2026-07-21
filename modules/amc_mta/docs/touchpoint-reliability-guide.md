@@ -169,10 +169,10 @@ AMC 原始支持共同判断。
 当前样例共有 17 个五段触点和三个 outcome，即 51 条触点结果：
 
 - 51 条 `calculation_valid=true`；
-- 3 条 `data_support_sufficient=true`；
-- 这 3 条的 `models_consistent=false`；
-- 最终 `0 RELIABLE / 51 UNRELIABLE`；
-- 三条 outcome 摘要均为 `UNRELIABLE`。
+- 51 条 `data_support_sufficient=true`；
+- 51 条 `models_consistent=true`；
+- 最终 `51 RELIABLE / 0 UNRELIABLE`；
+- 三条 outcome 摘要均为 `RELIABLE`。
 
 `RELIABLE` 只表示当前窗口满足上述三项归因证据标准，不代表因果增量、长期稳定
 贡献，也不表示结果适合自动预算或投放执行。

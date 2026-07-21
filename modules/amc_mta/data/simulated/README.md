@@ -10,14 +10,13 @@
 
 事件样例不是 AMC 可直接导出的用户级数据。真实 AMC 应在 clean room 内执行路径处理并只导出匿名聚合结果。
 
-AMC 事件、路径和 Amazon Ads 报告统一使用 `AD_PRODUCT:FORMAT:PLACEMENT:CREATIVE:INTERACTION_TYPE` 五段粒度，`INTERACTION_TYPE` 为 `IMPRESSION` 或 `CLICK`。Ads 每个基础广告每日有两个互动行：CPC 成本只归 CLICK，CPM 成本只归 IMPRESSION，非计费行成本为 0，平台转化指标只归 CLICK。报告窗口为 `2026-05-01` 至 `2026-06-30`。完整字段、14 天规则和购买语义见[数据契约](../../docs/amc-data-requirements.md)。
+AMC 事件、路径和 Amazon Ads 报告统一使用 `AD_PRODUCT:FORMAT:PLACEMENT:CREATIVE:INTERACTION_TYPE` 五段粒度。CPC 成本只归 CLICK，CPM 成本只归 IMPRESSION；non-billed 互动成本为 0，平台购买和销售只归 CLICK。报告窗口为完整自然年 `2026-01-01` 至 `2026-12-31`。全年包含 520 条事件、146 个 journey、158 次 conversion 和 6,205 条 Ads 日数据：144 次形成路径、12 次二次 conversion 因无新触点不复用、2 次边界 conversion 被拒绝。144 条路径全部唯一是合成测试设计，不是真实 AMC 证据。
 
 重新生成并校验：
 
 ```bash
-python3 modules/amc_mta/scripts/generate_simulated_amazon_ads_report.py
-python3 modules/amc_mta/run_pipeline.py
+python3 modules/amc_mta/scripts/regenerate_simulated_dataset.py
 python3 modules/amc_mta/scripts/validate_data_alignment.py
 ```
 
-Ads 生成器按日期和五段触点确定性地产生 61 天数据，不复用月度模板；同一输入每次生成结果一致。
+两个生成器均原子写入且可确定复现。Ads 使用自然年绝对日序，因此任意子区间与全年相同日期切片一致。

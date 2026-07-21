@@ -10,7 +10,7 @@
 | 模型治理 | `modules/amc_mta/src/model_comparison.py` | 五段支持度、差距、三项可靠性、整体指标和推荐状态 |
 | 完整入口 | `modules/amc_mta/run_pipeline.py` | 重建输入派生物与五份输出 |
 | 命令行脚本 | `modules/amc_mta/scripts/` | 分步生成、归因、比较与校验 |
-| 测试 | `modules/amc_mta/tests/` | 85 项单元、契约和端到端验证 |
+| 测试 | `modules/amc_mta/tests/` | 91 项单元、契约和端到端验证 |
 
 ## 数据资产
 

@@ -31,7 +31,10 @@ from config import (  # noqa: E402
     REPORT_START_DATE,
     SHAPLEY_OUTPUT_FILE,
 )
-from generate_simulated_amazon_ads_report import FIELDS, generate_rows  # noqa: E402
+import generate_simulated_amazon_ads_report as ads_generator  # noqa: E402
+from generate_simulated_amazon_ads_report import FIELDS, generate_file, generate_rows  # noqa: E402
+from generate_simulated_amc_touchpoint_events import generate_rows as generate_event_rows  # noqa: E402
+from regenerate_simulated_dataset import regenerate  # noqa: E402
 from run_amc_attribution import run_amc_attribution  # noqa: E402
 from compare_attribution_models import compare_model_files  # noqa: E402
 from run_pipeline import match_outputs_by_name, publish_with_rollback  # noqa: E402
@@ -42,6 +45,7 @@ from model_comparison import (  # noqa: E402
     TOUCHPOINT_COMPARISON_FIELDS,
 )
 from touchpoint_key import canonicalize_amc_touchpoint_key  # noqa: E402
+from simulated_touchpoints import TOUCHPOINT_CATALOG, TOUCHPOINT_KEYS  # noqa: E402
 
 
 RELIABILITY_FIELDS = {
@@ -54,6 +58,63 @@ RELIABILITY_FIELDS = {
 
 
 class EndToEndSampleTests(unittest.TestCase):
+    def test_ads_subrange_and_cross_year_use_fixed_epoch(self) -> None:
+        full = generate_rows(date(2026, 1, 1), date(2026, 12, 31))
+        sliced = generate_rows(date(2026, 4, 3), date(2026, 4, 9))
+        self.assertEqual(sliced, [row for row in full if "2026-04-03" <= row["reportDate"] <= "2026-04-09"])
+        cross_year = generate_rows(date(2025, 12, 31), date(2026, 1, 1))
+        self.assertEqual(cross_year[-17:], generate_rows(date(2026, 1, 1), date(2026, 1, 1)))
+        self.assertEqual(len({(row["reportDate"], row["normalizedTouchpoint"]) for row in full}), 365 * 17)
+
+    def test_annual_event_sample_is_complete_and_reproducible(self) -> None:
+        rows = generate_event_rows()
+        stored = read_csv(AMC_TOUCHPOINT_EVENTS_FILE)
+        self.assertEqual([{key: str(row.get(key, "")) for key in stored[0]} for row in rows], stored)
+        self.assertEqual(len(rows), 520)
+        self.assertEqual(len({row["journey_id"] for row in rows}), 146)
+        conversions = [row for row in rows if row["event_type"] == "CONVERSION"]
+        self.assertEqual(len(conversions), 158)
+        self.assertEqual({row["event_time"][:7] for row in conversions}, {f"2026-{month:02d}" for month in range(1, 13)})
+        annual_conversions = [
+            row for row in conversions if row["journey_id"].startswith("annual_")
+        ]
+        monthly = {
+            f"2026-{month:02d}": sum(
+                row["event_time"].startswith(f"2026-{month:02d}")
+                for row in annual_conversions
+            )
+            for month in range(1, 13)
+        }
+        self.assertEqual(set(monthly.values()), {13})
+
+    def test_annual_journeys_accept_once_and_boundary_fixtures_are_rejected(self) -> None:
+        rows = generate_event_rows()
+        journey_ids = {row["journey_id"] for row in rows}
+        annual_ids = {value for value in journey_ids if value.startswith("annual_")}
+        secondary_ids = {f"annual_{month:02d}_00" for month in range(1, 13)}
+        self.assertEqual(len(annual_ids), 144)
+        self.assertEqual(
+            {value for value in annual_ids if sum(
+                row["event_type"] == "CONVERSION" and row["journey_id"] == value
+                for row in rows
+            ) == 2},
+            secondary_ids,
+        )
+        for journey_id in annual_ids:
+            journey_rows = [row for row in rows if row["journey_id"] == journey_id]
+            built = build_aggregated_path_rows(
+                journey_rows, REPORT_START_DATE, REPORT_END_DATE, 14
+            )
+            self.assertEqual(len(built), 1, journey_id)
+        for journey_id in ("reject_start", "reject_gap"):
+            journey_rows = [row for row in rows if row["journey_id"] == journey_id]
+            self.assertEqual(
+                build_aggregated_path_rows(
+                    journey_rows, REPORT_START_DATE, REPORT_END_DATE, 14
+                ),
+                [],
+            )
+
     def test_removed_sales_quantity_is_absent_from_public_csv_schemas(self) -> None:
         paths = [
             AMC_TOUCHPOINT_EVENTS_FILE,
@@ -94,8 +155,17 @@ class EndToEndSampleTests(unittest.TestCase):
         )
         self.assertEqual(len(description_row), 9)
         self.assertTrue(all(value.strip() for value in description_row))
-        self.assertEqual(sum(int(row["converted_users"]) for row in stored), 1826)
-        self.assertEqual(sum(int(row["purchase_count"]) for row in stored), 2044)
+        self.assertEqual(len(stored), 144)
+        self.assertEqual(len({row["path"] for row in stored}), 144)
+        self.assertTrue(all("reject_" not in row["path"] for row in stored))
+        first_counts = {}
+        for row in stored:
+            first = row["path"].split(" > ")[0]
+            first_counts[first] = first_counts.get(first, 0) + 1
+        self.assertEqual(len(first_counts), 17)
+        self.assertLessEqual(max(first_counts.values()) - min(first_counts.values()), 1)
+        self.assertEqual(sum(int(row["converted_users"]) for row in stored), 3316)
+        self.assertEqual(sum(int(row["purchase_count"]) for row in stored), 4185)
         self.assertIn(
             "SPONSORED_DISPLAY:DISPLAY:PRODUCT_PAGE:VIDEO:IMPRESSION",
             {part.strip() for row in stored for part in row["path"].split(">")},
@@ -139,7 +209,17 @@ class EndToEndSampleTests(unittest.TestCase):
         ]
 
         self.assertEqual(normalized_generated, stored)
-        self.assertEqual(len(stored), 61 * 17)
+        self.assertEqual(len(stored), 365 * 17)
+        expected_keys = set(TOUCHPOINT_KEYS)
+        self.assertEqual(len(expected_keys), 17)
+        self.assertEqual({row["reportDate"] for row in stored}, {
+            date(2026, 1, 1).fromordinal(date(2026, 1, 1).toordinal() + offset).isoformat()
+            for offset in range(365)
+        })
+        for report_date in {row["reportDate"] for row in stored}:
+            daily = [row for row in stored if row["reportDate"] == report_date]
+            self.assertEqual(len(daily), 17)
+            self.assertEqual({row["normalizedTouchpoint"] for row in daily}, expected_keys)
         with Path(AMAZON_ADS_REPORT_FILE).open(newline="") as file:
             physical_rows = csv.reader(file)
             next(physical_rows)
@@ -153,6 +233,33 @@ class EndToEndSampleTests(unittest.TestCase):
             [(row["impressions"], row["clicks"], row["cost"]) for row in june_first],
         )
         validate_data_alignment_rows(read_csv(AMC_REPORT_FILE), stored)
+
+    def test_ads_billing_semantics_and_invalid_range_preserves_file(self) -> None:
+        rows = generate_rows(date(2026, 1, 1), date(2026, 1, 1))
+        for row in rows:
+            if row["interaction_type"] == "CLICK":
+                self.assertEqual(row["cost_type"], "CPC")
+                self.assertGreater(row["clicks"], 0)
+                self.assertGreaterEqual(row["purchases"], 0)
+            else:
+                self.assertEqual(row["cost_type"], "CPM")
+                self.assertEqual(row["clicks"], 0)
+                self.assertEqual(row["purchases"], 0)
+                self.assertEqual(row["sales"], 0)
+            spec = next(spec for spec in TOUCHPOINT_CATALOG if spec.key == row["normalizedTouchpoint"])
+            if spec.interaction_type != spec.billed_interaction:
+                self.assertEqual(row["cost"], 0)
+        with tempfile.TemporaryDirectory() as tmp:
+            output = Path(tmp) / "ads.csv"
+            output.write_bytes(b"old artifact\n")
+            with self.assertRaisesRegex(ValueError, "on or before"):
+                generate_file(output, date(2026, 2, 1), date(2026, 1, 1))
+            self.assertEqual(output.read_bytes(), b"old artifact\n")
+
+    def test_catalog_drift_fails_before_ads_generation(self) -> None:
+        with patch.object(ads_generator, "TOUCHPOINT_CATALOG", TOUCHPOINT_CATALOG[:-1]):
+            with self.assertRaisesRegex(ValueError, "exactly 17"):
+                ads_generator.generate_rows(date(2026, 1, 1), date(2026, 1, 1))
 
     def test_attribution_outputs_are_exactly_reproducible_and_conserved(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -198,17 +305,17 @@ class EndToEndSampleTests(unittest.TestCase):
                     )
                     self.assertAlmostEqual(
                         sum(float(row["attributed_converted_users"]) for row in generated),
-                        1826.0,
+                        3316.0,
                         places=4,
                     )
                     self.assertAlmostEqual(
                         sum(float(row["attributed_purchase_count"]) for row in generated),
-                        2044.0,
+                        4185.0,
                         places=4,
                     )
                     self.assertAlmostEqual(
                         sum(float(row["attributed_revenue"]) for row in generated),
-                        226628.0,
+                        343161.0,
                         places=2,
                     )
                     self.assertTrue(
@@ -245,18 +352,18 @@ class EndToEndSampleTests(unittest.TestCase):
             )
             self.assertEqual(
                 sum(row["data_support_sufficient"] == "true" for row in comparison_rows),
-                3,
+                51,
             )
             supported_rows = [
                 row for row in comparison_rows if row["data_support_sufficient"] == "true"
             ]
-            self.assertTrue(all(row["models_consistent"] == "false" for row in supported_rows))
+            self.assertTrue(all(row["models_consistent"] == "true" for row in supported_rows))
             self.assertEqual(
                 sum(row["reliability_status"] == "RELIABLE" for row in comparison_rows),
-                0,
+                51,
             )
             self.assertTrue(
-                all(row["reliability_status"] == "UNRELIABLE" for row in comparison_rows)
+                all(row["reliability_status"] == "RELIABLE" for row in comparison_rows)
             )
             comparison_reliability = {
                 (row["touchpoint"], row["outcome"]): tuple(
@@ -273,16 +380,16 @@ class EndToEndSampleTests(unittest.TestCase):
             )
             self.assertTrue(all(row["calculation_valid"] == "true" for row in summary_rows))
             self.assertTrue(
-                all(row["data_support_sufficient"] == "false" for row in summary_rows)
+                all(row["data_support_sufficient"] == "true" for row in summary_rows)
             )
-            self.assertTrue(all(row["models_consistent"] == "false" for row in summary_rows))
+            self.assertTrue(all(row["models_consistent"] == "true" for row in summary_rows))
             self.assertTrue(
-                all(row["reliability_status"] == "UNRELIABLE" for row in summary_rows)
+                all(row["reliability_status"] == "RELIABLE" for row in summary_rows)
             )
             self.assertTrue(
                 all(
                     row["reliability_reason"]
-                    == "INSUFFICIENT_DATA_SUPPORT|MODELS_INCONSISTENT"
+                    == "ALL_CRITERIA_PASSED"
                     for row in summary_rows
                 )
             )
@@ -350,9 +457,9 @@ class EndToEndSampleTests(unittest.TestCase):
 
             five_part = {row["outcome"]: row for row in summary_rows}
             expected = {
-                "converted_users": (0.091599, 0.987699877, 1.0),
-                "purchase_count": (0.092277, 0.989551508, 1.0),
-                "revenue": (0.098206, 0.982779828, 0.8),
+                "converted_users": (0.014066, 0.740650047, 0.4),
+                "purchase_count": (0.013891, 0.776211059, 0.6),
+                "revenue": (0.014266, 0.796568627, 0.4),
             }
             for outcome, (tvd, rho, overlap) in expected.items():
                 with self.subTest(outcome=outcome):
@@ -438,6 +545,47 @@ class EndToEndSampleTests(unittest.TestCase):
 
             self.assertEqual(destination_one.read_text(), "old one")
             self.assertEqual(destination_two.read_text(), "old two")
+
+    def test_complete_dataset_is_byte_reproducible_and_rolls_back_all_eight(self) -> None:
+        names = [
+            Path(AMC_TOUCHPOINT_EVENTS_FILE).name,
+            Path(AMAZON_ADS_REPORT_FILE).name,
+            Path(AMC_REPORT_FILE).name,
+            MARKOV_OUTPUT_FILE,
+            SHAPLEY_OUTPUT_FILE,
+            MODEL_COMPARISON_TOUCHPOINTS_FILE,
+            MODEL_COMPARISON_SUMMARY_FILE,
+            RECOMMENDED_ATTRIBUTION_FILE,
+        ]
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            destinations = [root / f"{index}_{name}" for index, name in enumerate(names)]
+            # Output matching is filename-based, so preserve the five model filenames.
+            destinations[3:] = [root / "outputs" / name for name in names[3:]]
+            destinations[:3] = [root / name for name in names[:3]]
+            regenerate(destinations)
+            first = {path: path.read_bytes() for path in destinations}
+            regenerate(destinations)
+            self.assertEqual(first, {path: path.read_bytes() for path in destinations})
+
+            old = {path: f"old-{index}\n".encode() for index, path in enumerate(destinations)}
+            for path, content in old.items():
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_bytes(content)
+            real_replace = __import__("os").replace
+            call_count = 0
+
+            def fail_on_fifth_replace(source: Path, destination: Path) -> None:
+                nonlocal call_count
+                call_count += 1
+                if call_count == 5:
+                    raise OSError("simulated fifth publication failure")
+                real_replace(source, destination)
+
+            with patch("run_pipeline.os.replace", side_effect=fail_on_fifth_replace):
+                with self.assertRaisesRegex(OSError, "fifth publication failure"):
+                    regenerate(destinations)
+            self.assertEqual(old, {path: path.read_bytes() for path in destinations})
 
     def test_output_publication_matches_files_by_name_not_return_order(self) -> None:
         generated = [Path("tmp/shapley.csv"), Path("tmp/markov.csv")]

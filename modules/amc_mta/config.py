@@ -10,8 +10,8 @@ AMC_TOUCHPOINT_EVENTS_FILE = DATA_DIR / "amc_touchpoint_events_sample.csv"
 AMC_REPORT_FILE = DATA_DIR / "amc_mta_path_report_raw_sample.csv"
 AMAZON_ADS_REPORT_FILE = DATA_DIR / "amazon_ads_report_sample.csv"
 
-REPORT_START_DATE = "2026-05-01"
-REPORT_END_DATE = "2026-06-30"
+REPORT_START_DATE = "2026-01-01"
+REPORT_END_DATE = "2026-12-31"
 MAX_TOUCHPOINT_GAP_DAYS = 14
 
 ATTRIBUTION_OUTPUT_DIR = AMC_MTA_ROOT / "outputs" / "attribution"

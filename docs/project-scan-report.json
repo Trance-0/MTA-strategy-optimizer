@@ -65,8 +65,8 @@
       ]
     },
     "inventory": {
-      "files_after_exclusions": 2171,
-      "bytes_after_exclusions": 43761670,
+      "files_after_exclusions": 2166,
+      "bytes_after_exclusions": 44576943,
       "symbolic_links": 0,
       "empty_files": 0,
       "installed_skills": 119
@@ -94,19 +94,19 @@
       "summary_rows": 3,
       "recommended_rows": 51,
       "calculation_valid_rows": 51,
-      "data_support_sufficient_rows": 3,
-      "supported_but_model_inconsistent_rows": 3,
-      "reliable_rows": 0,
-      "unreliable_rows": 51,
-      "reliable_summary_rows": 0,
+      "data_support_sufficient_rows": 51,
+      "supported_but_model_inconsistent_rows": 0,
+      "reliable_rows": 51,
+      "unreliable_rows": 0,
+      "reliable_summary_rows": 3,
       "single_model_reliability_fields": 0
     },
     "validation_summary": {
-      "amc_tests": "85 passed",
-      "data_alignment": "17 touchpoints, 61 days, one US / adv_demo_001 / USD scope",
+      "amc_tests": "91 passed",
+      "data_alignment": "17 touchpoints, 365 days, one US / adv_demo_001 / USD scope",
       "project_markdown": "41 reachable non-spec documents, 0 broken local links, 0 orphans",
       "csv_contracts": "51/3/51 rows, exact headers, no internal Decimal keys, lowercase booleans, summary touchpoint-AND parity, no surrounding whitespace or CRLF",
-      "pipeline_determinism": "six generated artifact SHA-256 values unchanged across consecutive runs",
+      "pipeline_determinism": "all eight simulated dataset artifact SHA-256 values unchanged across consecutive runs",
       "inventory_mismatches": 0,
       "new_cache_or_temporary_files": 0,
       "protected_log": "excluded without content read, hash, move, or modification"
@@ -122,9 +122,9 @@
   "execution_status": "complete",
   "review_status": "done",
   "validation_commands": [
-    "python3 -B -m unittest discover -s modules/amc_mta/tests -p test*.py: 85 passed",
+    "python3 -B -m unittest discover -s modules/amc_mta/tests -p test*.py: 91 passed",
     "python3 -B modules/amc_mta/run_pipeline.py: passed and deterministic",
-    "python3 -B modules/amc_mta/scripts/validate_data_alignment.py: 17 touchpoints and 61 days aligned",
+    "python3 -B modules/amc_mta/scripts/validate_data_alignment.py: 17 touchpoints and 365 days aligned",
     "strict CSV header, whitespace, count, threshold, summary-AND, and reliability checks: passed",
     "project Markdown local-link and reachability scan: 41 reachable, 0 broken links, 0 orphans",
     "JSON parse, inventory parity, file hygiene, and git diff --check excluding protected log: passed"

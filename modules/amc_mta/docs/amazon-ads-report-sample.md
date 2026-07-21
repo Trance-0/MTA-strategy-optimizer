@@ -1,6 +1,6 @@
 # Amazon Ads 五段成本样例
 
-`modules/amc_mta/data/simulated/amazon_ads_report_sample.csv` 模拟与 AMC 路径粒度一致的 Amazon Ads 表现和成本数据。样例窗口为 `2026-05-01` 至 `2026-06-30`。CSV 第一行是字段名，第二行是中文字段说明，读取程序会自动跳过说明行。
+`modules/amc_mta/data/simulated/amazon_ads_report_sample.csv` 模拟与 AMC 路径粒度一致的 Amazon Ads 表现和成本数据。样例窗口为完整自然年 `2026-01-01` 至 `2026-12-31`，共 365 天、6,205 条数据。CSV 第一行是字段名，第二行是中文字段说明，读取程序会自动跳过说明行。
 
 ## 字段与关联键
 

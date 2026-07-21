@@ -78,7 +78,7 @@ modules/amc_mta/outputs/attribution/amc_mta_recommended_attribution.csv
 Markov 是正式归因展示口径，Shapley 用于判断模型敏感性。旧成本、效率、差距
 等级和状态字段不属于这三份双模型 schema。
 
-当前样例为 `0 RELIABLE / 51 UNRELIABLE`。稳定性证据缺失时，结果只能解释为
+当前全年样例为 `51 RELIABLE / 0 UNRELIABLE`。结果只能解释为
 当前窗口中的探索性归因，不能据此自动调整预算。
 
 单个触点的归因是否可靠、应该如何解释，见

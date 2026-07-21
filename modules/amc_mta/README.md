@@ -30,7 +30,7 @@ modules/amc_mta/outputs/attribution/amc_mta_recommended_attribution.csv
 均直接给出“计算有效、数据支撑充分、模型一致”三个布尔值及二元可靠性结果；
 三项全真才是 `RELIABLE`。摘要分别 AND 聚合同一 outcome 全部触点的三个布尔
 值；整体比较状态和其他差异指标只作诊断。当前样例为
-`0 RELIABLE / 51 UNRELIABLE`。
+`51 RELIABLE / 0 UNRELIABLE`。
 
 当前没有滚动窗口稳定性证据，因此现有结果仍只能解释为当前窗口的探索性归因，
 不能表述为长期稳定贡献或因果增量。稳定性和自动决策约束不参与可靠性计算，也

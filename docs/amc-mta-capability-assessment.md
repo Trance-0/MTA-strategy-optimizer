@@ -14,7 +14,7 @@
 
 | 维度 | 等级 | 证据 |
 | --- | --- | --- |
-| 工程可靠性 | 较高 | 流程可复现、校验严格，85 项测试覆盖守恒、可靠性与回滚 |
+| 工程可靠性 | 较高 | 流程可复现、校验严格，91 项测试覆盖守恒、可靠性与回滚 |
 | 归因方法 | 中等 | 双模型互补且语义清楚，但仍需手算基准和真实数据校准 |
 | 数据证据 | 低 | 只有确定性模拟样例，没有真实 AMC 查询与跨窗口证据 |
 | 业务决策 | 很低 | 当前只输出模型诊断与可靠性，不提供决策值或自动化字段 |
@@ -64,7 +64,7 @@
 
 以下结果是 2026-07-21 使用仓库三份模拟输入并运行
 `python3 modules/amc_mta/run_pipeline.py` 得到的确定性样例快照。样例包含
-12 条聚合路径、17 个五段触点、1,826 个购买用户、2,044 次购买和 226,628
+144 条唯一聚合路径、17 个五段触点、3,316 个购买用户、4,185 次购买和 343,161
 收入；两个模型都完全守恒。输入变化后必须重新生成本节，不能沿用这些数字。
 
 ### 整体差异
@@ -100,7 +100,7 @@ SPONSORED_PRODUCTS:PRODUCT_AD:PRODUCT_PAGE:UNSPECIFIED:CLICK
 calculation_valid = true
 data_support_sufficient = 48 false / 3 true
 models_consistent = 32 true / 19 false
-reliability_status = 0 RELIABLE / 51 UNRELIABLE
+reliability_status = 51 RELIABLE / 0 UNRELIABLE
 ```
 
 三个 outcome 摘要分别对本 outcome 全部触点的三项可靠性布尔值做 AND；
