@@ -158,8 +158,8 @@ amc_mta_recommended_attribution.csv
 `calculation_valid`、`data_support_sufficient`、`models_consistent` 做 AND，
 再使用完全相同的三项 AND 公式生成摘要可靠性。
 
-`support_status`、`comparison_status`、TVD、Spearman、Top-K、
-`critical_divergence` 和差距等级都保留为诊断信息，但不参与可靠性计算。
+触点表保留 `gap_pp`、`relative_gap` 和三个原始支持量；摘要保留 TVD、Spearman
+和 Top-K 重合率。这些摘要指标不参与可靠性计算，旧状态与差距等级不在当前 schema。
 
 原始 Markov、Shapley 单模型结果不包含可靠性字段，因为可靠性需要两个模型及
 AMC 原始支持共同判断。
@@ -175,5 +175,4 @@ AMC 原始支持共同判断。
 - 三条 outcome 摘要均为 `UNRELIABLE`。
 
 `RELIABLE` 只表示当前窗口满足上述三项归因证据标准，不代表因果增量、长期稳定
-贡献，也不会开放自动预算或投放执行。既有稳定性和决策字段是独立治理约束，
-不参与这里的可靠性计算。
+贡献，也不表示结果适合自动预算或投放执行。

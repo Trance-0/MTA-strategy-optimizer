@@ -102,20 +102,21 @@ Amazon Ads 行和模型输出，确保曝光、点击和成本始终独立。
 | --- | ---: | --- |
 | `amc_markov_attribution_results.csv` | 17 | Markov 五段结果 |
 | `amc_shapley_attribution_results.csv` | 17 | Shapley 五段结果 |
-| `amc_mta_model_comparison_touchpoints.csv` | 51 | 17 触点 × 3 outcome 全量诊断 |
+| `amc_mta_model_comparison_touchpoints.csv` | 51 | 14 列 share、gap、支持证据与可靠性 |
 | `amc_mta_model_comparison_summary.csv` | 3 | 3 outcome × 五段摘要 |
-| `amc_mta_recommended_attribution.csv` | 51 | 治理状态与是否允许决策 |
+| `amc_mta_recommended_attribution.csv` | 51 | 14 列 Markov 正式值、Shapley 参照值与可靠性 |
 
 两模型分别对购买用户、购买次数和收入守恒。ROI、ROAS、CPA 与每购买用户成本使用
 同一五段成本计算；零成本行的效率指标为空。推荐文件不是第三套归因模型，而是治理
-视图：当前 Markov 仅作为展示口径，Shapley 作为参照，所有决策值均被证据门槛阻断。
+视图：当前 Markov 仅作为展示口径，Shapley 作为参照；文件不提供预算决策值或
+自动化许可字段。
 三份双模型产物另输出计算有效、数据支撑充分、模型一致及其二元可靠性状态；当前
 样例为 `0 RELIABLE / 51 UNRELIABLE`。摘要按 outcome 对三个触点级布尔值分别
-做 AND；TVD、Spearman、Top-K、整体比较状态和差距等级保留为诊断，不参与合成。
+做 AND；TVD、Spearman、Top-K 重合率只在 13 列摘要中展示，不参与合成。
 
 ## 可靠性与测试
 
-当前 86 项测试覆盖：
+当前 85 项测试覆盖：
 
 - 五段键和 CPC/CPM 计费冲突；
 - 路径排序、14 天边界、报告起点和多购买不复用；

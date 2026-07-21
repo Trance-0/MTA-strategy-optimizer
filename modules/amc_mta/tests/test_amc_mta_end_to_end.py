@@ -233,7 +233,6 @@ class EndToEndSampleTests(unittest.TestCase):
             self.assertEqual(len(comparison_rows), 51)
             self.assertEqual(len(summary_rows), 3)
             self.assertEqual(len(recommended_rows), 51)
-            self.assertTrue(all(row["grain"] == "FIVE_PART" for row in summary_rows))
             self.assertTrue(
                 all(set(row) == set(TOUCHPOINT_COMPARISON_FIELDS) for row in comparison_rows)
             )
@@ -291,9 +290,11 @@ class EndToEndSampleTests(unittest.TestCase):
                 all(
                     canonicalize_amc_touchpoint_key(row["touchpoint"])
                     == row["touchpoint"]
-                    and row["touchpoint"].rsplit(":", 1)[1] == row["interaction_type"]
-                    for row in comparison_rows + recommended_rows
+                    for row in comparison_rows
                 )
+            )
+            self.assertTrue(
+                all(row["touchpoint"].rsplit(":", 1)[1] == row["interaction_type"] for row in recommended_rows)
             )
             forbidden_fields = {
                 "parent_touchpoint",
@@ -331,15 +332,9 @@ class EndToEndSampleTests(unittest.TestCase):
                 "ABSOLUTE_GAP",
                 "RELATIVE_AND_ABSOLUTE_GAP",
             }
-            reason_tokens = {
-                token
-                for row in comparison_rows + recommended_rows
-                for token in row["reason_code"].split("|")
-            }
-            self.assertTrue(
-                forbidden_reason_codes.isdisjoint(reason_tokens)
-            )
-            self.assertTrue(reason_tokens <= allowed_reason_codes)
+            for row in comparison_rows + summary_rows + recommended_rows:
+                self.assertTrue(forbidden_reason_codes.isdisjoint(row))
+                self.assertNotIn("reason_code", row)
             expected_reasons = {
                 "NO_OUTCOME": {"NO_OUTCOME"},
                 "LONG_TAIL": {"LONG_TAIL", "LONG_TAIL_MODEL_SENSITIVE"},
@@ -347,33 +342,23 @@ class EndToEndSampleTests(unittest.TestCase):
                 "MEDIUM": {"MODEL_REVIEW"},
                 "LARGE": {"ABSOLUTE_GAP", "RELATIVE_AND_ABSOLUTE_GAP"},
             }
-            self.assertTrue(
-                all(
-                    "|" not in row["reason_code"]
-                    and row["reason_code"] in expected_reasons[row["difference_level"]]
-                    for row in comparison_rows + recommended_rows
-                )
-            )
+            self.assertTrue(all("difference_level" not in row for row in comparison_rows + summary_rows + recommended_rows))
             self.assertEqual(
                 len({(row["touchpoint"], row["outcome"]) for row in comparison_rows}),
                 51,
             )
-            self.assertTrue(all(row["decision_value"] == "" for row in recommended_rows))
-            self.assertTrue(
-                all(row["decision_status"] == "EVIDENCE_UNVERIFIED" for row in recommended_rows)
-            )
 
             five_part = {row["outcome"]: row for row in summary_rows}
             expected = {
-                "converted_users": (0.091599, 0.987699877, "5"),
-                "purchase_count": (0.092277, 0.989551508, "5"),
-                "revenue": (0.098206, 0.982779828, "4"),
+                "converted_users": (0.091599, 0.987699877, 1.0),
+                "purchase_count": (0.092277, 0.989551508, 1.0),
+                "revenue": (0.098206, 0.982779828, 0.8),
             }
             for outcome, (tvd, rho, overlap) in expected.items():
                 with self.subTest(outcome=outcome):
                     self.assertAlmostEqual(float(five_part[outcome]["tvd"]), tvd, places=6)
                     self.assertAlmostEqual(float(five_part[outcome]["spearman_rho"]), rho, places=6)
-                    self.assertEqual(five_part[outcome]["top_k_overlap"], overlap)
+                    self.assertAlmostEqual(float(five_part[outcome]["top_k_overlap_rate"]), overlap)
 
             expected_headers = {
                 MODEL_COMPARISON_TOUCHPOINTS_FILE: TOUCHPOINT_COMPARISON_FIELDS,

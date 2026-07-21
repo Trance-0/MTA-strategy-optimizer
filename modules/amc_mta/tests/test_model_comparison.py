@@ -25,7 +25,6 @@ from model_comparison import (  # noqa: E402
     SUMMARY_FIELDS,
     TOUCHPOINT_COMPARISON_FIELDS,
     calculate_raw_support,
-    classify_difference,
     compare_attribution_models,
     data_support_is_sufficient,
     models_are_consistent,
@@ -109,18 +108,6 @@ def high_support_model_row(model: str, touchpoint: str, share: float) -> dict:
 
 
 class DifferenceRuleTests(unittest.TestCase):
-    def test_thresholds_apply_in_documented_order(self) -> None:
-        self.assertEqual(classify_difference(0.009, 0.008)[0], "LONG_TAIL")
-        self.assertEqual(classify_difference(0.10, 0.09)[0], "SMALL")
-        self.assertEqual(classify_difference(0.10, 0.07)[0], "LARGE")
-        self.assertEqual(classify_difference(0.045, 0.025)[0], "LARGE")
-        self.assertEqual(classify_difference(0.10, 0.085)[0], "MEDIUM")
-
-    def test_critical_divergence_is_head_share_with_five_pp_gap(self) -> None:
-        level, _, critical = classify_difference(0.13, 0.19)
-        self.assertEqual(level, "LARGE")
-        self.assertTrue(critical)
-
     def test_spearman_handles_ties_and_undefined_rankings(self) -> None:
         self.assertAlmostEqual(
             spearman_rho({"a": 0.5, "b": 0.5, "c": 0.0}, {"a": 0.4, "b": 0.4, "c": 0.2}),
@@ -230,7 +217,6 @@ class CompleteComparisonTests(unittest.TestCase):
         self.assertEqual(len(artifacts.touchpoints), 6)
         self.assertEqual(len(artifacts.summary), 3)
         self.assertEqual(len(artifacts.recommended), 6)
-        self.assertTrue(all(row["grain"] == "FIVE_PART" for row in artifacts.summary))
         self.assertEqual(
             {row["outcome"] for row in artifacts.summary},
             {"converted_users", "purchase_count", "revenue"},
@@ -243,10 +229,6 @@ class CompleteComparisonTests(unittest.TestCase):
                 for outcome in ("converted_users", "purchase_count", "revenue")
             },
         )
-        self.assertTrue(all(row["decision_value"] == "" for row in artifacts.recommended))
-        self.assertTrue(
-            all(row["decision_status"] == "EVIDENCE_UNVERIFIED" for row in artifacts.recommended)
-        )
         for field in (
             "markov_interval_low",
             "markov_interval_high",
@@ -255,8 +237,7 @@ class CompleteComparisonTests(unittest.TestCase):
             "gap_direction_rate",
             "top5_entry_rate",
         ):
-            self.assertIn(field, TOUCHPOINT_COMPARISON_FIELDS)
-            self.assertTrue(all(row[field] == "" for row in artifacts.touchpoints))
+            self.assertNotIn(field, TOUCHPOINT_COMPARISON_FIELDS)
         forbidden_fields = {
             "parent_touchpoint",
             "parent_support_level",
@@ -268,13 +249,6 @@ class CompleteComparisonTests(unittest.TestCase):
         )
         self.assertTrue(
             all(forbidden_fields.isdisjoint(row) for row in artifacts.recommended)
-        )
-        self.assertEqual(
-            {
-                row["reason_code"]
-                for row in artifacts.touchpoints
-            },
-            {"ABSOLUTE_GAP"},
         )
         self.assertTrue(
             all(row["calculation_valid"] == "true" for row in artifacts.touchpoints)
@@ -332,7 +306,6 @@ class CompleteComparisonTests(unittest.TestCase):
         rows = [
             row for row in artifacts.touchpoints if row["touchpoint"] == A_IMPRESSION
         ]
-        self.assertTrue(all(row["difference_level"] == "LONG_TAIL" for row in rows))
         self.assertTrue(all(row["models_consistent"] == "true" for row in rows))
         self.assertTrue(all(row["reliability_status"] == "UNRELIABLE" for row in rows))
         self.assertTrue(
@@ -381,9 +354,6 @@ class CompleteComparisonTests(unittest.TestCase):
             all(row["models_consistent"] == "false" for row in artifacts.touchpoints)
         )
         self.assertTrue(
-            all(row["comparison_status"] == "CONSISTENT" for row in artifacts.summary)
-        )
-        self.assertTrue(
             all(row["models_consistent"] == "false" for row in artifacts.summary)
         )
         self.assertTrue(
@@ -411,9 +381,6 @@ class CompleteComparisonTests(unittest.TestCase):
         )
 
         self.assertTrue(all(row["spearman_rho"] == "" for row in artifacts.summary))
-        self.assertTrue(
-            all(row["comparison_status"] == "MIXED_REVIEW" for row in artifacts.summary)
-        )
         self.assertTrue(
             all(row["models_consistent"] == "true" for row in artifacts.summary)
         )
@@ -527,15 +494,10 @@ class CompleteComparisonTests(unittest.TestCase):
         self.assertEqual(set(artifacts.touchpoints[0]), set(TOUCHPOINT_COMPARISON_FIELDS))
         self.assertEqual(set(artifacts.summary[0]), set(SUMMARY_FIELDS))
         self.assertEqual(set(artifacts.recommended[0]), set(RECOMMENDED_FIELDS))
-        self.assertTrue(all(row["grain"] == "FIVE_PART" for row in artifacts.summary))
-        reason_tokens = {
-            token
-            for row in artifacts.touchpoints
-            for token in row["reason_code"].split("|")
-        }
-        self.assertTrue(
-            forbidden_reason_codes.isdisjoint(reason_tokens)
-        )
+        for row in artifacts.touchpoints + artifacts.summary + artifacts.recommended:
+            self.assertTrue(forbidden_reason_codes.isdisjoint(row))
+            self.assertNotIn("reason_code", row)
+            self.assertNotIn("difference_level", row)
 
     def test_gap_direction_tolerance_is_measured_in_percentage_points(self) -> None:
         markov = [
@@ -547,7 +509,7 @@ class CompleteComparisonTests(unittest.TestCase):
             model_row("shapley", A_CLICK, 0.500000004),
         ]
         artifacts = compare_attribution_models(markov, shapley, self.amc_rows)
-        self.assertTrue(all(row["gap_direction"] == "TIE" for row in artifacts.touchpoints))
+        self.assertTrue(all(row["gap_pp"] <= 0.000001 for row in artifacts.touchpoints))
 
     def test_rejects_touchpoint_mismatch_duplicate_and_nonfinite_values(self) -> None:
         with self.assertRaisesRegex(ValueError, "sets differ"):
@@ -592,10 +554,6 @@ class CompleteComparisonTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "one report window"):
             compare_attribution_models(self.markov, self.shapley, second_scope)
 
-        with self.assertRaisesRegex(ValueError, "positive integer"):
-            compare_attribution_models(
-                self.markov, self.shapley, self.amc_rows, reference_window_days=0
-            )
 
     def test_rejects_invalid_or_inverted_amc_report_dates(self) -> None:
         invalid_cases = (
@@ -637,14 +595,8 @@ class CompleteComparisonTests(unittest.TestCase):
                 row["cpa"] = ""
                 row["cost_per_converted_user"] = ""
         artifacts = compare_attribution_models(markov, shapley, amc_rows)
-        self.assertTrue(all(row["comparison_status"] == "NO_OUTCOME" for row in artifacts.summary))
         self.assertTrue(all(row["tvd"] == "" for row in artifacts.summary))
-        self.assertTrue(
-            all(row["difference_level"] == "NO_OUTCOME" for row in artifacts.touchpoints)
-        )
-        self.assertTrue(
-            all(row["decision_status"] == "NO_OUTCOME" for row in artifacts.recommended)
-        )
+        self.assertTrue(all(row["official_share"] == "" for row in artifacts.recommended))
         for rows in (artifacts.touchpoints, artifacts.summary, artifacts.recommended):
             self.assertTrue(all(row["calculation_valid"] == "true" for row in rows))
             self.assertTrue(
@@ -659,6 +611,16 @@ class CompleteComparisonTests(unittest.TestCase):
                     for row in rows
                 )
             )
+
+    def test_nonzero_outcome_zero_share_touchpoint_keeps_official_zero(self) -> None:
+        markov = [model_row("markov", A_IMPRESSION, 0), model_row("markov", A_CLICK, 1)]
+        shapley = [model_row("shapley", A_IMPRESSION, 0), model_row("shapley", A_CLICK, 1)]
+        artifacts = compare_attribution_models(markov, shapley, self.amc_rows)
+        zero_share_rows = [
+            row for row in artifacts.recommended if row["touchpoint"] == A_IMPRESSION
+        ]
+        self.assertTrue(zero_share_rows)
+        self.assertTrue(all(row["official_share"] == 0.0 for row in zero_share_rows))
 
 
 class StrictCsvTests(unittest.TestCase):

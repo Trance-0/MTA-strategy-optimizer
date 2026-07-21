@@ -41,7 +41,7 @@ Amazon Ads 报告中的 `impressions` 和 `clicks` 是汇总表现指标，不�
 
 输入明确区分 `converted_users`（至少购买一次的去重用户）和 `purchase_count`（订单次数）。Markov 与 Shapley 分别归因这两个指标和收入；每个模型输出一份包含互动类型、贡献、成本与效率指标的五段结果。流程还生成触点比较、整体摘要和治理推荐，共五份正式输出。CPA 使用订单次数，另行输出每购买用户成本。完整边界见[数据契约](../../../modules/amc_mta/docs/amc-data-requirements.md)。
 
-当前样例的 51 条推荐记录全部处于 `EVIDENCE_UNVERIFIED`：`decision_value` 为空、`automation_allowed=false`。原因是尚无滚动窗口和重采样稳定性证据，且触点支持度有限。详细规则见[模型比较治理规范](../../../modules/amc_mta/docs/model-comparison-governance.md)。
+当前样例的 51 条推荐记录采用精简 14 列契约，只保留 Markov 正式展示值、Shapley 参照值、差距与可靠性；全部为 `UNRELIABLE`。详细规则见[模型比较治理规范](../../../modules/amc_mta/docs/model-comparison-governance.md)。
 
 独立的当前窗口可靠性只检查计算有效、最低数据支持和模型一致三个标准。当前
 51 条记录中没有任何一条同时通过三项，因此为 `0 RELIABLE / 51 UNRELIABLE`；

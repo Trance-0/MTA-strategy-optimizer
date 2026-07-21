@@ -49,7 +49,7 @@ Agent/BMad 工具链。项目只有一个正式业务实现：
 modules/amc_mta/
 ├── src/       # 路径键、路径构建、归因和模型比较
 ├── scripts/   # 独立命令行入口
-├── tests/     # 86 项自动化测试
+├── tests/     # 85 项自动化测试
 ├── data/      # 三份可复现模拟输入
 ├── outputs/   # 五份正式、可再生 CSV
 └── docs/      # 当前模块契约与使用说明
@@ -83,13 +83,13 @@ docs/
 截至 2026-07-20，基于当前三份模拟输入以及
 `python3 modules/amc_mta/run_pipeline.py` 的确定性输出：
 
-- 86 项 AMC MTA 测试通过；
+- 85 项 AMC MTA 测试通过；
 - 17 个五段触点与 Amazon Ads 报告完全对齐；
 - 报告窗口为 2026-05-01 至 2026-06-30，共 61 天逐日覆盖；
 - 三项 AMC outcome 总量为 1,826 个购买用户、2,044 次购买、226,628 收入；
 - 五份归因产物可确定性复现；
 - 三份双模型产物的可靠性结果为 `0 RELIABLE / 51 UNRELIABLE`；
-- 51 条治理推荐均为 `EVIDENCE_UNVERIFIED`，没有 `decision_value`。
+- 51 条推荐记录均为 `UNRELIABLE`；推荐表只保存正式/参照 share、差距和可靠性。
 
 这些数字证明样例流水线的一致性，不证明真实投放中的模型有效性或因果增量。
 

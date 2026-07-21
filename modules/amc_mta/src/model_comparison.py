@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal, InvalidOperation
 from pathlib import Path
-from typing import Iterable, Mapping, Sequence
+from typing import Mapping, Sequence
 
 from amc_mta_attribution import (
     NULL,
@@ -48,55 +48,14 @@ MODEL_OUTPUT_FIELDS = [
 
 TOUCHPOINT_COMPARISON_FIELDS = [
     "touchpoint",
-    "interaction_type",
     "outcome",
     "markov_share",
     "shapley_share",
-    "markov_attributed_value",
-    "shapley_attributed_value",
-    "mean_share",
     "gap_pp",
-    "signed_gap_pp",
     "relative_gap",
-    "model_low",
-    "model_high",
-    "impressions",
-    "clicks",
-    "cost",
-    "reported_purchases",
-    "reported_sales",
-    "markov_roas",
-    "shapley_roas",
-    "markov_roi",
-    "shapley_roi",
-    "markov_cpa",
-    "shapley_cpa",
-    "markov_cost_per_converted_user",
-    "shapley_cost_per_converted_user",
     "raw_unique_paths",
     "raw_converted_users",
     "raw_purchase_count",
-    "raw_revenue",
-    "support_level",
-    "markov_interval_low",
-    "markov_interval_high",
-    "shapley_interval_low",
-    "shapley_interval_high",
-    "gap_direction",
-    "gap_direction_rate",
-    "top5_entry_rate",
-    "difference_level",
-    "comparison_status",
-    "critical_divergence",
-    "operational_status",
-    "stability_level",
-    "decision_status",
-    "official_model",
-    "official_share",
-    "decision_value",
-    "review_required",
-    "automation_allowed",
-    "reason_code",
     "calculation_valid",
     "data_support_sufficient",
     "models_consistent",
@@ -106,27 +65,13 @@ TOUCHPOINT_COMPARISON_FIELDS = [
 
 SUMMARY_FIELDS = [
     "outcome",
-    "grain",
     "report_start_date",
     "report_end_date",
     "max_touchpoint_gap_days",
-    "reference_window_days",
     "touchpoint_count",
     "tvd",
     "spearman_rho",
-    "top_k",
-    "top_k_overlap",
     "top_k_overlap_rate",
-    "critical_divergence_count",
-    "distribution_gap",
-    "rank_consistency",
-    "support_status",
-    "stability_status",
-    "operational_status",
-    "validation_error_count",
-    "validation_reason_code",
-    "comparison_status",
-    "decision_status",
     "calculation_valid",
     "data_support_sufficient",
     "models_consistent",
@@ -142,17 +87,8 @@ RECOMMENDED_FIELDS = [
     "official_share",
     "benchmark_model",
     "benchmark_share",
-    "model_low",
-    "model_high",
     "gap_pp",
-    "difference_level",
-    "support_level",
-    "stability_level",
-    "decision_status",
-    "decision_value",
-    "review_required",
-    "automation_allowed",
-    "reason_code",
+    "relative_gap",
     "calculation_valid",
     "data_support_sufficient",
     "models_consistent",
@@ -169,7 +105,6 @@ _SHARED_PERFORMANCE_FIELDS = (
 )
 _EFFICIENCY_FIELDS = ("roas", "roi", "cpa", "cost_per_converted_user")
 _SHARE_TOLERANCE = 1e-6
-_GAP_PP_TOLERANCE = 1e-6
 _EFFICIENCY_TOLERANCE = 5e-7
 _MIN_SUPPORT_PURCHASE_COUNT = 30
 _MIN_SUPPORT_CONVERTED_USERS = 20
@@ -471,22 +406,6 @@ def _validate_models(
     return markov, shapley, totals
 
 
-def _support_level(support: Mapping[str, float]) -> str:
-    if (
-        support["raw_purchase_count"] >= 100
-        and support["raw_converted_users"] >= 50
-        and support["raw_unique_paths"] >= 10
-    ):
-        return "FULL_SUPPORT"
-    if (
-        support["raw_purchase_count"] >= 30
-        and support["raw_converted_users"] >= 20
-        and support["raw_unique_paths"] >= 5
-    ):
-        return "LIMITED_SUPPORT"
-    return "LOW_SUPPORT"
-
-
 def data_support_is_sufficient(support: Mapping[str, float]) -> bool:
     """Return whether all three minimum raw-support thresholds pass."""
     return (
@@ -525,17 +444,12 @@ def models_are_consistent(
 def _decimal_gap_metrics(
     markov_share: Decimal,
     shapley_share: Decimal,
-) -> tuple[Decimal, Decimal, Decimal, Decimal]:
+) -> tuple[Decimal, Decimal]:
     """Calculate gap metrics from preserved, unrounded decimal shares."""
     mean_share = (markov_share + shapley_share) / Decimal("2")
     absolute_gap = abs(markov_share - shapley_share)
     relative_gap = Decimal("0") if mean_share == 0 else absolute_gap / mean_share
-    return (
-        mean_share,
-        absolute_gap * Decimal("100"),
-        (markov_share - shapley_share) * Decimal("100"),
-        relative_gap,
-    )
+    return absolute_gap * Decimal("100"), relative_gap
 
 
 def reliability_fields(
@@ -567,7 +481,6 @@ def calculate_raw_support(amc_rows: Sequence[Mapping[str, object]]) -> dict[str,
             "path_keys": set(),
             "raw_converted_users": 0,
             "raw_purchase_count": 0,
-            "raw_revenue": 0.0,
         }
     )
     for row_number, row in enumerate(amc_rows, start=2):
@@ -580,7 +493,6 @@ def calculate_raw_support(amc_rows: Sequence[Mapping[str, object]]) -> dict[str,
             support["path_keys"].add(normalized_path)
             support["raw_converted_users"] += safe_int(row.get("converted_users"))
             support["raw_purchase_count"] += safe_int(row.get("purchase_count"))
-            support["raw_revenue"] += safe_float(row.get("revenue"))
 
     results = {}
     for key, support in grouped.items():
@@ -588,41 +500,9 @@ def calculate_raw_support(amc_rows: Sequence[Mapping[str, object]]) -> dict[str,
             "raw_unique_paths": len(support["path_keys"]),
             "raw_converted_users": support["raw_converted_users"],
             "raw_purchase_count": support["raw_purchase_count"],
-            "raw_revenue": round(support["raw_revenue"], 6),
         }
-        row["support_level"] = _support_level(row)
         results[key] = row
     return results
-
-
-def classify_difference(markov_share: float, shapley_share: float) -> tuple[str, str, bool]:
-    mean_share = (markov_share + shapley_share) / 2
-    gap_pp = abs(markov_share - shapley_share) * 100
-    relative_gap = 0.0 if mean_share == 0 else abs(markov_share - shapley_share) / mean_share
-    critical = mean_share >= 0.10 - 1e-12 and gap_pp >= 5.0 - 1e-9
-    if mean_share < 0.01 - 1e-12:
-        reason = "LONG_TAIL_MODEL_SENSITIVE" if relative_gap >= 0.30 else "LONG_TAIL"
-        return "LONG_TAIL", reason, critical
-    if gap_pp <= 1.0 + 1e-9 and relative_gap <= 0.20 + 1e-12:
-        return "SMALL", "ALIGNED", critical
-    if gap_pp >= 3.0 - 1e-9:
-        return "LARGE", "ABSOLUTE_GAP", critical
-    if (
-        mean_share >= 0.03 - 1e-12
-        and gap_pp >= 1.5 - 1e-9
-        and relative_gap >= 0.50 - 1e-12
-    ):
-        return "LARGE", "RELATIVE_AND_ABSOLUTE_GAP", critical
-    return "MEDIUM", "MODEL_REVIEW", critical
-
-
-def _comparison_status(difference_level: str) -> str:
-    return {
-        "SMALL": "ALIGNED",
-        "MEDIUM": "REVIEW",
-        "LARGE": "DIVERGENT",
-        "LONG_TAIL": "LONG_TAIL",
-    }[difference_level]
 
 
 def _rank(values: Mapping[str, float]) -> dict[str, float]:
@@ -658,19 +538,12 @@ def spearman_rho(markov: Mapping[str, float], shapley: Mapping[str, float]) -> f
     return None if denominator == 0 else covariance / denominator
 
 
-def _overall_metrics(
-    markov: Mapping[str, float], shapley: Mapping[str, float], critical_count: int
-) -> dict:
+def _overall_metrics(markov: Mapping[str, float], shapley: Mapping[str, float]) -> dict:
     if not any(markov.values()) and not any(shapley.values()):
         return {
             "tvd": "",
             "spearman_rho": "",
-            "top_k": min(5, len(markov)),
-            "top_k_overlap": "",
             "top_k_overlap_rate": "",
-            "distribution_gap": "NO_OUTCOME",
-            "rank_consistency": "UNDEFINED",
-            "comparison_status": "NO_OUTCOME",
         }
     tvd = 0.5 * sum(abs(markov[key] - shapley[key]) for key in markov)
     rho = spearman_rho(markov, shapley)
@@ -679,43 +552,11 @@ def _overall_metrics(
     top_shapley = set(sorted(shapley, key=lambda key: (-shapley[key], key))[:k])
     overlap = len(top_markov & top_shapley)
     overlap_rate = 0.0 if k == 0 else overlap / k
-    distribution_gap = "SMALL" if tvd <= 0.05 else "MEDIUM" if tvd <= 0.12 else "LARGE"
-    rank_consistency = (
-        "UNDEFINED"
-        if rho is None
-        else "HIGH"
-        if rho >= 0.90
-        else "MEDIUM"
-        if rho >= 0.75
-        else "LOW"
-    )
-    if rho is None:
-        comparison_status = "MIXED_REVIEW"
-    elif tvd <= 0.05 and rho >= 0.90 and overlap_rate >= 0.80 and critical_count == 0:
-        comparison_status = "CONSISTENT"
-    elif tvd > 0.12 or rho < 0.75 or overlap_rate < 0.60:
-        comparison_status = "MODEL_DIVERGENT"
-    else:
-        comparison_status = "MIXED_REVIEW"
     return {
         "tvd": round(tvd, 9),
         "spearman_rho": "" if rho is None else round(rho, 9),
-        "top_k": k,
-        "top_k_overlap": overlap,
         "top_k_overlap_rate": round(overlap_rate, 9),
-        "distribution_gap": distribution_gap,
-        "rank_consistency": rank_consistency,
-        "comparison_status": comparison_status,
     }
-
-
-def _aggregate_support_status(support_rows: Iterable[Mapping[str, object]]) -> str:
-    levels = {str(row["support_level"]) for row in support_rows}
-    if "LOW_SUPPORT" in levels:
-        return "LOW_SUPPORT"
-    if "LIMITED_SUPPORT" in levels:
-        return "LIMITED_SUPPORT"
-    return "FULL_SUPPORT"
 
 
 def compare_attribution_models(
@@ -724,11 +565,9 @@ def compare_attribution_models(
     amc_rows: Sequence[Mapping[str, object]],
     *,
     max_touchpoint_gap_days: int = 14,
-    reference_window_days: int = 7,
 ) -> ComparisonArtifacts:
     for name, value in (
         ("max_touchpoint_gap_days", max_touchpoint_gap_days),
-        ("reference_window_days", reference_window_days),
     ):
         if isinstance(value, bool) or not isinstance(value, int) or value <= 0:
             raise ValueError(f"{name} must be a positive integer")
@@ -742,9 +581,10 @@ def compare_attribution_models(
         raise ValueError("AMC report must contain exactly one report window")
     report_start_date, report_end_date = next(iter(windows))
 
+    zero_outcomes = {outcome for outcome, total in totals.items() if total == 0}
     touchpoint_rows: list[dict] = []
     summary_rows: list[dict] = []
-    for outcome, (share_field, attributed_field) in OUTCOME_FIELDS.items():
+    for outcome, (share_field, _) in OUTCOME_FIELDS.items():
         is_zero_outcome = totals[outcome] == 0
         outcome_reliability_rows: list[dict[str, str]] = []
         for touchpoint in sorted(markov):
@@ -752,25 +592,12 @@ def compare_attribution_models(
             shapley_row = shapley[touchpoint]
             markov_share = float(markov_row[share_field])
             shapley_share = float(shapley_row[share_field])
-            (
-                mean_share_decimal,
-                gap_pp_decimal,
-                signed_gap_pp_decimal,
-                relative_gap_decimal,
-            ) = _decimal_gap_metrics(
+            gap_pp_decimal, relative_gap_decimal = _decimal_gap_metrics(
                 markov_row[_DECIMAL_SHARE_KEYS[share_field]],
                 shapley_row[_DECIMAL_SHARE_KEYS[share_field]],
             )
-            mean_share = float(mean_share_decimal)
             gap_pp = float(gap_pp_decimal)
-            signed_gap_pp = float(signed_gap_pp_decimal)
             relative_gap = float(relative_gap_decimal)
-            if is_zero_outcome:
-                difference_level, reason, critical = "NO_OUTCOME", "NO_OUTCOME", False
-            else:
-                difference_level, reason, critical = classify_difference(
-                    markov_share, shapley_share
-                )
             support = support_five[touchpoint]
             reliability = reliability_fields(
                 calculation_valid=True,
@@ -787,73 +614,21 @@ def compare_attribution_models(
             touchpoint_rows.append(
                 {
                     "touchpoint": touchpoint,
-                    "interaction_type": touchpoint.rsplit(":", 1)[1],
                     "outcome": outcome,
                     "markov_share": round(markov_share, 9),
                     "shapley_share": round(shapley_share, 9),
-                    "markov_attributed_value": markov_row[attributed_field],
-                    "shapley_attributed_value": shapley_row[attributed_field],
-                    "mean_share": round(mean_share, 9),
                     "gap_pp": round(gap_pp, 6),
-                    "signed_gap_pp": round(signed_gap_pp, 6),
                     "relative_gap": round(relative_gap, 9),
-                    "model_low": round(min(markov_share, shapley_share), 9),
-                    "model_high": round(max(markov_share, shapley_share), 9),
-                    **{field: markov_row[field] for field in _SHARED_PERFORMANCE_FIELDS},
-                    **{f"markov_{field}": markov_row[field] for field in _EFFICIENCY_FIELDS},
-                    **{f"shapley_{field}": shapley_row[field] for field in _EFFICIENCY_FIELDS},
                     "raw_unique_paths": support["raw_unique_paths"],
                     "raw_converted_users": support["raw_converted_users"],
                     "raw_purchase_count": support["raw_purchase_count"],
-                    "raw_revenue": support["raw_revenue"],
-                    "support_level": support["support_level"],
-                    "markov_interval_low": "",
-                    "markov_interval_high": "",
-                    "shapley_interval_low": "",
-                    "shapley_interval_high": "",
-                    "gap_direction": (
-                        "TIE"
-                        if abs(signed_gap_pp) <= _GAP_PP_TOLERANCE
-                        else "MARKOV_HIGH"
-                        if signed_gap_pp > 0
-                        else "SHAPLEY_HIGH"
-                    ),
-                    "gap_direction_rate": "",
-                    "top5_entry_rate": "",
-                    "difference_level": difference_level,
-                    "comparison_status": (
-                        "NO_OUTCOME"
-                        if is_zero_outcome
-                        else _comparison_status(difference_level)
-                    ),
-                    "critical_divergence": str(critical).lower(),
-                    "operational_status": "VALID",
-                    "stability_level": "UNVERIFIED",
-                    "decision_status": (
-                        "NO_OUTCOME" if is_zero_outcome else "EVIDENCE_UNVERIFIED"
-                    ),
-                    "official_model": "MARKOV",
-                    "official_share": "" if is_zero_outcome else round(markov_share, 9),
-                    "decision_value": "",
-                    "review_required": "false" if is_zero_outcome else "true",
-                    "automation_allowed": "false",
-                    "reason_code": reason,
                     **reliability,
                 }
             )
 
         grain_markov = {key: float(row[share_field]) for key, row in markov.items()}
         grain_shapley = {key: float(row[share_field]) for key, row in shapley.items()}
-        critical_count = sum(
-            (
-                False
-                if is_zero_outcome
-                else classify_difference(grain_markov[key], grain_shapley[key])[2]
-            )
-            for key in grain_markov
-        )
-        metrics = _overall_metrics(grain_markov, grain_shapley, critical_count)
-        support_status = _aggregate_support_status(support_five.values())
+        metrics = _overall_metrics(grain_markov, grain_shapley)
         summary_reliability = reliability_fields(
             calculation_valid=all(
                 row["calculation_valid"] == "true"
@@ -871,22 +646,13 @@ def compare_attribution_models(
         summary_rows.append(
             {
                 "outcome": outcome,
-                "grain": "FIVE_PART",
                 "report_start_date": report_start_date,
                 "report_end_date": report_end_date,
                 "max_touchpoint_gap_days": max_touchpoint_gap_days,
-                "reference_window_days": reference_window_days,
                 "touchpoint_count": len(grain_markov),
-                **metrics,
-                "critical_divergence_count": critical_count,
-                "support_status": support_status,
-                "stability_status": "UNVERIFIED",
-                "operational_status": "VALID",
-                "validation_error_count": 0,
-                "validation_reason_code": "",
-                "decision_status": (
-                    "NO_OUTCOME" if is_zero_outcome else "EVIDENCE_UNVERIFIED"
-                ),
+                "tvd": metrics["tvd"],
+                "spearman_rho": metrics["spearman_rho"],
+                "top_k_overlap_rate": metrics["top_k_overlap_rate"],
                 **summary_reliability,
             }
         )
@@ -894,23 +660,14 @@ def compare_attribution_models(
     recommended_rows = [
         {
             "touchpoint": row["touchpoint"],
-            "interaction_type": row["interaction_type"],
+            "interaction_type": row["touchpoint"].rsplit(":", 1)[1],
             "outcome": row["outcome"],
-            "official_model": row["official_model"],
-            "official_share": row["official_share"],
+            "official_model": "MARKOV",
+            "official_share": "" if row["outcome"] in zero_outcomes else row["markov_share"],
             "benchmark_model": "PATH_LEVEL_SHAPLEY",
             "benchmark_share": row["shapley_share"],
-            "model_low": row["model_low"],
-            "model_high": row["model_high"],
             "gap_pp": row["gap_pp"],
-            "difference_level": row["difference_level"],
-            "support_level": row["support_level"],
-            "stability_level": row["stability_level"],
-            "decision_status": row["decision_status"],
-            "decision_value": "",
-            "review_required": row["review_required"],
-            "automation_allowed": row["automation_allowed"],
-            "reason_code": row["reason_code"],
+            "relative_gap": row["relative_gap"],
             "calculation_valid": row["calculation_valid"],
             "data_support_sufficient": row["data_support_sufficient"],
             "models_consistent": row["models_consistent"],

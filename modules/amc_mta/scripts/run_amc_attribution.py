@@ -18,7 +18,6 @@ from config import (  # noqa: E402
     MODEL_COMPARISON_SUMMARY_FILE,
     MODEL_COMPARISON_TOUCHPOINTS_FILE,
     RECOMMENDED_ATTRIBUTION_FILE,
-    REFERENCE_WINDOW_DAYS,
     SHAPLEY_OUTPUT_FILE,
 )
 from amc_mta_attribution import (  # noqa: E402
@@ -65,9 +64,6 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--max-touchpoint-gap-days", type=int, default=MAX_TOUCHPOINT_GAP_DAYS
     )
-    parser.add_argument(
-        "--reference-window-days", type=int, default=REFERENCE_WINDOW_DAYS
-    )
     return parser.parse_args()
 
 
@@ -77,7 +73,6 @@ def run_amc_attribution(
     amazon_ads_report: Path = AMAZON_ADS_REPORT_FILE,
     *,
     max_touchpoint_gap_days: int = MAX_TOUCHPOINT_GAP_DAYS,
-    reference_window_days: int = REFERENCE_WINDOW_DAYS,
 ) -> list[Path]:
     output_dir.mkdir(parents=True, exist_ok=True)
     amc_rows = read_amc_csv_strict(amc_report)
@@ -98,7 +93,6 @@ def run_amc_attribution(
         shapley_rows,
         amc_rows,
         max_touchpoint_gap_days=max_touchpoint_gap_days,
-        reference_window_days=reference_window_days,
     )
 
     markov_output = output_dir / MARKOV_OUTPUT_FILE
@@ -128,7 +122,6 @@ def main() -> None:
         args.output_dir,
         args.amazon_ads_report,
         max_touchpoint_gap_days=args.max_touchpoint_gap_days,
-        reference_window_days=args.reference_window_days,
     )
 
     for path in output_files:

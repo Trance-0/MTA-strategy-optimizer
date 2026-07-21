@@ -16,7 +16,6 @@ from config import (
     MODEL_COMPARISON_SUMMARY_FILE,
     MODEL_COMPARISON_TOUCHPOINTS_FILE,
     RECOMMENDED_ATTRIBUTION_FILE,
-    REFERENCE_WINDOW_DAYS,
     SHAPLEY_OUTPUT_FILE,
 )
 from scripts.build_amc_path_report import build_amc_path_report
@@ -103,7 +102,6 @@ def main() -> None:
             output_dir=temporary_output_dir,
             amazon_ads_report=Path(AMAZON_ADS_REPORT_FILE),
             max_touchpoint_gap_days=MAX_TOUCHPOINT_GAP_DAYS,
-            reference_window_days=REFERENCE_WINDOW_DAYS,
         )
 
         final_outputs = [

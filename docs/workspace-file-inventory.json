@@ -1,6 +1,6 @@
 {
   "schema_version": "1.1",
-  "generated_at": "2026-07-20T13:30:53.320Z",
+  "generated_at": "2026-07-21T11:47:17.022Z",
   "root": "{project-root}",
   "scope": "all regular workspace files excluding declared protected or generated paths",
   "exclusions": [
@@ -21,12 +21,12 @@
       "reason": "human-owned no-touch file; content and hash are not read"
     }
   ],
-  "file_count": 2170,
-  "total_bytes": 43811916,
+  "file_count": 2171,
+  "total_bytes": 43761670,
   "by_top_level": {
     "_bmad-output": {
-      "files": 12,
-      "bytes": 66647
+      "files": 13,
+      "bytes": 74282
     },
     "_bmad": {
       "files": 91,
@@ -50,15 +50,15 @@
     },
     "docs": {
       "files": 36,
-      "bytes": 26477081
+      "bytes": 26476981
     },
     "modules": {
       "files": 34,
-      "bytes": 470193
+      "bytes": 412386
     },
     "README.md": {
       "files": 1,
-      "bytes": 5162
+      "bytes": 5188
     }
   },
   "files": [
@@ -66,9 +66,9 @@
       "path": "_bmad-output/implementation-artifacts/deferred-work.md",
       "top_level": "_bmad-output",
       "extension": ".md",
-      "size_bytes": 2887,
+      "size_bytes": 2694,
       "mode": "644",
-      "sha256": "d223049c6f4336e6b3ae37b9873402118260a74dac99d4ed69c597f8d3369cad"
+      "sha256": "a1ee8955b8bd74a30400f2898f5f9cb0d52da9d50c25c365e925374ab6e21bb6"
     },
     {
       "path": "_bmad-output/implementation-artifacts/README.md",
@@ -141,6 +141,14 @@
       "size_bytes": 5610,
       "mode": "644",
       "sha256": "a93781300ac20ef312233d1dad10b32be7af30e837b7abade787d613a92fcfd2"
+    },
+    {
+      "path": "_bmad-output/implementation-artifacts/spec-simplify-amc-output-fields.md",
+      "top_level": "_bmad-output",
+      "extension": ".md",
+      "size_bytes": 7828,
+      "mode": "644",
+      "sha256": "2f9b959f0e03a04dd44eefcefa3dfef54f64428d4f492fd47487c2cbe84eff22"
     },
     {
       "path": "_bmad-output/implementation-artifacts/spec-simplify-amc-reliability-judgment.md",
@@ -16866,17 +16874,17 @@
       "path": "docs/amc-mta-architecture.md",
       "top_level": "docs",
       "extension": ".md",
-      "size_bytes": 7632,
+      "size_bytes": 7667,
       "mode": "644",
-      "sha256": "527dafb8ddc49ecd0e951ec8db08a060d507c3eaedc70618d2e89263cda18a36"
+      "sha256": "9ebfce74413de8da753630cffe0711e8e280862c9e4f4cc1037cd2635e69bd2a"
     },
     {
       "path": "docs/amc-mta-capability-assessment.md",
       "top_level": "docs",
       "extension": ".md",
-      "size_bytes": 8814,
+      "size_bytes": 8683,
       "mode": "644",
-      "sha256": "3f252f3c41151b63d9f03f8d1be650edc9fc1822ad94f6f30e6744b8055c30ef"
+      "sha256": "7a05b3dfeae98ad95d547a18ec880ab1f7630cd3b96202a1986e33b8a59969aa"
     },
     {
       "path": "docs/architecture.md",
@@ -16892,7 +16900,7 @@
       "extension": ".md",
       "size_bytes": 3199,
       "mode": "644",
-      "sha256": "371a96e6453825e42c7e95b9029988c2443d1d6e605013ce81d9574b46b9400c"
+      "sha256": "6e0cee12f15f98350b4165cc43c7bc092f5458fb875120f65d35f20aa1cc6da2"
     },
     {
       "path": "docs/development-guide.md",
@@ -16900,23 +16908,23 @@
       "extension": ".md",
       "size_bytes": 2551,
       "mode": "644",
-      "sha256": "417d9a606d6243ac417d3fa9a7ff52c06f246f61d2c4d58f4966ef0cc3fc6147"
+      "sha256": "29f7f381ec2a4bff367bec6ac952b29e1ce16e1ef79d3b1493f311db9010111e"
     },
     {
       "path": "docs/index.md",
       "top_level": "docs",
       "extension": ".md",
-      "size_bytes": 5111,
+      "size_bytes": 5137,
       "mode": "644",
-      "sha256": "8dbaf0d35e4e339b90ad7a2904f2500ad37bbfbd20b8dd88c509788a47c9d5e6"
+      "sha256": "60f05725fa131ceb69e69b02ac5a26553cc2a31797a56ac3ad83de33f84d1746"
     },
     {
       "path": "docs/product/amc-mta/project-introduction.md",
       "top_level": "docs",
       "extension": ".md",
-      "size_bytes": 3834,
+      "size_bytes": 3787,
       "mode": "644",
-      "sha256": "1e54bd21b5aca6b09775cbe4a850659dc3926471b98da7c1b6c807aac65ef794"
+      "sha256": "62c56b6fa643d42551087458e1e8d35ba7624952aa8120846831ae95490ea161"
     },
     {
       "path": "docs/product/README.md",
@@ -16930,17 +16938,17 @@
       "path": "docs/project-overview.md",
       "top_level": "docs",
       "extension": ".md",
-      "size_bytes": 5562,
+      "size_bytes": 5567,
       "mode": "644",
-      "sha256": "80eb186aaaa096d2e5b62fae10e18ac5e476b42c0b89d21a6f4df1603c2d97e6"
+      "sha256": "f40e3f0c88f34711add55d6c232e35b1915435d89f82938d7c78d25a45b9dccd"
     },
     {
       "path": "docs/project-scan-report.json",
       "top_level": "docs",
       "extension": ".json",
-      "size_bytes": 5651,
+      "size_bytes": 5663,
       "mode": "644",
-      "sha256": "47d7af821a43f879fdd25f695afd29c7a382c82c4971d695f591ef78b03bc827"
+      "sha256": "1e025fbd28d9ad94f32e4b9b05db89fb90d13bfaeeed38ce0a1a861b99b29a31"
     },
     {
       "path": "docs/README.md",
@@ -17132,7 +17140,7 @@
       "extension": ".md",
       "size_bytes": 4541,
       "mode": "644",
-      "sha256": "d380bc7c3ef3f79aa573ebb0e7ac4abc519c6cbd53b9698573df81bce5e60214"
+      "sha256": "ac7879d81d9ffbb8bdb1cadb2e8802113e3d9061529248612a0731c7d22169f9"
     },
     {
       "path": "docs/workspace-file-management.md",
@@ -17146,16 +17154,16 @@
       "path": "modules/amc_mta/config.py",
       "top_level": "modules",
       "extension": ".py",
-      "size_bytes": 891,
+      "size_bytes": 865,
       "mode": "644",
-      "sha256": "3b652c579ff12ae7ca573e3e6349e07ea05c960086553df908bdf1e758fc42ce"
+      "sha256": "57a9adf22db143307c96bd1a069768e3e52e33c09fcc4e1c49728c583432ff05"
     },
     {
       "path": "modules/amc_mta/data/simulated/amazon_ads_report_sample.csv",
       "top_level": "modules",
       "extension": ".csv",
       "size_bytes": 167035,
-      "mode": "600",
+      "mode": "644",
       "sha256": "20d3e818e8324c0f86101b5640adc800711643ffe7cbdd2a2a0399508f681555"
     },
     {
@@ -17194,17 +17202,17 @@
       "path": "modules/amc_mta/docs/amc-data-requirements.md",
       "top_level": "modules",
       "extension": ".md",
-      "size_bytes": 6675,
+      "size_bytes": 6485,
       "mode": "644",
-      "sha256": "2bbd16f32f901657f7de36bca92dd34c4a8d3c9a5616a6e935a01d1500d89f84"
+      "sha256": "ce1daf72b0822f325662809f921a647a9286a489b5b6895b1af670fffc5e11ca"
     },
     {
       "path": "modules/amc_mta/docs/model-comparison-governance.md",
       "top_level": "modules",
       "extension": ".md",
-      "size_bytes": 30843,
+      "size_bytes": 4516,
       "mode": "644",
-      "sha256": "13167e4341af356e260ebefedb4c08a6ee395fc6dee008d68914bec31adf513c"
+      "sha256": "ba52a400758cdf9abaa53f418507dcd53e37ff95cce1bda02b4f2010aa9c2c76"
     },
     {
       "path": "modules/amc_mta/docs/README.md",
@@ -17218,17 +17226,17 @@
       "path": "modules/amc_mta/docs/touchpoint-reliability-guide.md",
       "top_level": "modules",
       "extension": ".md",
-      "size_bytes": 5084,
+      "size_bytes": 5051,
       "mode": "644",
-      "sha256": "943ae058eb2ecc41f8fa86848cbcd5df7da3cfbd05bfca2e7a49464372a123a9"
+      "sha256": "3d9940b4ba90aa87c0aab30dbf3ca4239ac1823e3a59c12e249ec678a21ace98"
     },
     {
       "path": "modules/amc_mta/docs/usage.md",
       "top_level": "modules",
       "extension": ".md",
-      "size_bytes": 3386,
+      "size_bytes": 3342,
       "mode": "644",
-      "sha256": "5d2b609d62db8ea623e5338ee159a376bc2b935a9c2ba05ec924626945319886"
+      "sha256": "0128584e050b5edaa11a0eb3a24797a901e7fe5b9b76fe7a0fece8ccc3d5d8e7"
     },
     {
       "path": "modules/amc_mta/outputs/attribution/amc_markov_attribution_results.csv",
@@ -17242,25 +17250,25 @@
       "path": "modules/amc_mta/outputs/attribution/amc_mta_model_comparison_summary.csv",
       "top_level": "modules",
       "extension": ".csv",
-      "size_bytes": 1161,
+      "size_bytes": 637,
       "mode": "644",
-      "sha256": "6b24de275914b6e86531b88086ef2a3b0958f5647e54b6437fff191ac6e69c90"
+      "sha256": "a01dffd82c2c17406d1c939ba85080f6164c8eddccca84d495c20726ad120ebb"
     },
     {
       "path": "modules/amc_mta/outputs/attribution/amc_mta_model_comparison_touchpoints.csv",
       "top_level": "modules",
       "extension": ".csv",
-      "size_bytes": 23948,
+      "size_bytes": 9098,
       "mode": "644",
-      "sha256": "cfa6f92c9f55de7a0906884a6fc619ea4503dad0ad6a03eef45e7da705cf5b64"
+      "sha256": "0220e1ae0d947b9118ce4273933809a46d266007542865b4d40c1f3f7f3c9faf"
     },
     {
       "path": "modules/amc_mta/outputs/attribution/amc_mta_recommended_attribution.csv",
       "top_level": "modules",
       "extension": ".csv",
-      "size_bytes": 14501,
+      "size_bytes": 10378,
       "mode": "644",
-      "sha256": "e0af841693a5066a1c47d96968e3cc1942c187af0905f06762736755c51f5836"
+      "sha256": "02192f340e2e946fa59b4b6b5e6274419e3cd0f1bc4664bb118aff291bcbcf2a"
     },
     {
       "path": "modules/amc_mta/outputs/attribution/amc_shapley_attribution_results.csv",
@@ -17282,9 +17290,9 @@
       "path": "modules/amc_mta/run_pipeline.py",
       "top_level": "modules",
       "extension": ".py",
-      "size_bytes": 4806,
+      "size_bytes": 4722,
       "mode": "644",
-      "sha256": "cd50f38509f012adac124941147f579aefd0f8d8d4ae6a51aacab89a614fc5d7"
+      "sha256": "b55cc3e34353a93dce90c46094687a8473c0d868e061d5b81f4ffd319a51214e"
     },
     {
       "path": "modules/amc_mta/scripts/__init__.py",
@@ -17306,9 +17314,9 @@
       "path": "modules/amc_mta/scripts/compare_attribution_models.py",
       "top_level": "modules",
       "extension": ".py",
-      "size_bytes": 4816,
+      "size_bytes": 4516,
       "mode": "644",
-      "sha256": "78bfd5f707f53d1811556b02ec31e08a9225ab6acae8c8f5d6f16dc0e9bd18a2"
+      "sha256": "7be1b705e3807c7c639cedaae22a82652888180092742d8a882693854c37c40e"
     },
     {
       "path": "modules/amc_mta/scripts/generate_simulated_amazon_ads_report.py",
@@ -17322,9 +17330,9 @@
       "path": "modules/amc_mta/scripts/run_amc_attribution.py",
       "top_level": "modules",
       "extension": ".py",
-      "size_bytes": 4420,
+      "size_bytes": 4120,
       "mode": "644",
-      "sha256": "d68967c354eb7efb1a0e0b8e167b0bbcbdc4882001aae2aa40f368abc97818d7"
+      "sha256": "2fec572838cb0f83ff5a296e381c8af48f57ceb9a2331ef303d5ca16ef008b9f"
     },
     {
       "path": "modules/amc_mta/scripts/validate_data_alignment.py",
@@ -17354,9 +17362,9 @@
       "path": "modules/amc_mta/src/model_comparison.py",
       "top_level": "modules",
       "extension": ".py",
-      "size_bytes": 35469,
+      "size_bytes": 26554,
       "mode": "644",
-      "sha256": "9fdf49e40aca0783f35fe52838bf795e1c68c5f4e39c467d12911885ea12d81e"
+      "sha256": "4e3aa21b66917d65220087c399d7f37460e7cd54c91874bb7038d00632aca5df"
     },
     {
       "path": "modules/amc_mta/src/touchpoint_key.py",
@@ -17378,9 +17386,9 @@
       "path": "modules/amc_mta/tests/test_amc_mta_end_to_end.py",
       "top_level": "modules",
       "extension": ".py",
-      "size_bytes": 21860,
+      "size_bytes": 21287,
       "mode": "644",
-      "sha256": "aa2baf5b78ce13ab313e210e839c3bd48afa93a3198d5e58f511ad1154ae6313"
+      "sha256": "b62aa7c25f9661199cb9afe70cb1767973702794299b305a69891d92d67eece9"
     },
     {
       "path": "modules/amc_mta/tests/test_amc_path_builder.py",
@@ -17394,9 +17402,9 @@
       "path": "modules/amc_mta/tests/test_model_comparison.py",
       "top_level": "modules",
       "extension": ".py",
-      "size_bytes": 29606,
+      "size_bytes": 28088,
       "mode": "644",
-      "sha256": "c32fb28859994ac9e6f91508049fd58807e49d0050d5b4a9093e81d4fa6aeb0f"
+      "sha256": "6aaa1dce9f60974befec8f27e7b24f9361015d1eb9fdbb211609d6e0869930f0"
     },
     {
       "path": "modules/amc_mta/tests/test_touchpoint_key.py",
@@ -17418,9 +17426,9 @@
       "path": "README.md",
       "top_level": "README.md",
       "extension": ".md",
-      "size_bytes": 5162,
+      "size_bytes": 5188,
       "mode": "644",
-      "sha256": "08149233fe342f22027e4729c047cfa4c46dc16abfd226ceb0a164704161de98"
+      "sha256": "41bed757ec36bff475b22aae88f753b3620bb2ecea52c36631a1c4ef92102f0b"
     }
   ]
 }

@@ -113,19 +113,16 @@ attributed_revenue         = revenue 总量
 五段键。
 
 比较输入必须使用严格无空白表头，两个模型的触点集合、成本和平台表现完全一致，
-且每个非零 outcome 的 share 与归因总量分别守恒。三份双模型治理产物追加五个
+且每个非零 outcome 的 share 与归因总量分别守恒。三份双模型产物固定为
+14/13/14 列并包含五个
 可靠性字段：`calculation_valid`、`data_support_sufficient`、
 `models_consistent`、`reliability_status`、`reliability_reason`。计算有效、原始
 支持同时达到 `30` 次购买、`20` 位购买用户、`5` 条唯一路径，且非零 outcome
 的模型差距同时满足 `gap_pp<=1.0`、`relative_gap<=0.20` 时，结果才是
 `RELIABLE`。摘要按 outcome 分别 AND 聚合所有触点的三个基础布尔值，再使用
-相同公式生成摘要可靠性。`support_status`、`comparison_status`、TVD、
-Spearman、Top-K、关键分歧和差距等级仅作诊断，不参与可靠性计算。两份单模型
-结果不含这些字段。
-
-当前未提供滚动窗口或重采样稳定性证据，因此治理产物仍标记
-`stability_level=UNVERIFIED`、`decision_status=EVIDENCE_UNVERIFIED`，所有
-`decision_value` 为空。这些字段属于独立决策治理，不参与上述可靠性计算。
+相同公式生成摘要可靠性。TVD、Spearman、Top-K 重合率只作摘要描述，不参与
+可靠性计算。两份单模型结果保持 18 列；旧稳定性、状态、决策、复核、自动化、
+原因码和重复效率字段不再进入双模型产物。
 
 零成本行的 ROAS、ROI、CPA 和每转化用户成本为空。
 
