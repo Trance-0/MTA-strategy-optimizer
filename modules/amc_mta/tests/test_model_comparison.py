@@ -335,6 +335,41 @@ class CompleteComparisonTests(unittest.TestCase):
             self.assertTrue(
                 all(row["reliability_reason"] == "ALL_CRITERIA_PASSED" for row in rows)
             )
+        self.assertTrue(
+            all(
+                row["recommended_value"] == row["official_share"]
+                for row in artifacts.recommended
+            )
+        )
+
+    def test_unreliable_recommendations_are_ordered_model_ranges(self) -> None:
+        artifacts = compare_attribution_models(self.markov, self.shapley, self.amc_rows)
+
+        expected = {
+            A_IMPRESSION: "[0.4,0.5]",
+            A_CLICK: "[0.5,0.6]",
+        }
+        self.assertTrue(
+            all(
+                row["recommended_value"] == expected[row["touchpoint"]]
+                for row in artifacts.recommended
+            )
+        )
+
+        with tempfile.TemporaryDirectory() as tmp:
+            output = Path(tmp) / "recommended.csv"
+            write_csv_set_atomic(
+                [(output, artifacts.recommended, RECOMMENDED_FIELDS)]
+            )
+            with output.open(newline="") as file:
+                stored = list(csv.DictReader(file))
+            self.assertEqual(len(stored), 6)
+            self.assertTrue(
+                all(
+                    row["recommended_value"] == expected[row["touchpoint"]]
+                    for row in stored
+                )
+            )
 
     def test_summary_ands_touchpoint_booleans_not_overall_diagnostics(self) -> None:
         markov = [
@@ -597,6 +632,9 @@ class CompleteComparisonTests(unittest.TestCase):
         artifacts = compare_attribution_models(markov, shapley, amc_rows)
         self.assertTrue(all(row["tvd"] == "" for row in artifacts.summary))
         self.assertTrue(all(row["official_share"] == "" for row in artifacts.recommended))
+        self.assertTrue(
+            all(row["recommended_value"] == "" for row in artifacts.recommended)
+        )
         for rows in (artifacts.touchpoints, artifacts.summary, artifacts.recommended):
             self.assertTrue(all(row["calculation_valid"] == "true" for row in rows))
             self.assertTrue(
@@ -621,6 +659,9 @@ class CompleteComparisonTests(unittest.TestCase):
         ]
         self.assertTrue(zero_share_rows)
         self.assertTrue(all(row["official_share"] == 0.0 for row in zero_share_rows))
+        self.assertTrue(
+            all(row["recommended_value"] == "[0.0,0.0]" for row in zero_share_rows)
+        )
 
 
 class StrictCsvTests(unittest.TestCase):

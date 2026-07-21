@@ -68,16 +68,22 @@ touchpoint,outcome,markov_share,shapley_share,gap_pp,relative_gap,raw_unique_pat
 outcome,report_start_date,report_end_date,max_touchpoint_gap_days,touchpoint_count,tvd,spearman_rho,top_k_overlap_rate,calculation_valid,data_support_sufficient,models_consistent,reliability_status,reliability_reason
 ```
 
-推荐结果，14 列、当前样例 51 行：
+推荐结果，15 列、当前样例 51 行：
 
 ```text
-touchpoint,interaction_type,outcome,official_model,official_share,benchmark_model,benchmark_share,gap_pp,relative_gap,calculation_valid,data_support_sufficient,models_consistent,reliability_status,reliability_reason
+touchpoint,interaction_type,outcome,official_model,official_share,recommended_value,benchmark_model,benchmark_share,gap_pp,relative_gap,calculation_valid,data_support_sufficient,models_consistent,reliability_status,reliability_reason
 ```
 
 推荐结果固定 `official_model=MARKOV`、`benchmark_model=PATH_LEVEL_SHAPLEY`。
 非零 outcome 的 `official_share` 等于 Markov share，包括合法的 `0.0` 触点；零
 outcome 的 `official_share` 为空。推荐与触点表中同一键的 share、gap 和五个
 可靠性字段必须一致。两份单模型文件保持 18 列且不增加可靠性字段。
+
+`recommended_value` 是由 `reliability_status` 判别的 CSV 文本联合类型。非零
+outcome 的 `RELIABLE` 行输出 `official_share` 单点；`UNRELIABLE` 行输出两个
+模型 share 的升序无空格闭区间 `[low,high]`。零 outcome 没有可解释分布，该字段
+为空；非零 outcome 的两个 share 都为零时，允许退化区间 `[0.0,0.0]`。该区间是
+模型结果范围，不是统计置信区间。
 
 ## 当前样例
 
@@ -92,4 +98,4 @@ outcome 的 `official_share` 为空。推荐与触点表中同一键的 share、
 
 滚动窗口、重采样和 3/7/14 天敏感性可作为后续研究，但它们不是当前可靠性条件，
 也不是当前 CSV 字段。若未来需要决策审批或自动化治理，应设计独立产物，不扩宽
-现有 14/13/14 契约。
+现有 14/13/15 契约。

@@ -164,6 +164,11 @@ amc_mta_recommended_attribution.csv
 原始 Markov、Shapley 单模型结果不包含可靠性字段，因为可靠性需要两个模型及
 AMC 原始支持共同判断。
 
+推荐表另有 `recommended_value`，它不参与可靠性计算，只把最终状态转换为更直接
+的展示：非零 outcome 的可靠记录采用 Markov `official_share` 单点，不可靠记录
+采用两个模型 share 的升序闭区间 `[low,high]`。零 outcome 没有可解释分布，因此
+该字段为空；非零 outcome 的双零 share 可以表示为 `[0.0,0.0]`。
+
 ## 当前样例
 
 当前样例共有 17 个五段触点和三个 outcome，即 51 条触点结果：

@@ -37,6 +37,10 @@ modules/amc_mta/outputs/attribution/amc_mta_recommended_attribution.csv
 值；整体比较状态和其他差异指标只作诊断。当前样例为
 `51 RELIABLE / 0 UNRELIABLE`。
 
+推荐表新增 `recommended_value`：非零 outcome 的可靠记录直接使用 Markov
+`official_share`，不可靠记录使用 Markov 与 Shapley share 的升序闭区间
+`[low,high]`；零 outcome 保持为空。推荐表因此为 15 列，其他输出 schema 不变。
+
 当前没有滚动窗口稳定性证据，因此现有结果仍只能解释为当前窗口的探索性归因，
 不能表述为长期稳定贡献或因果增量。稳定性和自动决策约束不参与可靠性计算，也
 不会因 `RELIABLE` 自动开放预算执行。

@@ -347,6 +347,7 @@ class EndToEndSampleTests(unittest.TestCase):
             self.assertTrue(
                 all(set(row) == set(RECOMMENDED_FIELDS) for row in recommended_rows)
             )
+            self.assertEqual(len(RECOMMENDED_FIELDS), 15)
             self.assertTrue(
                 all(row["calculation_valid"] == "true" for row in comparison_rows)
             )
@@ -364,6 +365,12 @@ class EndToEndSampleTests(unittest.TestCase):
             )
             self.assertTrue(
                 all(row["reliability_status"] == "RELIABLE" for row in comparison_rows)
+            )
+            self.assertTrue(
+                all(
+                    row["recommended_value"] == row["official_share"]
+                    for row in recommended_rows
+                )
             )
             comparison_reliability = {
                 (row["touchpoint"], row["outcome"]): tuple(

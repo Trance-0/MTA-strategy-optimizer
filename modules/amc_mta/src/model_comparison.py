@@ -85,6 +85,7 @@ RECOMMENDED_FIELDS = [
     "outcome",
     "official_model",
     "official_share",
+    "recommended_value",
     "benchmark_model",
     "benchmark_share",
     "gap_pp",
@@ -474,6 +475,22 @@ def reliability_fields(
     }
 
 
+def _recommended_value(row: Mapping[str, object], *, has_outcome: bool) -> float | str:
+    """Select the official point value or the ordered model range."""
+    if not has_outcome:
+        return ""
+    if row["reliability_status"] == "RELIABLE":
+        return row["markov_share"]
+
+    endpoints = []
+    for value in (row["markov_share"], row["shapley_share"]):
+        decimal_value = Decimal(str(value))
+        display_value = "0.0" if decimal_value == 0 else str(value)
+        endpoints.append((decimal_value, display_value))
+    endpoints.sort(key=lambda endpoint: endpoint[0])
+    return f"[{endpoints[0][1]},{endpoints[1][1]}]"
+
+
 def calculate_raw_support(amc_rows: Sequence[Mapping[str, object]]) -> dict[str, dict]:
     """Calculate support for complete five-part touchpoints only."""
     grouped: dict[str, dict] = defaultdict(
@@ -657,23 +674,28 @@ def compare_attribution_models(
             }
         )
 
-    recommended_rows = [
-        {
-            "touchpoint": row["touchpoint"],
-            "interaction_type": row["touchpoint"].rsplit(":", 1)[1],
-            "outcome": row["outcome"],
-            "official_model": "MARKOV",
-            "official_share": "" if row["outcome"] in zero_outcomes else row["markov_share"],
-            "benchmark_model": "PATH_LEVEL_SHAPLEY",
-            "benchmark_share": row["shapley_share"],
-            "gap_pp": row["gap_pp"],
-            "relative_gap": row["relative_gap"],
-            "calculation_valid": row["calculation_valid"],
-            "data_support_sufficient": row["data_support_sufficient"],
-            "models_consistent": row["models_consistent"],
-            "reliability_status": row["reliability_status"],
-            "reliability_reason": row["reliability_reason"],
-        }
-        for row in touchpoint_rows
-    ]
+    recommended_rows = []
+    for row in touchpoint_rows:
+        has_outcome = row["outcome"] not in zero_outcomes
+        recommended_rows.append(
+            {
+                "touchpoint": row["touchpoint"],
+                "interaction_type": row["touchpoint"].rsplit(":", 1)[1],
+                "outcome": row["outcome"],
+                "official_model": "MARKOV",
+                "official_share": "" if not has_outcome else row["markov_share"],
+                "recommended_value": _recommended_value(
+                    row, has_outcome=has_outcome
+                ),
+                "benchmark_model": "PATH_LEVEL_SHAPLEY",
+                "benchmark_share": row["shapley_share"],
+                "gap_pp": row["gap_pp"],
+                "relative_gap": row["relative_gap"],
+                "calculation_valid": row["calculation_valid"],
+                "data_support_sufficient": row["data_support_sufficient"],
+                "models_consistent": row["models_consistent"],
+                "reliability_status": row["reliability_status"],
+                "reliability_reason": row["reliability_reason"],
+            }
+        )
     return ComparisonArtifacts(touchpoint_rows, summary_rows, recommended_rows)

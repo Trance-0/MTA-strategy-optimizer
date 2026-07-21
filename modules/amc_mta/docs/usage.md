@@ -97,14 +97,19 @@ modules/amc_mta/outputs/attribution/amc_mta_recommended_attribution.csv
 
 触点比较文件固定为 14 列、`17 × 3 = 51` 行，只保存两模型 share、`gap_pp`、
 `relative_gap`、三个原始支持量和可靠性。摘要固定为 13 列、三个 outcome 三行，
-保存窗口、触点数、TVD、Spearman、Top-K 重合率和可靠性。推荐文件固定为 14 列、
-51 行，保存 Markov 正式展示值、Shapley 参照值、差距和可靠性。三份产物均包含
+保存窗口、触点数、TVD、Spearman、Top-K 重合率和可靠性。推荐文件固定为 15 列、
+51 行，保存 Markov 正式展示值、Shapley 参照值、最终推荐值、差距和可靠性。三份产物均包含
 `calculation_valid`、
 `data_support_sufficient`、`models_consistent`、`reliability_status` 和
 `reliability_reason`；两份单模型结果不含这些字段。三个布尔值全部为 `true`
 时才是 `RELIABLE`。摘要按 outcome 分别 AND 聚合全部触点的三个布尔值；
 Markov 是正式归因展示口径，Shapley 用于判断模型敏感性。旧成本、效率、差距
 等级和状态字段不属于这三份双模型 schema。
+
+`recommended_value` 是文本联合类型：非零 outcome 的 `RELIABLE` 行输出
+`official_share` 单点，`UNRELIABLE` 行输出两个模型 share 的升序闭区间
+`[low,high]`；零 outcome 为空。非零 outcome 下两个 share 都为零时，合法区间为
+`[0.0,0.0]`。
 
 当前全年样例为 `51 RELIABLE / 0 UNRELIABLE`。结果只能解释为
 当前窗口中的探索性归因，不能据此自动调整预算。

@@ -44,10 +44,11 @@ Markov + Path-level Shapley
 - 三份模拟输入：概念事件、匿名聚合路径、Amazon Ads 成本与表现。
 - 五段键：`AD_PRODUCT:FORMAT:PLACEMENT:CREATIVE:INTERACTION_TYPE`。
 - 三个独立 outcome：购买用户、购买次数和收入。
-- 五份正式输出：两份 18 列模型结果，以及 14/13/14 列的触点比较、整体摘要和推荐结果。
+- 五份正式输出：两份 18 列模型结果，以及 14/13/15 列的触点比较、整体摘要和推荐结果。
 - 当前样例有 17 个五段触点；推荐文件包含 51 条触点/outcome 记录。
 - 三份双模型产物直接给出三项可靠性标准；全年样例为 `51 RELIABLE / 0 UNRELIABLE`。
-- 推荐结果仅保留 Markov 正式展示值、Shapley 参照值、差距与三项可靠性；不输出旧决策或自动化字段。
+- 推荐结果还按可靠性给出最终值：可靠时使用 Markov 正式 share，不可靠时使用
+  Markov/Shapley share 的升序闭区间；不输出自动化许可字段。
 
 ## 快速验证
 
@@ -63,7 +64,7 @@ python3 -B -m unittest discover -s modules/amc_mta/tests -p 'test*.py'
 
 - 流水线从 Ads 输入自动识别日期窗口，重建匿名聚合路径并发布五份契约输出；
 - 17 个 AMC 与 Amazon Ads 五段触点、365 天覆盖和账户/币种范围严格对齐；
-- 99 项以上测试通过；
+- 100 项测试通过；
 - 当前 51 条推荐记录均为 `RELIABLE`。
 
 ## 项目结构

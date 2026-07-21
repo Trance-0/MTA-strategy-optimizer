@@ -122,7 +122,7 @@ attributed_revenue         = revenue 总量
 
 比较输入必须使用严格无空白表头，两个模型的触点集合、成本和平台表现完全一致，
 且每个非零 outcome 的 share 与归因总量分别守恒。三份双模型产物固定为
-14/13/14 列并包含五个
+14/13/15 列并包含五个
 可靠性字段：`calculation_valid`、`data_support_sufficient`、
 `models_consistent`、`reliability_status`、`reliability_reason`。计算有效、原始
 支持同时达到 `30` 次购买、`20` 位购买用户、`5` 条唯一路径，且非零 outcome
@@ -131,6 +131,11 @@ attributed_revenue         = revenue 总量
 相同公式生成摘要可靠性。TVD、Spearman、Top-K 重合率只作摘要描述，不参与
 可靠性计算。两份单模型结果保持 18 列；旧稳定性、状态、决策、复核、自动化、
 原因码和重复效率字段不再进入双模型产物。
+
+推荐表的 `recommended_value` 根据同一行的可靠性选择展示形式：非零 outcome
+可靠时输出 Markov `official_share`，不可靠时输出 Markov 与 Shapley share 的
+升序闭区间 `[low,high]`；零 outcome 没有可解释分布，因此保持为空。该字段不改变
+Markov 的正式模型身份，也不是置信区间或自动预算许可。
 
 零成本行的 ROAS、ROI、CPA 和每转化用户成本为空。
 

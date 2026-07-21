@@ -32,7 +32,7 @@ modules/amc_mta/
 │   ├── amc_mta_attribution.py        # Markov、Shapley 与成本关联
 │   └── model_comparison.py           # 差距、支持度、三项可靠性和治理推荐
 ├── scripts/                          # 各步骤 CLI
-├── tests/                            # 6 个测试文件，99 项测试
+├── tests/                            # 6 个测试文件，100 项测试
 ├── data/simulated/                   # 3 份可复现输入
 ├── outputs/attribution/              # 5 份正式生成输出
 └── docs/                             # 数据、运行和治理契约
