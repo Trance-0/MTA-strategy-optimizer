@@ -178,8 +178,29 @@ def build_aggregated_path_rows(
     if max_gap_days < 0:
         raise ValueError("max_gap_days must be non-negative")
 
+    validated_events = _validated_events(event_rows)
+    if not validated_events:
+        raise ValueError("AMC event report must contain at least one row")
+    conversions = [
+        event for event in validated_events if event["event_type"] == CONVERSION
+    ]
+    if not conversions:
+        raise ValueError("AMC event report must contain at least one CONVERSION")
+    outside_window = sorted(
+        {
+            event["event_time_parsed"].date()
+            for event in conversions
+            if not start <= event["event_time_parsed"].date() <= end
+        }
+    )
+    if outside_window:
+        raise ValueError(
+            "CONVERSION event_time must be inside the Amazon Ads report window; "
+            f"outside={outside_window}"
+        )
+
     journeys: dict[str, list[dict]] = defaultdict(list)
-    for event in _validated_events(event_rows):
+    for event in validated_events:
         journeys[event["journey_id"]].append(event)
 
     for journey_id, journey_events in journeys.items():
@@ -202,7 +223,6 @@ def build_aggregated_path_rows(
         conversions = [event for event in journey_events if event["event_type"] == CONVERSION]
         previous_conversion_time: datetime | None = None
         for conversion in sorted(conversions, key=lambda event: event["event_time_parsed"]):
-            conversion_date = conversion["event_time_parsed"].date()
             eligible = [
                 event
                 for event in touchpoints
@@ -210,8 +230,6 @@ def build_aggregated_path_rows(
                 and event["event_time_parsed"] <= conversion["event_time_parsed"]
             ]
             previous_conversion_time = conversion["event_time_parsed"]
-            if conversion_date > end:
-                continue
             path_events = _contiguous_path(eligible, max_gap)
             if not path_events:
                 continue

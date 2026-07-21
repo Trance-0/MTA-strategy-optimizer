@@ -54,16 +54,16 @@ Markov + Path-level Shapley
 运行环境需要 Python 3.10 或更高版本；当前实现只使用 Python 标准库。
 
 ```bash
-python3 modules/amc_mta/run_pipeline.py
+python3 -B modules/amc_mta/run_pipeline.py
 python3 modules/amc_mta/scripts/validate_data_alignment.py
-python3 -m unittest discover -s modules/amc_mta/tests -p 'test*.py'
+python3 -B -m unittest discover -s modules/amc_mta/tests -p 'test*.py'
 ```
 
 预期结果：
 
-- 流水线重建匿名聚合路径并发布五份契约输出；
+- 流水线从 Ads 输入自动识别日期窗口，重建匿名聚合路径并发布五份契约输出；
 - 17 个 AMC 与 Amazon Ads 五段触点、365 天覆盖和账户/币种范围严格对齐；
-- 83 项以上测试通过；
+- 99 项以上测试通过；
 - 当前 51 条推荐记录均为 `RELIABLE`。
 
 ## 项目结构

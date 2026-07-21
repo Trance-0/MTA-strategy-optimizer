@@ -46,7 +46,7 @@ def regenerate(destinations: list[Path] | None = None) -> None:
         paths = root / destinations[2].name
         write_csv_atomic(events, generate_events(), EVENT_FIELDS)
         write_csv_atomic(ads, [ADS_FIELD_DESCRIPTIONS, *generate_ads(date.fromisoformat(REPORT_START_DATE), date.fromisoformat(REPORT_END_DATE))], ADS_FIELDS)
-        build_amc_path_report(events, paths)
+        build_amc_path_report(events, paths, amazon_ads_report=ads)
         outputs = run_amc_attribution(paths, root / "outputs", ads)
         replacements = [(events, destinations[0]), (ads, destinations[1]), (paths, destinations[2]), *match_outputs_by_name(outputs, destinations[3:])]
         publish_with_rollback(replacements, root / "backups")

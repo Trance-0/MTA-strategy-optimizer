@@ -13,9 +13,12 @@
 ## 运行业务流水线
 
 ```bash
-python3 modules/amc_mta/run_pipeline.py
+python3 -B modules/amc_mta/run_pipeline.py
 python3 modules/amc_mta/scripts/validate_data_alignment.py
 ```
+
+流水线以 Amazon Ads 输入的最早至最晚 `reportDate` 自动确定窗口，不应为新增数据
+修改配置日期。自定义输入与输出参数见 `modules/amc_mta/docs/usage.md`。
 
 输出位置：
 
@@ -31,7 +34,7 @@ modules/amc_mta/outputs/attribution/
 python3 -m unittest discover -s modules/amc_mta/tests -p 'test*.py'
 ```
 
-当前基线为 91 项通过。
+当前基线为 99 项通过。
 
 ## 验证 BMad 配置
 

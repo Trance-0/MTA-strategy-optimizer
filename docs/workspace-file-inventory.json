@@ -1,6 +1,6 @@
 {
   "schema_version": "1.1",
-  "generated_at": "2026-07-21T13:08:22.606Z",
+  "generated_at": "2026-07-21T13:59:31.167Z",
   "root": "{project-root}",
   "scope": "all regular workspace files excluding declared protected or generated paths",
   "exclusions": [
@@ -21,16 +21,16 @@
       "reason": "human-owned no-touch file; content and hash are not read"
     }
   ],
-  "file_count": 2166,
-  "total_bytes": 44576943,
+  "file_count": 2168,
+  "total_bytes": 44606998,
   "by_top_level": {
     "_bmad": {
       "files": 91,
       "bytes": 925984
     },
     "_bmad-output": {
-      "files": 14,
-      "bytes": 81096
+      "files": 15,
+      "bytes": 86671
     },
     ".agents": {
       "files": 1979,
@@ -50,15 +50,15 @@
     },
     "docs": {
       "files": 36,
-      "bytes": 26477006
+      "bytes": 26477631
     },
     "modules": {
-      "files": 37,
-      "bytes": 1322390
+      "files": 38,
+      "bytes": 1346198
     },
     "README.md": {
       "files": 1,
-      "bytes": 5147
+      "bytes": 5194
     }
   },
   "files": [
@@ -93,6 +93,14 @@
       "size_bytes": 4577,
       "mode": "644",
       "sha256": "195a9a9579a2e52f66e7a589d443b478c3af9559d8fa471a42a056aeebc5e93a"
+    },
+    {
+      "path": "_bmad-output/implementation-artifacts/spec-auto-detect-amc-report-window.md",
+      "top_level": "_bmad-output",
+      "extension": ".md",
+      "size_bytes": 5575,
+      "mode": "644",
+      "sha256": "8a739b20b4568087f0ed3c225e8ac18419b4ddc9790586e00f575e5e5cb12010"
     },
     {
       "path": "_bmad-output/implementation-artifacts/spec-clean-workspace.md",
@@ -16810,9 +16818,9 @@
       "path": "docs/amc-mta-architecture.md",
       "top_level": "docs",
       "extension": ".md",
-      "size_bytes": 7668,
+      "size_bytes": 8094,
       "mode": "644",
-      "sha256": "356d0cf0a873aeea1035fac3f38685a8b01dd2dce9e420e1077333fd94815b15"
+      "sha256": "e2540ed10419aecba4b02e968868fa346b79510985785fb948896b19d1993a23"
     },
     {
       "path": "docs/amc-mta-capability-assessment.md",
@@ -16820,7 +16828,7 @@
       "extension": ".md",
       "size_bytes": 8690,
       "mode": "644",
-      "sha256": "04094c1e5b6a9e7e11235355748710263cd8d911f5ced5f3251a8cbb0d2f689b"
+      "sha256": "403538d26103c727153bb3bd1319a94c9e4b6f08398ba99c9aa14cd710d38421"
     },
     {
       "path": "docs/architecture.md",
@@ -16836,15 +16844,15 @@
       "extension": ".md",
       "size_bytes": 3199,
       "mode": "644",
-      "sha256": "d4be9fad90dc50f0b8b102783319d45021837df3506613e5d5a28b4808dbc388"
+      "sha256": "034c73f310d00c36bd26f6f0117879c95b95416fedc9ab7408515ba303b22ba7"
     },
     {
       "path": "docs/development-guide.md",
       "top_level": "docs",
       "extension": ".md",
-      "size_bytes": 2551,
+      "size_bytes": 2750,
       "mode": "644",
-      "sha256": "05259f643a8852f2fcb16abc7edef24650d50a2084474ddfe9e632e734f54135"
+      "sha256": "5c669916e844682289b612f7646f5a0f6d4956fb0ee41a3d07ede4643b4cacd8"
     },
     {
       "path": "docs/index.md",
@@ -16852,7 +16860,7 @@
       "extension": ".md",
       "size_bytes": 5136,
       "mode": "644",
-      "sha256": "d205110c3e1b15fe58c7f8e82edb6740e8a526d9d9893f8d96ed6d55e7be6da0"
+      "sha256": "532f6831d03d0c9a83456b656e5c261ddf13b2a88619d893a7cb1b25e2845bce"
     },
     {
       "path": "docs/product/amc-mta/project-introduction.md",
@@ -16876,7 +16884,7 @@
       "extension": ".md",
       "size_bytes": 5572,
       "mode": "644",
-      "sha256": "dbc2da06f7230ea6917ed63fd36094439aab6d64336f239c3b9213cf76cd4776"
+      "sha256": "9b172bc79b9270ebf998e199f81228e98a76cc71c91a1aa441516716541fdd88"
     },
     {
       "path": "docs/project-scan-report.json",
@@ -16884,7 +16892,7 @@
       "extension": ".json",
       "size_bytes": 5680,
       "mode": "644",
-      "sha256": "57a2acc42f49c1340114d0177cd40f3b09639681b0213f95070af90af5a2f272"
+      "sha256": "6eb49bd929bb62f5d7515f11305c573e25c8130632c1eba7b11fee29a9dbdc69"
     },
     {
       "path": "docs/README.md",
@@ -17076,7 +17084,7 @@
       "extension": ".md",
       "size_bytes": 4541,
       "mode": "644",
-      "sha256": "b65cf0ecc79829c0615d5bed5a4fb70c512f0494d59baa6886aea9a1aa88aea3"
+      "sha256": "242915377a773042d6bab1fb96515fe9a7088c4f69f9529fa701e789ac75ad71"
     },
     {
       "path": "docs/workspace-file-management.md",
@@ -17138,9 +17146,9 @@
       "path": "modules/amc_mta/docs/amc-data-requirements.md",
       "top_level": "modules",
       "extension": ".md",
-      "size_bytes": 6500,
+      "size_bytes": 7184,
       "mode": "644",
-      "sha256": "c5ff720c6c8c872ae5277741ba6455bb3e203d953b23a82a613c7d5beea16581"
+      "sha256": "505bb0915e219996caa1457fdf445ef59b8740b41a19142d74d305ece1aac498"
     },
     {
       "path": "modules/amc_mta/docs/model-comparison-governance.md",
@@ -17170,9 +17178,9 @@
       "path": "modules/amc_mta/docs/usage.md",
       "top_level": "modules",
       "extension": ".md",
-      "size_bytes": 3321,
+      "size_bytes": 4668,
       "mode": "644",
-      "sha256": "b9e9b9600fd0dcd6452c243b125f120499ab4813d774d2af605f8713e5aaeab5"
+      "sha256": "ffd622868846fbd940ab2b2690fb20af9e6026fdb36dbead893b187dc391f16d"
     },
     {
       "path": "modules/amc_mta/outputs/attribution/amc_markov_attribution_results.csv",
@@ -17218,17 +17226,17 @@
       "path": "modules/amc_mta/README.md",
       "top_level": "modules",
       "extension": ".md",
-      "size_bytes": 3066,
+      "size_bytes": 3498,
       "mode": "644",
-      "sha256": "5c32d0566cd5cba31fc40acf22ed8f406eb425fdfb583fa2b48e20c9e910d8c1"
+      "sha256": "6eac0727fe5f86e23c7730dd2abcbe56ae085ae820dc111ddd7e5a626a5ea0df"
     },
     {
       "path": "modules/amc_mta/run_pipeline.py",
       "top_level": "modules",
       "extension": ".py",
-      "size_bytes": 4722,
+      "size_bytes": 8704,
       "mode": "644",
-      "sha256": "b55cc3e34353a93dce90c46094687a8473c0d868e061d5b81f4ffd319a51214e"
+      "sha256": "8d320ac1f304e1eabc38a40238946b8b8e40c9d41e4660cdbeac4973dfe2d0b2"
     },
     {
       "path": "modules/amc_mta/scripts/__init__.py",
@@ -17242,9 +17250,9 @@
       "path": "modules/amc_mta/scripts/build_amc_path_report.py",
       "top_level": "modules",
       "extension": ".py",
-      "size_bytes": 1989,
+      "size_bytes": 2972,
       "mode": "644",
-      "sha256": "8b3b69ae2ef0d3232c1b6c1dc7a4dca4d37e8315377233e8a67c9d5e057a1210"
+      "sha256": "d3ef3b7105efa605ac344d9edad431de54619f644866633f956d41439668570b"
     },
     {
       "path": "modules/amc_mta/scripts/compare_attribution_models.py",
@@ -17274,9 +17282,9 @@
       "path": "modules/amc_mta/scripts/regenerate_simulated_dataset.py",
       "top_level": "modules",
       "extension": ".py",
-      "size_bytes": 2790,
+      "size_bytes": 2813,
       "mode": "644",
-      "sha256": "66e1e323628c8c4dafa72a342ee15097cd06226dc5044f0abfb19c670f0dd1e6"
+      "sha256": "2ceb805410073575b688fbe6f54b836a98870e3aefe2f3e4d38233d0098107a3"
     },
     {
       "path": "modules/amc_mta/scripts/run_amc_attribution.py",
@@ -17290,9 +17298,9 @@
       "path": "modules/amc_mta/scripts/validate_data_alignment.py",
       "top_level": "modules",
       "extension": ".py",
-      "size_bytes": 7906,
+      "size_bytes": 11145,
       "mode": "644",
-      "sha256": "628d2b6349cd4304d4884c889e7d08c0b7ffcfcdb89c58165585bffc3219d6bd"
+      "sha256": "0cde5ab8733222e7c4e98b6734f51da643d9a218bf9100491237c87083839b71"
     },
     {
       "path": "modules/amc_mta/src/amc_mta_attribution.py",
@@ -17306,9 +17314,9 @@
       "path": "modules/amc_mta/src/amc_path_builder.py",
       "top_level": "modules",
       "extension": ".py",
-      "size_bytes": 10902,
+      "size_bytes": 11516,
       "mode": "644",
-      "sha256": "b48b30391b0930b27c1e5305927cebee472066a93f2626ccc7ffef58c6273a45"
+      "sha256": "d57365d1ce3f19a4b236ffeee7395d54945f085f7d5a98804ba0f68ea769cb81"
     },
     {
       "path": "modules/amc_mta/src/model_comparison.py",
@@ -17354,9 +17362,17 @@
       "path": "modules/amc_mta/tests/test_amc_path_builder.py",
       "top_level": "modules",
       "extension": ".py",
-      "size_bytes": 13732,
+      "size_bytes": 13770,
       "mode": "644",
-      "sha256": "e8240d657fc80c9c339549e36341033285e0f1dd6a8fd4fef47c268133a7740c"
+      "sha256": "cffb9a5603b2fe8e9b1363857fae14787dd445b7b0218f23417a5683520f6ba5"
+    },
+    {
+      "path": "modules/amc_mta/tests/test_auto_report_window.py",
+      "top_level": "modules",
+      "extension": ".py",
+      "size_bytes": 12466,
+      "mode": "644",
+      "sha256": "bc5136014b56205b968da7b07f764f6085050f00198155e64bf3a7f0c2d720c0"
     },
     {
       "path": "modules/amc_mta/tests/test_model_comparison.py",
@@ -17386,9 +17402,9 @@
       "path": "README.md",
       "top_level": "README.md",
       "extension": ".md",
-      "size_bytes": 5147,
+      "size_bytes": 5194,
       "mode": "644",
-      "sha256": "356ed6d7c6215a70cf4625097ccd57f84ed50f350c0c71acfe12ea552f01c5db"
+      "sha256": "6a030385c21a51533fa9db4ed53b16ac61fbdbf82c26c6af313c2bf29acc1475"
     }
   ]
 }

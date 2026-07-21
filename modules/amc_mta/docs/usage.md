@@ -8,13 +8,37 @@
 完整流程：
 
 ```bash
-python3 modules/amc_mta/run_pipeline.py
+python3 -B modules/amc_mta/run_pipeline.py
+```
+
+只需替换 events 与 Amazon Ads 两份输入后再次运行。正式流程自动采用 Ads
+`reportDate` 的最早日至最晚日作为窗口，无需修改 `config.py`。路径和五份模型
+结果会先在临时目录全部完成并校验，再统一发布；输入错误、空路径或发布失败时，
+已有六份派生产物保持不变，原始输入不会被程序覆盖。
+
+使用自定义输入与输出位置：
+
+```bash
+python3 -B modules/amc_mta/run_pipeline.py \
+  --events-file path/to/amc_touchpoint_events.csv \
+  --amazon-ads-report path/to/amazon_ads_report.csv \
+  --path-report path/to/amc_path_report.csv \
+  --output-dir path/to/attribution_outputs
 ```
 
 只生成聚合路径：
 
 ```bash
-python3 modules/amc_mta/scripts/build_amc_path_report.py
+python3 -B modules/amc_mta/scripts/build_amc_path_report.py
+```
+
+该命令同样默认从 Ads 输入自动识别窗口。需要时可单独覆盖任一文件路径：
+
+```bash
+python3 -B modules/amc_mta/scripts/build_amc_path_report.py \
+  --events-file path/to/amc_touchpoint_events.csv \
+  --amazon-ads-report path/to/amazon_ads_report.csv \
+  --output-file path/to/amc_path_report.csv
 ```
 
 重新生成确定性的 Amazon Ads 模拟数据：
@@ -56,6 +80,10 @@ python3 modules/amc_mta/scripts/validate_data_alignment.py
 ## 默认输入与输出
 
 输入位于 `modules/amc_mta/data/simulated/`；文件角色见该目录的 [README](../data/simulated/README.md)。
+
+每次运行只接受一个市场、账户和币种范围。Ads 必须非空、日期连续、每日五段触点
+集合一致，且键日期组合唯一；events 必须包含转化，所有转化均在 Ads 窗口内并
+至少形成一条有效路径。任何条件不满足都会直接报错，不裁剪、不补零、不发布。
 
 ```text
 modules/amc_mta/outputs/attribution/amc_markov_attribution_results.csv

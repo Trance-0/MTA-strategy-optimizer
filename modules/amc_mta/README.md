@@ -11,9 +11,14 @@
 在项目根目录执行：
 
 ```bash
-python3 modules/amc_mta/run_pipeline.py
+python3 -B modules/amc_mta/run_pipeline.py
 python3 modules/amc_mta/scripts/validate_data_alignment.py
 ```
+
+更新 events 与 Amazon Ads 输入文件后直接运行即可。正式流程以 Ads 中最早至最晚
+`reportDate` 自动确定窗口，支持任意长度、跨年和闰日，不需要修改配置日期。
+路径与五份模型结果全部验证成功后才统一发布；失败时保留上一批六份派生产物，
+且不会覆盖原始输入。自定义文件位置和完整校验规则见[运行方式](docs/usage.md)。
 
 默认输出：
 

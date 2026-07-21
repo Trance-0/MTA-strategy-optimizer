@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+import argparse
 import os
 import shutil
+import sys
 import tempfile
 from pathlib import Path
 
@@ -18,8 +20,13 @@ from config import (
     RECOMMENDED_ATTRIBUTION_FILE,
     SHAPLEY_OUTPUT_FILE,
 )
-from scripts.build_amc_path_report import build_amc_path_report
-from scripts.run_amc_attribution import run_amc_attribution
+
+sys.path.insert(0, str(AMC_MTA_ROOT / "src"))
+
+from amc_mta_attribution import read_csv  # noqa: E402
+from scripts.build_amc_path_report import build_amc_path_report  # noqa: E402
+from scripts.run_amc_attribution import run_amc_attribution  # noqa: E402
+from scripts.validate_data_alignment import infer_ads_report_window  # noqa: E402
 
 
 def publish_with_rollback(
@@ -29,6 +36,26 @@ def publish_with_rollback(
     destinations = [destination.resolve() for _, destination in replacements]
     if len(destinations) != len(set(destinations)):
         raise ValueError("artifact publication contains duplicate destinations")
+    staged_replacements: list[tuple[Path, Path]] = []
+    try:
+        for source, destination in replacements:
+            destination.parent.mkdir(parents=True, exist_ok=True)
+            descriptor, temporary_name = tempfile.mkstemp(
+                prefix=f".{destination.name}.publish_", dir=destination.parent
+            )
+            os.close(descriptor)
+            staged = Path(temporary_name)
+            try:
+                shutil.copy2(source, staged)
+            except Exception:
+                staged.unlink(missing_ok=True)
+                raise
+            staged_replacements.append((staged, destination))
+    except Exception:
+        for staged, _ in staged_replacements:
+            staged.unlink(missing_ok=True)
+        raise
+
     backup_dir.mkdir(parents=True, exist_ok=True)
     backups: dict[Path, Path | None] = {}
     for index, (_, destination) in enumerate(replacements):
@@ -41,8 +68,7 @@ def publish_with_rollback(
 
     published: list[Path] = []
     try:
-        for source, destination in replacements:
-            destination.parent.mkdir(parents=True, exist_ok=True)
+        for source, destination in staged_replacements:
             os.replace(source, destination)
             published.append(destination)
     except Exception:
@@ -62,6 +88,9 @@ def publish_with_rollback(
                 + "; ".join(rollback_errors)
             )
         raise
+    finally:
+        for staged, _ in staged_replacements:
+            staged.unlink(missing_ok=True)
 
 
 def match_outputs_by_name(
@@ -81,10 +110,56 @@ def match_outputs_by_name(
     return [(generated_by_name[destination.name], destination) for destination in expected]
 
 
-def main() -> None:
-    final_path_report = Path(AMC_REPORT_FILE)
-    final_output_dir = Path(ATTRIBUTION_OUTPUT_DIR)
-    final_output_dir.mkdir(parents=True, exist_ok=True)
+def _derived_outputs(path_report: Path, output_dir: Path) -> list[Path]:
+    return [
+        path_report,
+        output_dir / MARKOV_OUTPUT_FILE,
+        output_dir / SHAPLEY_OUTPUT_FILE,
+        output_dir / MODEL_COMPARISON_TOUCHPOINTS_FILE,
+        output_dir / MODEL_COMPARISON_SUMMARY_FILE,
+        output_dir / RECOMMENDED_ATTRIBUTION_FILE,
+    ]
+
+
+def _validate_artifact_paths(
+    events_file: Path,
+    amazon_ads_report: Path,
+    destinations: list[Path],
+) -> None:
+    input_paths = {events_file.resolve(), amazon_ads_report.resolve()}
+    resolved_destinations = [path.resolve() for path in destinations]
+    conflicts = input_paths.intersection(resolved_destinations)
+    for destination in resolved_destinations:
+        if destination.exists() and any(
+            source.exists() and os.path.samefile(source, destination)
+            for source in input_paths
+        ):
+            conflicts.add(destination)
+    if conflicts:
+        raise ValueError(
+            "derived artifact path must not overwrite an input file: "
+            f"{sorted(str(path) for path in conflicts)}"
+        )
+    if len(resolved_destinations) != len(set(resolved_destinations)):
+        raise ValueError("derived artifact paths must be unique")
+    for index, path in enumerate(resolved_destinations):
+        for other in resolved_destinations[index + 1 :]:
+            if path in other.parents or other in path.parents:
+                raise ValueError("derived artifact paths must not contain one another")
+
+
+def run_pipeline(
+    events_file: Path = AMC_TOUCHPOINT_EVENTS_FILE,
+    amazon_ads_report: Path = AMAZON_ADS_REPORT_FILE,
+    path_report: Path = AMC_REPORT_FILE,
+    output_dir: Path = ATTRIBUTION_OUTPUT_DIR,
+) -> list[Path]:
+    events_file = Path(events_file)
+    amazon_ads_report = Path(amazon_ads_report)
+    final_path_report = Path(path_report)
+    final_output_dir = Path(output_dir)
+    destinations = _derived_outputs(final_path_report, final_output_dir)
+    _validate_artifact_paths(events_file, amazon_ads_report, destinations)
 
     # Build every artifact in one temporary workspace. A validation or model
     # failure therefore leaves the previously published artifacts untouched.
@@ -94,13 +169,15 @@ def main() -> None:
         temporary_output_dir = temporary_root / "outputs"
 
         build_amc_path_report(
-            events_file=Path(AMC_TOUCHPOINT_EVENTS_FILE),
+            events_file=events_file,
             output_file=temporary_path_report,
+            amazon_ads_report=amazon_ads_report,
+            max_gap_days=MAX_TOUCHPOINT_GAP_DAYS,
         )
         temporary_outputs = run_amc_attribution(
             amc_report=temporary_path_report,
             output_dir=temporary_output_dir,
-            amazon_ads_report=Path(AMAZON_ADS_REPORT_FILE),
+            amazon_ads_report=amazon_ads_report,
             max_touchpoint_gap_days=MAX_TOUCHPOINT_GAP_DAYS,
         )
 
@@ -118,10 +195,39 @@ def main() -> None:
             ],
             temporary_root / "backups",
         )
+    return destinations
+
+
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(
+        description="Build AMC paths and attribution outputs using the Ads date window."
+    )
+    parser.add_argument("--events-file", type=Path, default=AMC_TOUCHPOINT_EVENTS_FILE)
+    parser.add_argument(
+        "--amazon-ads-report", type=Path, default=AMAZON_ADS_REPORT_FILE
+    )
+    parser.add_argument("--path-report", type=Path, default=AMC_REPORT_FILE)
+    parser.add_argument("--output-dir", type=Path, default=ATTRIBUTION_OUTPUT_DIR)
+    return parser.parse_args()
+
+
+def main() -> None:
+    args = parse_args()
+    report_start, report_end = infer_ads_report_window(read_csv(args.amazon_ads_report))
+    outputs = run_pipeline(
+        events_file=args.events_file,
+        amazon_ads_report=args.amazon_ads_report,
+        path_report=args.path_report,
+        output_dir=args.output_dir,
+    )
 
     print("AMC MTA pipeline complete.")
+    print(
+        "Report window: "
+        f"{report_start.isoformat()} to {report_end.isoformat()}"
+    )
     print("Outputs:")
-    for path in [final_path_report, *final_outputs]:
+    for path in outputs:
         print(f"- {path}")
 
 

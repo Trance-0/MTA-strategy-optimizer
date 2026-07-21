@@ -119,7 +119,7 @@ class BuildAggregatedPathRowsTests(unittest.TestCase):
 
         self.assertEqual(self.build(rows), [])
 
-    def test_excludes_conversions_outside_report_window(self) -> None:
+    def test_rejects_conversions_outside_report_window(self) -> None:
         rows = [
             touch("early", "A", "2026-04-20T00:00:00Z"),
             conversion("early", "2026-04-30T23:59:59Z"),
@@ -129,7 +129,8 @@ class BuildAggregatedPathRowsTests(unittest.TestCase):
             conversion("late", "2026-07-01T00:00:01Z"),
         ]
 
-        self.assertEqual([row["path"] for row in self.build(rows)], [key("B")])
+        with self.assertRaisesRegex(ValueError, "CONVERSION.*inside.*Ads report window"):
+            self.build(rows)
 
     def test_skips_conversion_without_prior_touchpoint(self) -> None:
         self.assertEqual(self.build([conversion("j1", "2026-05-10T00:00:00Z")]), [])

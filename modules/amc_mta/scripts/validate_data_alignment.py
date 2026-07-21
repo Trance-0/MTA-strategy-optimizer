@@ -69,11 +69,90 @@ def _required_text(row: dict, field: str, context: str) -> str:
     return value
 
 
+def _parse_report_date(value: str, context: str) -> date:
+    if (
+        len(value) != 10
+        or value[4] != "-"
+        or value[7] != "-"
+        or not (value[:4] + value[5:7] + value[8:]).isdigit()
+    ):
+        raise ValueError(f"{context}: reportDate must use YYYY-MM-DD")
+    try:
+        return date.fromisoformat(value)
+    except ValueError as exc:
+        raise ValueError(f"{context}: reportDate must be an ISO date") from exc
+
+
+def infer_ads_report_window(ads_rows: list[dict]) -> tuple[date, date]:
+    """Validate the Ads date grid and return its inclusive report window."""
+    if not ads_rows:
+        raise ValueError("Amazon Ads report must contain at least one row")
+
+    dates: set[date] = set()
+    touchpoint_dates: set[tuple[str, date]] = set()
+    touchpoints_by_date: dict[date, set[str]] = {}
+    scopes: set[tuple[str, str, str]] = set()
+    for row_number, row in enumerate(ads_rows, start=2):
+        touchpoint = touchpoint_key_from_ads_row(row, row_number=row_number)
+        report_date = _required_text(row, "reportDate", f"Amazon Ads row {row_number}")
+        parsed_date = _parse_report_date(report_date, f"Amazon Ads row {row_number}")
+
+        touchpoint_date = (touchpoint, parsed_date)
+        if touchpoint_date in touchpoint_dates:
+            raise ValueError(
+                f"Amazon Ads row {row_number}: duplicate touchpoint/reportDate: "
+                f"{touchpoint} / {parsed_date.isoformat()}"
+            )
+        touchpoint_dates.add(touchpoint_date)
+        dates.add(parsed_date)
+        touchpoints_by_date.setdefault(parsed_date, set()).add(touchpoint)
+        scopes.add(
+            (
+                _required_text(row, "marketplace", f"Amazon Ads row {row_number}"),
+                _required_text(row, "accountId", f"Amazon Ads row {row_number}"),
+                _required_text(row, "currencyCode", f"Amazon Ads row {row_number}"),
+            )
+        )
+
+    if len(scopes) != 1:
+        raise ValueError(
+            "Amazon Ads report must contain one marketplace/account/currency scope; "
+            f"found {len(scopes)}"
+        )
+
+    start_date = min(dates)
+    end_date = max(dates)
+    ordered_dates = sorted(dates)
+    gaps = [
+        (left, right)
+        for left, right in zip(ordered_dates, ordered_dates[1:])
+        if right - left != timedelta(days=1)
+    ]
+    if gaps:
+        raise ValueError(
+            "Amazon Ads report dates must be continuous; "
+            f"first_gap={gaps[0][0]}..{gaps[0][1]}"
+        )
+
+    expected_touchpoints = touchpoints_by_date[start_date]
+    inconsistent_dates = [
+        report_date
+        for report_date in ordered_dates
+        if touchpoints_by_date[report_date] != expected_touchpoints
+    ]
+    if inconsistent_dates:
+        raise ValueError(
+            "incomplete daily touchpoint coverage; "
+            "Amazon Ads report must contain the same touchpoint set every day; "
+            f"inconsistent={inconsistent_dates[:10]}"
+        )
+    return start_date, end_date
+
+
 def validate_data_alignment_rows(amc_rows: list[dict], ads_rows: list[dict]) -> dict:
     if not amc_rows:
         raise ValueError("AMC report must contain at least one row")
-    if not ads_rows:
-        raise ValueError("Amazon Ads report must contain at least one row")
+    inferred_start, inferred_end = infer_ads_report_window(ads_rows)
 
     amc_touchpoints = set()
     amc_windows = set()
@@ -135,11 +214,8 @@ def validate_data_alignment_rows(amc_rows: list[dict], ads_rows: list[dict]) -> 
             )
         )
 
-    if len(ads_scopes) != 1:
-        raise ValueError(
-            f"Amazon Ads report must contain one marketplace/account/currency scope; "
-            f"found {len(ads_scopes)}"
-        )
+    # infer_ads_report_window already validates one Ads scope, a continuous
+    # window, unique key/date pairs, and the same touchpoint set on every day.
     amc_scope = next(iter(amc_scopes))
     ads_scope = next(iter(ads_scopes))
     if amc_scope != ads_scope[:2]:
@@ -155,6 +231,12 @@ def validate_data_alignment_rows(amc_rows: list[dict], ads_rows: list[dict]) -> 
         )
 
     start_date, end_date = next(iter(amc_windows))
+    if (start_date, end_date) != (inferred_start, inferred_end):
+        raise ValueError(
+            "report date mismatch; "
+            f"AMC={start_date.isoformat()}..{end_date.isoformat()}, "
+            f"Ads={inferred_start.isoformat()}..{inferred_end.isoformat()}"
+        )
     expected_dates = {
         start_date + timedelta(days=offset)
         for offset in range((end_date - start_date).days + 1)

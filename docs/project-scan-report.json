@@ -65,8 +65,8 @@
       ]
     },
     "inventory": {
-      "files_after_exclusions": 2166,
-      "bytes_after_exclusions": 44576943,
+      "files_after_exclusions": 2168,
+      "bytes_after_exclusions": 44606998,
       "symbolic_links": 0,
       "empty_files": 0,
       "installed_skills": 119
@@ -102,7 +102,7 @@
       "single_model_reliability_fields": 0
     },
     "validation_summary": {
-      "amc_tests": "91 passed",
+      "amc_tests": "99 passed",
       "data_alignment": "17 touchpoints, 365 days, one US / adv_demo_001 / USD scope",
       "project_markdown": "41 reachable non-spec documents, 0 broken local links, 0 orphans",
       "csv_contracts": "51/3/51 rows, exact headers, no internal Decimal keys, lowercase booleans, summary touchpoint-AND parity, no surrounding whitespace or CRLF",
@@ -122,7 +122,7 @@
   "execution_status": "complete",
   "review_status": "done",
   "validation_commands": [
-    "python3 -B -m unittest discover -s modules/amc_mta/tests -p test*.py: 91 passed",
+    "python3 -B -m unittest discover -s modules/amc_mta/tests -p test*.py: 99 passed",
     "python3 -B modules/amc_mta/run_pipeline.py: passed and deterministic",
     "python3 -B modules/amc_mta/scripts/validate_data_alignment.py: 17 touchpoints and 365 days aligned",
     "strict CSV header, whitespace, count, threshold, summary-AND, and reliability checks: passed",
