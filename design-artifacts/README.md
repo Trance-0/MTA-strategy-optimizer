@@ -11,3 +11,9 @@
 - [决策记录](A-Product-Brief/decision-log.md)
 
 这些历史材料不能用于判断当前输入、路径窗口、归因公式、治理阈值或输出契约。
+
+## 分类说明
+
+现有 `A-Product-Brief/` 即本目录的历史产品材料区。为保持已配置工具路径和历史
+引用稳定，本次不物理迁移文件；本 README 上方清单即产品材料分类入口。当前能力
+和提交范围必须从 [`modules/amc_mta`](../modules/amc_mta/README.md) 进入。

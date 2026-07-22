@@ -57,7 +57,7 @@ Markov + Path-level Shapley
 ```bash
 python3 -B modules/amc_mta/run_pipeline.py
 python3 modules/amc_mta/scripts/validate_data_alignment.py
-python3 -B -m unittest discover -s modules/amc_mta/tests -p 'test*.py'
+python3 -B -m unittest discover -s modules/amc_mta/tests -p 'test_*.py'
 ```
 
 预期结果：
