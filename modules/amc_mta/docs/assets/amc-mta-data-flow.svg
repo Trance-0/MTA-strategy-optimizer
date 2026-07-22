@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="3200" height="1250" viewBox="0 0 3200 1250" role="img" aria-labelledby="title desc">
   <title id="title">AMC MTA 数据流流程图</title>
-  <desc id="desc">从 Demo 事件、真实 AMC 聚合路径和 Amazon Ads 日报开始，经路径构建、双模型归因、可靠性判断，输出五份正式结果；失败时不发布部分结果。</desc>
+  <desc id="desc">从真实 AMC 聚合路径和 Amazon Ads 日报开始，经对齐校验、双模型归因、可靠性判断，输出五份正式结果；失败时不发布部分结果。</desc>
   <defs>
     <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse">
       <path d="M 0 0 L 10 5 L 0 10 z" fill="#174a86"/>
@@ -37,19 +37,10 @@
 
   <rect class="bg" width="3200" height="1250"/>
 
-  <!-- Inputs and canonical path -->
-  <rect class="node" x="30" y="100" width="210" height="120"/>
-  <text class="label" x="135" y="152">Demo 概念事件</text>
-  <text class="label" x="135" y="190">CSV</text>
-
-  <rect class="node" x="300" y="80" width="260" height="160"/>
-  <text class="label" x="430" y="132">路径构建</text>
-  <text class="small" x="430" y="180">五字段触点键｜点击/曝光</text>
-  <text class="small" x="430" y="212">14 天规则｜多次转化不复用</text>
-
-  <rect class="node" x="30" y="300" width="210" height="120"/>
-  <text class="label" x="135" y="352">真实 AMC</text>
-  <text class="label" x="135" y="390">聚合路径</text>
+  <!-- Formal inputs and canonical path -->
+  <rect class="node" x="30" y="260" width="210" height="120"/>
+  <text class="label" x="135" y="312">真实 AMC</text>
+  <text class="label" x="135" y="350">聚合路径</text>
 
   <rect class="node" x="620" y="245" width="260" height="150"/>
   <text class="label" x="750" y="305">标准 AMC</text>
@@ -64,9 +55,7 @@
   <text class="label" x="430" y="675">与数据校验</text>
   <text class="small" x="430" y="713">账户｜币种｜连续日期｜触点集</text>
 
-  <path class="flow" d="M240 160 H300"/>
-  <path class="flow" d="M560 160 H590 V285 H620"/>
-  <path class="flow" d="M240 360 H620"/>
+  <path class="flow" d="M240 320 H620"/>
   <path class="flow" d="M240 650 H300"/>
 
   <!-- Alignment -->
@@ -152,7 +141,6 @@
   <path class="flow-amber" d="M2850 600 H2880 V580 H2920"/>
 
   <!-- Failure lane -->
-  <path class="fail-flow" d="M430 240 V1030"/>
   <path class="fail-flow" d="M430 730 V1030"/>
   <path class="fail-flow" d="M1060 535 V1030"/>
   <path class="fail-flow" d="M2005 505 V1030"/>
