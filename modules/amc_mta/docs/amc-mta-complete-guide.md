@@ -27,56 +27,7 @@ Path-level Shapley 的购买用户、订单次数和收入归因，再生成触�
 
 完整字段、数值关系和对齐条件以[数据契约](amc-data-requirements.md)为准。
 
-## 3. 数据流流程图
-
-```mermaid
-flowchart TD
-    A[Demo 概念事件 CSV] --> D[本地路径构建<br/>五字段触点键 · 点击/曝光分离<br/>14 天规则 · 多次转化不复用]
-    B[真实 AMC clean-room 导出<br/>遵守相同路径聚合契约] --> E[标准 AMC 匿名聚合路径契约]
-    D --> E
-
-    C[Amazon Ads 日报] --> F[Ads 严格校验与自动窗口<br/>市场 · 账户 · 币种<br/>连续日期 · 每日五字段键集合]
-    E --> G[AMC 与 Ads 对齐校验<br/>报告窗口 · 数据范围 · 五字段键集合]
-    F --> G
-
-    G --> H{双模型归因}
-    H --> I[Markov<br/>official 正式展示]
-    H --> J[Path-level Shapley<br/>benchmark 参照]
-
-    I --> K[关联 Ads 表现与成本<br/>计算 attributed value<br/>ROAS · ROI · CPA]
-    J --> K
-    K --> L[严格结果校验<br/>schema · 数值 · 集合<br/>三类 outcome 守恒]
-    L --> M[双模型证据计算<br/>原始支持量 · share 差距<br/>触点诊断 · outcome 摘要]
-    L --> L1[calculation_valid]
-    M --> M1[data_support_sufficient]
-    M --> M2[models_consistent]
-    L1 --> N{三项可靠性 AND}
-    M1 --> N
-    M2 --> N
-
-    N -->|全部通过| O[RELIABLE<br/>recommended_value = official_share<br/>仅作报告展示口径]
-    N -->|任一未通过| P[UNRELIABLE<br/>recommended_value = 两模型升序区间<br/>不是统计置信区间]
-    O --> Q{运行入口}
-    P --> Q
-
-    Q -->|Demo run_pipeline| R{聚合路径与五份结果<br/>整组六份验证成功?}
-    Q -->|真实聚合路径 run_amc_attribution| T{五份模型结果<br/>整组验证成功?}
-    R -->|是| U[原子发布<br/>1 份聚合路径 + 5 份模型结果]
-    T -->|是| V[原子发布 5 份模型结果<br/>AMC 路径输入保持不变]
-    R -->|否| X[不发布部分新结果<br/>保留已有产物（如有）<br/>不覆盖原始输入]
-    T -->|否| X
-    G -. 对齐或计算失败 .-> X
-    L -. 严格校验失败 .-> X
-```
-
-真实生产场景从 AMC clean room 导出的匿名聚合路径进入；Demo 才从本地概念事件
-构建路径。真实 AMC 的上游查询必须遵守相同的五字段键、点击/曝光、14 天和多次转化
-不复用契约，因为本地流程不能从聚合结果反推出事件构建过程。两条路线在标准聚合
-路径契约层汇合，后续使用相同的对齐、归因、比较和可靠性规则；但 Demo 全流水线
-发布六份派生产物，真实聚合路径入口只发布五份模型结果。图中的 `official` 仅表示
-项目正式展示口径，不表示 Amazon 官方认证。
-
-## 4. 五段触点与路径规则
+## 3. 五段触点与路径规则
 
 统一关联键为：
 
@@ -92,7 +43,7 @@ AD_PRODUCT:FORMAT:PLACEMENT:CREATIVE:INTERACTION_TYPE
 严格晚于窗口起点，购买不得晚于窗口终点。同一旅程多次购买时，后一次购买只使用
 前一次购买之后的新触点。
 
-## 5. 模型与守恒
+## 4. 模型与守恒
 
 Markov 使用路径顺序和转移依赖；Path-level Shapley 对每条路径的唯一触点集合
 计算参与贡献，同一路径内重复触点只计一次。两个模型均分别计算：
@@ -114,7 +65,7 @@ cost_per_converted_user = cost / attributed_converted_users
 成本为 0 时，ROAS 和 ROI 为空；对应归因订单数或归因购买用户为 0 时，CPA 或
 `cost_per_converted_user` 为空，不输出无穷值。
 
-## 6. 可靠性与推荐值
+## 5. 可靠性与推荐值
 
 每个 `touchpoint + outcome` 只有在以下三项全部为真时才是 `RELIABLE`：
 
@@ -130,7 +81,7 @@ cost_per_converted_user = cost / attributed_converted_users
 详细规则见[可靠性判断](touchpoint-reliability-guide.md)和
 [双模型治理规范](model-comparison-governance.md)。
 
-## 7. 运行与整组发布
+## 6. 运行与整组发布
 
 从项目根目录执行：
 
@@ -151,7 +102,7 @@ python3 -B -m unittest discover -s modules/amc_mta/tests -p 'test_*.py'
 
 预期结果为 100 项测试通过；该命令不会发布或覆盖正式 CSV。
 
-## 8. 输出阅读顺序
+## 7. 输出阅读顺序
 
 建议依次阅读：
 
@@ -163,7 +114,7 @@ python3 -B -m unittest discover -s modules/amc_mta/tests -p 'test_*.py'
 
 逐文件主键、字段和限制见[正式输出索引](output-reference.md)。
 
-## 9. 常见错误
+## 8. 常见错误
 
 | 现象 | 常见原因 | 处理 |
 | --- | --- | --- |
@@ -175,7 +126,7 @@ python3 -B -m unittest discover -s modules/amc_mta/tests -p 'test_*.py'
 
 任何失败都应修正输入后整组重跑，不手工拼接新旧批次。
 
-## 10. 五分钟 Demo
+## 9. 五分钟 Demo
 
 1. 从模块 [README](../README.md) 说明范围和自动窗口。
 2. 展示[数据契约](amc-data-requirements.md)中的五段键和 14 天规则。
@@ -184,7 +135,7 @@ python3 -B -m unittest discover -s modules/amc_mta/tests -p 'test_*.py'
 5. 用推荐表解释 `official`、`RELIABLE` 和不可靠区间的边界。
 6. 用[提交清单](../SUBMISSION_MANIFEST.md)确认核心包与辅助材料边界。
 
-## 11. 限制与后续验证
+## 10. 限制与后续验证
 
 - 当前没有滚动窗口、重采样或 3/7/14 天敏感性证据；
 - 结果不是实验增量、反事实因果或长期稳定贡献；

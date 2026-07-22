@@ -69,6 +69,7 @@ context:
 - 2026-07-22：运行 100 项模块测试，99 项通过；可复现性测试发现已存 Shapley 正式输出多一行异常记录。因正式 CSV 属于冻结区，本次不修复，规格保持 `in-review`。
 - 2026-07-22：用户删除异常尾行后重新验证，100 项测试全部通过；完整指南加入最终数据流 Mermaid 流程图。
 - 2026-07-22：最终审阅明确区分 Demo 六产物与真实 AMC 五结果发布，并恢复两份曾被视觉对齐的 CSV 至批准基线的严格物理契约；所有业务值保持不变。
+- 2026-07-22：按用户最终展示要求，从完整使用说明移除 Mermaid；新增独立 PNG 数据流图和可编辑 SVG 源文件，并由模块入口单独导航。
 
 ## Design Notes
 
@@ -97,8 +98,11 @@ context:
 
 **数据流与结果解释**
 
-- 查看 Demo、真实 AMC、双模型、可靠性和发布边界。
-  [`amc-mta-complete-guide.md:30`](../../modules/amc_mta/docs/amc-mta-complete-guide.md#L30)
+- 通过独立图像查看输入、双模型、可靠性和输出关系。
+  [`amc-mta-data-flow.svg:1`](../../modules/amc_mta/docs/assets/amc-mta-data-flow.svg#L1)
+
+- 阅读不内嵌流程图的完整文字使用说明。
+  [`amc-mta-complete-guide.md:1`](../../modules/amc_mta/docs/amc-mta-complete-guide.md#L1)
 
 - 按正确顺序理解五份输出及字段限制。
   [`output-reference.md:1`](../../modules/amc_mta/docs/output-reference.md#L1)

@@ -1,0 +1,163 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="3200" height="1250" viewBox="0 0 3200 1250" role="img" aria-labelledby="title desc">
+  <title id="title">AMC MTA 数据流流程图</title>
+  <desc id="desc">从 Demo 事件、真实 AMC 聚合路径和 Amazon Ads 日报开始，经路径构建、双模型归因、可靠性判断，输出五份正式结果；失败时不发布部分结果。</desc>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#174a86"/>
+    </marker>
+    <marker id="arrow-green" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#238636"/>
+    </marker>
+    <marker id="arrow-amber" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#b56000"/>
+    </marker>
+    <marker id="arrow-red" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#c62828"/>
+    </marker>
+    <style>
+      .bg { fill: #ffffff; }
+      .node { fill: #f5f9ff; stroke: #174a86; stroke-width: 4; rx: 14; }
+      .model { fill: #eef5ff; stroke: #174a86; stroke-width: 4; rx: 14; }
+      .evidence { fill: #f8fbff; stroke: #174a86; stroke-width: 4; rx: 12; }
+      .reliable { fill: #edf9ef; stroke: #238636; stroke-width: 5; rx: 14; }
+      .unreliable { fill: #fff6e8; stroke: #b56000; stroke-width: 5; rx: 14; }
+      .output { fill: #f8fbff; stroke: #174a86; stroke-width: 5; rx: 14; }
+      .failure { fill: #fff1f1; stroke: #c62828; stroke-width: 5; rx: 14; }
+      .flow { fill: none; stroke: #174a86; stroke-width: 5; marker-end: url(#arrow); }
+      .flow-green { fill: none; stroke: #238636; stroke-width: 6; marker-end: url(#arrow-green); }
+      .flow-amber { fill: none; stroke: #b56000; stroke-width: 6; marker-end: url(#arrow-amber); }
+      .fail-flow { fill: none; stroke: #c62828; stroke-width: 4; stroke-dasharray: 13 11; }
+      .fail-arrow { fill: none; stroke: #c62828; stroke-width: 5; stroke-dasharray: 13 11; marker-end: url(#arrow-red); }
+      .label { fill: #12243a; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif; font-size: 30px; font-weight: 600; text-anchor: middle; }
+      .small { fill: #35516f; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif; font-size: 20px; font-weight: 500; text-anchor: middle; }
+      .branch { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; font-size: 26px; font-weight: 700; }
+      .output-label { fill: #12243a; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif; font-size: 26px; font-weight: 600; text-anchor: middle; }
+    </style>
+  </defs>
+
+  <rect class="bg" width="3200" height="1250"/>
+
+  <!-- Inputs and canonical path -->
+  <rect class="node" x="30" y="100" width="210" height="120"/>
+  <text class="label" x="135" y="152">Demo 概念事件</text>
+  <text class="label" x="135" y="190">CSV</text>
+
+  <rect class="node" x="300" y="80" width="260" height="160"/>
+  <text class="label" x="430" y="132">路径构建</text>
+  <text class="small" x="430" y="180">五字段触点键｜点击/曝光</text>
+  <text class="small" x="430" y="212">14 天规则｜多次转化不复用</text>
+
+  <rect class="node" x="30" y="300" width="210" height="120"/>
+  <text class="label" x="135" y="352">真实 AMC</text>
+  <text class="label" x="135" y="390">聚合路径</text>
+
+  <rect class="node" x="620" y="245" width="260" height="150"/>
+  <text class="label" x="750" y="305">标准 AMC</text>
+  <text class="label" x="750" y="350">聚合路径契约</text>
+
+  <rect class="node" x="30" y="590" width="210" height="120"/>
+  <text class="label" x="135" y="642">Amazon Ads</text>
+  <text class="label" x="135" y="680">日报</text>
+
+  <rect class="node" x="300" y="570" width="260" height="160"/>
+  <text class="label" x="430" y="630">自动窗口</text>
+  <text class="label" x="430" y="675">与数据校验</text>
+  <text class="small" x="430" y="713">账户｜币种｜连续日期｜触点集</text>
+
+  <path class="flow" d="M240 160 H300"/>
+  <path class="flow" d="M560 160 H590 V285 H620"/>
+  <path class="flow" d="M240 360 H620"/>
+  <path class="flow" d="M240 650 H300"/>
+
+  <!-- Alignment -->
+  <rect class="node" x="940" y="365" width="240" height="170"/>
+  <text class="label" x="1060" y="435">AMC / Ads</text>
+  <text class="label" x="1060" y="480">对齐校验</text>
+  <text class="small" x="1060" y="518">窗口｜范围｜五字段键集合</text>
+  <path class="flow" d="M880 320 H910 V420 H940"/>
+  <path class="flow" d="M560 650 H900 V485 H940"/>
+
+  <!-- Parallel attribution models -->
+  <rect class="model" x="1250" y="250" width="260" height="130"/>
+  <text class="label" x="1380" y="310">Markov</text>
+  <text class="small" x="1380" y="350">Official 正式展示</text>
+
+  <rect class="model" x="1250" y="470" width="260" height="130"/>
+  <text class="label" x="1380" y="515">Path-level</text>
+  <text class="label" x="1380" y="550">Shapley</text>
+  <text class="small" x="1380" y="582">Benchmark 参照</text>
+
+  <path class="flow" d="M1180 450 H1210 V315 H1250"/>
+  <path class="flow" d="M1180 450 H1210 V535 H1250"/>
+
+  <!-- Metrics and comparison -->
+  <rect class="node" x="1600" y="340" width="260" height="190"/>
+  <text class="label" x="1730" y="400">成本与效率指标</text>
+  <text class="small" x="1730" y="449">Attributed Value</text>
+  <text class="small" x="1730" y="487">ROAS｜ROI｜CPA</text>
+  <path class="flow" d="M1510 315 H1550 V410 H1600"/>
+  <path class="flow" d="M1510 535 H1550 V465 H1600"/>
+
+  <rect class="node" x="1910" y="365" width="190" height="140"/>
+  <text class="label" x="2005" y="425">双模型</text>
+  <text class="label" x="2005" y="470">比较</text>
+  <path class="flow" d="M1860 435 H1910"/>
+
+  <!-- Reliability evidence -->
+  <rect class="evidence" x="2160" y="250" width="200" height="100"/>
+  <text class="label" x="2260" y="312">计算有效</text>
+  <rect class="evidence" x="2160" y="400" width="200" height="100"/>
+  <text class="label" x="2260" y="462">数据支撑充分</text>
+  <rect class="evidence" x="2160" y="550" width="200" height="100"/>
+  <text class="label" x="2260" y="612">模型一致</text>
+  <path class="flow" d="M2100 435 H2130 V300 H2160"/>
+  <path class="flow" d="M2100 435 H2160"/>
+  <path class="flow" d="M2100 435 H2130 V600 H2160"/>
+
+  <!-- AND decision and independent outcomes -->
+  <polygon points="2480,350 2570,450 2480,550 2390,450" fill="#f8fbff" stroke="#174a86" stroke-width="5"/>
+  <text class="label" x="2480" y="440">全部</text>
+  <text class="label" x="2480" y="482">通过？</text>
+  <path class="flow" d="M2360 300 H2380 V410 H2410"/>
+  <path class="flow" d="M2360 450 H2390"/>
+  <path class="flow" d="M2360 600 H2380 V490 H2410"/>
+
+  <rect class="reliable" x="2630" y="295" width="220" height="130"/>
+  <text class="label" x="2740" y="350" fill="#166b2c">RELIABLE</text>
+  <text class="small" x="2740" y="392" fill="#166b2c">Official 点值</text>
+
+  <rect class="unreliable" x="2630" y="535" width="220" height="130"/>
+  <text class="label" x="2740" y="590" fill="#9b4f00">UNRELIABLE</text>
+  <text class="small" x="2740" y="632" fill="#9b4f00">双模型区间</text>
+
+  <path class="flow-green" d="M2570 450 H2595 V360 H2630"/>
+  <text class="branch" x="2582" y="342" fill="#238636">YES</text>
+  <path class="flow-amber" d="M2570 450 H2595 V600 H2630"/>
+  <text class="branch" x="2582" y="632" fill="#b56000">NO</text>
+
+  <!-- Formal outputs -->
+  <rect class="output" x="2920" y="230" width="250" height="540"/>
+  <text class="label" x="3045" y="285">正式输出</text>
+  <line x1="2920" y1="315" x2="3170" y2="315" stroke="#174a86" stroke-width="3"/>
+  <text class="output-label" x="3045" y="365">Markov</text>
+  <line x1="2920" y1="395" x2="3170" y2="395" stroke="#9bb5d2" stroke-width="2"/>
+  <text class="output-label" x="3045" y="445">Shapley</text>
+  <line x1="2920" y1="475" x2="3170" y2="475" stroke="#9bb5d2" stroke-width="2"/>
+  <text class="output-label" x="3045" y="525">触点比较</text>
+  <line x1="2920" y1="555" x2="3170" y2="555" stroke="#9bb5d2" stroke-width="2"/>
+  <text class="output-label" x="3045" y="605">Outcome 摘要</text>
+  <line x1="2920" y1="635" x2="3170" y2="635" stroke="#9bb5d2" stroke-width="2"/>
+  <text class="output-label" x="3045" y="695">Recommended</text>
+  <path class="flow-green" d="M2850 360 H2880 V420 H2920"/>
+  <path class="flow-amber" d="M2850 600 H2880 V580 H2920"/>
+
+  <!-- Failure lane -->
+  <path class="fail-flow" d="M430 240 V1030"/>
+  <path class="fail-flow" d="M430 730 V1030"/>
+  <path class="fail-flow" d="M1060 535 V1030"/>
+  <path class="fail-flow" d="M2005 505 V1030"/>
+  <path class="fail-flow" d="M430 1030 H2005"/>
+  <path class="fail-arrow" d="M1220 1030 V1080"/>
+  <rect class="failure" x="760" y="1080" width="920" height="120"/>
+  <text class="label" x="1220" y="1152" fill="#a61b1b">失败：不发布部分结果，保留已有产物</text>
+</svg>

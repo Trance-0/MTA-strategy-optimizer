@@ -9,6 +9,7 @@
 ## 从这里开始
 
 - [完整使用说明](docs/amc-mta-complete-guide.md)：范围、输入、路径、模型、指标、可靠性、运行、排错与 Demo。
+- [数据流流程图](docs/assets/amc-mta-data-flow.png)：独立 PNG 图像；可编辑源文件为 [SVG](docs/assets/amc-mta-data-flow.svg)。
 - [正式输出索引](docs/output-reference.md)：五份 CSV 的阅读顺序、粒度、字段与解释边界。
 - [提交清单](SUBMISSION_MANIFEST.md)：必交、选交、不提交内容和验收状态。
 - [当前文档索引](docs/README.md)：模块事实源与专题说明。
