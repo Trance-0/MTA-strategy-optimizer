@@ -84,17 +84,64 @@ def _is_field_description_row(row: Mapping[object, object]) -> bool:
     return any(dict(row) == description for description in KNOWN_FIELD_DESCRIPTION_ROWS)
 
 
-def read_csv(path: str | Path) -> List[dict]:
-    with Path(path).open(newline="") as f:
-        rows = [
-            {
-                (key.strip() if key is not None else key): (
-                    value.strip() if isinstance(value, str) else value
+def read_csv_normalized(path: str | Path) -> Tuple[List[str], List[dict]]:
+    """Read CSV structure after stripping only field and value edge whitespace."""
+    path = Path(path)
+    with path.open(newline="") as f:
+        reader = csv.reader(f, strict=True)
+        try:
+            raw_fieldnames = next(reader)
+        except StopIteration as exc:
+            raise ValueError(f"{path}: CSV header is missing") from exc
+        except csv.Error as exc:
+            raise ValueError(f"{path}: malformed CSV header: {exc}") from exc
+
+        fieldnames = [field.strip() for field in raw_fieldnames]
+        if not fieldnames or any(not field for field in fieldnames):
+            raise ValueError(
+                f"{path}: CSV header contains an empty field name after stripping "
+                "surrounding whitespace"
+            )
+
+        seen: set[str] = set()
+        duplicate_fields: list[str] = []
+        for field in fieldnames:
+            if field in seen and field not in duplicate_fields:
+                duplicate_fields.append(field)
+            seen.add(field)
+        if duplicate_fields:
+            raise ValueError(
+                f"{path}: CSV header contains duplicate field name(s) after stripping "
+                f"surrounding whitespace: {duplicate_fields}"
+            )
+
+        rows: List[dict] = []
+        expected_width = len(fieldnames)
+        try:
+            for row_number, values in enumerate(reader, start=2):
+                if len(values) > expected_width:
+                    raise ValueError(
+                        f"{path}: CSV row {row_number} contains extra column value(s); "
+                        f"expected {expected_width}, got {len(values)}"
+                    )
+                if len(values) < expected_width:
+                    raise ValueError(
+                        f"{path}: CSV row {row_number} has missing columns; "
+                        f"expected {expected_width}, got {len(values)}"
+                    )
+                rows.append(
+                    {
+                        field: value.strip()
+                        for field, value in zip(fieldnames, values)
+                    }
                 )
-                for key, value in row.items()
-            }
-            for row in csv.DictReader(f)
-        ]
+        except csv.Error as exc:
+            raise ValueError(f"{path}: malformed CSV data: {exc}") from exc
+    return fieldnames, rows
+
+
+def read_csv(path: str | Path) -> List[dict]:
+    _, rows = read_csv_normalized(path)
     return [row for row in rows if not _is_field_description_row(row)]
 
 

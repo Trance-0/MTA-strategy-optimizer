@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import argparse
-import csv
 import sys
 from pathlib import Path
 
@@ -10,7 +9,11 @@ AMC_MTA_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(AMC_MTA_ROOT))
 sys.path.insert(0, str(AMC_MTA_ROOT / "src"))
 
-from amc_mta_attribution import read_csv, write_csv_set_atomic  # noqa: E402
+from amc_mta_attribution import (  # noqa: E402
+    read_csv,
+    read_csv_normalized,
+    write_csv_set_atomic,
+)
 from config import (  # noqa: E402
     AMAZON_ADS_REPORT_FILE,
     AMC_REPORT_FILE,
@@ -36,27 +39,12 @@ from scripts.validate_data_alignment import validate_data_alignment_rows  # noqa
 
 def read_model_csv_strict(path: str | Path) -> list[dict]:
     path = Path(path)
-    with path.open(newline="") as file:
-        reader = csv.DictReader(file)
-        if reader.fieldnames != MODEL_OUTPUT_FIELDS:
-            raise ValueError(
-                f"{path}: physical header must exactly match the model output contract; "
-                f"expected={MODEL_OUTPUT_FIELDS}, got={reader.fieldnames}"
-            )
-        rows = []
-        for row_number, row in enumerate(reader, start=2):
-            if None in row:
-                raise ValueError(
-                    f"{path}: row {row_number} contains extra column value(s)"
-                )
-            for field, value in row.items():
-                if value is None:
-                    raise ValueError(f"{path}: row {row_number} has missing columns")
-                if value != value.strip():
-                    raise ValueError(
-                        f"{path}: row {row_number} field {field!r} contains missing or surrounding whitespace"
-                    )
-            rows.append(row)
+    fieldnames, rows = read_csv_normalized(path)
+    if fieldnames != MODEL_OUTPUT_FIELDS:
+        raise ValueError(
+            f"{path}: normalized header must exactly match the model output contract; "
+            f"expected={MODEL_OUTPUT_FIELDS}, got={fieldnames}"
+        )
     return rows
 
 

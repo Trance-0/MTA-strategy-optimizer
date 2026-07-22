@@ -11,7 +11,7 @@
 - [Amazon Ads 样例](amazon-ads-report-sample.md)：五段表现与成本输入及计费归属方式。
 - [双模型差异量化与输出规范](model-comparison-governance.md)：面向快消品的 Markov 与 Path-level Shapley 差距阈值、证据门槛和输出状态机。
 
-平台背景见 [Amazon AMC 研究](../../../docs/research/amazon/amc/README.md)，项目概览见 [AMC MTA 项目介绍](../../../docs/product/amc-mta/project-introduction.md)。
+AMC 平台背景研究与项目管理文档属于原项目外部资料，不随本独立包提交，也不是运行依赖。
 
 五份正式 CSV 的逐文件说明见[输出索引](output-reference.md)，提交范围见
 [提交清单](../SUBMISSION_MANIFEST.md)。若本文档与历史设计材料冲突，以当前数据契约、

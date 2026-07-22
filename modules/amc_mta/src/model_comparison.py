@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import csv
 import math
 from collections import defaultdict
 from dataclasses import dataclass
@@ -12,6 +11,7 @@ from typing import Mapping, Sequence
 from amc_mta_attribution import (
     NULL,
     PATH_FIELD_DESCRIPTIONS,
+    read_csv_normalized,
     safe_float,
     safe_int,
     validate_amc_aggregated_row,
@@ -126,38 +126,25 @@ class ComparisonArtifacts:
 
 
 def read_amc_csv_strict(path: str | Path) -> list[dict]:
-    """Read the physical AMC path contract without silently normalizing it."""
+    """Read the AMC path contract after normalizing field and value edges."""
     path = Path(path)
     expected_fields = list(PATH_FIELD_DESCRIPTIONS)
-    with path.open(newline="") as file:
-        reader = csv.DictReader(file)
-        if reader.fieldnames != expected_fields:
-            raise ValueError(
-                f"{path}: physical AMC header must exactly match {expected_fields}; "
-                f"got={reader.fieldnames}"
-            )
-        rows: list[dict] = []
-        description_count = 0
-        for row_number, row in enumerate(reader, start=2):
-            if None in row:
-                raise ValueError(
-                    f"{path}: AMC row {row_number} contains extra column value(s)"
-                )
-            if set(row) != set(expected_fields):
-                raise ValueError(f"{path}: AMC row {row_number} has missing columns")
-            if any(value is None for value in row.values()):
-                raise ValueError(f"{path}: AMC row {row_number} has missing columns")
-            if row == PATH_FIELD_DESCRIPTIONS:
-                description_count += 1
-                if description_count > 1:
-                    raise ValueError(f"{path}: AMC report contains multiple description rows")
-                continue
-            for field, value in row.items():
-                if value != value.strip():
-                    raise ValueError(
-                        f"{path}: AMC row {row_number} field {field!r} contains surrounding whitespace"
-                    )
-            rows.append(row)
+    fieldnames, normalized_rows = read_csv_normalized(path)
+    if fieldnames != expected_fields:
+        raise ValueError(
+            f"{path}: normalized AMC header must exactly match {expected_fields}; "
+            f"got={fieldnames}"
+        )
+
+    rows: list[dict] = []
+    description_count = 0
+    for row in normalized_rows:
+        if row == PATH_FIELD_DESCRIPTIONS:
+            description_count += 1
+            if description_count > 1:
+                raise ValueError(f"{path}: AMC report contains multiple description rows")
+            continue
+        rows.append(row)
     return rows
 
 

@@ -15,8 +15,8 @@ AMC 事件、路径和 Amazon Ads 报告统一使用 `AD_PRODUCT:FORMAT:PLACEMEN
 重新生成并校验：
 
 ```bash
-python3 modules/amc_mta/scripts/regenerate_simulated_dataset.py
-python3 modules/amc_mta/scripts/validate_data_alignment.py
+python3 -B scripts/regenerate_simulated_dataset.py
+python3 -B scripts/validate_data_alignment.py
 ```
 
 两个生成器均原子写入且可确定复现。Ads 使用自然年绝对日序，因此任意子区间与全年相同日期切片一致。

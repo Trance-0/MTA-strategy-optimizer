@@ -16,11 +16,12 @@
 
 ## 快速运行
 
-在项目根目录执行：
+解压后进入 `amc_mta/` 目录执行：
 
 ```bash
-python3 -B modules/amc_mta/run_pipeline.py
-python3 modules/amc_mta/scripts/validate_data_alignment.py
+cd amc_mta
+python3 -B run_pipeline.py
+python3 -B scripts/validate_data_alignment.py
 ```
 
 更新 events 与 Amazon Ads 输入文件后直接运行即可。正式流程以 Ads 中最早至最晚
@@ -31,11 +32,11 @@ python3 modules/amc_mta/scripts/validate_data_alignment.py
 默认正式输出：
 
 ```text
-modules/amc_mta/outputs/attribution/amc_markov_attribution_results.csv
-modules/amc_mta/outputs/attribution/amc_shapley_attribution_results.csv
-modules/amc_mta/outputs/attribution/amc_mta_model_comparison_touchpoints.csv
-modules/amc_mta/outputs/attribution/amc_mta_model_comparison_summary.csv
-modules/amc_mta/outputs/attribution/amc_mta_recommended_attribution.csv
+outputs/attribution/amc_markov_attribution_results.csv
+outputs/attribution/amc_shapley_attribution_results.csv
+outputs/attribution/amc_mta_model_comparison_touchpoints.csv
+outputs/attribution/amc_mta_model_comparison_summary.csv
+outputs/attribution/amc_mta_recommended_attribution.csv
 ```
 
 前两份是两个模型各自的五字段主结果；后三份分别提供“触点数 × 3 个 outcome”的
@@ -64,7 +65,7 @@ modules/amc_mta/outputs/attribution/amc_mta_recommended_attribution.csv
 - [单触点归因可靠性判断](docs/touchpoint-reliability-guide.md)：按计算有效、数据支撑充分、模型一致三个标准判断归因结果。
 - [Amazon Ads 样例](docs/amazon-ads-report-sample.md)：成本表及关联键。
 - [模拟数据](data/simulated/README.md)：三个样例文件的角色。
-- [AMC 背景与数据流](../../docs/research/amazon/amc/README.md)：平台边界与整体链路。
-- [项目介绍](../../docs/product/amc-mta/project-introduction.md)：项目目标与边界。
+- AMC 平台背景研究与项目管理材料属于原项目外部资料，不是本独立交付包的运行依赖，
+  也不随 `amc_mta/` 提交。
 
 AMC 路径、Amazon Ads 输入和归因输出统一使用 `AD_PRODUCT:FORMAT:PLACEMENT:CREATIVE:INTERACTION_TYPE`，其中 `INTERACTION_TYPE` 只能是 `IMPRESSION` 或 `CLICK`。CPC 成本只归属 CLICK，CPM 成本只归属 IMPRESSION，非计费互动成本为 0。AMC 输入明确区分 `converted_users`（去重购买用户）和 `purchase_count`（订单次数）；完整约束以[数据契约](docs/amc-data-requirements.md)为准。

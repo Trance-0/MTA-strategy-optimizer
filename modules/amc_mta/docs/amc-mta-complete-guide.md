@@ -83,24 +83,25 @@ cost_per_converted_user = cost / attributed_converted_users
 
 ## 6. 运行与整组发布
 
-从项目根目录执行：
+解压后进入 `amc_mta/` 目录执行：
 
 ```bash
-python3 -B modules/amc_mta/run_pipeline.py
-python3 modules/amc_mta/scripts/validate_data_alignment.py
+cd amc_mta
+python3 -B run_pipeline.py
+python3 -B scripts/validate_data_alignment.py
 ```
 
 完整流程先在临时位置生成并校验一份聚合路径和五份正式输出，只有整组六份派生
 产物全部成功才发布。输入错误、空路径、校验失败或发布失败时，原始输入不被覆盖，
 上一批派生产物保持不变。自定义路径和分步命令见[运行方式](usage.md)。
 
-独立验证模块测试时，不运行流水线，在项目根目录执行：
+独立验证模块测试时，不运行流水线，在 `amc_mta/` 目录执行：
 
 ```bash
-python3 -B -m unittest discover -s modules/amc_mta/tests -p 'test_*.py'
+python3 -B -m unittest discover -s tests -p 'test_*.py'
 ```
 
-预期结果为 100 项测试通过；该命令不会发布或覆盖正式 CSV。
+预期结果为 106 项测试通过；该命令不会发布或覆盖正式 CSV。
 
 ## 7. 输出阅读顺序
 
@@ -118,7 +119,7 @@ python3 -B -m unittest discover -s modules/amc_mta/tests -p 'test_*.py'
 
 | 现象 | 常见原因 | 处理 |
 | --- | --- | --- |
-| 输入立即失败 | 缺列、空白表头、非法数值或旧字段 | 按数据契约修正上游导出，不在流程内静默补值 |
+| 输入立即失败 | 清理后的空/重名表头、缺列、多列、非法数值或旧字段 | 首尾空白可直接容错；其他问题按数据契约修正上游导出 |
 | 对齐失败 | 窗口、账户、币种、日期或触点集合不一致 | 先运行对齐校验，确保 Ads 每日完整覆盖 |
 | 路径为空 | 没有有效转化、触点间隔超限或窗口起点不合法 | 检查事件类型、时间戳和 14 天规则 |
 | 效率指标为空 | 成本为 0，或 CPA 类指标的归因分母为 0 | 保留为空，不复制成本或输出无穷值 |

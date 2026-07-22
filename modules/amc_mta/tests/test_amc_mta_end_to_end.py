@@ -199,6 +199,46 @@ class EndToEndSampleTests(unittest.TestCase):
             path.write_text("name,market\n广告系列,中国\n", encoding="utf-8")
             self.assertEqual(read_csv(path), [{"name": "广告系列", "market": "中国"}])
 
+    def test_reader_normalizes_edges_and_preserves_internal_whitespace(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "normalized.csv"
+            path.write_text(
+                "  name  ,  value  \n  one  ,  one value  \n",
+                encoding="utf-8",
+            )
+            self.assertEqual(
+                read_csv(path),
+                [{"name": "one", "value": "one value"}],
+            )
+
+    def test_reader_rejects_empty_or_duplicate_normalized_headers(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "invalid-header.csv"
+            cases = (
+                ("", "header is missing"),
+                ("\n", "empty.*after stripping"),
+                ("name,   \none,value\n", "empty.*after stripping"),
+                ("name, name \none,value\n", "duplicate.*after stripping"),
+            )
+            for contents, message in cases:
+                with self.subTest(contents=contents):
+                    path.write_text(contents, encoding="utf-8")
+                    with self.assertRaisesRegex(ValueError, message):
+                        read_csv(path)
+
+    def test_reader_rejects_extra_or_missing_data_columns(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "invalid-width.csv"
+            cases = (
+                ("one,two\n1,2,3\n", "extra column"),
+                ("one,two\n1\n", "missing column"),
+            )
+            for contents, message in cases:
+                with self.subTest(contents=contents):
+                    path.write_text(contents, encoding="utf-8")
+                    with self.assertRaisesRegex(ValueError, message):
+                        read_csv(path)
+
     def test_ads_sample_is_reproducible_complete_and_not_month_repeated(self) -> None:
         generated = generate_rows(
             date.fromisoformat(REPORT_START_DATE), date.fromisoformat(REPORT_END_DATE)
@@ -283,6 +323,16 @@ class EndToEndSampleTests(unittest.TestCase):
             self.assertTrue(
                 all(b"\r\n" not in path.read_bytes() for path in generated_paths)
             )
+            for generated_path in generated_paths:
+                with generated_path.open(newline="") as file:
+                    for row_number, physical_row in enumerate(csv.reader(file), start=1):
+                        with self.subTest(
+                            output=generated_path.name,
+                            row_number=row_number,
+                        ):
+                            self.assertTrue(
+                                all(value == value.strip() for value in physical_row)
+                            )
             for generated_path in generated_paths[:2]:
                 with self.subTest(model=generated_path.name):
                     generated = read_csv(generated_path)

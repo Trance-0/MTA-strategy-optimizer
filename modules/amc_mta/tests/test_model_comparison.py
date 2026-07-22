@@ -18,7 +18,7 @@ sys.path.insert(0, str(SRC))
 sys.path.insert(0, str(SCRIPTS))
 
 from compare_attribution_models import read_model_csv_strict  # noqa: E402
-from amc_mta_attribution import write_csv_set_atomic  # noqa: E402
+from amc_mta_attribution import read_csv_normalized, write_csv_set_atomic  # noqa: E402
 from model_comparison import (  # noqa: E402
     MODEL_OUTPUT_FIELDS,
     RECOMMENDED_FIELDS,
@@ -665,23 +665,63 @@ class CompleteComparisonTests(unittest.TestCase):
 
 
 class StrictCsvTests(unittest.TestCase):
-    def test_strict_reader_rejects_header_and_value_whitespace(self) -> None:
+    def test_normalized_reader_rejects_malformed_csv_quotes(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "malformed.csv"
+            path.write_text('name,value\none,"unclosed\n')
+
+            with self.assertRaisesRegex(ValueError, "malformed CSV data"):
+                read_csv_normalized(path)
+
+    def test_strict_model_reader_accepts_edge_whitespace(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             path = Path(tmp) / "model.csv"
+            row = model_row("markov", A_IMPRESSION, 1.0)
             with path.open("w", newline="") as file:
                 writer = csv.writer(file)
-                writer.writerow([f" {MODEL_OUTPUT_FIELDS[0]}", *MODEL_OUTPUT_FIELDS[1:]])
-            with self.assertRaisesRegex(ValueError, "physical header"):
-                read_model_csv_strict(path)
+                writer.writerow([f"  {field}  " for field in MODEL_OUTPUT_FIELDS])
+                writer.writerow(
+                    [
+                        f"  {row[field]}  " if row[field] != "" else "  "
+                        for field in MODEL_OUTPUT_FIELDS
+                    ]
+                )
 
-            row = model_row("markov", A_IMPRESSION, 1.0)
-            row["touchpoint"] = f" {A_IMPRESSION}"
+            self.assertEqual(
+                read_model_csv_strict(path),
+                [
+                    {
+                        field: str(row[field]).strip()
+                        for field in MODEL_OUTPUT_FIELDS
+                    }
+                ],
+            )
+
+    def test_strict_model_reader_preserves_internal_whitespace(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "model.csv"
+            row = model_row("markov model", A_IMPRESSION, 1.0)
             with path.open("w", newline="") as file:
                 writer = csv.DictWriter(file, fieldnames=MODEL_OUTPUT_FIELDS)
                 writer.writeheader()
                 writer.writerow(row)
-            with self.assertRaisesRegex(ValueError, "surrounding whitespace"):
-                read_model_csv_strict(path)
+
+            self.assertEqual(
+                read_model_csv_strict(path)[0]["attribution_model"],
+                "markov model",
+            )
+
+    def test_strict_readers_reject_headers_that_collide_after_stripping(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            model_path = Path(tmp) / "model.csv"
+            model_path.write_text("one, one \n1,2\n")
+            with self.assertRaisesRegex(ValueError, "duplicate.*after stripping"):
+                read_model_csv_strict(model_path)
+
+            amc_path = Path(tmp) / "amc.csv"
+            amc_path.write_text("one, one \n1,2\n")
+            with self.assertRaisesRegex(ValueError, "duplicate.*after stripping"):
+                read_amc_csv_strict(amc_path)
 
     def test_strict_model_reader_reports_extra_data_columns(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -692,18 +732,21 @@ class StrictCsvTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "extra column"):
                 read_model_csv_strict(path)
 
-    def test_strict_amc_reader_skips_one_description_and_rejects_extra_columns(self) -> None:
+    def test_strict_amc_reader_normalizes_edges_and_rejects_extra_columns(self) -> None:
         from amc_mta_attribution import PATH_FIELD_DESCRIPTIONS
 
         with tempfile.TemporaryDirectory() as tmp:
             path = Path(tmp) / "amc.csv"
             fieldnames = list(PATH_FIELD_DESCRIPTIONS)
             with path.open("w", newline="") as file:
-                writer = csv.DictWriter(file, fieldnames=fieldnames)
-                writer.writeheader()
-                writer.writerow(PATH_FIELD_DESCRIPTIONS)
-                writer.writerow(amc_row(A_IMPRESSION))
-            self.assertEqual(len(read_amc_csv_strict(path)), 1)
+                writer = csv.writer(file)
+                writer.writerow([f" {field} " for field in fieldnames])
+                writer.writerow(
+                    [f" {PATH_FIELD_DESCRIPTIONS[field]} " for field in fieldnames]
+                )
+                source = amc_row(A_IMPRESSION)
+                writer.writerow([f" {source[field]} " for field in fieldnames])
+            self.assertEqual(read_amc_csv_strict(path), [amc_row(A_IMPRESSION)])
 
             with path.open("a", newline="") as file:
                 file.write(",".join([""] * len(fieldnames)) + ",extra\n")
