@@ -63,7 +63,7 @@
   },
   "files": [
     {
-      "path": "_bmad-output/implementation-artifacts/deferred-work.md",
+      "path": "_bmad-output/implementation-artifacts/amc_mta/deferred/deferred-work.md",
       "top_level": "_bmad-output",
       "extension": ".md",
       "size_bytes": 2694,
@@ -71,7 +71,7 @@
       "sha256": "a1ee8955b8bd74a30400f2898f5f9cb0d52da9d50c25c365e925374ab6e21bb6"
     },
     {
-      "path": "_bmad-output/implementation-artifacts/README.md",
+      "path": "_bmad-output/implementation-artifacts/amc_mta/README.md",
       "top_level": "_bmad-output",
       "extension": ".md",
       "size_bytes": 1092,
@@ -79,7 +79,7 @@
       "sha256": "134bb7befccae455c8498437cbb9d3eb6bdf24cd1fafc511e0c5f8ba9bc07670"
     },
     {
-      "path": "_bmad-output/implementation-artifacts/spec-add-interaction-type-granularity-2.md",
+      "path": "_bmad-output/implementation-artifacts/amc_mta/completed/spec-add-interaction-type-granularity-2.md",
       "top_level": "_bmad-output",
       "extension": ".md",
       "size_bytes": 7415,
@@ -87,7 +87,7 @@
       "sha256": "85595705eb98f36e4766d05973168589e4a31f582d7321778de55882c72198d4"
     },
     {
-      "path": "_bmad-output/implementation-artifacts/spec-add-recommended-value-field.md",
+      "path": "_bmad-output/implementation-artifacts/amc_mta/completed/spec-add-recommended-value-field.md",
       "top_level": "_bmad-output",
       "extension": ".md",
       "size_bytes": 5232,
@@ -95,7 +95,7 @@
       "sha256": "e95d0a56da868619313b67e099903b441e702a9dee3c4b9f5ab6e3f56b82218b"
     },
     {
-      "path": "_bmad-output/implementation-artifacts/spec-annotate-amc-path-report.md",
+      "path": "_bmad-output/implementation-artifacts/amc_mta/completed/spec-annotate-amc-path-report.md",
       "top_level": "_bmad-output",
       "extension": ".md",
       "size_bytes": 4577,
@@ -103,7 +103,7 @@
       "sha256": "195a9a9579a2e52f66e7a589d443b478c3af9559d8fa471a42a056aeebc5e93a"
     },
     {
-      "path": "_bmad-output/implementation-artifacts/spec-auto-detect-amc-report-window.md",
+      "path": "_bmad-output/implementation-artifacts/amc_mta/completed/spec-auto-detect-amc-report-window.md",
       "top_level": "_bmad-output",
       "extension": ".md",
       "size_bytes": 5575,
@@ -111,7 +111,7 @@
       "sha256": "8a739b20b4568087f0ed3c225e8ac18419b4ddc9790586e00f575e5e5cb12010"
     },
     {
-      "path": "_bmad-output/implementation-artifacts/spec-clean-workspace.md",
+      "path": "_bmad-output/implementation-artifacts/amc_mta/completed/spec-clean-workspace.md",
       "top_level": "_bmad-output",
       "extension": ".md",
       "size_bytes": 7418,
@@ -119,7 +119,7 @@
       "sha256": "6e8db12fcd0d718c73430acd65aecb5e6fd5480d7638e9434d6d18c3ddeb4967"
     },
     {
-      "path": "_bmad-output/implementation-artifacts/spec-evaluate-all-mta-outputs.md",
+      "path": "_bmad-output/implementation-artifacts/amc_mta/completed/spec-evaluate-all-mta-outputs.md",
       "top_level": "_bmad-output",
       "extension": ".md",
       "size_bytes": 8736,
@@ -127,7 +127,7 @@
       "sha256": "f8e9765d17a4f3bdaa0ffc62a028106cd51038b8096a742dc2c06b83ca1b1d24"
     },
     {
-      "path": "_bmad-output/implementation-artifacts/spec-expand-amc-sample-to-one-year.md",
+      "path": "_bmad-output/implementation-artifacts/amc_mta/completed/spec-expand-amc-sample-to-one-year.md",
       "top_level": "_bmad-output",
       "extension": ".md",
       "size_bytes": 6814,
@@ -135,7 +135,7 @@
       "sha256": "6cb401a9c2d59b2c8f4e43876d9db6a06ce9db5b4f9908bdf078c0f6c7a02df6"
     },
     {
-      "path": "_bmad-output/implementation-artifacts/spec-five-part-only-model-governance.md",
+      "path": "_bmad-output/implementation-artifacts/amc_mta/completed/spec-five-part-only-model-governance.md",
       "top_level": "_bmad-output",
       "extension": ".md",
       "size_bytes": 7551,
@@ -143,7 +143,7 @@
       "sha256": "548312230935cb28253c800e66560df609b2e655032878933fbe78493b6eae12"
     },
     {
-      "path": "_bmad-output/implementation-artifacts/spec-focus-project-on-amc-mta.md",
+      "path": "_bmad-output/implementation-artifacts/amc_mta/completed/spec-focus-project-on-amc-mta.md",
       "top_level": "_bmad-output",
       "extension": ".md",
       "size_bytes": 5960,
@@ -151,7 +151,7 @@
       "sha256": "7e770252ed69c30c2fb3aa7037b6613a8b1cda8b5ae182e8a61732aa3f15dd2d"
     },
     {
-      "path": "_bmad-output/implementation-artifacts/spec-organize-workspace-files.md",
+      "path": "_bmad-output/implementation-artifacts/amc_mta/completed/spec-organize-workspace-files.md",
       "top_level": "_bmad-output",
       "extension": ".md",
       "size_bytes": 6077,
@@ -159,7 +159,7 @@
       "sha256": "4f1d3d521f06d5a8d16a2297ecafcf362ff7ed5a05eef78b9e40e5e5f9072b70"
     },
     {
-      "path": "_bmad-output/implementation-artifacts/spec-remove-units-sold.md",
+      "path": "_bmad-output/implementation-artifacts/amc_mta/completed/spec-remove-units-sold.md",
       "top_level": "_bmad-output",
       "extension": ".md",
       "size_bytes": 5610,
@@ -167,7 +167,7 @@
       "sha256": "a93781300ac20ef312233d1dad10b32be7af30e837b7abade787d613a92fcfd2"
     },
     {
-      "path": "_bmad-output/implementation-artifacts/spec-simplify-amc-output-fields.md",
+      "path": "_bmad-output/implementation-artifacts/amc_mta/completed/spec-simplify-amc-output-fields.md",
       "top_level": "_bmad-output",
       "extension": ".md",
       "size_bytes": 7828,
@@ -175,7 +175,7 @@
       "sha256": "2f9b959f0e03a04dd44eefcefa3dfef54f64428d4f492fd47487c2cbe84eff22"
     },
     {
-      "path": "_bmad-output/implementation-artifacts/spec-simplify-amc-reliability-judgment.md",
+      "path": "_bmad-output/implementation-artifacts/amc_mta/completed/spec-simplify-amc-reliability-judgment.md",
       "top_level": "_bmad-output",
       "extension": ".md",
       "size_bytes": 8875,
@@ -16767,7 +16767,7 @@
       "sha256": "cbf1200b74998d34c0fdac1f4fd07450aa04b81971ee85a554491fba235ff991"
     },
     {
-      "path": "design-artifacts/A-Product-Brief/addendum.md",
+      "path": "design-artifacts/amc_mta/A-Product-Brief/addendum.md",
       "top_level": "design-artifacts",
       "extension": ".md",
       "size_bytes": 3166,
@@ -16775,7 +16775,7 @@
       "sha256": "0a201d9512a8e5bb7aa5736c1b47823f8cd573b8a7ebbce090fdf78a108a3e21"
     },
     {
-      "path": "design-artifacts/A-Product-Brief/decision-log.md",
+      "path": "design-artifacts/amc_mta/A-Product-Brief/decision-log.md",
       "top_level": "design-artifacts",
       "extension": ".md",
       "size_bytes": 1906,
@@ -16783,7 +16783,7 @@
       "sha256": "927eab3f20c3be77bb67f4aa9863eab015ae4c4fe9e5276a8a53e6a9770818de"
     },
     {
-      "path": "design-artifacts/A-Product-Brief/model-relationship-guide.md",
+      "path": "design-artifacts/amc_mta/A-Product-Brief/model-relationship-guide.md",
       "top_level": "design-artifacts",
       "extension": ".md",
       "size_bytes": 12963,
@@ -16791,7 +16791,7 @@
       "sha256": "d06559ee7b1508b11735db9b1b09b1edff4bd36d7bcb4637e9b569442c6ebc6a"
     },
     {
-      "path": "design-artifacts/A-Product-Brief/prd.md",
+      "path": "design-artifacts/amc_mta/A-Product-Brief/prd.md",
       "top_level": "design-artifacts",
       "extension": ".md",
       "size_bytes": 18541,
@@ -16799,7 +16799,7 @@
       "sha256": "a9a47eb447418e2e016a6e955acd92db9d4319a9ea8170a1a5ec4b41667b483f"
     },
     {
-      "path": "design-artifacts/A-Product-Brief/product-brief.md",
+      "path": "design-artifacts/amc_mta/A-Product-Brief/product-brief.md",
       "top_level": "design-artifacts",
       "extension": ".md",
       "size_bytes": 4022,
@@ -16823,7 +16823,7 @@
       "sha256": "6e932132a00595d0d4a7c4c80b92d75005e58941c51784b8720509fffaeef5bc"
     },
     {
-      "path": "docs/amc-mta-architecture.md",
+      "path": "docs/amc_mta/amc-mta-architecture.md",
       "top_level": "docs",
       "extension": ".md",
       "size_bytes": 8226,
@@ -16831,7 +16831,7 @@
       "sha256": "cb3e32b69490a5451afb8302ae7fa536d5253446da869c13594230322fb60f33"
     },
     {
-      "path": "docs/amc-mta-capability-assessment.md",
+      "path": "docs/amc_mta/amc-mta-capability-assessment.md",
       "top_level": "docs",
       "extension": ".md",
       "size_bytes": 8739,

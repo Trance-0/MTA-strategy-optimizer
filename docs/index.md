@@ -13,7 +13,7 @@ Agent/BMad 工具链。项目只有一个正式业务实现：
 4. [工作区级架构](architecture.md)：理解业务、知识和工具三层关系。
 5. [组件与资产清单](component-inventory.md)：查看代码、数据、研究和技能资产。
 6. [开发与验证指南](development-guide.md)：运行项目并复现验证。
-7. [AMC MTA 能力评价](amc-mta-capability-assessment.md)：深入判断归因能力。
+7. [AMC MTA 能力评价](amc_mta/amc-mta-capability-assessment.md)：深入判断归因能力。
 
 ## 当前入口与权威层级
 
@@ -27,9 +27,10 @@ Agent/BMad 工具链。项目只有一个正式业务实现：
 | 输入字段、路径和成本规则 | [AMC MTA 数据契约](../modules/amc_mta/docs/amc-data-requirements.md) |
 | Markov/Shapley 差距与决策状态 | [模型比较治理规范](../modules/amc_mta/docs/model-comparison-governance.md) |
 | 单触点结果可靠性 | [触点可靠性指南](../modules/amc_mta/docs/touchpoint-reliability-guide.md) |
-| 代码结构与数据流 | [AMC MTA 架构](amc-mta-architecture.md) |
-| 项目成熟度与后续优先级 | [AMC MTA 能力评价](amc-mta-capability-assessment.md) |
-| 尚未解决的技术问题 | [延期事项](../_bmad-output/implementation-artifacts/deferred-work.md) |
+| 代码结构与数据流 | [AMC MTA 架构](amc_mta/amc-mta-architecture.md) |
+| 项目成熟度与后续优先级 | [AMC MTA 能力评价](amc_mta/amc-mta-capability-assessment.md) |
+| Campaign 数据层级 | [Campaign 数据关系与 Paid Search 最细效果粒度](research/campaign-data-hierarchy.md) |
+| 尚未解决的 AMC MTA 技术问题 | [延期事项](../_bmad-output/implementation-artifacts/amc_mta/deferred/deferred-work.md) |
 
 权威优先级为：运行代码与测试 → 模块数据/治理契约 → 可再生产物 → 本目录的架构与
 能力评价 → 项目介绍 → 研究笔记 → 历史产品文档。架构与评价是从代码和产物派生的
@@ -56,8 +57,7 @@ modules/amc_mta/
 
 docs/
 ├── index.md
-├── amc-mta-architecture.md
-├── amc-mta-capability-assessment.md
+├── amc_mta/          # AMC MTA 工作区架构与能力评价
 ├── workspace-file-management.md
 ├── product/   # 当前项目介绍
 └── research/  # 外部研究原件，不是运行输入
@@ -73,7 +73,7 @@ docs/
 - **后续验证**：`docs/research/ab-testing/`。
 - **背景资料**：machine-learning、ontology、industry。
 - **历史愿景**：`design-artifacts/`，包括
-  [模型功能与关系说明](../design-artifacts/A-Product-Brief/model-relationship-guide.md)。
+  [模型功能与关系说明](../design-artifacts/amc_mta/A-Product-Brief/model-relationship-guide.md)。
 - **历史实现记录**：`_bmad-output/implementation-artifacts/`；冻结规格记录当时意图，
   不自动代表当前能力。
 - **安装工具**：`.agents` 与 `_bmad`；保持安装结构，不按业务重复文件清理。

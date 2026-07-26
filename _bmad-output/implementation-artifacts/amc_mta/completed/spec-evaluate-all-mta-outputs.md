@@ -88,40 +88,40 @@ context:
 **流程入口与产物生成**
 
 - 从一次归因运行生成两模型和三份治理产物。
-  [`run_amc_attribution.py:74`](../../modules/amc_mta/scripts/run_amc_attribution.py#L74)
+  [`run_amc_attribution.py:74`](../../../../modules/amc_mta/scripts/run_amc_attribution.py#L74)
 
 - 独立严格比较已有模型文件并复现相同结果。
-  [`compare_attribution_models.py:77`](../../modules/amc_mta/scripts/compare_attribution_models.py#L77)
+  [`compare_attribution_models.py:77`](../../../../modules/amc_mta/scripts/compare_attribution_models.py#L77)
 
 **比较、校验与状态治理**
 
 - 集中生成 51 行明细、6 行摘要和 51 行推荐记录。
-  [`model_comparison.py:638`](../../modules/amc_mta/src/model_comparison.py#L638)
+  [`model_comparison.py:638`](../../../../modules/amc_mta/src/model_comparison.py#L638)
 
 - 统一验证模型、AMC 范围、集合、守恒和效率关系。
-  [`model_comparison.py:325`](../../modules/amc_mta/src/model_comparison.py#L325)
+  [`model_comparison.py:325`](../../../../modules/amc_mta/src/model_comparison.py#L325)
 
 - 计算 TVD、Spearman、Top K 及整体比较状态。
-  [`model_comparison.py:578`](../../modules/amc_mta/src/model_comparison.py#L578)
+  [`model_comparison.py:578`](../../../../modules/amc_mta/src/model_comparison.py#L578)
 
 **安全发布**
 
 - 整组暂存、替换和失败回滚避免部分 CSV 更新。
-  [`amc_mta_attribution.py:127`](../../modules/amc_mta/src/amc_mta_attribution.py#L127)
+  [`amc_mta_attribution.py:127`](../../../../modules/amc_mta/src/amc_mta_attribution.py#L127)
 
 - 完整管线将五份归因产物纳入统一发布集合。
-  [`run_pipeline.py:109`](../../modules/amc_mta/run_pipeline.py#L109)
+  [`run_pipeline.py:109`](../../../../modules/amc_mta/run_pipeline.py#L109)
 
 **测试与治理文档**
 
 - 验证全部触点、outcome 和决策阻断结果。
-  [`test_model_comparison.py:130`](../../modules/amc_mta/tests/test_model_comparison.py#L130)
+  [`test_model_comparison.py:130`](../../../../modules/amc_mta/tests/test_model_comparison.py#L130)
 
 - 覆盖错位、逐行守恒、效率和范围边界。
-  [`test_model_comparison.py:181`](../../modules/amc_mta/tests/test_model_comparison.py#L181)
+  [`test_model_comparison.py:181`](../../../../modules/amc_mta/tests/test_model_comparison.py#L181)
 
 - 验证多文件发布失败时恢复完整旧集合。
-  [`test_model_comparison.py:309`](../../modules/amc_mta/tests/test_model_comparison.py#L309)
+  [`test_model_comparison.py:309`](../../../../modules/amc_mta/tests/test_model_comparison.py#L309)
 
 - 记录当前正式诊断结果与不可决策原因。
-  [`model-comparison-governance.md:661`](../../modules/amc_mta/docs/model-comparison-governance.md#L661)
+  [`model-comparison-governance.md:661`](../../../../modules/amc_mta/docs/model-comparison-governance.md#L661)

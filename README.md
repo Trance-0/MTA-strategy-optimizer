@@ -18,8 +18,8 @@
 | 查看声明范围内文件的大小、权限和哈希 | [工作区文件清单](docs/workspace-file-inventory.json)（排除 Git、`log.md`、ignored 个人覆盖及清单自身） |
 | 运行唯一正式模块 | [AMC MTA 模块说明](modules/amc_mta/README.md) |
 | 查看业务模块目录约定 | [模块索引](modules/README.md) |
-| 查看架构与数据流 | [AMC MTA 架构](docs/amc-mta-architecture.md) |
-| 查看成熟度、风险与路线 | [AMC MTA 能力评价](docs/amc-mta-capability-assessment.md) |
+| 查看架构与数据流 | [AMC MTA 架构](docs/amc_mta/amc-mta-architecture.md) |
+| 查看成熟度、风险与路线 | [AMC MTA 能力评价](docs/amc_mta/amc-mta-capability-assessment.md) |
 | 查看输入、路径和指标契约 | [AMC MTA 数据契约](modules/amc_mta/docs/amc-data-requirements.md) |
 | 查看双模型治理与证据阻断 | [模型比较治理规范](modules/amc_mta/docs/model-comparison-governance.md) |
 | 判断单触点归因是否可靠 | [触点可靠性指南](modules/amc_mta/docs/touchpoint-reliability-guide.md) |
@@ -75,8 +75,7 @@ python3 -B -m unittest discover -s modules/amc_mta/tests -p 'test_*.py'
 ├── log.md
 ├── docs/
 │   ├── index.md
-│   ├── amc-mta-architecture.md
-│   ├── amc-mta-capability-assessment.md
+│   ├── amc_mta/               # AMC MTA 工作区文档
 │   ├── product/              # 当前项目介绍
 │   └── research/             # 外部研究原件和相关性索引
 ├── modules/

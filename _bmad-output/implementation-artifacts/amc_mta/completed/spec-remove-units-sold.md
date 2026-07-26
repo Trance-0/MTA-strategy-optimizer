@@ -81,21 +81,21 @@ context:
 **输入与内部模型**
 
 - Ads 聚合状态只保留实际参与报表和效率分析的指标。
-  [`amc_mta_attribution.py:588`](../../modules/amc_mta/src/amc_mta_attribution.py#L588)
+  [`amc_mta_attribution.py:588`](../../../../modules/amc_mta/src/amc_mta_attribution.py#L588)
 
 - 事件路径仅校验三项归因 outcome，不再读取售出件数。
-  [`amc_path_builder.py:154`](../../modules/amc_mta/src/amc_path_builder.py#L154)
+  [`amc_path_builder.py:154`](../../../../modules/amc_mta/src/amc_path_builder.py#L154)
 
 - Ads 模拟输入表头与说明同步移除冗余列。
-  [`generate_simulated_amazon_ads_report.py:18`](../../modules/amc_mta/scripts/generate_simulated_amazon_ads_report.py#L18)
+  [`generate_simulated_amazon_ads_report.py:18`](../../../../modules/amc_mta/scripts/generate_simulated_amazon_ads_report.py#L18)
 
 **输出与回归保护**
 
 - 主结果字段列表删除冗余列，计算字段保持原序。
-  [`run_amc_attribution.py:72`](../../modules/amc_mta/scripts/run_amc_attribution.py#L72)
+  [`run_amc_attribution.py:72`](../../../../modules/amc_mta/scripts/run_amc_attribution.py#L72)
 
 - 结果序列化继续使用原归因、成本和效率计算。
-  [`amc_mta_attribution.py:682`](../../modules/amc_mta/src/amc_mta_attribution.py#L682)
+  [`amc_mta_attribution.py:682`](../../../../modules/amc_mta/src/amc_mta_attribution.py#L682)
 
 - 公共 CSV schema 显式阻止已删除字段回归。
-  [`test_amc_mta_end_to_end.py:38`](../../modules/amc_mta/tests/test_amc_mta_end_to_end.py#L38)
+  [`test_amc_mta_end_to_end.py:38`](../../../../modules/amc_mta/tests/test_amc_mta_end_to_end.py#L38)

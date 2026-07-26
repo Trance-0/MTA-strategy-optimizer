@@ -39,7 +39,7 @@ context:
 
 **Execution:**
 - [x] `docs/workspace-file-management.md` -- 定义分区、稳定路径、命名、归档、移动流程及 `log.md` no-touch 规则。
-- [x] `docs/product/model-relationship-guide.md` → `design-artifacts/A-Product-Brief/model-relationship-guide.md` -- 历史愿景归位并修复引用。
+- [x] `docs/product/model-relationship-guide.md` → `design-artifacts/amc_mta/A-Product-Brief/model-relationship-guide.md` -- 历史愿景归位并修复引用。
 - [x] `docs/research/{mta,ab-testing}/阅读顺序.md` → 各自 `README.md` -- 规范入口并链接原件。
 - [x] MTA Shapley PDF -- 将文件名 `Methodsfor` 修正为 `Methods for`，保持二进制内容不变。
 - [x] `docs/research/amazon/research/README.md` -- 索引该层六份原件并接入上级入口。
@@ -75,34 +75,34 @@ context:
 **位置治理与保护边界**
 
 - 先确认所有文件的唯一职责区与稳定路径。
-  [`workspace-file-management.md:7`](../../docs/workspace-file-management.md#L7)
+  [`workspace-file-management.md:7`](../../../../docs/workspace-file-management.md#L7)
 
 - 再检查移动、归档与 `log.md` no-touch 流程。
-  [`workspace-file-management.md:47`](../../docs/workspace-file-management.md#L47)
+  [`workspace-file-management.md:47`](../../../../docs/workspace-file-management.md#L47)
 
 **导航与资料归位**
 
 - 从总索引核对治理、可靠性与历史愿景入口。
-  [`index.md:18`](../../docs/index.md#L18)
+  [`index.md:18`](../../../../docs/index.md#L18)
 
 - 检查历史模型说明是否准确隔离当前能力。
-  [`model-relationship-guide.md:1`](../../design-artifacts/A-Product-Brief/model-relationship-guide.md#L1)
+  [`model-relationship-guide.md:1`](../../../../design-artifacts/amc_mta/A-Product-Brief/model-relationship-guide.md#L1)
 
 - 检查 MTA、A/B 与 Amazon 原件的目录入口。
-  [`README.md:1`](../../docs/research/mta/README.md#L1)
-  [`README.md:1`](../../docs/research/ab-testing/README.md#L1)
-  [`research/README.md:1`](../../docs/research/amazon/research/README.md#L1)
+  [`README.md:1`](../../../../docs/research/mta/README.md#L1)
+  [`README.md:1`](../../../../docs/research/ab-testing/README.md#L1)
+  [`research/README.md:1`](../../../../docs/research/amazon/research/README.md#L1)
 
 - 确认模块索引已登记触点可靠性指南。
-  [`docs/README.md:1`](../../modules/amc_mta/docs/README.md#L1)
+  [`docs/README.md:1`](../../../../modules/amc_mta/docs/README.md#L1)
 
 **派生状态与后续风险**
 
 - 核对最终规模、验证结论和分区评价。
-  [`project-overview.md:24`](../../docs/project-overview.md#L24)
+  [`project-overview.md:24`](../../../../docs/project-overview.md#L24)
 
 - 核对扫描范围、排除项和验证命令。
-  [`project-scan-report.json:1`](../../docs/project-scan-report.json#L1)
+  [`project-scan-report.json:1`](../../../../docs/project-scan-report.json#L1)
 
 - 最后查看未擅自修改的既有 AMC 问题。
-  [`deferred-work.md:20`](deferred-work.md#L20)
+  [`deferred-work.md:20`](../deferred/deferred-work.md#L20)

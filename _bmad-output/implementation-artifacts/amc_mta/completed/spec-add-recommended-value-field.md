@@ -78,26 +78,26 @@ context:
 **推荐值生成**
 
 - 推荐 schema 只增加一个最终值字段。
-  [`model_comparison.py:82`](../../modules/amc_mta/src/model_comparison.py#L82)
+  [`model_comparison.py:82`](../../../../modules/amc_mta/src/model_comparison.py#L82)
 
 - 可靠单点、模型区间和空值在一个函数中统一选择。
-  [`model_comparison.py:478`](../../modules/amc_mta/src/model_comparison.py#L478)
+  [`model_comparison.py:478`](../../../../modules/amc_mta/src/model_comparison.py#L478)
 
 - 推荐行复用已有 share 与可靠性，不改变模型计算。
-  [`model_comparison.py:677`](../../modules/amc_mta/src/model_comparison.py#L677)
+  [`model_comparison.py:677`](../../../../modules/amc_mta/src/model_comparison.py#L677)
 
 **边界验证**
 
 - 不可靠正反区间及真实 CSV 回读锁定文本契约。
-  [`test_model_comparison.py:345`](../../modules/amc_mta/tests/test_model_comparison.py#L345)
+  [`test_model_comparison.py:345`](../../../../modules/amc_mta/tests/test_model_comparison.py#L345)
 
 - 全年正式输出验证 51 个可靠值等于 official。
-  [`test_amc_mta_end_to_end.py:371`](../../modules/amc_mta/tests/test_amc_mta_end_to_end.py#L371)
+  [`test_amc_mta_end_to_end.py:371`](../../../../modules/amc_mta/tests/test_amc_mta_end_to_end.py#L371)
 
 **使用说明**
 
 - 治理规范定义 15 列顺序和三种推荐值形态。
-  [`model-comparison-governance.md:71`](../../modules/amc_mta/docs/model-comparison-governance.md#L71)
+  [`model-comparison-governance.md:71`](../../../../modules/amc_mta/docs/model-comparison-governance.md#L71)
 
 - 使用文档解释如何按可靠性读取单点或区间。
-  [`usage.md:109`](../../modules/amc_mta/docs/usage.md#L109)
+  [`usage.md:109`](../../../../modules/amc_mta/docs/usage.md#L109)

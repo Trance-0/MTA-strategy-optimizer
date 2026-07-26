@@ -5,8 +5,8 @@
 ## 当前内容
 
 - [实现产物索引](implementation-artifacts/README.md)
-- [延期事项](implementation-artifacts/deferred-work.md)
+- [AMC MTA 实现产物](implementation-artifacts/amc_mta/README.md)
+- [ML Predict 实现产物](implementation-artifacts/ML_predict/README.md)
 
-已完成规格和延期正文保留原位，作为需求、代码范围和验证证据的历史记录；由实现
-产物 README 原位分组，不复制正文。冻结规格是获批时点的快照，其中旧相对路径
+已完成规格和延期正文按模型分组，作为需求、代码范围和验证证据的历史记录。冻结规格是获批时点的快照，其中旧相对路径
 可能已失效，不为修链接而回写；当前事实以模块文档为准。

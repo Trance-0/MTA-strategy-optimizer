@@ -85,7 +85,7 @@ context: []
 
 ## File List
 
-- `_bmad-output/implementation-artifacts/spec-tolerate-csv-edge-whitespace.md`
+- `_bmad-output/implementation-artifacts/amc_mta/completed/spec-tolerate-csv-edge-whitespace.md`
 - `modules/amc_mta/src/amc_mta_attribution.py`
 - `modules/amc_mta/src/model_comparison.py`
 - `modules/amc_mta/scripts/compare_attribution_models.py`
@@ -110,26 +110,26 @@ done
 **统一输入规范化**
 
 - 单一入口清理边缘空白并拒绝结构歧义及畸形 CSV。
-  [`amc_mta_attribution.py:87`](../../modules/amc_mta/src/amc_mta_attribution.py#L87)
+  [`amc_mta_attribution.py:87`](../../../../modules/amc_mta/src/amc_mta_attribution.py#L87)
 
 - AMC 严格入口复用规范化层后继续执行精确 schema 校验。
-  [`model_comparison.py:128`](../../modules/amc_mta/src/model_comparison.py#L128)
+  [`model_comparison.py:128`](../../../../modules/amc_mta/src/model_comparison.py#L128)
 
 - 双模型严格入口保持相同的规范化与完整契约。
-  [`compare_attribution_models.py:40`](../../modules/amc_mta/scripts/compare_attribution_models.py#L40)
+  [`compare_attribution_models.py:40`](../../../../modules/amc_mta/scripts/compare_attribution_models.py#L40)
 
 **行为边界与说明**
 
 - 数据契约明确输入宽容、内部空格保留和输出严格。
-  [`amc-data-requirements.md:7`](../../modules/amc_mta/docs/amc-data-requirements.md#L7)
+  [`amc-data-requirements.md:7`](../../../../modules/amc_mta/docs/amc-data-requirements.md#L7)
 
 - 使用说明解释比较入口不会修复其他非法数据。
-  [`usage.md:62`](../../modules/amc_mta/docs/usage.md#L62)
+  [`usage.md:62`](../../../../modules/amc_mta/docs/usage.md#L62)
 
 **回归保护**
 
 - 普通读取覆盖清理、内部空格、重名及异常行宽。
-  [`test_amc_mta_end_to_end.py:202`](../../modules/amc_mta/tests/test_amc_mta_end_to_end.py#L202)
+  [`test_amc_mta_end_to_end.py:202`](../../../../modules/amc_mta/tests/test_amc_mta_end_to_end.py#L202)
 
 - 严格读取覆盖畸形引号、边缘空白和 schema 异常。
-  [`test_model_comparison.py:668`](../../modules/amc_mta/tests/test_model_comparison.py#L668)
+  [`test_model_comparison.py:668`](../../../../modules/amc_mta/tests/test_model_comparison.py#L668)

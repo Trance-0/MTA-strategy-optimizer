@@ -82,26 +82,26 @@ context:
 **全集发布边界**
 
 - 先暂存并验证全部八份产物，再统一发布并支持整体回滚。
-  [`regenerate_simulated_dataset.py:38`](../../modules/amc_mta/scripts/regenerate_simulated_dataset.py#L38)
+  [`regenerate_simulated_dataset.py:38`](../../../../modules/amc_mta/scripts/regenerate_simulated_dataset.py#L38)
 
 **共享触点与年度生成**
 
 - 单一结构化目录同时约束 AMC 事件键和 Ads 指标参数。
-  [`simulated_touchpoints.py:14`](../../modules/amc_mta/src/simulated_touchpoints.py#L14)
+  [`simulated_touchpoints.py:14`](../../../../modules/amc_mta/src/simulated_touchpoints.py#L14)
 
 - 精确 17 键校验阻止目录漂移被静默发布。
-  [`simulated_touchpoints.py:104`](../../modules/amc_mta/src/simulated_touchpoints.py#L104)
+  [`simulated_touchpoints.py:104`](../../../../modules/amc_mta/src/simulated_touchpoints.py#L104)
 
 - 固定 epoch 生成全年 Ads，保证独立子区间完全一致。
-  [`generate_simulated_amazon_ads_report.py:45`](../../modules/amc_mta/scripts/generate_simulated_amazon_ads_report.py#L45)
+  [`generate_simulated_amazon_ads_report.py:45`](../../../../modules/amc_mta/scripts/generate_simulated_amazon_ads_report.py#L45)
 
 - 月度模板轮换均衡首触点，并保留拒绝与不复用夹具。
-  [`generate_simulated_amc_touchpoint_events.py:32`](../../modules/amc_mta/scripts/generate_simulated_amc_touchpoint_events.py#L32)
+  [`generate_simulated_amc_touchpoint_events.py:32`](../../../../modules/amc_mta/scripts/generate_simulated_amc_touchpoint_events.py#L32)
 
 **验证与防回归**
 
 - 逐 journey 验证 144 次入模、12 次不复用和两次拒绝。
-  [`test_amc_mta_end_to_end.py:90`](../../modules/amc_mta/tests/test_amc_mta_end_to_end.py#L90)
+  [`test_amc_mta_end_to_end.py:90`](../../../../modules/amc_mta/tests/test_amc_mta_end_to_end.py#L90)
 
 - 模拟第五次发布失败，验证八个旧文件全部恢复。
-  [`test_amc_mta_end_to_end.py:549`](../../modules/amc_mta/tests/test_amc_mta_end_to_end.py#L549)
+  [`test_amc_mta_end_to_end.py:549`](../../../../modules/amc_mta/tests/test_amc_mta_end_to_end.py#L549)

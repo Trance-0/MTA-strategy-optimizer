@@ -3,6 +3,8 @@
 这里保存外部论文、平台调研和背景材料。所有文件均保留，但研究资料不等于当前实现，
 也不是 `modules/amc_mta` 的运行输入。
 
+项目内部的数据模型分析见 [Campaign 数据关系与 Paid Search 最细效果粒度](campaign-data-hierarchy.md)。
+
 ## 与 AMC MTA 的相关性
 
 | 等级 | 目录 | 用途 |

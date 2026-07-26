@@ -7,8 +7,8 @@ AMC MTA 是本仓库唯一正式业务实现：一个面向 Amazon 广告场景�
 当前阅读入口：
 
 - [文档总索引](../../index.md)
-- [架构说明](../../amc-mta-architecture.md)
-- [能力评价](../../amc-mta-capability-assessment.md)
+- [架构说明](../../amc_mta/amc-mta-architecture.md)
+- [能力评价](../../amc_mta/amc-mta-capability-assessment.md)
 - [模块运行说明](../../../modules/amc_mta/README.md)
 
 ## 项目如何工作

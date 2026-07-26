@@ -80,29 +80,29 @@ Amazon Ads 输入不再把一条四段汇总记录复制成两条。模拟数据
 **五段主流程**
 
 - 入口直接关联五段归因与五段 Ads 指标，仅发布两份结果。
-  [`run_amc_attribution.py:55`](../../modules/amc_mta/scripts/run_amc_attribution.py#L55)
+  [`run_amc_attribution.py:55`](../../../../modules/amc_mta/scripts/run_amc_attribution.py#L55)
 
 - 成本结果严格保留互动类型并正确处理零成本效率指标。
-  [`amc_mta_attribution.py:650`](../../modules/amc_mta/src/amc_mta_attribution.py#L650)
+  [`amc_mta_attribution.py:650`](../../../../modules/amc_mta/src/amc_mta_attribution.py#L650)
 
 **计费与键约束**
 
 - Ads 键要求完整第五段并核验存储键一致性。
-  [`touchpoint_key.py:83`](../../modules/amc_mta/src/touchpoint_key.py#L83)
+  [`touchpoint_key.py:83`](../../../../modules/amc_mta/src/touchpoint_key.py#L83)
 
 - CPC/CLICK 与 CPM/IMPRESSION 无条件匹配，阻止零成本冲突。
-  [`amc_mta_attribution.py:551`](../../modules/amc_mta/src/amc_mta_attribution.py#L551)
+  [`amc_mta_attribution.py:551`](../../../../modules/amc_mta/src/amc_mta_attribution.py#L551)
 
 - 完整五段集合与逐日覆盖直接对齐，不再降维。
-  [`validate_data_alignment.py:72`](../../modules/amc_mta/scripts/validate_data_alignment.py#L72)
+  [`validate_data_alignment.py:72`](../../../../modules/amc_mta/scripts/validate_data_alignment.py#L72)
 
 **样例与发布验证**
 
 - 样例按互动类型写入唯一计费类型与成本归属。
-  [`generate_simulated_amazon_ads_report.py:102`](../../modules/amc_mta/scripts/generate_simulated_amazon_ads_report.py#L102)
+  [`generate_simulated_amazon_ads_report.py:102`](../../../../modules/amc_mta/scripts/generate_simulated_amazon_ads_report.py#L102)
 
 - 流水线只认 Markov、Shapley 两份五段主产物。
-  [`run_pipeline.py:103`](../../modules/amc_mta/run_pipeline.py#L103)
+  [`run_pipeline.py:103`](../../../../modules/amc_mta/run_pipeline.py#L103)
 
 - 端到端验证五段输出、成本唯一性与守恒。
-  [`test_amc_mta_end_to_end.py:36`](../../modules/amc_mta/tests/test_amc_mta_end_to_end.py#L36)
+  [`test_amc_mta_end_to_end.py:36`](../../../../modules/amc_mta/tests/test_amc_mta_end_to_end.py#L36)

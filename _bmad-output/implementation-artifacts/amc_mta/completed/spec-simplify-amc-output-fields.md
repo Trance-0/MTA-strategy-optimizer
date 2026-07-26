@@ -84,31 +84,31 @@ context:
 **输出契约**
 
 - 从三个公开 schema 掌握 14/13/14 精简边界。
-  [`model_comparison.py:49`](../../modules/amc_mta/src/model_comparison.py#L49)
+  [`model_comparison.py:49`](../../../../modules/amc_mta/src/model_comparison.py#L49)
 
 - 查看触点、摘要和推荐结果如何共用三项可靠性。
-  [`model_comparison.py:562`](../../modules/amc_mta/src/model_comparison.py#L562)
+  [`model_comparison.py:562`](../../../../modules/amc_mta/src/model_comparison.py#L562)
 
 **零 outcome 与模型角色**
 
 - 真实 outcome 总量决定正式 share 是否为空。
-  [`model_comparison.py:584`](../../modules/amc_mta/src/model_comparison.py#L584)
+  [`model_comparison.py:584`](../../../../modules/amc_mta/src/model_comparison.py#L584)
 
 - 混合夹具保护非零 outcome 的合法零份额。
-  [`test_model_comparison.py:615`](../../modules/amc_mta/tests/test_model_comparison.py#L615)
+  [`test_model_comparison.py:615`](../../../../modules/amc_mta/tests/test_model_comparison.py#L615)
 
 **禁用字段与端到端保护**
 
 - 负向契约阻止旧治理字段重新进入 schema。
-  [`test_model_comparison.py:240`](../../modules/amc_mta/tests/test_model_comparison.py#L240)
+  [`test_model_comparison.py:240`](../../../../modules/amc_mta/tests/test_model_comparison.py#L240)
 
 - 完整流水线校验正式三文件不含重复字段。
-  [`test_amc_mta_end_to_end.py:299`](../../modules/amc_mta/tests/test_amc_mta_end_to_end.py#L299)
+  [`test_amc_mta_end_to_end.py:299`](../../../../modules/amc_mta/tests/test_amc_mta_end_to_end.py#L299)
 
 **当前事实源**
 
 - 治理说明集中记录精简字段和解释边界。
-  [`model-comparison-governance.md:59`](../../modules/amc_mta/docs/model-comparison-governance.md#L59)
+  [`model-comparison-governance.md:59`](../../../../modules/amc_mta/docs/model-comparison-governance.md#L59)
 
 - 使用说明给出三份正式结果的消费方式。
-  [`usage.md:70`](../../modules/amc_mta/docs/usage.md#L70)
+  [`usage.md:70`](../../../../modules/amc_mta/docs/usage.md#L70)

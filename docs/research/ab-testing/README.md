@@ -5,4 +5,4 @@
 1. [Controlled Experiments on the Web: Survey and Practical Guide](Controlled%20Experiments%20on%20the%20Web%20Survey%20and%20Practical%20Guide.pdf)
 2. [Online Controlled Experiments at Large Scale](Online%20Controlled%20Experiments%20at%20Large%20Scale.pdf)
 
-当前归因结果不是因果增量结论；模型边界见 [AMC MTA 能力评价](../../amc-mta-capability-assessment.md)。
+当前归因结果不是因果增量结论；模型边界见 [AMC MTA 能力评价](../../amc_mta/amc-mta-capability-assessment.md)。

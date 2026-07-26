@@ -47,7 +47,7 @@ context:
 - `modules/mta/{README.md,docs/}` -- 修复不存在压缩包及原始/派生数据角色说明。
 - `docs/` -- 修复 Amazon、研究目录和产品说明中的失效引用与矛盾表述。
 - `design-artifacts/` -- 删除未开展阶段占位，修复并公开决策日志路径。
-- `_bmad-output/implementation-artifacts/` -- 删除被取代或失效记录，保留有效实现证据。
+- `_bmad-output/implementation-artifacts/amc_mta/` -- 删除被取代或失效记录，保留有效实现证据。
 - `log.md` -- 清除空日期段、修复断句并记录本轮整理。
 
 ## Tasks & Acceptance
@@ -85,10 +85,10 @@ context:
 **工作区结构**
 
 - 从统一入口理解清理后的目录边界和内容导航。
-  [`README.md:5`](../../README.md#L5)
+  [`README.md:5`](../../../../README.md#L5)
 
 - 设计目录只保留已经形成的产品决策材料。
-  [`design-artifacts/README.md:1`](../../design-artifacts/README.md#L1)
+  [`design-artifacts/README.md:1`](../../../../design-artifacts/README.md#L1)
 
 - BMad 索引只展示有效规格与延期事项。
   [`README.md:1`](../README.md#L1)
@@ -96,35 +96,35 @@ context:
 **AMC 数据闭环**
 
 - 概念事件夹具确定性复现现有匿名聚合路径。
-  [`amc_touchpoint_events_sample.csv:1`](../../modules/amc_mta/data/simulated/amc_touchpoint_events_sample.csv#L1)
+  [`amc_touchpoint_events_sample.csv:1`](../../../../modules/amc_mta/data/simulated/amc_touchpoint_events_sample.csv#L1)
 
 - 模块入口明确五份输出及其不可自动预算状态。
-  [`README.md:16`](../../modules/amc_mta/README.md#L16)
+  [`README.md:16`](../../../../modules/amc_mta/README.md#L16)
 
 - 端到端测试逐字段验证存储路径可复现。
-  [`test_amc_mta_end_to_end.py:64`](../../modules/amc_mta/tests/test_amc_mta_end_to_end.py#L64)
+  [`test_amc_mta_end_to_end.py:64`](../../../../modules/amc_mta/tests/test_amc_mta_end_to_end.py#L64)
 
 - 边界测试锁定精确14天和多购买不复用语义。
-  [`test_amc_path_builder.py:84`](../../modules/amc_mta/tests/test_amc_path_builder.py#L84)
+  [`test_amc_path_builder.py:84`](../../../../modules/amc_mta/tests/test_amc_path_builder.py#L84)
 
 **治理与资料边界**
 
 - 正式AMC输出可追踪，其他模块输出仍保持可再生。
-  [`.gitignore:41`](../../.gitignore#L41)
+  [`.gitignore:41`](../../../../.gitignore#L41)
 
 - 决策日志同步当前campaign与AMC两类样例状态。
-  [`decision-log.md:4`](../../design-artifacts/A-Product-Brief/decision-log.md#L4)
+  [`decision-log.md:4`](../../../../design-artifacts/amc_mta/A-Product-Brief/decision-log.md#L4)
 
 - 数据限制只在两类路径证据都缺失时降级。
-  [`addendum.md:55`](../../design-artifacts/A-Product-Brief/addendum.md#L55)
+  [`addendum.md:55`](../../../../design-artifacts/amc_mta/A-Product-Brief/addendum.md#L55)
 
 - 研究资料与模块运行样例保持物理分区。
-  [`README.md:9`](../../docs/research/README.md#L9)
+  [`README.md:9`](../../../../docs/research/README.md#L9)
 
 **维护记录**
 
 - 工作日志记录本轮清理和AMC样例恢复。
-  [`log.md:8`](../../log.md#L8)
+  [`log.md:8`](../../../../log.md#L8)
 
 - 延期清单只保留仍未解决的工程与模型问题。
-  [`deferred-work.md:1`](deferred-work.md#L1)
+  [`deferred-work.md:1`](../deferred/deferred-work.md#L1)

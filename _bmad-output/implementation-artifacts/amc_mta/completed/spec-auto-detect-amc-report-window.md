@@ -81,26 +81,26 @@ Ads 提供每日成本网格，是窗口权威；事件可能合法包含窗口�
 **正式入口与发布**
 
 - 数据驱动入口串联自动窗口、临时构建和六文件统一发布。
-  [`run_pipeline.py:151`](../../modules/amc_mta/run_pipeline.py#L151)
+  [`run_pipeline.py:151`](../../../../modules/amc_mta/run_pipeline.py#L151)
 
 - 目标旁暂存支持跨文件系统，并在发布失败时恢复旧结果。
-  [`run_pipeline.py:32`](../../modules/amc_mta/run_pipeline.py#L32)
+  [`run_pipeline.py:32`](../../../../modules/amc_mta/run_pipeline.py#L32)
 
 **输入契约**
 
 - Ads 日期网格决定窗口，并严格校验连续性和每日触点集合。
-  [`validate_data_alignment.py:86`](../../modules/amc_mta/scripts/validate_data_alignment.py#L86)
+  [`validate_data_alignment.py:86`](../../../../modules/amc_mta/scripts/validate_data_alignment.py#L86)
 
 - 独立路径入口在写入前完成窗口推断和完整数据对齐。
-  [`build_amc_path_report.py:28`](../../modules/amc_mta/scripts/build_amc_path_report.py#L28)
+  [`build_amc_path_report.py:28`](../../../../modules/amc_mta/scripts/build_amc_path_report.py#L28)
 
 - 窗口外转化明确失败，避免新增数据被静默裁剪。
-  [`amc_path_builder.py:189`](../../modules/amc_mta/src/amc_path_builder.py#L189)
+  [`amc_path_builder.py:189`](../../../../modules/amc_mta/src/amc_path_builder.py#L189)
 
 **失败保护测试**
 
 - 空数据、越界转化和零路径均保持六份旧产物不变。
-  [`test_auto_report_window.py:179`](../../modules/amc_mta/tests/test_auto_report_window.py#L179)
+  [`test_auto_report_window.py:179`](../../../../modules/amc_mta/tests/test_auto_report_window.py#L179)
 
 - 输入别名与嵌套输出路径在执行前被拒绝。
-  [`test_auto_report_window.py:309`](../../modules/amc_mta/tests/test_auto_report_window.py#L309)
+  [`test_auto_report_window.py:309`](../../../../modules/amc_mta/tests/test_auto_report_window.py#L309)

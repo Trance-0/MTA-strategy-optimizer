@@ -7,7 +7,7 @@ baseline_commit: '734ff73b4f2c3e841fedee33311a2eecf704d888'
 context:
   - '{project-root}/modules/amc_mta/docs/amc-data-requirements.md'
   - '{project-root}/modules/amc_mta/docs/model-comparison-governance.md'
-  - '{project-root}/_bmad-output/implementation-artifacts/deferred-work.md'
+  - '{project-root}/_bmad-output/implementation-artifacts/amc_mta/deferred/deferred-work.md'
 ---
 
 <frozen-after-approval reason="human-owned intent — do not modify unless human renegotiates">
@@ -42,7 +42,7 @@ context:
 - `data/README.md` -- 删除不再成立的共享数据占位。
 - `design-artifacts/README.md`, `docs/product/` -- 将广义平台内容标为历史愿景。
 - `docs/research/` -- 分类资料相关性并修复旧运行路径。
-- `docs/index.md`, `docs/amc-mta-architecture.md`, `docs/amc-mta-capability-assessment.md` -- 新增当前事实源、架构与成熟度评价。
+- `docs/index.md`, `docs/amc_mta/amc-mta-architecture.md`, `docs/amc_mta/amc-mta-capability-assessment.md` -- 新增当前事实源、架构与成熟度评价。
 - `docs/project-scan-report.json`, `log.md` -- 完成全量扫描状态与整理记录。
 
 ## Tasks & Acceptance
@@ -79,37 +79,37 @@ context:
 **当前项目边界**
 
 - 根入口先明确唯一正式能力及不可自动决策边界。
-  [`README.md:3`](../../README.md#L3)
+  [`README.md:3`](../../../../README.md#L3)
 
 - 文档入口定义当前、研究和历史材料的权威层级。
-  [`index.md:17`](../../docs/index.md#L17)
+  [`index.md:17`](../../../../docs/index.md#L17)
 
 - 模块索引只保留 AMC MTA 运行入口。
-  [`modules/README.md:7`](../../modules/README.md#L7)
+  [`modules/README.md:7`](../../../../modules/README.md#L7)
 
 **能力与方法评价**
 
 - 总体评价区分 Demo 完成度和生产就绪度。
-  [`amc-mta-capability-assessment.md:3`](../../docs/amc-mta-capability-assessment.md#L3)
+  [`amc-mta-capability-assessment.md:3`](../../../../docs/amc_mta/amc-mta-capability-assessment.md#L3)
 
 - 样例结果明确绑定当前输入、运行命令和证据阻断。
-  [`amc-mta-capability-assessment.md:62`](../../docs/amc-mta-capability-assessment.md#L62)
+  [`amc-mta-capability-assessment.md:62`](../../../../docs/amc_mta/amc-mta-capability-assessment.md#L62)
 
 - 架构文档解释单模块数据流与真实 AMC 边界。
-  [`amc-mta-architecture.md:3`](../../docs/amc-mta-architecture.md#L3)
+  [`amc-mta-architecture.md:3`](../../../../docs/amc_mta/amc-mta-architecture.md#L3)
 
 - 模型语义区分 Markov removal 与 Path-level Shapley。
-  [`amc-mta-architecture.md:76`](../../docs/amc-mta-architecture.md#L76)
+  [`amc-mta-architecture.md:76`](../../../../docs/amc_mta/amc-mta-architecture.md#L76)
 
 **历史与研究分层**
 
 - 研究原件按核心方法、平台、验证和背景分级。
-  [`research/README.md:1`](../../docs/research/README.md#L1)
+  [`research/README.md:1`](../../../../docs/research/README.md#L1)
 
 - 历史设计入口防止未实现平台愿景被误读。
-  [`design-artifacts/README.md:3`](../../design-artifacts/README.md#L3)
+  [`design-artifacts/README.md:3`](../../../../design-artifacts/README.md#L3)
 
 **审计与验证**
 
 - 扫描报告记录基线、工作区状态和复验命令。
-  [`project-scan-report.json:13`](../../docs/project-scan-report.json#L13)
+  [`project-scan-report.json:13`](../../../../docs/project-scan-report.json#L13)

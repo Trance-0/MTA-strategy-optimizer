@@ -69,21 +69,21 @@ context:
 **注释生成与读取**
 
 - 路径生成入口固定把九项说明写在业务数据之前。
-  [`build_amc_path_report.py:27`](../../modules/amc_mta/scripts/build_amc_path_report.py#L27)
+  [`build_amc_path_report.py:27`](../../../../modules/amc_mta/scripts/build_amc_path_report.py#L27)
 
 - 两套说明定义集中管理，避免生成与解析发生漂移。
-  [`amc_mta_attribution.py:22`](../../modules/amc_mta/src/amc_mta_attribution.py#L22)
+  [`amc_mta_attribution.py:22`](../../../../modules/amc_mta/src/amc_mta_attribution.py#L22)
 
 - 只精确匹配完整说明行，避免误删中文业务数据。
-  [`amc_mta_attribution.py:83`](../../modules/amc_mta/src/amc_mta_attribution.py#L83)
+  [`amc_mta_attribution.py:83`](../../../../modules/amc_mta/src/amc_mta_attribution.py#L83)
 
 **回归保护**
 
 - 验证流水线重建后第二行说明仍可正确跳过。
-  [`test_amc_mta_end_to_end.py:76`](../../modules/amc_mta/tests/test_amc_mta_end_to_end.py#L76)
+  [`test_amc_mta_end_to_end.py:76`](../../../../modules/amc_mta/tests/test_amc_mta_end_to_end.py#L76)
 
 - 验证任意全中文合法数据不会被错误过滤。
-  [`test_amc_mta_end_to_end.py:90`](../../modules/amc_mta/tests/test_amc_mta_end_to_end.py#L90)
+  [`test_amc_mta_end_to_end.py:90`](../../../../modules/amc_mta/tests/test_amc_mta_end_to_end.py#L90)
 
 **Results (2026-07-14):**
 - 单元测试：56/56 通过。

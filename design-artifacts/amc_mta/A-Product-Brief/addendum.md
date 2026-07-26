@@ -1,8 +1,8 @@
 # Addendum: 模型与技术补充
 
 > 历史愿景：本文是早期平台技术建议，不是当前代码契约。当前 AMC MTA 的实际模型
-> 语义、输入和限制见[架构说明](../../docs/amc-mta-architecture.md)与
-> [数据契约](../../modules/amc_mta/docs/amc-data-requirements.md)。
+> 语义、输入和限制见[架构说明](../../../docs/amc_mta/amc-mta-architecture.md)与
+> [数据契约](../../../modules/amc_mta/docs/amc-data-requirements.md)。
 
 ## 1. 推荐模型结构
 

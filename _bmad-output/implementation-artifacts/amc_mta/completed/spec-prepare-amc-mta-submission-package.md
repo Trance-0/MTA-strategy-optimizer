@@ -43,7 +43,7 @@ context:
 - `modules/amc_mta/outputs/attribution/` -- 五份正式输出。
 - `modules/amc_mta/SUBMISSION_MANIFEST.md` -- 必交、选交、不提交内容及验收状态。
 - `design-artifacts/` -- 历史产品愿景和设计追溯附件。
-- `_bmad-output/implementation-artifacts/` -- 已完成规格与延期事项。
+- `_bmad-output/implementation-artifacts/amc_mta/` -- 已完成规格与延期事项。
 
 ## Tasks & Acceptance
 
@@ -92,29 +92,29 @@ context:
 **核心提交入口**
 
 - 从唯一提交入口理解范围、运行方式和材料导航。
-  [`README.md:1`](../../modules/amc_mta/README.md#L1)
+  [`README.md:1`](../../../../modules/amc_mta/README.md#L1)
 
 - 核对核心、选交和不提交内容及最终验收状态。
-  [`SUBMISSION_MANIFEST.md:1`](../../modules/amc_mta/SUBMISSION_MANIFEST.md#L1)
+  [`SUBMISSION_MANIFEST.md:1`](../../../../modules/amc_mta/SUBMISSION_MANIFEST.md#L1)
 
 **数据流与结果解释**
 
 - 通过独立图像查看输入、双模型、可靠性和输出关系。
-  [`amc-mta-data-flow.svg:1`](../../modules/amc_mta/docs/assets/amc-mta-data-flow.svg#L1)
+  [`amc-mta-data-flow.svg:1`](../../../../modules/amc_mta/docs/assets/amc-mta-data-flow.svg#L1)
 
 - 阅读不内嵌流程图的完整文字使用说明。
-  [`amc-mta-complete-guide.md:1`](../../modules/amc_mta/docs/amc-mta-complete-guide.md#L1)
+  [`amc-mta-complete-guide.md:1`](../../../../modules/amc_mta/docs/amc-mta-complete-guide.md#L1)
 
 - 按正确顺序理解五份输出及字段限制。
-  [`output-reference.md:1`](../../modules/amc_mta/docs/output-reference.md#L1)
+  [`output-reference.md:1`](../../../../modules/amc_mta/docs/output-reference.md#L1)
 
 **辅助材料边界**
 
 - 确认历史产品愿景不冒充当前实现。
-  [`design-artifacts/README.md:1`](../../design-artifacts/README.md#L1)
+  [`design-artifacts/README.md:1`](../../../../design-artifacts/README.md#L1)
 
 - 检查完成规格、当前整理和延期事项导航。
   [`implementation-artifacts/README.md:1`](README.md#L1)
 
 - 查看本轮审阅发现但不阻塞提交的模型边界。
-  [`deferred-work.md:15`](deferred-work.md#L15)
+  [`deferred-work.md:15`](../deferred/deferred-work.md#L15)

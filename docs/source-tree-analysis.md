@@ -104,4 +104,4 @@ _bmad-output/
 
 新增或移动文件必须遵循[工作区文件位置管理](workspace-file-management.md)。承担导航
 职责的多文件或核心研究子目录统一用 `README.md` 作为入口；历史模型功能说明现位于
-`design-artifacts/A-Product-Brief/`，不再与当前产品介绍混放。
+`design-artifacts/amc_mta/A-Product-Brief/`，不再与当前产品介绍或 ML Predict 设计产物混放。

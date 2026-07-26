@@ -14,8 +14,9 @@
 - [组件与资产清单](component-inventory.md)
 - [开发与验证指南](development-guide.md)
 - [全量文件清单](workspace-file-inventory.json)
-- [AMC MTA 架构](amc-mta-architecture.md)
-- [AMC MTA 能力评价](amc-mta-capability-assessment.md)
+- [AMC MTA 工作区文档](amc_mta/README.md)
+- [AMC MTA 架构](amc_mta/amc-mta-architecture.md)
+- [AMC MTA 能力评价](amc_mta/amc-mta-capability-assessment.md)
 - [AMC MTA 项目介绍](product/amc-mta/project-introduction.md)
 - [项目扫描状态](project-scan-report.json)
 
@@ -32,5 +33,6 @@
 - [产品文档状态](product/README.md)
 - [历史设计产物](../design-artifacts/README.md)
 - [研究资料分级索引](research/README.md)
+- [Campaign 数据关系与 Paid Search 最细效果粒度](research/campaign-data-hierarchy.md)
 
 历史愿景和研究快照用于追溯，不覆盖当前模块的代码、数据契约和治理规范。

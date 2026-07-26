@@ -143,7 +143,7 @@ Shapley 被用作参照，以判断结果是否过度依赖顺序与 removal 假
 8. 多进程并发发布缺少锁；并发读取者仍可能短暂看到混合文件版本。
 9. 尚无 package、依赖锁定和 CI，脚本依赖本地路径注入。
 
-完整工程问题见[延期事项](../_bmad-output/implementation-artifacts/deferred-work.md)。
+完整工程问题见[延期事项](../../_bmad-output/implementation-artifacts/amc_mta/deferred/deferred-work.md)。
 
 ## 推荐实施顺序
 

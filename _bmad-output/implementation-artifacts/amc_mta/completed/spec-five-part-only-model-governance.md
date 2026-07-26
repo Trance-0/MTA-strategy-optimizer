@@ -42,7 +42,7 @@ context:
 - `modules/amc_mta/tests/test_model_comparison.py` -- 父级诊断测试及比较行数、字段契约测试。
 - `modules/amc_mta/tests/test_amc_mta_end_to_end.py` -- 五份产物、摘要行数和样例指标回归。
 - `modules/amc_mta/outputs/attribution/` -- 需要重建的三份治理 CSV。
-- `modules/amc_mta/README.md`、`modules/amc_mta/docs/`、`docs/amc-mta-*.md` -- 当前输出与治理说明。
+- `modules/amc_mta/README.md`、`modules/amc_mta/docs/`、`docs/amc_mta/` -- 当前输出与治理说明。
 
 ## Tasks & Acceptance
 
@@ -68,7 +68,7 @@ context:
 - `python3 -m unittest discover -s modules/amc_mta/tests -p 'test*.py'` -- expected: 全部测试通过。
 - `python3 modules/amc_mta/run_pipeline.py` -- expected: 五份输出确定性重建。
 - `python3 modules/amc_mta/scripts/validate_data_alignment.py` -- expected: 17 个五段触点和 61 天范围对齐。
-- `rg -n 'FOUR_PART|parent_touchpoint|parent_support_level|parent_difference_level|INTERACTION_ALLOCATION|PARENT_TOUCHPOINT|PARENT_AGGREGATE|TOUCHPOINT_DIVERGENCE' modules/amc_mta/src modules/amc_mta/scripts modules/amc_mta/outputs modules/amc_mta/README.md modules/amc_mta/docs README.md docs/amc-mta-architecture.md docs/amc-mta-capability-assessment.md docs/component-inventory.md docs/development-guide.md docs/index.md docs/source-tree-analysis.md` -- expected: 当前实现、输出和现行说明无残留；测试使用这些字面量锁定禁用契约，因此不纳入残留扫描。
+- `rg -n 'FOUR_PART|parent_touchpoint|parent_support_level|parent_difference_level|INTERACTION_ALLOCATION|PARENT_TOUCHPOINT|PARENT_AGGREGATE|TOUCHPOINT_DIVERGENCE' modules/amc_mta/src modules/amc_mta/scripts modules/amc_mta/outputs modules/amc_mta/README.md modules/amc_mta/docs README.md docs/amc_mta/amc-mta-architecture.md docs/amc_mta/amc-mta-capability-assessment.md docs/component-inventory.md docs/development-guide.md docs/index.md docs/source-tree-analysis.md` -- expected: 当前实现、输出和现行说明无残留；测试使用这些字面量锁定禁用契约，因此不纳入残留扫描。
 
 **Results:**
 - 75 项测试通过。
@@ -84,32 +84,32 @@ context:
 **五粒度治理实现**
 
 - 从完整五段路径直接重算支持度，不再接受其他治理粒度。
-  [`model_comparison.py:440`](../../modules/amc_mta/src/model_comparison.py#L440)
+  [`model_comparison.py:440`](../../../../modules/amc_mta/src/model_comparison.py#L440)
 
 - 逐触点比较只生成五段字段、五段原因码和阻断状态。
-  [`model_comparison.py:612`](../../modules/amc_mta/src/model_comparison.py#L612)
+  [`model_comparison.py:612`](../../../../modules/amc_mta/src/model_comparison.py#L612)
 
 - 每个 outcome 仅追加一行 `FIVE_PART` 整体摘要。
-  [`model_comparison.py:699`](../../modules/amc_mta/src/model_comparison.py#L699)
+  [`model_comparison.py:699`](../../../../modules/amc_mta/src/model_comparison.py#L699)
 
 - 比较与推荐 CSV 契约已删除全部父级字段。
-  [`model_comparison.py:47`](../../modules/amc_mta/src/model_comparison.py#L47)
+  [`model_comparison.py:47`](../../../../modules/amc_mta/src/model_comparison.py#L47)
 
 **输出与阅读契约**
 
 - 治理文档明确所有指标和状态只使用完整五段键。
-  [`model-comparison-governance.md:256`](../../modules/amc_mta/docs/model-comparison-governance.md#L256)
+  [`model-comparison-governance.md:256`](../../../../modules/amc_mta/docs/model-comparison-governance.md#L256)
 
 - 使用说明锁定 51/3/51 行结构和五段摘要。
-  [`usage.md:69`](../../modules/amc_mta/docs/usage.md#L69)
+  [`usage.md:69`](../../../../modules/amc_mta/docs/usage.md#L69)
 
 - 正式摘要产物仅保留三个五段 outcome。
-  [`amc_mta_model_comparison_summary.csv:1`](../../modules/amc_mta/outputs/attribution/amc_mta_model_comparison_summary.csv#L1)
+  [`amc_mta_model_comparison_summary.csv:1`](../../../../modules/amc_mta/outputs/attribution/amc_mta_model_comparison_summary.csv#L1)
 
 **契约回归**
 
 - 端到端校验全行字段、五段键、互动类型和原因码。
-  [`test_amc_mta_end_to_end.py:217`](../../modules/amc_mta/tests/test_amc_mta_end_to_end.py#L217)
+  [`test_amc_mta_end_to_end.py:217`](../../../../modules/amc_mta/tests/test_amc_mta_end_to_end.py#L217)
 
 - 单路径曝光与点击支持度始终独立计算。
-  [`test_model_comparison.py:100`](../../modules/amc_mta/tests/test_model_comparison.py#L100)
+  [`test_model_comparison.py:100`](../../../../modules/amc_mta/tests/test_model_comparison.py#L100)

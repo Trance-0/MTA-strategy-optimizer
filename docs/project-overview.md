@@ -48,7 +48,7 @@ Demo**的状态。
 主要限制是使用模拟数据、没有滚动窗口与重采样稳定性证据、没有真实 AMC
 隐私执行验证，也不具备因果增量或自动预算能力。
 
-详细评价见 [AMC MTA 能力评价](amc-mta-capability-assessment.md)。
+详细评价见 [AMC MTA 能力评价](amc_mta/amc-mta-capability-assessment.md)。
 
 ### 项目知识：`docs`
 

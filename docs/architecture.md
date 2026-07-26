@@ -31,7 +31,7 @@ AMC MTA 是纯 Python 标准库数据流水线：
 5. 生成触点差异、整体摘要和治理推荐。
 
 没有网络请求、数据库、API 端点、认证、后台任务或 UI。详细算法与数据流见
-[AMC MTA 架构](amc-mta-architecture.md)。
+[AMC MTA 架构](amc_mta/amc-mta-architecture.md)。
 
 ## 知识架构
 

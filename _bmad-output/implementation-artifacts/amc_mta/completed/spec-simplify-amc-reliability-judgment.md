@@ -108,35 +108,35 @@ CSV 检查确认 17/17/51/3/51 行、摘要与触点布尔 AND 一致、`0/51` �
 **三项可靠性契约**
 
 - 从统一合成函数理解三项 AND、状态和固定原因顺序。
-  [`model_comparison.py:541`](../../modules/amc_mta/src/model_comparison.py#L541)
+  [`model_comparison.py:541`](../../../../modules/amc_mta/src/model_comparison.py#L541)
 
 - 核对最低数据门槛与严格十进制模型一致性门槛。
-  [`model_comparison.py:490`](../../modules/amc_mta/src/model_comparison.py#L490)
+  [`model_comparison.py:490`](../../../../modules/amc_mta/src/model_comparison.py#L490)
 
 - 查看触点判断及摘要逐字段 AND 的完整数据流。
-  [`model_comparison.py:721`](../../modules/amc_mta/src/model_comparison.py#L721)
+  [`model_comparison.py:721`](../../../../modules/amc_mta/src/model_comparison.py#L721)
 
 **输出契约**
 
 - 确认五个字段只追加到三份双模型 schema。
-  [`model_comparison.py:49`](../../modules/amc_mta/src/model_comparison.py#L49)
+  [`model_comparison.py:49`](../../../../modules/amc_mta/src/model_comparison.py#L49)
 
 - 查看业务说明、零 outcome 和结果文件边界。
-  [`touchpoint-reliability-guide.md:14`](../../modules/amc_mta/docs/touchpoint-reliability-guide.md#L14)
+  [`touchpoint-reliability-guide.md:14`](../../../../modules/amc_mta/docs/touchpoint-reliability-guide.md#L14)
 
 - 核对旧治理指标与可靠性判断的隔离规则。
-  [`model-comparison-governance.md:208`](../../modules/amc_mta/docs/model-comparison-governance.md#L208)
+  [`model-comparison-governance.md:208`](../../../../modules/amc_mta/docs/model-comparison-governance.md#L208)
 
 **边界与回归**
 
 - 覆盖精确门槛、非法数值和固定原因真值表。
-  [`test_model_comparison.py:166`](../../modules/amc_mta/tests/test_model_comparison.py#L166)
+  [`test_model_comparison.py:166`](../../../../modules/amc_mta/tests/test_model_comparison.py#L166)
 
 - 复现旧摘要误判并验证逐触点 AND 修正。
-  [`test_model_comparison.py:366`](../../modules/amc_mta/tests/test_model_comparison.py#L366)
+  [`test_model_comparison.py:366`](../../../../modules/amc_mta/tests/test_model_comparison.py#L366)
 
 - 验证原始十进制微超界不会被 float 吞掉。
-  [`test_model_comparison.py:451`](../../modules/amc_mta/tests/test_model_comparison.py#L451)
+  [`test_model_comparison.py:451`](../../../../modules/amc_mta/tests/test_model_comparison.py#L451)
 
 - 端到端确认正式 CSV、透传、重建与原子保护。
-  [`test_amc_mta_end_to_end.py:157`](../../modules/amc_mta/tests/test_amc_mta_end_to_end.py#L157)
+  [`test_amc_mta_end_to_end.py:157`](../../../../modules/amc_mta/tests/test_amc_mta_end_to_end.py#L157)
