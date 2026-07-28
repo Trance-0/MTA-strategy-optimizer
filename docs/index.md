@@ -1,9 +1,10 @@
 # 全工作区文档总索引
 
 本索引覆盖整个工作区：当前业务实现、项目知识、研究原件、历史产物以及本地
-Agent/BMad 工具链。项目只有一个正式业务实现：
-[`modules/amc_mta`](../modules/amc_mta/README.md)；`.agents` 和 `_bmad`
-是开发工具，不是营销产品功能。
+Agent/BMad 工具链。当前业务链路由
+[`modules/amc_mta`](../modules/amc_mta/README.md) 和
+[`modules/mta_strategy_recommender`](../modules/mta_strategy_recommender/README.md)
+组成；`.agents` 和 `_bmad` 是开发工具，不是营销产品功能。
 
 ## 推荐阅读顺序
 
@@ -24,12 +25,14 @@ Agent/BMad 工具链。项目只有一个正式业务实现：
 | 顶层架构与分区 | [工作区级架构](architecture.md) |
 | 文件位置与移动规则 | [工作区文件位置管理](workspace-file-management.md) |
 | 可运行模块与命令 | [`modules/amc_mta/README.md`](../modules/amc_mta/README.md) |
+| Campaign Group 初始策略 | [策略初始化器](../modules/mta_strategy_recommender/README.md) |
+| 初始策略计划与契约 | [整体模型计划](../modules/mta_strategy_recommender/docs/model-plan.md) |
 | 输入字段、路径和成本规则 | [AMC MTA 数据契约](../modules/amc_mta/docs/amc-data-requirements.md) |
 | Markov/Shapley 差距与决策状态 | [模型比较治理规范](../modules/amc_mta/docs/model-comparison-governance.md) |
 | 单触点结果可靠性 | [触点可靠性指南](../modules/amc_mta/docs/touchpoint-reliability-guide.md) |
 | 代码结构与数据流 | [AMC MTA 架构](amc_mta/amc-mta-architecture.md) |
 | 项目成熟度与后续优先级 | [AMC MTA 能力评价](amc_mta/amc-mta-capability-assessment.md) |
-| Campaign 数据层级 | [Campaign 数据关系与 Paid Search 最细效果粒度](research/campaign-data-hierarchy.md) |
+| Campaign Group 数据层级 | [Campaign Group 顶层数据关系与最细效果粒度](research/campaign-data-hierarchy.md) |
 | 尚未解决的 AMC MTA 技术问题 | [延期事项](../_bmad-output/implementation-artifacts/amc_mta/deferred/deferred-work.md) |
 
 权威优先级为：运行代码与测试 → 模块数据/治理契约 → 可再生产物 → 本目录的架构与
@@ -45,15 +48,22 @@ Agent/BMad 工具链。项目只有一个正式业务实现：
 ├── _bmad-output/      # 已完成规格和延期事项
 ├── design-artifacts/  # 历史产品愿景
 ├── docs/              # 当前知识、研究和全量扫描结果
-└── modules/amc_mta/   # 唯一正式业务实现
+└── modules/           # AMC MTA + Campaign Group 初始策略模块
 
 modules/amc_mta/
 ├── src/       # 路径键、路径构建、归因和模型比较
 ├── scripts/   # 独立命令行入口
-├── tests/     # 100 项自动化测试
+├── tests/     # 106 项自动化测试
 ├── data/      # 三份可复现模拟输入
 ├── outputs/   # 五份正式、可再生 CSV
 └── docs/      # 当前模块契约与使用说明
+
+modules/mta_strategy_recommender/
+├── data/      # 独立层级模拟输入与 INITIAL_SEED
+├── src/       # 层级和候选池校验
+├── scripts/   # 校验 CLI
+├── tests/     # 合同与边界测试
+└── docs/      # 模型计划
 
 docs/
 ├── index.md
@@ -71,7 +81,7 @@ docs/
   AMC MTA 项目介绍及模块文档。
 - **研究支撑**：`docs/research/mta/`、`docs/research/amazon/`。
 - **后续验证**：`docs/research/ab-testing/`。
-- **背景资料**：machine-learning、ontology、industry。
+- **背景资料**：ontology、industry。
 - **历史愿景**：`design-artifacts/`，包括
   [模型功能与关系说明](../design-artifacts/amc_mta/A-Product-Brief/model-relationship-guide.md)。
 - **历史实现记录**：`_bmad-output/implementation-artifacts/`；冻结规格记录当时意图，
@@ -80,10 +90,10 @@ docs/
 
 ## 当前验证基线
 
-截至 2026-07-20，基于当前三份模拟输入以及
+截至 2026-07-28，基于当前三份模拟输入以及
 `python3 modules/amc_mta/run_pipeline.py` 的确定性输出：
 
-- 100 项 AMC MTA 测试通过；
+- 106 项 AMC MTA 测试通过，策略初始化模块另有 19 项层级契约测试；
 - 17 个五段触点与 Amazon Ads 报告完全对齐；
 - 报告窗口为 2026-01-01 至 2026-12-31，共 365 天逐日覆盖；
 - 三项 AMC outcome 总量为 3,316 个购买用户、4,185 次购买、343,161 收入；

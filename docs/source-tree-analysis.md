@@ -9,7 +9,8 @@ marketing-roi-analysis/
 ├── .gitignore                        # 缓存、秘密和生成输出规则
 ├── .markdownlint.json                # Markdown lint 例外
 ├── modules/
-│   └── amc_mta/                      # 唯一当前业务实现
+│   ├── amc_mta/                      # 五段触点归因实现
+│   └── mta_strategy_recommender/     # Campaign Group 初始策略模块
 ├── docs/                             # 当前知识、全量扫描和外部研究
 ├── design-artifacts/                 # 历史产品愿景
 ├── _bmad-output/                     # 已完成规格和延期事项
@@ -32,7 +33,7 @@ modules/amc_mta/
 │   ├── amc_mta_attribution.py        # Markov、Shapley 与成本关联
 │   └── model_comparison.py           # 差距、支持度、三项可靠性和治理推荐
 ├── scripts/                          # 各步骤 CLI
-├── tests/                            # 6 个测试文件，100 项测试
+├── tests/                            # 6 个测试文件，106 项测试
 ├── data/simulated/                   # 3 份可复现输入
 ├── outputs/attribution/              # 5 份正式生成输出
 └── docs/                             # 数据、运行和治理契约
@@ -75,6 +76,17 @@ _bmad-output/
 └── implementation-artifacts/         # 已完成整改规格与延期事项
 ```
 
+策略初始化模块结构：
+
+```text
+modules/mta_strategy_recommender/
+├── data/simulated/                   # 1 Group、4 Campaign、候选池和 INITIAL_SEED
+├── docs/model-plan.md                # 当前模型计划
+├── src/hierarchy_validator.py        # 层级、引用、pair 和预算校验
+├── scripts/validate_simulated_hierarchy.py
+└── tests/test_hierarchy_validator.py
+```
+
 ## 安装工具区
 
 `.agents/skills/` 是面向 Codex 的扁平技能安装目录。119 个一级技能目录均包含
@@ -104,4 +116,4 @@ _bmad-output/
 
 新增或移动文件必须遵循[工作区文件位置管理](workspace-file-management.md)。承担导航
 职责的多文件或核心研究子目录统一用 `README.md` 作为入口；历史模型功能说明现位于
-`design-artifacts/amc_mta/A-Product-Brief/`，不再与当前产品介绍或 ML Predict 设计产物混放。
+`design-artifacts/amc_mta/A-Product-Brief/`，不与当前产品介绍混放。

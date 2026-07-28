@@ -4,7 +4,8 @@
 
 | 模块 | 用途 | 状态 | 入口 |
 | --- | --- | --- | --- |
-| AMC MTA | 基于 AMC 匿名聚合路径进行五段互动粒度归因和双模型诊断 | 唯一正式实现 | [amc_mta/README.md](amc_mta/README.md) |
+| AMC MTA | 基于 AMC 匿名聚合路径进行五段互动粒度归因和双模型诊断 | 可运行归因模块 | [amc_mta/README.md](amc_mta/README.md) |
+| MTA Strategy Initializer | 以 Campaign Group 为顶层生成 Ad Group、Keyword/SKU 和预算初始点 | 数据契约、模拟样例与校验已实现 | [mta_strategy_recommender/README.md](mta_strategy_recommender/README.md) |
 
 ## 目录约定
 
@@ -19,5 +20,9 @@ modules/<module>/
 ```
 
 当前架构、能力评价和阅读顺序见[文档总索引](../docs/index.md)。外部论文和参考资料放在 [`docs/research/`](../docs/research/)，不与模块运行输入混放。
+
+两个模块的边界是：AMC MTA 输出 Group 范围内的五段触点证据；策略初始化器采用
+`Campaign Group → Campaign → Ad Group → Keyword/SKU`，且只产生
+`INITIAL_SEED`，不承担后续优化。
 
 已删除的旧通用 MTA 模块不属于当前项目范围，不恢复、不评价，也不作为新开发入口。

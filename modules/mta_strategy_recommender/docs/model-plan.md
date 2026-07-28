@@ -1,0 +1,245 @@
+# MTA-Informed Strategy Initializer 整体模型计划
+
+## 1. 定位与边界
+
+本模型的目标是以 Campaign Group 为一次推荐单元，将 AMC MTA 触点归因转换为可解释的初始投放方案；当前阶段先落实数据契约、样例和校验：
+
+```text
+Campaign Group
+└── Campaign（固定 4 个）
+    └── Ad Group（模型推荐数量与策略）
+        ├── Keyword
+        └── SKU
+```
+
+`ad_product` 只保存在 Campaign 记录中。Ad Group 通过 `campaign_id` 继承该属性，不能保存另一份可能冲突的值。
+
+模型负责：
+
+- 综合 `converted_users`、`purchase_count` 和 `revenue` 三类 MTA outcome；
+- 根据候选池规模与策略差异推荐每个 Campaign 的 Ad Group 数量；
+- 为 Ad Group 分配触点策略、Keyword、SKU 和 Match Type；
+- 输出相对预算份额，存在预算基线时输出绝对预算种子；
+- 标记为 `INITIAL_SEED` 并交给优化团队。
+
+模型不负责最高 ROI、全局优化、因果增量证明、长期调参或自动执行。
+
+## 2. 初始条件
+
+一次运行必须给定：
+
+```yaml
+campaign_group:
+  campaign_group_id: CG001
+  platform: AMAZON
+  marketplace: US
+  advertiser_id: adv_001
+  currency: USD
+  candidate_pool_id: pool_2026_07
+  mta_batch_id: mta_2026_07
+
+campaigns:
+  - campaign_id: C001
+    ad_product: SPONSORED_PRODUCTS
+    targeting: MANUAL
+    status: enabled
+  - campaign_id: C002
+    ad_product: SPONSORED_BRANDS
+    targeting: MANUAL
+    status: enabled
+  - campaign_id: C003
+    ad_product: SPONSORED_DISPLAY
+    targeting: MANUAL
+    status: enabled
+  - campaign_id: C004
+    ad_product: AMAZON_DSP
+    targeting: MANUAL
+    status: enabled
+
+campaign_group_relationships:
+  - campaign_group_id: CG001
+    campaign_id: C001
+    relationship_type: MANAGED
+    status: active
+  - campaign_group_id: CG001
+    campaign_id: C002
+    relationship_type: MANAGED
+    status: active
+  - campaign_group_id: CG001
+    campaign_id: C003
+    relationship_type: MANAGED
+    status: active
+  - campaign_group_id: CG001
+    campaign_id: C004
+    relationship_type: MANAGED
+    status: active
+```
+
+当前业务规则要求恰有四个唯一 Campaign。底层 Group–Campaign 物理关系仍是 N:N；推荐运行必须校验本 Group 对这四个 Campaign 的管理范围。
+
+可选结构约束：
+
+```yaml
+ad_group_constraints:
+  min_keywords: 1
+  max_keywords: 50
+  min_skus: 1
+  max_skus: 20
+  max_ad_groups_per_campaign: 10
+  max_exploration_groups_per_campaign: 1
+```
+
+## 3. 有限候选池
+
+一次运行开始时冻结三组版本化数据：
+
+1. Keyword 候选：现有有效词、审核后的 harvesting 结果及允许的 Match Type；
+2. SKU 候选：符合 Group 范围、可售、有库存且允许搜索投放的商品；
+3. Keyword–SKU 合法组合：`EXISTING`、`VALIDATED`、受限 `EXPLORATION` 或 `BLOCKED`。
+
+模型只能从候选池选择，不能生成全量笛卡尔积。Keyword 和 SKU 并列分配到 Ad Group，每项实际分配还必须有明确合法 pairing。
+
+## 4. MTA 信号
+
+上游保持使用：
+
+- `modules/amc_mta/outputs/attribution/amc_mta_recommended_attribution.csv`
+- `modules/amc_mta/outputs/attribution/amc_markov_attribution_results.csv`
+
+MTA 五段键保持不变：
+
+```text
+AD_PRODUCT:FORMAT:PLACEMENT:CREATIVE:INTERACTION_TYPE
+```
+
+这是 Group 范围内的归因观察维度，不是业务实体树，也不携带 Campaign、Ad Group、Keyword 或 SKU ID。第一段用于把触点策略路由到相容 Campaign，但不会在业务树中新增一层。
+
+每个触点的初始优先级可按配置计算：
+
+```text
+TouchpointScore
+= w_converted × converted_user_share
++ w_purchase  × purchase_count_share
++ w_revenue   × revenue_share
+```
+
+权重表达业务偏好，不是优化目标。`interaction_type` 只能作为证据，不能直接翻译成“增加点击”等不可执行动作。
+
+## 5. 触点到 Ad Group 策略
+
+转换规则使用：
+
+```text
+Platform × Campaign 配置 × Touchpoint Dimension
+→ Control Level × Supported Action × Constraints
+```
+
+流程如下：
+
+1. 依据 Campaign 配置筛选相容 MTA 触点和 Group 候选内容；
+2. 按 Placement、Format、Creative、Keyword 意图、Match Type、SKU 相似度和策略角色形成稳定策略簇；
+3. 超过容量的簇拆分，证据不足的小簇合并或进入探索组；
+4. 每个稳定可执行簇形成一个推荐 Ad Group；
+5. 为每组分配并列的 Keyword/SKU 清单和明确 pairing。
+
+当前跨广告产品样例中的 Keyword、SKU 和 Match Type 是归一化策略分配，不是可直接提交
+给所有广告产品的原生 targeting payload。后续 adapter 必须依据 `ad_product` 映射到平台
+支持的 keyword、product、audience 或 line-item 控制项；无法映射时必须拒绝，不能自动投放。
+
+```text
+RecommendedAdGroupCount(Campaign)
+= Count(StableExecutableStrategyClusters)
+```
+
+同一 Campaign 内默认不重复分配相同 `Keyword + Match Type`。SKU 可以因不同策略出现在多个 Ad Group，但不能复制完整的 Keyword/SKU 策略。
+
+## 6. 初始预算种子
+
+预算仅用于初始化：
+
+```text
+AdGroupScore = Σ TouchpointScore
+MtaSeedShare = AdGroupScore / Σ AdGroupScore
+```
+
+有历史份额时可进行保守混合：
+
+```text
+FinalSeedShare
+= η × MtaSeedShare
++ (1 - η) × HistoricalBudgetShare
+```
+
+有绝对预算基线时：
+
+```text
+Ad Group budget seed = Group budget baseline × Ad Group group-level share
+Campaign budget seed = Σ its Ad Group budget seeds
+Group budget seed = Σ Campaign budget seeds
+```
+
+没有预算基线时，只输出相对份额和 `NO_BUDGET_BASELINE_RELATIVE_SHARES_ONLY` warning，不输出绝对金额。
+
+## 7. 输出契约
+
+```yaml
+campaign_group_id: CG001
+candidate_pool_id: pool_2026_07
+mta_batch_id: mta_2026_07
+recommendation_type: INITIAL_SEED
+handoff_status: READY_FOR_OPTIMIZATION
+is_optimized: false
+campaigns:
+  - campaign_id: C001
+    budget_seed_share: 0.45
+    recommended_ad_groups:
+      - ad_group_id: C001_AG01
+        strategy_name: high_intent_top_search
+        strategy_role: CORE_CONVERSION
+        budget_seed_share: 0.25
+        keywords:
+          - keyword_id: K001
+            match_type: EXACT
+        skus:
+          - sku_id: SKU001
+        pairings:
+          - keyword_id: K001
+            sku_id: SKU001
+            match_type: EXACT
+        source_candidate_pool_id: pool_2026_07
+        mta_evidence:
+          - touchpoint: SPONSORED_PRODUCTS:PRODUCT_AD:TOP_OF_SEARCH:UNSPECIFIED:CLICK
+            outcomes: [converted_users, purchase_count, revenue]
+        reason_codes: [RELIABLE_MTA_TOUCHPOINT, HIGH_INTENT_KEYWORD_SKU_PAIR]
+        confidence: 0.91
+```
+
+输出 Campaign 和 Ad Group 不重复保存 `ad_product`；调用方通过输入 Campaign 表获取。每项策略还应保存 MTA 来源、候选池版本、原因码和置信度。
+
+## 8. 模块结构与阶段
+
+```text
+modules/mta_strategy_recommender/
+├── data/simulated/             # 独立业务层级样例与 Group–Campaign 关系表
+├── docs/model-plan.md
+├── scripts/validate_simulated_hierarchy.py
+├── src/hierarchy_validator.py
+├── tests/test_hierarchy_validator.py
+└── README.md
+```
+
+当前阶段实现数据契约、独立样例和确定性校验。后续阶段再接入正式候选数据、MTA adapter、策略聚类与推荐生成，但仍不在本模块中实现优化器。
+
+## 9. 验收规则
+
+- 一次样例只有一个 Campaign Group 和四个唯一 Campaign；
+- 每个 Campaign 有且仅有一个非空标量 `ad_product`；
+- 每个推荐 Ad Group 归属一个已知 Campaign，且不重复保存 `ad_product`；
+- 所有 Keyword/SKU 均来自本次冻结候选池；
+- pairing 必须明确存在且不能为 `BLOCKED`；
+- Ad Group → Campaign → Campaign Group 的相对份额和绝对预算守恒；
+- 无预算基线时不得输出绝对预算；
+- 输出明确是 `INITIAL_SEED`、`READY_FOR_OPTIMIZATION` 且 `is_optimized=false`；
+- AMC MTA 五段键、17 触点、CSV schema 与正式输出保持不变。
+
+可运行样例及命令见 [模块 README](../README.md)。

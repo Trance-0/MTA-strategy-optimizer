@@ -34,7 +34,16 @@ modules/amc_mta/outputs/attribution/
 python3 -m unittest discover -s modules/amc_mta/tests -p 'test*.py'
 ```
 
-当前基线为 100 项通过。
+当前基线为 106 项通过。
+
+## 验证 Campaign Group 初始策略样例
+
+```bash
+python3 modules/mta_strategy_recommender/scripts/validate_simulated_hierarchy.py
+python3 -m unittest discover -s modules/mta_strategy_recommender/tests -p 'test_*.py'
+```
+
+该样例与 AMC MTA 输入独立，验证 `Campaign Group → Campaign → Ad Group → Keyword/SKU`、Campaign 单值 `ad_product`、候选引用、合法 pairing、预算守恒和无预算基线行为。
 
 ## 验证 BMad 配置
 
@@ -69,7 +78,7 @@ JSON/TOML: 实际配置和数据文件解析
 ## 修改原则
 
 - 新增、移动或归档文件先遵循[工作区文件位置管理](workspace-file-management.md)。
-- 当前业务能力只在 `modules/amc_mta` 中扩展。
+- 归因能力在 `modules/amc_mta` 中扩展；初始策略能力在 `modules/mta_strategy_recommender` 中扩展。
 - 输入字段、五段键或输出列变化时，同步更新代码、样例、测试和模块契约。
 - `docs/research` 的外部原件不作为运行输入。
 - `design-artifacts` 与已完成规格保持历史原文，新增状态说明而不是改写过去意图。

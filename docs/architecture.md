@@ -11,11 +11,13 @@ docs/research + design-artifacts + _bmad-output
                      │
                      ▼
 当前知识与治理层
-docs + modules/amc_mta/docs
+docs + modules/*/docs
                      │
                      ▼
-唯一业务执行层
-modules/amc_mta → generated CSV outputs
+业务执行与初始化层
+modules/amc_mta → five-part attribution evidence
+                        ↓
+modules/mta_strategy_recommender → INITIAL_SEED
 
 .agents + _bmad 为开发辅助平面，不参与归因计算
 ```
@@ -32,6 +34,10 @@ AMC MTA 是纯 Python 标准库数据流水线：
 
 没有网络请求、数据库、API 端点、认证、后台任务或 UI。详细算法与数据流见
 [AMC MTA 架构](amc_mta/amc-mta-architecture.md)。
+
+策略初始化器同样只使用 Python 标准库。它不改变 MTA 五段键，而是以 Campaign Group
+为顶层，校验四个固定 Campaign、冻结候选池和 `Ad Group → Keyword/SKU` 初始分配。
+Campaign 记录持有单值 `ad_product`，Ad Group 不重复保存该字段。
 
 ## 知识架构
 

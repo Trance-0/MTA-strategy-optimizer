@@ -1,0 +1,129 @@
+{
+  "campaign_group_id": "CG_DEMO_001",
+  "candidate_pool_id": "pool_demo_2026_07",
+  "mta_batch_id": "mta_demo_2026_07",
+  "recommendation_type": "INITIAL_SEED",
+  "handoff_status": "READY_FOR_OPTIMIZATION",
+  "is_optimized": false,
+  "budget_seed_total": 1000.0,
+  "campaigns": [
+    {
+      "campaign_id": "C_DEMO_SP",
+      "budget_seed_share": 0.45,
+      "campaign_budget_seed": 450.0,
+      "recommended_ad_groups": [
+        {
+          "ad_group_id": "C_DEMO_SP_AG_01",
+          "strategy_name": "high_intent_top_search",
+          "strategy_role": "CORE_CONVERSION",
+          "source_candidate_pool_id": "pool_demo_2026_07",
+          "mta_evidence": [{"touchpoint": "SPONSORED_PRODUCTS:PRODUCT_AD:TOP_OF_SEARCH:UNSPECIFIED:CLICK", "outcomes": ["converted_users", "purchase_count", "revenue"]}],
+          "reason_codes": ["RELIABLE_MTA_TOUCHPOINT", "HIGH_INTENT_KEYWORD_SKU_PAIR"],
+          "confidence": 0.91,
+          "budget_seed_share": 0.25,
+          "initial_daily_budget": 250.0,
+          "keywords": [{"keyword_id": "K_RUNNING_EXACT", "match_type": "EXACT"}],
+          "skus": [{"sku_id": "SKU_PEG_BLACK"}, {"sku_id": "SKU_PEG_WHITE"}],
+          "pairings": [
+            {"keyword_id": "K_RUNNING_EXACT", "sku_id": "SKU_PEG_BLACK", "match_type": "EXACT"},
+            {"keyword_id": "K_RUNNING_EXACT", "sku_id": "SKU_PEG_WHITE", "match_type": "EXACT"}
+          ]
+        },
+        {
+          "ad_group_id": "C_DEMO_SP_AG_02",
+          "strategy_name": "category_discovery",
+          "strategy_role": "EXPLORATION",
+          "source_candidate_pool_id": "pool_demo_2026_07",
+          "mta_evidence": [{"touchpoint": "SPONSORED_PRODUCTS:PRODUCT_AD:REST_OF_SEARCH:UNSPECIFIED:CLICK", "outcomes": ["converted_users", "purchase_count", "revenue"]}],
+          "reason_codes": ["RELIABLE_MTA_TOUCHPOINT", "CONTROLLED_EXPLORATION_PAIR"],
+          "confidence": 0.72,
+          "budget_seed_share": 0.20,
+          "initial_daily_budget": 200.0,
+          "keywords": [{"keyword_id": "K_DISCOVERY", "match_type": "BROAD"}],
+          "skus": [{"sku_id": "SKU_PEG_BLACK"}],
+          "pairings": [{"keyword_id": "K_DISCOVERY", "sku_id": "SKU_PEG_BLACK", "match_type": "BROAD"}]
+        }
+      ]
+    },
+    {
+      "campaign_id": "C_DEMO_SB",
+      "budget_seed_share": 0.30,
+      "campaign_budget_seed": 300.0,
+      "recommended_ad_groups": [
+        {
+          "ad_group_id": "C_DEMO_SB_AG_01",
+          "strategy_name": "brand_search",
+          "strategy_role": "CORE_CONVERSION",
+          "source_candidate_pool_id": "pool_demo_2026_07",
+          "mta_evidence": [{"touchpoint": "SPONSORED_BRANDS:COMPONENT:TOP_OF_SEARCH:IMAGE:CLICK", "outcomes": ["converted_users", "purchase_count", "revenue"]}],
+          "reason_codes": ["RELIABLE_MTA_TOUCHPOINT", "BRAND_INTENT_PAIR"],
+          "confidence": 0.90,
+          "budget_seed_share": 0.16,
+          "initial_daily_budget": 160.0,
+          "keywords": [{"keyword_id": "K_NIKE_EXACT", "match_type": "EXACT"}],
+          "skus": [{"sku_id": "SKU_PEG_BLACK"}, {"sku_id": "SKU_PEG_WHITE"}],
+          "pairings": [
+            {"keyword_id": "K_NIKE_EXACT", "sku_id": "SKU_PEG_BLACK", "match_type": "EXACT"},
+            {"keyword_id": "K_NIKE_EXACT", "sku_id": "SKU_PEG_WHITE", "match_type": "EXACT"}
+          ]
+        },
+        {
+          "ad_group_id": "C_DEMO_SB_AG_02",
+          "strategy_name": "lightweight_category",
+          "strategy_role": "ORDER_GROWTH",
+          "source_candidate_pool_id": "pool_demo_2026_07",
+          "mta_evidence": [{"touchpoint": "SPONSORED_BRANDS:DISPLAY:REST_OF_SEARCH:IMAGE:IMPRESSION", "outcomes": ["converted_users", "purchase_count", "revenue"]}],
+          "reason_codes": ["RELIABLE_MTA_TOUCHPOINT", "VALIDATED_CATEGORY_PAIR"],
+          "confidence": 0.84,
+          "budget_seed_share": 0.14,
+          "initial_daily_budget": 140.0,
+          "keywords": [{"keyword_id": "K_LIGHTWEIGHT", "match_type": "PHRASE"}],
+          "skus": [{"sku_id": "SKU_PEG_WHITE"}],
+          "pairings": [{"keyword_id": "K_LIGHTWEIGHT", "sku_id": "SKU_PEG_WHITE", "match_type": "PHRASE"}]
+        }
+      ]
+    },
+    {
+      "campaign_id": "C_DEMO_SD",
+      "budget_seed_share": 0.15,
+      "campaign_budget_seed": 150.0,
+      "recommended_ad_groups": [
+        {
+          "ad_group_id": "C_DEMO_SD_AG_01",
+          "strategy_name": "trail_product_page",
+          "strategy_role": "HIGH_VALUE",
+          "source_candidate_pool_id": "pool_demo_2026_07",
+          "mta_evidence": [{"touchpoint": "SPONSORED_DISPLAY:DISPLAY:PRODUCT_PAGE:IMAGE:CLICK", "outcomes": ["converted_users", "purchase_count", "revenue"]}],
+          "reason_codes": ["RELIABLE_MTA_TOUCHPOINT", "VALIDATED_TRAIL_PAIR"],
+          "confidence": 0.87,
+          "budget_seed_share": 0.15,
+          "initial_daily_budget": 150.0,
+          "keywords": [{"keyword_id": "K_TRAIL", "match_type": "EXACT"}],
+          "skus": [{"sku_id": "SKU_TRAIL_BLUE"}],
+          "pairings": [{"keyword_id": "K_TRAIL", "sku_id": "SKU_TRAIL_BLUE", "match_type": "EXACT"}]
+        }
+      ]
+    },
+    {
+      "campaign_id": "C_DEMO_DSP",
+      "budget_seed_share": 0.10,
+      "campaign_budget_seed": 100.0,
+      "recommended_ad_groups": [
+        {
+          "ad_group_id": "C_DEMO_DSP_AG_01",
+          "strategy_name": "premium_reach",
+          "strategy_role": "AWARENESS",
+          "source_candidate_pool_id": "pool_demo_2026_07",
+          "mta_evidence": [{"touchpoint": "AMAZON_DSP:DISPLAY:UNSPECIFIED:IMAGE:IMPRESSION", "outcomes": ["converted_users", "purchase_count", "revenue"]}],
+          "reason_codes": ["RELIABLE_MTA_TOUCHPOINT", "PREMIUM_SKU_REACH"],
+          "confidence": 0.79,
+          "budget_seed_share": 0.10,
+          "initial_daily_budget": 100.0,
+          "keywords": [{"keyword_id": "K_PREMIUM", "match_type": "PHRASE"}],
+          "skus": [{"sku_id": "SKU_VOMERO_RED"}],
+          "pairings": [{"keyword_id": "K_PREMIUM", "sku_id": "SKU_VOMERO_RED", "match_type": "PHRASE"}]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,5 @@
+campaign_group_id,campaign_id,historical_budget_share,current_daily_budget
+CG_DEMO_001,C_DEMO_SP,0.40,400.00
+CG_DEMO_001,C_DEMO_SB,0.30,300.00
+CG_DEMO_001,C_DEMO_SD,0.20,200.00
+CG_DEMO_001,C_DEMO_DSP,0.10,100.00

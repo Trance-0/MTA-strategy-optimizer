@@ -18,6 +18,8 @@ AD_PRODUCT:FORMAT:PLACEMENT:CREATIVE:INTERACTION_TYPE
 
 `INTERACTION_TYPE` 只能是 `IMPRESSION` 或 `CLICK`。在 `amc_mta/` 目录运行 `python3 -B scripts/validate_data_alignment.py` 可校验账户、币种、窗口、五段触点集合和逐日覆盖。
 
+该文件是 Campaign Group 范围内用于归因成本关联的五段汇总，不是 Campaign/Ad Group 管理结构样例。五段键中的 `AD_PRODUCT` 是归因观察维度；业务树仍是 `Campaign Group → Campaign → Ad Group → Keyword/SKU`，且 `ad_product` 只保存于 Campaign。层级样例位于 [`../../mta_strategy_recommender/data/simulated/`](../../mta_strategy_recommender/data/simulated/)。
+
 ## 成本与平台转化归属
 
 - `CPC` 正成本只允许在 `CLICK` 行。

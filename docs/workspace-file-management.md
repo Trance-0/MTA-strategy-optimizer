@@ -9,7 +9,8 @@
 | 分区 | 唯一职责 | 允许内容 |
 | --- | --- | --- |
 | 根目录 | 工作区入口和少量全局配置 | `README.md`、忽略/格式规则，以及人工维护的 `log.md` |
-| `modules/amc_mta/` | 唯一正式业务实现 | 源码、脚本、测试、模块输入、五份正式输出和模块契约 |
+| `modules/amc_mta/` | 五段触点归因实现 | 源码、脚本、测试、模块输入、五份正式输出和模块契约 |
+| `modules/mta_strategy_recommender/` | Campaign Group 初始策略模块 | 模型计划、独立模拟数据、校验器和测试 |
 | `docs/` | 当前项目知识与外部研究 | 总索引、架构、评价、管理规则、扫描结果、当前产品介绍和研究原件 |
 | `design-artifacts/` | 历史产品愿景 | Product Brief、PRD、模型设想、补充和决策记录 |
 | `_bmad-output/` | 工作流追溯 | 已批准规格、实现状态和延期事项 |
@@ -24,6 +25,8 @@
 - 根入口固定为 `README.md`，项目知识主入口固定为 `docs/index.md`。
 - AMC MTA 运行入口固定为 `modules/amc_mta/run_pipeline.py`，模块说明固定为
   `modules/amc_mta/README.md`，模块契约固定在 `modules/amc_mta/docs/`。
+- 策略初始化器入口固定为 `modules/mta_strategy_recommender/README.md`，其独立层级
+  样例固定在 `modules/mta_strategy_recommender/data/simulated/`。
 - 承担目录导航职责的多文件或核心研究子目录用 `README.md` 作为入口；单份背景原件可由
   上级研究索引直接链接。Amazon 原件索引固定为
   `docs/research/amazon/research/README.md`。
@@ -71,6 +74,7 @@
 - 清单文件自身；
 - `_bmad/custom/*.user.toml` 匹配的 ignored 个人覆盖；
 - 受保护的 `log.md`。
+- 当前任务明确保护的 `docs/系统架构图-07.drawio`。
 
 清单按路径排序，生成后应与磁盘进行双向对账。`docs/project-scan-report.json` 记录
 扫描范围、最终计数、验证结果和上述排除项；两者都是派生状态，不替代源码或契约。

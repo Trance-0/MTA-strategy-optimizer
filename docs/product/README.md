@@ -5,6 +5,7 @@
 
 | 文档 | 状态 | 内容 |
 | --- | --- | --- |
-| [AMC MTA 项目介绍](amc-mta/project-introduction.md) | 当前 | 唯一正式实现的目标、输入输出和边界 |
+| [AMC MTA 项目介绍](amc-mta/project-introduction.md) | 当前 | 可运行归因模块的目标、输入输出和边界 |
+| [策略初始化器](../../modules/mta_strategy_recommender/README.md) | 当前 | Campaign Group 顶层初始策略契约、模拟数据与校验 |
 
 当前事实源见[文档总索引](../index.md)。历史 Product Brief、PRD、模型关系说明与决策记录见[设计产物索引](../../design-artifacts/README.md)，研究资料见[分级索引](../research/README.md)。

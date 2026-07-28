@@ -1,0 +1,5 @@
+campaign_group_id,campaign_id,relationship_type,status
+CG_DEMO_001,C_DEMO_SP,MANAGED,active
+CG_DEMO_001,C_DEMO_SB,MANAGED,active
+CG_DEMO_001,C_DEMO_SD,MANAGED,active
+CG_DEMO_001,C_DEMO_DSP,MANAGED,active

@@ -10,7 +10,9 @@
 | 模型治理 | `modules/amc_mta/src/model_comparison.py` | 五段支持度、差距、三项可靠性、整体指标和推荐状态 |
 | 完整入口 | `modules/amc_mta/run_pipeline.py` | 重建输入派生物与五份输出 |
 | 命令行脚本 | `modules/amc_mta/scripts/` | 分步生成、归因、比较与校验 |
-| 测试 | `modules/amc_mta/tests/` | 100 项单元、契约和端到端验证 |
+| 测试 | `modules/amc_mta/tests/` | 106 项单元、契约和端到端验证 |
+| Campaign Group 层级校验 | `modules/mta_strategy_recommender/src/hierarchy_validator.py` | 校验四个 Campaign、候选引用、合法 pairing 和预算守恒 |
+| 初始策略样例 | `modules/mta_strategy_recommender/data/simulated/` | 展示 Group→Campaign→Ad Group→Keyword/SKU 与 `INITIAL_SEED` |
 
 ## 数据资产
 
@@ -18,7 +20,8 @@
 | --- | ---: | --- |
 | 模拟输入 CSV | 3 | `modules/amc_mta/data/simulated/` |
 | 正式输出 CSV | 5 | `modules/amc_mta/outputs/attribution/` |
-| 外部 PDF | 8 | `docs/research/` |
+| 策略初始化模拟文件 | 9 | `modules/mta_strategy_recommender/data/simulated/` |
+| 外部 PDF | 7 | `docs/research/` |
 | 外部 DOCX | 2 | `docs/research/amazon/research/` |
 | Amazon Ads OpenAPI JSON | 1 | `docs/research/amazon/research/` |
 | 研究说明与笔记 | 多份 | `docs/research/**` |
@@ -29,9 +32,7 @@
 - 文件位置与移动规则：`docs/workspace-file-management.md`。
 - 当前业务架构与契约：`docs/amc_mta/`、`modules/amc_mta/docs/`。
 - AMC MTA 历史产品愿景：`design-artifacts/amc_mta/A-Product-Brief/`。
-- ML Predict 设计产物：`design-artifacts/ML_predict/`。
 - 已完成实现规格：`_bmad-output/implementation-artifacts/amc_mta/`。
-- ML Predict 实现产物：`_bmad-output/implementation-artifacts/ML_predict/`。
 - 全量机器清单：`docs/workspace-file-inventory.json`。
 - 研究分级与原件索引：`docs/research/README.md` 及各子目录 `README.md`。
 

@@ -1,0 +1,5 @@
+campaign_id,campaign_name,ad_product,targeting,status
+C_DEMO_SP,Running Shoes Search,SPONSORED_PRODUCTS,MANUAL,enabled
+C_DEMO_SB,Running Shoes Brand,SPONSORED_BRANDS,MANUAL,enabled
+C_DEMO_SD,Running Shoes Display,SPONSORED_DISPLAY,MANUAL,enabled
+C_DEMO_DSP,Running Shoes Reach,AMAZON_DSP,MANUAL,enabled

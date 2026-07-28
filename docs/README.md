@@ -18,6 +18,8 @@
 - [AMC MTA 架构](amc_mta/amc-mta-architecture.md)
 - [AMC MTA 能力评价](amc_mta/amc-mta-capability-assessment.md)
 - [AMC MTA 项目介绍](product/amc-mta/project-introduction.md)
+- [Campaign Group 顶层数据关系](research/campaign-data-hierarchy.md)
+- [MTA Strategy Initializer](../modules/mta_strategy_recommender/README.md)
 - [项目扫描状态](project-scan-report.json)
 
 ## 契约与运行
@@ -27,12 +29,13 @@
 - [运行说明](../modules/amc_mta/docs/usage.md)
 - [模型比较治理](../modules/amc_mta/docs/model-comparison-governance.md)
 - [触点可靠性指南](../modules/amc_mta/docs/touchpoint-reliability-guide.md)
+- [初始策略模型计划](../modules/mta_strategy_recommender/docs/model-plan.md)
 
 ## 历史与研究
 
 - [产品文档状态](product/README.md)
 - [历史设计产物](../design-artifacts/README.md)
 - [研究资料分级索引](research/README.md)
-- [Campaign 数据关系与 Paid Search 最细效果粒度](research/campaign-data-hierarchy.md)
+- [Campaign Group 顶层数据关系与最细效果粒度](research/campaign-data-hierarchy.md)
 
 历史愿景和研究快照用于追溯，不覆盖当前模块的代码、数据契约和治理规范。
