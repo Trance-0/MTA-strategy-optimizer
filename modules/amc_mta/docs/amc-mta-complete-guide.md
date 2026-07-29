@@ -11,15 +11,18 @@ Path-level Shapley 的购买用户、订单次数和收入归因，再生成触�
 两者不平均，也不能互相替代。
 
 真实 AMC 应在 clean room 内完成事件排序、路径构建和隐私聚合，只导出满足隐私
-门槛的聚合路径。本地概念事件仅用于演示，不能当作真实 AMC 用户级导出格式。
+门槛的聚合路径。本地合成用户事件和概念事件仅用于演示，不能当作真实AMC用户级
+导出格式。
 
 ## 2. 输入与数据位置
 
 默认演示输入位于 [`../data/simulated/`](../data/simulated/README.md)：
 
-- 概念事件：只用于本地构建聚合路径；
+- 合成用户事件：仅供本地模拟，是其他动态样例的统一来源；
+- 匿名概念事件：从主表按路径模板聚合，只用于本地构建路径；
 - AMC 聚合路径：归因算法的直接输入；
-- Amazon Ads 报告：提供逐日五段表现和成本。
+- Amazon Ads 报告：从主表聚合逐日五段表现和成本；
+- 触点实体聚合：连接历史Campaign/Ad Group/Keyword/SKU，供后续策略使用。
 
 一次运行只接受一个 marketplace、广告账户和币种。Ads 日期必须连续、每天的
 五段触点集合一致，且日期与触点组合唯一。流程从 Ads 最早和最晚 `reportDate`
@@ -101,7 +104,7 @@ python3 -B scripts/validate_data_alignment.py
 python3 -B -m unittest discover -s tests -p 'test_*.py'
 ```
 
-预期结果为 106 项测试通过；该命令不会发布或覆盖正式 CSV。
+预期结果为107项测试通过；该命令不会发布或覆盖正式 CSV。
 
 ## 7. 输出阅读顺序
 

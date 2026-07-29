@@ -26,11 +26,11 @@ modules/mta_strategy_recommender → INITIAL_SEED
 
 AMC MTA 是纯 Python 标准库数据流水线：
 
-1. 概念事件样例构建 AMC 风格匿名聚合路径；
-2. 严格校验五段触点键和路径结果；
-3. 独立运行 Markov 与 Path-level Shapley；
-4. 关联五段 Amazon Ads 成本与平台指标；
-5. 生成触点差异、整体摘要和治理推荐。
+1. 本地模拟先从用户事件主表派生匿名概念事件、Ads日报和触点实体聚合；
+2. 概念事件构建AMC风格匿名聚合路径并严格校验五段键；
+3. 独立运行Markov与Path-level Shapley；
+4. 关联同源的五段Amazon Ads成本与平台指标；
+5. 生成触点差异、整体摘要和治理推荐；实体聚合留给后续策略初始化器使用。
 
 没有网络请求、数据库、API 端点、认证、后台任务或 UI。详细算法与数据流见
 [AMC MTA 架构](amc_mta/amc-mta-architecture.md)。
@@ -90,7 +90,7 @@ docs、design-artifacts、_bmad-output 或源码改动
 - 当前业务输入和输出均为仓库内模拟 CSV。
 - `.env`、本地覆盖、缓存和普通生成输出由 `.gitignore` 隔离。
 - 未发现实际 API key、私钥或凭证；技能知识文件中的 password/token 字样为示例。
-- AMC 概念事件只用于本地演示，不代表真实 AMC 可导出用户级事件。
+- 合成用户事件主表和AMC概念事件只用于本地演示，不代表真实AMC可导出用户级事件。
 - 没有生产部署、密钥管理、数据保留或 AMC 隐私执行实现。
 
 ## 架构缺口

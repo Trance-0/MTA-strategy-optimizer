@@ -1,4 +1,4 @@
 outcome,report_start_date,report_end_date,max_touchpoint_gap_days,touchpoint_count,tvd,spearman_rho,top_k_overlap_rate,calculation_valid,data_support_sufficient,models_consistent,reliability_status,reliability_reason
-converted_users,2026-01-01,2026-12-31,14,17,0.014066,0.740650047,0.4,true,true,true,RELIABLE,ALL_CRITERIA_PASSED
-purchase_count,2026-01-01,2026-12-31,14,17,0.013891,0.776211059,0.6,true,true,true,RELIABLE,ALL_CRITERIA_PASSED
-revenue,2026-01-01,2026-12-31,14,17,0.014266,0.796568627,0.4,true,true,true,RELIABLE,ALL_CRITERIA_PASSED
+converted_users,2026-01-01,2026-03-31,14,17,0.019451,0.889025305,0.6,true,true,true,RELIABLE,ALL_CRITERIA_PASSED
+purchase_count,2026-01-01,2026-03-31,14,17,0.01975,0.911097657,0.6,true,true,true,RELIABLE,ALL_CRITERIA_PASSED
+revenue,2026-01-01,2026-03-31,14,17,0.020585,0.931372549,0.8,true,true,true,RELIABLE,ALL_CRITERIA_PASSED

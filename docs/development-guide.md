@@ -34,7 +34,7 @@ modules/amc_mta/outputs/attribution/
 python3 -m unittest discover -s modules/amc_mta/tests -p 'test*.py'
 ```
 
-当前基线为 106 项通过。
+当前基线为107项通过。
 
 ## 验证 Campaign Group 初始策略样例
 

@@ -41,11 +41,17 @@ python3 -B scripts/build_amc_path_report.py \
   --output-file path/to/amc_path_report.csv
 ```
 
-重新生成确定性的 Amazon Ads 模拟数据：
+从同一用户事件主表原子重建十项模拟与归因产物：
 
 ```bash
-python3 -B scripts/generate_simulated_amazon_ads_report.py
+python3 -B scripts/regenerate_simulated_dataset.py
 ```
+
+也可以单独运行 `generate_simulated_synthetic_user_events.py`、
+`generate_simulated_amc_touchpoint_events.py`、
+`generate_simulated_amazon_ads_report.py` 或
+`generate_simulated_touchpoint_entity_aggregate.py` 检查某层数据；正式样例应使用完整
+再生成命令，以保证所有层来自同一批事件。
 
 只对已有聚合路径运行归因：
 
@@ -114,7 +120,7 @@ Markov 是正式归因展示口径，Shapley 用于判断模型敏感性。旧�
 `[low,high]`；零 outcome 为空。非零 outcome 下两个 share 都为零时，合法区间为
 `[0.0,0.0]`。
 
-当前全年样例为 `51 RELIABLE / 0 UNRELIABLE`。结果只能解释为
+当前90天样例为 `51 RELIABLE / 0 UNRELIABLE`。结果只能解释为
 当前窗口中的探索性归因，不能据此自动调整预算。
 
 单个触点的归因是否可靠、应该如何解释，见

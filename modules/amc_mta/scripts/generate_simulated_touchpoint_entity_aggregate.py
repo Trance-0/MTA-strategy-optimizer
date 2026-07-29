@@ -10,15 +10,20 @@ sys.path.insert(0, str(AMC_MTA_ROOT))
 sys.path.insert(0, str(AMC_MTA_ROOT / "src"))
 
 from amc_mta_attribution import write_csv_atomic  # noqa: E402
-from config import AMC_TOUCHPOINT_EVENTS_FILE, REPORT_END_DATE, REPORT_START_DATE  # noqa: E402
+from config import (  # noqa: E402
+    AMC_TOUCHPOINT_ENTITY_AGGREGATE_FILE,
+    REPORT_END_DATE,
+    REPORT_START_DATE,
+    SIMULATED_PRIVACY_MIN_USERS,
+)
 from synthetic_event_pipeline import (  # noqa: E402
-    AMC_EVENT_FIELDS,
-    derive_amc_touchpoint_events,
+    ENTITY_AGGREGATE_FIELDS,
+    derive_touchpoint_entity_aggregate,
     generate_synthetic_user_events,
 )
 
 
-FIELDS = AMC_EVENT_FIELDS
+FIELDS = ENTITY_AGGREGATE_FIELDS
 
 
 def generate_rows(
@@ -27,14 +32,21 @@ def generate_rows(
     source = list(source_rows) if source_rows is not None else generate_synthetic_user_events(
         REPORT_START_DATE, REPORT_END_DATE
     )
-    return derive_amc_touchpoint_events(source)
+    return derive_touchpoint_entity_aggregate(
+        source,
+        REPORT_START_DATE,
+        REPORT_END_DATE,
+        SIMULATED_PRIVACY_MIN_USERS,
+    )
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(
-        description="Generate anonymous AMC concept events from synthetic user events."
+        description="Generate privacy-safe touchpoint/entity aggregates."
     )
-    parser.add_argument("--output", type=Path, default=AMC_TOUCHPOINT_EVENTS_FILE)
+    parser.add_argument(
+        "--output", type=Path, default=AMC_TOUCHPOINT_ENTITY_AGGREGATE_FILE
+    )
     args = parser.parse_args()
     rows = generate_rows()
     write_csv_atomic(args.output, rows, FIELDS)

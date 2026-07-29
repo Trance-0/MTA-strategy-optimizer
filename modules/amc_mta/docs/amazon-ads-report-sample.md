@@ -1,6 +1,9 @@
 # Amazon Ads 五段成本样例
 
-`data/simulated/amazon_ads_report_sample.csv` 模拟与 AMC 路径粒度一致的 Amazon Ads 表现和成本数据。样例窗口为完整自然年 `2026-01-01` 至 `2026-12-31`，共 365 天、6,205 条数据。CSV 第一行是字段名，第二行是中文字段说明，读取程序会自动跳过说明行。
+`data/simulated/amazon_ads_report_sample.csv` 是从
+`synthetic_user_events_sample.csv` 逐日聚合的 Amazon Ads 风格表现和成本数据。样例窗口
+为 `2026-01-01` 至 `2026-03-31`，共90天、1,530条数据。CSV第一行是字段名，
+第二行是中文字段说明，读取程序会自动跳过说明行。
 
 ## 字段与关联键
 
@@ -27,4 +30,7 @@ AD_PRODUCT:FORMAT:PLACEMENT:CREATIVE:INTERACTION_TYPE
 - 非计费互动行成本为 0，不复制基础广告的成本。
 - 平台 `purchases`、`sales` 只归属 `CLICK` 行。
 
-Amazon Ads 的汇总指标不用于生成或推断 AMC 用户路径。输出中的 `reported_purchases` 是平台报告值，不会替代 AMC 的订单口径。效率指标直接按同一五段行计算；成本为 0 时为空。
+样例中的曝光、点击和成本直接聚合用户事件；平台 `purchases`、`sales` 由每个journey
+最后一个符合条件的CLICK派生。Amazon Ads汇总表本身仍不用于反推AMC路径；两者只是
+共享同一模拟事实源。`reported_purchases`不会替代AMC outcome口径。效率指标按同一
+五段行计算；成本为0时为空。

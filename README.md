@@ -32,7 +32,9 @@ AMC MTA 使用五段互动键区分广告产品、形式、位置、创意和曝
 ## 当前能力
 
 ```text
-概念事件样例（仅本地演示）
+合成用户事件主表（仅本地演示）
+          ↓
+匿名概念事件 + Ads 日报 + 触点实体聚合
           ↓
 AMC 风格匿名聚合五段路径
           ↓
@@ -47,12 +49,12 @@ Markov + Path-level Shapley
 Campaign → 推荐 Ad Group → Keyword/SKU
 ```
 
-- 三份模拟输入：概念事件、匿名聚合路径、Amazon Ads 成本与表现。
+- 一份模拟事实源及四类派生数据：匿名概念事件、聚合路径、Amazon Ads 日报和触点实体聚合。
 - 五段键：`AD_PRODUCT:FORMAT:PLACEMENT:CREATIVE:INTERACTION_TYPE`。
 - 三个独立 outcome：购买用户、购买次数和收入。
 - 五份正式输出：两份 18 列模型结果，以及 14/13/15 列的触点比较、整体摘要和推荐结果。
 - 当前样例有 17 个五段触点；推荐文件包含 51 条触点/outcome 记录。
-- 三份双模型产物直接给出三项可靠性标准；全年样例为 `51 RELIABLE / 0 UNRELIABLE`。
+- 三份双模型产物直接给出三项可靠性标准；当前90天样例为 `51 RELIABLE / 0 UNRELIABLE`。
 - 推荐结果还按可靠性给出最终值：可靠时使用 Markov 正式 share，不可靠时使用
   Markov/Shapley share 的升序闭区间；不输出自动化许可字段。
 - 独立策略样例包含一个 Campaign Group、四个 Campaign、冻结候选池、六个推荐
@@ -73,8 +75,8 @@ python3 -m unittest discover -s modules/mta_strategy_recommender/tests -p 'test_
 预期结果：
 
 - 流水线从 Ads 输入自动识别日期窗口，重建匿名聚合路径并发布五份契约输出；
-- 17 个 AMC 与 Amazon Ads 五段触点、365 天覆盖和账户/币种范围严格对齐；
-- 106 项 AMC MTA 测试和 19 项策略层级测试通过；
+- 17 个 AMC 与 Amazon Ads 五段触点、90 天覆盖和账户/币种范围严格对齐；
+- 107 项 AMC MTA 测试和 19 项策略层级测试通过；
 - 当前 51 条推荐记录均为 `RELIABLE`。
 
 ## 项目结构

@@ -1,8 +1,11 @@
 # AMC MTA 提交入口
 
-基于 Amazon Marketing Cloud（AMC）匿名聚合路径的归因流程。默认示例从本地概念事件生成区分曝光与点击的聚合路径，再运行 Markov、Shapley，并按五段互动键关联 Amazon Ads 指标与成本，计算 ROI、ROAS 和 CPA。
+基于 Amazon Marketing Cloud（AMC）匿名聚合路径的归因流程。默认示例先从一份仅供
+模拟的用户事件主表派生匿名概念事件、Amazon Ads 日报和实体聚合，再生成区分曝光与
+点击的路径，运行 Markov、Shapley，并按五段互动键关联成本和效率指标。
 
-> `amc_touchpoint_events_sample.csv` 只用于演示路径构建；真实 AMC 应在 clean room 内处理事件，只导出满足隐私门槛的聚合结果。
+> `synthetic_user_events_sample.csv` 和 `amc_touchpoint_events_sample.csv` 只用于演示
+> 数据整合与路径构建；真实 AMC 应在 clean room 内处理事件，只导出满足隐私门槛的聚合结果。
 
 本模块只用于归因分析，不承担预算分配、投放优化或自动执行。
 
@@ -40,7 +43,7 @@ outputs/attribution/amc_mta_recommended_attribution.csv
 ```
 
 前两份是两个模型各自的五字段主结果；后三份分别提供“触点数 × 3 个 outcome”的
-诊断、三个 outcome 的整体摘要，以及同样“触点数 × 3”的归因推荐记录。当前全年
+诊断、三个 outcome 的整体摘要，以及同样“触点数 × 3”的归因推荐记录。当前90天
 样例为 17 个触点，所以诊断和推荐各 51 行。三份双模型产物
 均直接给出“计算有效、数据支撑充分、模型一致”三个布尔值及二元可靠性结果；
 三项全真才是 `RELIABLE`。摘要分别 AND 聚合同一 outcome 全部触点的三个布尔
@@ -64,7 +67,7 @@ outputs/attribution/amc_mta_recommended_attribution.csv
 - [运行方式](docs/usage.md)：命令、参数和输出。
 - [单触点归因可靠性判断](docs/touchpoint-reliability-guide.md)：按计算有效、数据支撑充分、模型一致三个标准判断归因结果。
 - [Amazon Ads 样例](docs/amazon-ads-report-sample.md)：成本表及关联键。
-- [模拟数据](data/simulated/README.md)：三个样例文件的角色。
+- [模拟数据](data/simulated/README.md)：用户事件主表及四类派生产物的角色。
 - AMC 平台背景研究与项目管理材料属于原项目外部资料，不是本独立交付包的运行依赖，
   也不随 `amc_mta/` 提交。
 

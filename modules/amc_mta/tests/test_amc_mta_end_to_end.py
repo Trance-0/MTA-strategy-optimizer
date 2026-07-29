@@ -4,7 +4,9 @@ import csv
 import sys
 import tempfile
 import unittest
-from datetime import date
+from dataclasses import replace
+from datetime import date, datetime, timedelta, timezone
+from decimal import Decimal
 from pathlib import Path
 from unittest.mock import patch
 
@@ -22,6 +24,7 @@ from build_amc_path_report import build_amc_path_report  # noqa: E402
 from config import (  # noqa: E402
     AMAZON_ADS_REPORT_FILE,
     AMC_REPORT_FILE,
+    AMC_TOUCHPOINT_ENTITY_AGGREGATE_FILE,
     AMC_TOUCHPOINT_EVENTS_FILE,
     MARKOV_OUTPUT_FILE,
     MODEL_COMPARISON_SUMMARY_FILE,
@@ -29,9 +32,11 @@ from config import (  # noqa: E402
     RECOMMENDED_ATTRIBUTION_FILE,
     REPORT_END_DATE,
     REPORT_START_DATE,
+    SIMULATED_MAX_USER_EVENT_ROWS,
+    SIMULATED_PRIVACY_MIN_USERS,
     SHAPLEY_OUTPUT_FILE,
+    SYNTHETIC_USER_EVENTS_FILE,
 )
-import generate_simulated_amazon_ads_report as ads_generator  # noqa: E402
 from generate_simulated_amazon_ads_report import FIELDS, generate_file, generate_rows  # noqa: E402
 from generate_simulated_amc_touchpoint_events import generate_rows as generate_event_rows  # noqa: E402
 from regenerate_simulated_dataset import regenerate  # noqa: E402
@@ -45,7 +50,23 @@ from model_comparison import (  # noqa: E402
     TOUCHPOINT_COMPARISON_FIELDS,
 )
 from touchpoint_key import canonicalize_amc_touchpoint_key  # noqa: E402
-from simulated_touchpoints import TOUCHPOINT_CATALOG, TOUCHPOINT_KEYS  # noqa: E402
+from simulated_touchpoints import (  # noqa: E402
+    TOUCHPOINT_CATALOG,
+    TOUCHPOINT_KEYS,
+    validate_touchpoint_catalog,
+)
+import synthetic_event_pipeline as synthetic_pipeline  # noqa: E402
+from synthetic_event_pipeline import (  # noqa: E402
+    AMC_EVENT_FIELDS,
+    ENTITY_AGGREGATE_FIELDS,
+    SYNTHETIC_EVENT_FIELDS,
+    derive_amazon_ads_rows,
+    derive_amc_touchpoint_events,
+    derive_touchpoint_entity_aggregate,
+    generate_synthetic_user_events,
+    validate_derivations,
+    validate_synthetic_user_events,
+)
 
 
 RELIABILITY_FIELDS = {
@@ -58,66 +79,232 @@ RELIABILITY_FIELDS = {
 
 
 class EndToEndSampleTests(unittest.TestCase):
-    def test_ads_subrange_and_cross_year_use_fixed_epoch(self) -> None:
-        full = generate_rows(date(2026, 1, 1), date(2026, 12, 31))
-        sliced = generate_rows(date(2026, 4, 3), date(2026, 4, 9))
-        self.assertEqual(sliced, [row for row in full if "2026-04-03" <= row["reportDate"] <= "2026-04-09"])
-        cross_year = generate_rows(date(2025, 12, 31), date(2026, 1, 1))
-        self.assertEqual(cross_year[-17:], generate_rows(date(2026, 1, 1), date(2026, 1, 1)))
-        self.assertEqual(len({(row["reportDate"], row["normalizedTouchpoint"]) for row in full}), 365 * 17)
+    def test_ads_short_window_is_deterministic_and_has_complete_grid(self) -> None:
+        start = date(2026, 1, 1)
+        end = date(2026, 1, 7)
+        first = generate_rows(start, end)
+        second = generate_rows(start, end)
+        self.assertEqual(first, second)
+        self.assertEqual(len(first), 7 * 17)
+        self.assertEqual(
+            len({(row["reportDate"], row["normalizedTouchpoint"]) for row in first}),
+            7 * 17,
+        )
 
-    def test_annual_event_sample_is_complete_and_reproducible(self) -> None:
+    def test_anonymous_event_sample_is_derived_and_reproducible(self) -> None:
         rows = generate_event_rows()
         stored = read_csv(AMC_TOUCHPOINT_EVENTS_FILE)
         self.assertEqual([{key: str(row.get(key, "")) for key in stored[0]} for row in rows], stored)
-        self.assertEqual(len(rows), 520)
-        self.assertEqual(len({row["journey_id"] for row in rows}), 146)
+        source = read_csv(SYNTHETIC_USER_EVENTS_FILE)
+        expected = derive_amc_touchpoint_events(source)
+        self.assertEqual(
+            [{field: str(row.get(field, "")) for field in AMC_EVENT_FIELDS} for row in expected],
+            stored,
+        )
+        journey_ids = {row["journey_id"] for row in rows}
+        self.assertGreater(len(rows), len(journey_ids))
         conversions = [row for row in rows if row["event_type"] == "CONVERSION"]
-        self.assertEqual(len(conversions), 158)
-        self.assertEqual({row["event_time"][:7] for row in conversions}, {f"2026-{month:02d}" for month in range(1, 13)})
-        annual_conversions = [
-            row for row in conversions if row["journey_id"].startswith("annual_")
-        ]
-        monthly = {
-            f"2026-{month:02d}": sum(
-                row["event_time"].startswith(f"2026-{month:02d}")
-                for row in annual_conversions
-            )
-            for month in range(1, 13)
-        }
-        self.assertEqual(set(monthly.values()), {13})
+        self.assertEqual(len(conversions), len(journey_ids))
+        self.assertEqual(
+            {row["event_time"][:7] for row in conversions},
+            {"2026-01", "2026-02", "2026-03"},
+        )
+        self.assertTrue(all("synthetic_user_id" not in row for row in stored))
 
-    def test_annual_journeys_accept_once_and_boundary_fixtures_are_rejected(self) -> None:
+    def test_user_event_source_reconciles_entities_ads_and_privacy_boundary(self) -> None:
+        generated = generate_synthetic_user_events(REPORT_START_DATE, REPORT_END_DATE)
+        stored_source = read_csv(SYNTHETIC_USER_EVENTS_FILE)
+        self.assertEqual(
+            [
+                {field: str(row.get(field, "")) for field in SYNTHETIC_EVENT_FIELDS}
+                for row in generated
+            ],
+            stored_source,
+        )
+        self.assertLessEqual(len(stored_source), SIMULATED_MAX_USER_EVENT_ROWS)
+        user_count = len({row["synthetic_user_id"] for row in stored_source})
+        journey_count = len({row["journey_instance_id"] for row in stored_source})
+        self.assertLess(user_count, journey_count)
+        outcomes = [row for row in stored_source if row["event_type"] == "OUTCOME"]
+        self.assertTrue(any(row["converted"] == "1" for row in outcomes))
+        self.assertTrue(any(row["converted"] == "0" for row in outcomes))
+
+        touch_rows = [row for row in stored_source if row["event_type"] == "TOUCHPOINT"]
+        search_products = {"SPONSORED_PRODUCTS", "SPONSORED_BRANDS"}
+        self.assertTrue(
+            all(
+                bool(row["keyword_id"]) == (row["ad_product"] in search_products)
+                and bool(row["match_type"]) == (row["ad_product"] in search_products)
+                for row in touch_rows
+            )
+        )
+        invalid_source = list(stored_source)
+        invalid_index = next(
+            index
+            for index, row in enumerate(invalid_source)
+            if row["event_type"] == "TOUCHPOINT" and row["ad_product"] == "AMAZON_DSP"
+        )
+        invalid_source[invalid_index] = {
+            **invalid_source[invalid_index],
+            "keyword_id": "K_ILLEGAL",
+            "match_type": "EXACT",
+        }
+        with self.assertRaisesRegex(ValueError, "cannot carry keyword fields"):
+            validate_synthetic_user_events(
+                invalid_source, REPORT_START_DATE, REPORT_END_DATE
+            )
+
+        mismatched_user = list(stored_source)
+        journey_id = stored_source[0]["journey_instance_id"]
+        journey_indexes = [
+            index
+            for index, row in enumerate(mismatched_user)
+            if row["journey_instance_id"] == journey_id
+        ]
+        mismatched_user[journey_indexes[0]] = {
+            **mismatched_user[journey_indexes[0]],
+            "synthetic_user_id": "SYN_U99999",
+        }
+        with self.assertRaisesRegex(ValueError, "rows must belong to one user"):
+            validate_synthetic_user_events(
+                mismatched_user, REPORT_START_DATE, REPORT_END_DATE
+            )
+
+        amc_rows = read_csv(AMC_TOUCHPOINT_EVENTS_FILE)
+        ads_rows = read_csv(AMAZON_ADS_REPORT_FILE)
+        entity_rows = read_csv(AMC_TOUCHPOINT_ENTITY_AGGREGATE_FILE)
+        expected_entities = derive_touchpoint_entity_aggregate(
+            stored_source,
+            REPORT_START_DATE,
+            REPORT_END_DATE,
+            SIMULATED_PRIVACY_MIN_USERS,
+        )
+        self.assertEqual(
+            [
+                {field: str(row.get(field, "")) for field in ENTITY_AGGREGATE_FIELDS}
+                for row in expected_entities
+            ],
+            entity_rows,
+        )
+        self.assertTrue(
+            all(int(row["unique_users"]) >= SIMULATED_PRIVACY_MIN_USERS for row in entity_rows)
+        )
+        self.assertTrue(
+            all(
+                int(row["assisted_converted_users"]) <= int(row["unique_users"])
+                for row in entity_rows
+            )
+        )
+        source_cost = sum(
+            (Decimal(row["cost"]) for row in stored_source), Decimal("0")
+        )
+        self.assertEqual(
+            source_cost,
+            sum((Decimal(row["cost"]) for row in ads_rows), Decimal("0")),
+        )
+        self.assertEqual(
+            source_cost,
+            sum((Decimal(row["cost"]) for row in entity_rows), Decimal("0")),
+        )
+
+        # Independently reconstruct the platform-reported outcome rule from the
+        # master events: the last eligible click receives purchases and sales.
+        journeys: dict[str, list[dict[str, str]]] = {}
+        for row in stored_source:
+            journeys.setdefault(row["journey_instance_id"], []).append(row)
+
+        def parse_time(value: str) -> datetime:
+            parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+            return parsed if parsed.tzinfo else parsed.replace(tzinfo=timezone.utc)
+
+        expected_reported_purchases = 0
+        expected_reported_sales = Decimal("0")
+        for journey_rows in journeys.values():
+            outcome = next(row for row in journey_rows if row["event_type"] == "OUTCOME")
+            if outcome["converted"] != "1":
+                continue
+            outcome_time = parse_time(outcome["event_time"])
+            eligible_clicks = [
+                row
+                for row in journey_rows
+                if row["event_type"] == "TOUCHPOINT"
+                and row["interaction_type"] == "CLICK"
+                and timedelta(0)
+                <= outcome_time - parse_time(row["event_time"])
+                <= timedelta(days=14)
+            ]
+            if eligible_clicks:
+                expected_reported_purchases += int(outcome["purchase_count"])
+                expected_reported_sales += Decimal(outcome["revenue"])
+        self.assertEqual(
+            expected_reported_purchases,
+            sum(int(row["purchases"]) for row in ads_rows),
+        )
+        self.assertEqual(
+            expected_reported_sales,
+            sum((Decimal(row["sales"]) for row in ads_rows), Decimal("0")),
+        )
+        validate_derivations(
+            stored_source,
+            amc_rows,
+            ads_rows,
+            entity_rows,
+            REPORT_START_DATE,
+            REPORT_END_DATE,
+            SIMULATED_PRIVACY_MIN_USERS,
+            SIMULATED_MAX_USER_EVENT_ROWS,
+        )
+        leaked_amc = [dict(row) for row in amc_rows]
+        leaked_amc[0]["synthetic_user_id"] = "customer-SYN_U00001"
+        with self.assertRaisesRegex(ValueError, "schema does not match"):
+            validate_derivations(
+                stored_source,
+                leaked_amc,
+                ads_rows,
+                entity_rows,
+                REPORT_START_DATE,
+                REPORT_END_DATE,
+                SIMULATED_PRIVACY_MIN_USERS,
+                SIMULATED_MAX_USER_EVENT_ROWS,
+            )
+        downstream = (amc_rows, ads_rows, entity_rows, read_csv(AMC_REPORT_FILE))
+        self.assertTrue(
+            all(
+                "synthetic_user_id" not in row
+                and all(not value.startswith("SYN_U") for value in row.values())
+                for rows in downstream
+                for row in rows
+            )
+        )
+
+        one_journey_id = stored_source[0]["journey_instance_id"]
+        one_journey = [
+            row for row in stored_source if row["journey_instance_id"] == one_journey_id
+        ]
+        self.assertEqual(
+            derive_touchpoint_entity_aggregate(
+                one_journey, REPORT_START_DATE, REPORT_END_DATE, privacy_min_users=2
+            ),
+            [],
+        )
+
+    def test_all_anonymous_cohorts_form_one_valid_path(self) -> None:
         rows = generate_event_rows()
         journey_ids = {row["journey_id"] for row in rows}
-        annual_ids = {value for value in journey_ids if value.startswith("annual_")}
-        secondary_ids = {f"annual_{month:02d}_00" for month in range(1, 13)}
-        self.assertEqual(len(annual_ids), 144)
-        self.assertEqual(
-            {value for value in annual_ids if sum(
-                row["event_type"] == "CONVERSION" and row["journey_id"] == value
-                for row in rows
-            ) == 2},
-            secondary_ids,
-        )
-        for journey_id in annual_ids:
+        self.assertTrue(any(value.startswith("cohort_") for value in journey_ids))
+        self.assertTrue(any(value.startswith("coverage_") for value in journey_ids))
+        for journey_id in journey_ids:
             journey_rows = [row for row in rows if row["journey_id"] == journey_id]
             built = build_aggregated_path_rows(
                 journey_rows, REPORT_START_DATE, REPORT_END_DATE, 14
             )
             self.assertEqual(len(built), 1, journey_id)
-        for journey_id in ("reject_start", "reject_gap"):
-            journey_rows = [row for row in rows if row["journey_id"] == journey_id]
-            self.assertEqual(
-                build_aggregated_path_rows(
-                    journey_rows, REPORT_START_DATE, REPORT_END_DATE, 14
-                ),
-                [],
-            )
 
     def test_removed_sales_quantity_is_absent_from_public_csv_schemas(self) -> None:
         paths = [
+            SYNTHETIC_USER_EVENTS_FILE,
             AMC_TOUCHPOINT_EVENTS_FILE,
+            AMC_TOUCHPOINT_ENTITY_AGGREGATE_FILE,
             AMC_REPORT_FILE,
             AMAZON_ADS_REPORT_FILE,
             ROOT / "outputs" / "attribution" / MARKOV_OUTPUT_FILE,
@@ -155,17 +342,34 @@ class EndToEndSampleTests(unittest.TestCase):
         )
         self.assertEqual(len(description_row), 9)
         self.assertTrue(all(value.strip() for value in description_row))
-        self.assertEqual(len(stored), 144)
-        self.assertEqual(len({row["path"] for row in stored}), 144)
-        self.assertTrue(all("reject_" not in row["path"] for row in stored))
-        first_counts = {}
-        for row in stored:
-            first = row["path"].split(" > ")[0]
-            first_counts[first] = first_counts.get(first, 0) + 1
-        self.assertEqual(len(first_counts), 17)
-        self.assertLessEqual(max(first_counts.values()) - min(first_counts.values()), 1)
-        self.assertEqual(sum(int(row["converted_users"]) for row in stored), 3316)
-        self.assertEqual(sum(int(row["purchase_count"]) for row in stored), 4185)
+        self.assertGreaterEqual(len(stored), 17)
+        self.assertEqual(len({row["path"] for row in stored}), len(stored))
+        self.assertEqual(
+            len({row["path"].split(" > ")[0] for row in stored}),
+            17,
+        )
+        source_outcomes = [
+            row
+            for row in read_csv(SYNTHETIC_USER_EVENTS_FILE)
+            if row["event_type"] == "OUTCOME"
+        ]
+        self.assertEqual(
+            sum(int(row["users"]) for row in stored),
+            len(source_outcomes),
+        )
+        self.assertEqual(
+            sum(int(row["converted_users"]) for row in stored),
+            sum(int(row["converted"]) for row in source_outcomes),
+        )
+        self.assertEqual(
+            sum(int(row["purchase_count"]) for row in stored),
+            sum(int(row["purchase_count"]) for row in source_outcomes),
+        )
+        self.assertAlmostEqual(
+            sum(float(row["revenue"]) for row in stored),
+            sum(float(row["revenue"]) for row in source_outcomes),
+            places=2,
+        )
         self.assertIn(
             "SPONSORED_DISPLAY:DISPLAY:PRODUCT_PAGE:VIDEO:IMPRESSION",
             {part.strip() for row in stored for part in row["path"].split(">")},
@@ -239,9 +443,10 @@ class EndToEndSampleTests(unittest.TestCase):
                     with self.assertRaisesRegex(ValueError, message):
                         read_csv(path)
 
-    def test_ads_sample_is_reproducible_complete_and_not_month_repeated(self) -> None:
-        generated = generate_rows(
-            date.fromisoformat(REPORT_START_DATE), date.fromisoformat(REPORT_END_DATE)
+    def test_ads_sample_is_reproducible_complete_and_source_derived(self) -> None:
+        source = read_csv(SYNTHETIC_USER_EVENTS_FILE)
+        generated = derive_amazon_ads_rows(
+            source, date.fromisoformat(REPORT_START_DATE), date.fromisoformat(REPORT_END_DATE)
         )
         stored = read_csv(AMAZON_ADS_REPORT_FILE)
         normalized_generated = [
@@ -249,12 +454,15 @@ class EndToEndSampleTests(unittest.TestCase):
         ]
 
         self.assertEqual(normalized_generated, stored)
-        self.assertEqual(len(stored), 365 * 17)
+        start = date.fromisoformat(REPORT_START_DATE)
+        end = date.fromisoformat(REPORT_END_DATE)
+        day_count = (end - start).days + 1
+        self.assertEqual(len(stored), day_count * 17)
         expected_keys = set(TOUCHPOINT_KEYS)
         self.assertEqual(len(expected_keys), 17)
         self.assertEqual({row["reportDate"] for row in stored}, {
-            date(2026, 1, 1).fromordinal(date(2026, 1, 1).toordinal() + offset).isoformat()
-            for offset in range(365)
+            (start + timedelta(days=offset)).isoformat()
+            for offset in range(day_count)
         })
         for report_date in {row["reportDate"] for row in stored}:
             daily = [row for row in stored if row["reportDate"] == report_date]
@@ -266,12 +474,9 @@ class EndToEndSampleTests(unittest.TestCase):
             description_row = next(physical_rows)
         self.assertEqual(description_row[0].strip(), "报告日期")
         self.assertTrue(all(value.strip() for value in description_row))
-        may_first = [row for row in stored if row["reportDate"] == "2026-05-01"]
-        june_first = [row for row in stored if row["reportDate"] == "2026-06-01"]
-        self.assertNotEqual(
-            [(row["impressions"], row["clicks"], row["cost"]) for row in may_first],
-            [(row["impressions"], row["clicks"], row["cost"]) for row in june_first],
-        )
+        self.assertGreater(sum(int(row["impressions"]) for row in stored), 0)
+        self.assertGreater(sum(int(row["clicks"]) for row in stored), 0)
+        self.assertGreater(sum(float(row["cost"]) for row in stored), 0)
         validate_data_alignment_rows(read_csv(AMC_REPORT_FILE), stored)
 
     def test_ads_billing_semantics_and_invalid_range_preserves_file(self) -> None:
@@ -279,7 +484,6 @@ class EndToEndSampleTests(unittest.TestCase):
         for row in rows:
             if row["interaction_type"] == "CLICK":
                 self.assertEqual(row["cost_type"], "CPC")
-                self.assertGreater(row["clicks"], 0)
                 self.assertGreaterEqual(row["purchases"], 0)
             else:
                 self.assertEqual(row["cost_type"], "CPM")
@@ -288,7 +492,7 @@ class EndToEndSampleTests(unittest.TestCase):
                 self.assertEqual(row["sales"], 0)
             spec = next(spec for spec in TOUCHPOINT_CATALOG if spec.key == row["normalizedTouchpoint"])
             if spec.interaction_type != spec.billed_interaction:
-                self.assertEqual(row["cost"], 0)
+                self.assertEqual(float(row["cost"]), 0)
         with tempfile.TemporaryDirectory() as tmp:
             output = Path(tmp) / "ads.csv"
             output.write_bytes(b"old artifact\n")
@@ -297,9 +501,24 @@ class EndToEndSampleTests(unittest.TestCase):
             self.assertEqual(output.read_bytes(), b"old artifact\n")
 
     def test_catalog_drift_fails_before_ads_generation(self) -> None:
-        with patch.object(ads_generator, "TOUCHPOINT_CATALOG", TOUCHPOINT_CATALOG[:-1]):
+        with patch.object(
+            synthetic_pipeline, "TOUCHPOINT_CATALOG", TOUCHPOINT_CATALOG[:-1]
+        ):
             with self.assertRaisesRegex(ValueError, "exactly 17"):
-                ads_generator.generate_rows(date(2026, 1, 1), date(2026, 1, 1))
+                generate_synthetic_user_events(REPORT_START_DATE, REPORT_END_DATE)
+
+        drifted = (
+            replace(
+                TOUCHPOINT_CATALOG[0],
+                key="AMAZON_DSP:AUDIO:UNSPECIFIED:UNSPECIFIED:CLICK",
+            ),
+            *TOUCHPOINT_CATALOG[1:],
+        )
+        with self.assertRaisesRegex(ValueError, "approved 17-key"):
+            validate_touchpoint_catalog(drifted)
+
+        with self.assertRaisesRegex(ValueError, "must not be empty"):
+            derive_amc_touchpoint_events([])
 
     def test_attribution_outputs_are_exactly_reproducible_and_conserved(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -323,6 +542,12 @@ class EndToEndSampleTests(unittest.TestCase):
             self.assertTrue(
                 all(b"\r\n" not in path.read_bytes() for path in generated_paths)
             )
+            path_rows = read_csv(AMC_REPORT_FILE)
+            expected_totals = {
+                "converted_users": sum(float(row["converted_users"]) for row in path_rows),
+                "purchase_count": sum(float(row["purchase_count"]) for row in path_rows),
+                "revenue": sum(float(row["revenue"]) for row in path_rows),
+            }
             for generated_path in generated_paths:
                 with generated_path.open(newline="") as file:
                     for row_number, physical_row in enumerate(csv.reader(file), start=1):
@@ -355,17 +580,17 @@ class EndToEndSampleTests(unittest.TestCase):
                     )
                     self.assertAlmostEqual(
                         sum(float(row["attributed_converted_users"]) for row in generated),
-                        3316.0,
+                        expected_totals["converted_users"],
                         places=4,
                     )
                     self.assertAlmostEqual(
                         sum(float(row["attributed_purchase_count"]) for row in generated),
-                        4185.0,
+                        expected_totals["purchase_count"],
                         places=4,
                     )
                     self.assertAlmostEqual(
                         sum(float(row["attributed_revenue"]) for row in generated),
-                        343161.0,
+                        expected_totals["revenue"],
                         places=2,
                     )
                     self.assertTrue(
@@ -513,16 +738,28 @@ class EndToEndSampleTests(unittest.TestCase):
             )
 
             five_part = {row["outcome"]: row for row in summary_rows}
-            expected = {
-                "converted_users": (0.014066, 0.740650047, 0.4),
-                "purchase_count": (0.013891, 0.776211059, 0.6),
-                "revenue": (0.014266, 0.796568627, 0.4),
+            self.assertEqual(set(five_part), {"converted_users", "purchase_count", "revenue"})
+            expected_summary = {
+                "converted_users": (0.019451, 0.889025305, 0.6),
+                "purchase_count": (0.01975, 0.911097657, 0.6),
+                "revenue": (0.020585, 0.931372549, 0.8),
             }
-            for outcome, (tvd, rho, overlap) in expected.items():
+            for outcome, row in five_part.items():
                 with self.subTest(outcome=outcome):
-                    self.assertAlmostEqual(float(five_part[outcome]["tvd"]), tvd, places=6)
-                    self.assertAlmostEqual(float(five_part[outcome]["spearman_rho"]), rho, places=6)
-                    self.assertAlmostEqual(float(five_part[outcome]["top_k_overlap_rate"]), overlap)
+                    self.assertGreaterEqual(float(row["tvd"]), 0.0)
+                    self.assertLessEqual(float(row["tvd"]), 1.0)
+                    self.assertGreaterEqual(float(row["spearman_rho"]), -1.0)
+                    self.assertLessEqual(float(row["spearman_rho"]), 1.0)
+                    self.assertGreaterEqual(float(row["top_k_overlap_rate"]), 0.0)
+                    self.assertLessEqual(float(row["top_k_overlap_rate"]), 1.0)
+                    expected_tvd, expected_rho, expected_top_k = expected_summary[outcome]
+                    self.assertAlmostEqual(float(row["tvd"]), expected_tvd, places=6)
+                    self.assertAlmostEqual(
+                        float(row["spearman_rho"]), expected_rho, places=9
+                    )
+                    self.assertAlmostEqual(
+                        float(row["top_k_overlap_rate"]), expected_top_k, places=6
+                    )
 
             expected_headers = {
                 MODEL_COMPARISON_TOUCHPOINTS_FILE: TOUCHPOINT_COMPARISON_FIELDS,
@@ -603,10 +840,12 @@ class EndToEndSampleTests(unittest.TestCase):
             self.assertEqual(destination_one.read_text(), "old one")
             self.assertEqual(destination_two.read_text(), "old two")
 
-    def test_complete_dataset_is_byte_reproducible_and_rolls_back_all_eight(self) -> None:
+    def test_complete_dataset_is_byte_reproducible_and_rolls_back_all_ten(self) -> None:
         names = [
+            Path(SYNTHETIC_USER_EVENTS_FILE).name,
             Path(AMC_TOUCHPOINT_EVENTS_FILE).name,
             Path(AMAZON_ADS_REPORT_FILE).name,
+            Path(AMC_TOUCHPOINT_ENTITY_AGGREGATE_FILE).name,
             Path(AMC_REPORT_FILE).name,
             MARKOV_OUTPUT_FILE,
             SHAPLEY_OUTPUT_FILE,
@@ -618,8 +857,8 @@ class EndToEndSampleTests(unittest.TestCase):
             root = Path(tmp)
             destinations = [root / f"{index}_{name}" for index, name in enumerate(names)]
             # Output matching is filename-based, so preserve the five model filenames.
-            destinations[3:] = [root / "outputs" / name for name in names[3:]]
-            destinations[:3] = [root / name for name in names[:3]]
+            destinations[5:] = [root / "outputs" / name for name in names[5:]]
+            destinations[:5] = [root / name for name in names[:5]]
             regenerate(destinations)
             first = {path: path.read_bytes() for path in destinations}
             regenerate(destinations)

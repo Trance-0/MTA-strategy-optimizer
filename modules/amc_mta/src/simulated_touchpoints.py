@@ -8,6 +8,7 @@ from touchpoint_key import canonical_amc_touchpoint_key
 MARKETPLACE = "US"
 ADVERTISER_ID = "adv_demo_001"
 CURRENCY = "USD"
+CAMPAIGN_GROUP_ID = "CG_DEMO_001"
 
 
 @dataclass(frozen=True)
@@ -98,7 +99,27 @@ def _build_catalog() -> tuple[TouchpointSpec, ...]:
 
 TOUCHPOINT_CATALOG = _build_catalog()
 TOUCHPOINT_KEYS = tuple(spec.key for spec in TOUCHPOINT_CATALOG)
-EXPECTED_TOUCHPOINT_KEYS = frozenset(TOUCHPOINT_KEYS)
+EXPECTED_TOUCHPOINT_KEYS = frozenset(
+    {
+        "AMAZON_DSP:AUDIO:UNSPECIFIED:UNSPECIFIED:IMPRESSION",
+        "AMAZON_DSP:DISPLAY:UNSPECIFIED:IMAGE:IMPRESSION",
+        "AMAZON_DSP:ONLINE_VIDEO:UNSPECIFIED:VIDEO:IMPRESSION",
+        "AMAZON_DSP:STREAMING_TV:UNSPECIFIED:VIDEO:IMPRESSION",
+        "SPONSORED_BRANDS:COMPONENT:TOP_OF_SEARCH:IMAGE:IMPRESSION",
+        "SPONSORED_BRANDS:COMPONENT:TOP_OF_SEARCH:IMAGE:CLICK",
+        "SPONSORED_BRANDS:DISPLAY:REST_OF_SEARCH:IMAGE:IMPRESSION",
+        "SPONSORED_BRANDS:VIDEO:TOP_OF_SEARCH:VIDEO:IMPRESSION",
+        "SPONSORED_BRANDS:VIDEO:TOP_OF_SEARCH:VIDEO:CLICK",
+        "SPONSORED_DISPLAY:DISPLAY:PRODUCT_PAGE:IMAGE:IMPRESSION",
+        "SPONSORED_DISPLAY:DISPLAY:PRODUCT_PAGE:IMAGE:CLICK",
+        "SPONSORED_DISPLAY:DISPLAY:PRODUCT_PAGE:VIDEO:IMPRESSION",
+        "SPONSORED_DISPLAY:VIDEO:PRODUCT_PAGE:VIDEO:CLICK",
+        "SPONSORED_PRODUCTS:PRODUCT_AD:PRODUCT_PAGE:UNSPECIFIED:CLICK",
+        "SPONSORED_PRODUCTS:PRODUCT_AD:REST_OF_SEARCH:UNSPECIFIED:CLICK",
+        "SPONSORED_PRODUCTS:PRODUCT_AD:TOP_OF_SEARCH:UNSPECIFIED:IMPRESSION",
+        "SPONSORED_PRODUCTS:PRODUCT_AD:TOP_OF_SEARCH:UNSPECIFIED:CLICK",
+    }
+)
 
 
 def validate_touchpoint_catalog(catalog: tuple[TouchpointSpec, ...]) -> None:
@@ -113,3 +134,75 @@ def validate_touchpoint_catalog(catalog: tuple[TouchpointSpec, ...]) -> None:
 
 
 validate_touchpoint_catalog(TOUCHPOINT_CATALOG)
+
+
+CAMPAIGN_BY_AD_PRODUCT = {
+    "SPONSORED_PRODUCTS": "C_DEMO_SP",
+    "SPONSORED_BRANDS": "C_DEMO_SB",
+    "SPONSORED_DISPLAY": "C_DEMO_SD",
+    "AMAZON_DSP": "C_DEMO_DSP",
+}
+
+_KEYWORDS = (
+    ("K_RUNNING_EXACT", "running shoes", ("EXACT", "PHRASE")),
+    ("K_NIKE_EXACT", "nike running shoes", ("EXACT", "PHRASE")),
+    ("K_LIGHTWEIGHT", "lightweight running shoes", ("PHRASE", "BROAD")),
+    ("K_TRAIL", "trail running shoes", ("EXACT", "PHRASE")),
+    ("K_PREMIUM", "premium running shoes", ("PHRASE", "BROAD")),
+    ("K_DISCOVERY", "new running shoe styles", ("BROAD",)),
+)
+
+_SKUS = (
+    ("SKU_PEG_BLACK", "B0DEMOPEG41B"),
+    ("SKU_PEG_WHITE", "B0DEMOPEG41W"),
+    ("SKU_TRAIL_BLUE", "B0DEMOTRAILB"),
+    ("SKU_VOMERO_RED", "B0DEMOVOMEROR"),
+)
+
+
+def historical_entity_for_touchpoint(spec: TouchpointSpec, variant: int) -> dict[str, str]:
+    """Return a deterministic historical entity assignment for a raw event.
+
+    These are observed simulation facts. They do not define the eligible candidate
+    pool used by the downstream strategy initializer.
+    """
+    campaign_id = CAMPAIGN_BY_AD_PRODUCT[spec.ad_product]
+    short_name = campaign_id.removeprefix("C_DEMO_")
+    sku_id, advertised_asin = _SKUS[(spec.metric_seed + variant) % len(_SKUS)]
+    common = {
+        "campaign_group_id": CAMPAIGN_GROUP_ID,
+        "campaign_id": campaign_id,
+        "ad_group_id": f"{campaign_id}_AG{1 + (spec.metric_seed + variant) % 2:02d}",
+        "advertised_asin": advertised_asin,
+        "sku_id": sku_id,
+    }
+    if spec.ad_product in {"SPONSORED_PRODUCTS", "SPONSORED_BRANDS"}:
+        keyword_id, keyword_text, allowed_matches = _KEYWORDS[
+            (spec.metric_seed + variant) % len(_KEYWORDS)
+        ]
+        match_type = allowed_matches[(spec.metric_seed + variant) % len(allowed_matches)]
+        return {
+            **common,
+            "keyword_id": keyword_id,
+            "keyword_text": keyword_text,
+            "match_type": match_type,
+            "target_id": f"TGT_{short_name}_{keyword_id}_{match_type}",
+            "audience_id": "",
+        }
+    if spec.ad_product == "SPONSORED_DISPLAY":
+        return {
+            **common,
+            "keyword_id": "",
+            "keyword_text": "",
+            "match_type": "",
+            "target_id": f"TGT_SD_PRODUCT_{sku_id}",
+            "audience_id": ("AUD_PRODUCT_VIEWERS", "AUD_CATEGORY_INTEREST")[variant % 2],
+        }
+    return {
+        **common,
+        "keyword_id": "",
+        "keyword_text": "",
+        "match_type": "",
+        "target_id": f"TGT_DSP_{spec.inventory_type}_{variant % 2 + 1}",
+        "audience_id": ("AUD_IN_MARKET_RUNNING", "AUD_LIFESTYLE_FITNESS")[variant % 2],
+    }

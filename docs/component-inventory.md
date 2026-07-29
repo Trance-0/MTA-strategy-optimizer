@@ -5,12 +5,13 @@
 | 组件 | 入口 | 责任 |
 | --- | --- | --- |
 | 五段触点键 | `modules/amc_mta/src/touchpoint_key.py` | 统一广告产品、形式、位置、创意、互动类型 |
+| 模拟事件数据工厂 | `modules/amc_mta/src/synthetic_event_pipeline.py` | 用户事件事实源、三类聚合派生、隐私与守恒校验 |
 | 路径构建 | `modules/amc_mta/src/amc_path_builder.py` | 将事件转为 AMC 风格匿名聚合路径 |
 | 归因引擎 | `modules/amc_mta/src/amc_mta_attribution.py` | Markov、Shapley、成本和效率指标 |
 | 模型治理 | `modules/amc_mta/src/model_comparison.py` | 五段支持度、差距、三项可靠性、整体指标和推荐状态 |
 | 完整入口 | `modules/amc_mta/run_pipeline.py` | 重建输入派生物与五份输出 |
 | 命令行脚本 | `modules/amc_mta/scripts/` | 分步生成、归因、比较与校验 |
-| 测试 | `modules/amc_mta/tests/` | 106 项单元、契约和端到端验证 |
+| 测试 | `modules/amc_mta/tests/` | 107项单元、契约和端到端验证 |
 | Campaign Group 层级校验 | `modules/mta_strategy_recommender/src/hierarchy_validator.py` | 校验四个 Campaign、候选引用、合法 pairing 和预算守恒 |
 | 初始策略样例 | `modules/mta_strategy_recommender/data/simulated/` | 展示 Group→Campaign→Ad Group→Keyword/SKU 与 `INITIAL_SEED` |
 
@@ -18,7 +19,7 @@
 
 | 类型 | 数量 | 位置 |
 | --- | ---: | --- |
-| 模拟输入 CSV | 3 | `modules/amc_mta/data/simulated/` |
+| 模拟事实源及派生 CSV | 5 | `modules/amc_mta/data/simulated/` |
 | 正式输出 CSV | 5 | `modules/amc_mta/outputs/attribution/` |
 | 策略初始化模拟文件 | 9 | `modules/mta_strategy_recommender/data/simulated/` |
 | 外部 PDF | 7 | `docs/research/` |
@@ -54,7 +55,7 @@
 
 ## 代码与可执行文件
 
-- Python：94 个，语法检查全部通过。
+- Python：105个，语法检查全部通过。
 - JavaScript：7 个，Node.js 语法检查全部通过。
 - Bash：1 个 Story Automator 入口，`bash -n` 通过。
 - Git 可执行文件：15 个，均位于安装工具脚本区域。

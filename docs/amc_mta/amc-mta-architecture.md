@@ -7,28 +7,28 @@
 可复现、可校验的闭环。
 
 ```text
-概念事件样例
-  │  amc_path_builder
-  ▼
-匿名聚合五段路径 ───────────────┐
-  │                              │
-  ├─ Weighted Markov             │ raw support
-  └─ Path-level Shapley          │
-          │                      │
-          ▼                      │
-两份五段归因结果 ◀─ Amazon Ads 日报
-          │
-          ▼
+合成用户事件主表（仅模拟）
+  ├─ 匿名概念事件 ── amc_path_builder ── 匿名聚合五段路径
+  │                                           ├─ Weighted Markov
+  │                                           └─ Path-level Shapley ─┐
+  ├─ Amazon Ads 日报 ───────────────────────────────────────────────┤
+  └─ 触点实体聚合 ── 后续策略初始化证据                             │
+                                                                     ▼
+                                                          两份五段归因结果
+                                                                     │
+                                                                     ▼
 五段触点比较 + 五段摘要 + 治理推荐
 ```
 
-真实使用时，第一步应在 AMC clean room 内完成。项目只能接收满足隐私门槛的匿名
-聚合路径；仓库中的概念事件是测试夹具，不是可导出的真实 AMC 用户明细。
+真实使用时，用户事件到匿名聚合的步骤应在AMC clean room内完成。项目只能接收满足
+隐私门槛的聚合结果；仓库中的用户事件主表和概念事件都是测试夹具，不是可导出的
+真实AMC用户明细。
 
 ## 组件职责
 
 | 组件 | 职责 |
 | --- | --- |
+| `src/synthetic_event_pipeline.py` | 唯一模拟事实源、AMC/Ads/实体派生、隐私和守恒校验 |
 | `src/touchpoint_key.py` | 构造和严格校验五段键；曝光与点击保持独立 |
 | `src/amc_path_builder.py` | 事件排序、14 天连续间隔、多购买切段、匿名路径聚合 |
 | `src/amc_mta_attribution.py` | 输入校验、Markov、Shapley、Ads 成本聚合、效率指标和原子 CSV 写入 |
@@ -57,13 +57,15 @@ AD_PRODUCT:FORMAT:PLACEMENT:CREATIVE:INTERACTION_TYPE
 `UNSPECIFIED`；第五段只能是 `IMPRESSION` 或 `CLICK`。完整键同时用于 AMC 路径、
 Amazon Ads 行和模型输出，确保曝光、点击和成本始终独立。
 
-### 三类输入
+### 模拟数据层
 
 | 输入 | 当前样例规模 | 角色 |
 | --- | ---: | --- |
-| 概念事件 | 47 行 | 仅验证本地路径构建 |
-| AMC 聚合路径 | 12 行 | 归因算法直接输入 |
-| Amazon Ads 日报 | 6,205 行 | 17 个触点 × 365 天的表现和成本 |
+| 合成用户事件 | 11,147行 | 仅供模拟的唯一动态事实源 |
+| 匿名概念事件 | 645行 | 验证本地路径构建 |
+| AMC聚合路径 | 153行 | 归因算法直接输入 |
+| Amazon Ads日报 | 1,530行 | 17个触点 × 90天的表现和成本 |
+| 触点实体聚合 | 34行 | 历史触点到Campaign/Keyword/SKU的匿名证据 |
 
 一次运行只允许一个 marketplace、advertiser、currency 和报告窗口。AMC 与 Ads
 必须具有完全相同的触点集合与逐日覆盖。CPC 成本只能落在 `CLICK`，CPM 成本只能
@@ -122,7 +124,7 @@ Amazon Ads 行和模型输出，确保曝光、点击和成本始终独立。
 
 ## 可靠性与测试
 
-当前 106 项测试覆盖：
+当前107项测试覆盖：
 
 - 五段键和 CPC/CPM 计费冲突；
 - 路径排序、14 天边界、报告起点和多购买不复用；

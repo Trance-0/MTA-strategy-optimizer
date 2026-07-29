@@ -10,7 +10,7 @@
 | --- | --- | --- |
 | 根目录 | 工作区入口和少量全局配置 | `README.md`、忽略/格式规则，以及人工维护的 `log.md` |
 | `modules/amc_mta/` | 五段触点归因实现 | 源码、脚本、测试、模块输入、五份正式输出和模块契约 |
-| `modules/mta_strategy_recommender/` | Campaign Group 初始策略模块 | 模型计划、独立模拟数据、校验器和测试 |
+| `modules/mta_strategy_recommender/` | Campaign Group 初始策略模块 | 模型计划、运行条件模拟数据、校验器和测试 |
 | `docs/` | 当前项目知识与外部研究 | 总索引、架构、评价、管理规则、扫描结果、当前产品介绍和研究原件 |
 | `design-artifacts/` | 历史产品愿景 | Product Brief、PRD、模型设想、补充和决策记录 |
 | `_bmad-output/` | 工作流追溯 | 已批准规格、实现状态和延期事项 |

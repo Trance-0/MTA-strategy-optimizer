@@ -13,15 +13,23 @@ AMC 路径和模型结果等严格入口在完成上述规范化后，仍要求�
 与对应契约精确一致。数值、集合、守恒及业务关系校验不因空白容错而放宽。五份
 正式输出继续写为无首尾空白的规范 CSV，字段名、行数和数值契约不变。
 
-## 三类输入
+## 模拟数据层与正式归因输入
 
 | 数据 | 用途 |
 | --- | --- |
+| `synthetic_user_events_sample.csv` | 仅供本地模拟的数据整合事实源，一行一个合成用户事件 |
 | `amc_touchpoint_events_sample.csv` | 仅用于本地演示路径构建，不代表 AMC 可导出的用户明细 |
 | `amc_mta_path_report_raw_sample.csv` | 匿名聚合路径，归因算法的直接输入 |
 | `amazon_ads_report_sample.csv` | Amazon Ads 成本与表现，用于计算效率指标 |
+| `amc_touchpoint_entity_aggregate_sample.csv` | 触点到历史 Campaign/Ad Group/Keyword/SKU 的匿名聚合证据 |
 
-真实应用应在 AMC clean room 内完成事件排序、路径构建与隐私聚合，只导出满足隐私门槛的聚合路径。
+主表中的 `synthetic_user_id` 不得进入后四类数据。实体聚合当前使用至少5个合成用户的
+本地演示门槛，该数值不是Amazon正式隐私阈值。真实应用应在AMC clean room内完成
+事件排序、路径构建与隐私聚合，只导出满足平台隐私规则的聚合结果。
+
+主表同时保存历史 Campaign/Ad Group、适用的 Keyword/Match Type/Target、SKU/ASIN、
+单事件成本和journey结果。它们是历史观察事实，不取代策略运行时给定的候选池、预算、
+Campaign数量、容量或平台政策。
 
 ## 字段口径
 
@@ -82,7 +90,7 @@ Amazon Ads 报告也必须使用同一五段键，并提供 `interaction_type`�
 
 正式流水线以 Amazon Ads 输入中最早至最晚的 `reportDate` 自动确定报告窗口，
 首尾日期均包含。窗口支持单日、任意长度、跨年和闰日，不依赖配置中的固定日期。
-本地确定性模拟数据当前覆盖完整自然年 `2026-01-01` 至 `2026-12-31`。
+本地确定性模拟数据当前覆盖 `2026-01-01` 至 `2026-03-31`，共90天。
 
 - 从购买前最后一个触点开始向前回溯；触点顺序以时间戳为准。
 - 相邻触点及最后触点到购买的间隔都必须 `<= 14 天`，正好 14 天有效。

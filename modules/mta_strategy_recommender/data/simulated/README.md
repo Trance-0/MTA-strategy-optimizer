@@ -32,4 +32,7 @@ targeting payload；后续 adapter 必须按 Campaign 的 `ad_product` 做支持
 python3 modules/mta_strategy_recommender/scripts/validate_simulated_hierarchy.py
 ```
 
-本目录不替代 `modules/amc_mta/data/simulated/`。后者仍是五段触点归因的独立模拟输入，schema 和触点键保持不变。
+本目录仍负责策略运行时给定的Campaign、候选池、约束和预算基线，不由历史行为自动
+生成。`modules/amc_mta/data/simulated/amc_touchpoint_entity_aggregate_sample.csv`则从
+统一用户事件主表提供历史触点—Keyword/SKU关联。两者通过实体ID连接，但观察过的
+历史实体不自动等于本次允许投放的候选池。

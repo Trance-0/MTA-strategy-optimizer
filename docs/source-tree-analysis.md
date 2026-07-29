@@ -29,12 +29,13 @@ modules/amc_mta/
 ├── run_pipeline.py                   # 完整流水线入口
 ├── src/
 │   ├── touchpoint_key.py             # 五段键解析与校验
+│   ├── synthetic_event_pipeline.py   # 模拟用户事件及AMC/Ads/实体派生
 │   ├── amc_path_builder.py           # 概念事件到匿名聚合路径
 │   ├── amc_mta_attribution.py        # Markov、Shapley 与成本关联
 │   └── model_comparison.py           # 差距、支持度、三项可靠性和治理推荐
 ├── scripts/                          # 各步骤 CLI
-├── tests/                            # 6 个测试文件，106 项测试
-├── data/simulated/                   # 3 份可复现输入
+├── tests/                            # 6个测试文件，107项测试
+├── data/simulated/                   # 1份模拟事实源及4类派生数据
 ├── outputs/attribution/              # 5 份正式生成输出
 └── docs/                             # 数据、运行和治理契约
 ```
@@ -42,9 +43,13 @@ modules/amc_mta/
 运行依赖方向为：
 
 ```text
-config + touchpoint_key
+config + touchpoint_key + simulated_touchpoints
           ↓
-amc_path_builder
+synthetic_event_pipeline（模拟数据）
+          ├─ Ads / 触点实体聚合
+          └─ 匿名概念事件
+                    ↓
+             amc_path_builder
           ↓
 amc_mta_attribution
           ↓

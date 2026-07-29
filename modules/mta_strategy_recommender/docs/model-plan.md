@@ -114,6 +114,12 @@ AD_PRODUCT:FORMAT:PLACEMENT:CREATIVE:INTERACTION_TYPE
 
 这是 Group 范围内的归因观察维度，不是业务实体树，也不携带 Campaign、Ad Group、Keyword 或 SKU ID。第一段用于把触点策略路由到相容 Campaign，但不会在业务树中新增一层。
 
+实体关联另读取同批模拟事实派生的
+`modules/amc_mta/data/simulated/amc_touchpoint_entity_aggregate_sample.csv`。该表把五段
+触点连接到历史Campaign/Ad Group/Keyword/SKU表现；MTA输出本身仍保持原schema。
+策略只在实体同时属于本次冻结候选池时使用这份历史证据，未观察候选不能伪装成有
+MTA效果。
+
 每个触点的初始优先级可按配置计算：
 
 ```text
@@ -242,4 +248,6 @@ modules/mta_strategy_recommender/
 - 输出明确是 `INITIAL_SEED`、`READY_FOR_OPTIMIZATION` 且 `is_optimized=false`；
 - AMC MTA 五段键、17 触点、CSV schema 与正式输出保持不变。
 
-可运行样例及命令见 [模块 README](../README.md)。
+详细输出字段、JSON 格式、预算口径和关联规则见
+[输出数据契约](output-data-contract.md)；Ad Group 数量依据、MTA 数值证据和具体投放动作见
+[模型策略输出契约](strategy-output-contract.md)；可运行样例及命令见 [模块 README](../README.md)。
