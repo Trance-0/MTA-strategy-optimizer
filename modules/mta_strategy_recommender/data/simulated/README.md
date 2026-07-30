@@ -1,38 +1,26 @@
-# Campaign Group 策略初始化输入
+# Ad Group 数量与预算模拟输入
 
-本目录只保存一次策略初始化所需的业务输入，不保存历史 MTA 证据，也不保存推荐输出。
-层级固定为：
-
-```text
-Campaign Group
-└── Campaign（固定四个，每个只有一个 ad_product）
-    └── Ad Group（未来由模型推荐）
-        ├── Keyword
-        └── SKU
-```
+本目录只有两个 v4 输入 JSON 和本说明，不保存 AMC 数据或模型输出。
 
 | 文件 | 用途 |
 | --- | --- |
-| `strategy_request.json` | Group 范围、四个 Campaign、AMC 文件 SHA/窗口、17→6 选点口径、可选总预算、outcome 权重和容量约束 |
-| `candidate_pool.json` | 六个 Keyword、四个 SKU、八条历史 Pair、两条补充 Pair 及两条 SD/DSP 信号规则 |
+| `strategy_request.json` | Group、四个 Campaign、AMC 文件 SHA/范围、outcome 权重、各广告产品容量与最低预算 |
+| `candidate_pool.json` | 每个 Campaign 的合格 Keyword unit、SKU、合法 Pair、Target、Audience 数量 |
 
-手写的推荐结果仅是输出契约夹具，位于
-`../../tests/fixtures/expected_initial_recommendation.json`，不代表模型已经生成策略。
+计数口径：
 
-当前校验器只读以下历史 MTA 与实体证据：
+- SP/SB 使用 Keyword unit、SKU、合法 Pair 三个容量下限的最大值；
+- SD/DSP 使用 SKU、Target、Audience 三个容量下限的最大值；
+- `candidate_usage_policy=USE_ALL_ELIGIBLE`，所有给定计数都进入容量计算；
+- 输入只含数量，不含具体候选 ID，因此输出也不构成投放计划。
+
+当前样例按广告产品过滤后的数量为：SP 的 Keyword/SKU/Pair=`3/3/3`，SB=`4/4/4`，
+SD 的 SKU/Target/Audience=`4/4/2`，DSP=`4/8/2`。
+
+预算证据只读以下 AMC 文件：
 
 - `modules/amc_mta/outputs/attribution/amc_mta_recommended_attribution.csv`
 - `modules/amc_mta/data/simulated/amc_touchpoint_entity_aggregate_sample.csv`
 
-`hierarchy_validator.py` 校验文件 SHA、账户/窗口、17 个触点、34 条实体、六个选中触点、
-三类 outcome 数值、平台原生定向、实体选择和预算复算。它不会修改或重新生成 AMC。
-
-策略输入通过 `mta_source`、`mta_batch_id` 和 `candidate_pool_id` 保持可追溯。`evidence_type`
-记录历史或补充证据，`allocation_role` 记录用途，`policy_status` 单独记录允许或禁止；历史中
-出现不等于当前允许投放，补充候选也不能伪装成直接 MTA 实体证据。
-
-校验命令：
-
-```bash
-python3 -B modules/mta_strategy_recommender/scripts/validate_simulated_hierarchy.py
-```
+历史 `campaign_id`/`ad_group_id` 只存在于 AMC bridge 内。输出使用新的匿名 slot ID，不把历史
+组当作未来新组。

@@ -1,1 +1,1 @@
-"""MTA-informed strategy initializer support code."""
+"""MTA-informed Ad Group count and budget seed support code."""

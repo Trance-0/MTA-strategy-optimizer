@@ -44,9 +44,9 @@ Markov + Path-level Shapley
           ↓
 双模型差异、支持度和治理状态
 
-独立策略契约样例：Campaign Group
+独立预算初始化器：Campaign Group
           ↓
-Campaign → 推荐 Ad Group → Keyword/SKU
+Campaign → 候选容量推荐新 Ad Group 数量 → MTA 初始预算
 ```
 
 - 一份模拟事实源及四类派生数据：匿名概念事件、聚合路径、Amazon Ads 日报和触点实体聚合。
@@ -57,9 +57,9 @@ Campaign → 推荐 Ad Group → Keyword/SKU
 - 三份双模型产物直接给出三项可靠性标准；当前90天样例为 `51 RELIABLE / 0 UNRELIABLE`。
 - 推荐结果还按可靠性给出最终值：可靠时使用 Markov 正式 share，不可靠时使用
   Markov/Shapley share 的升序闭区间；不输出自动化许可字段。
-- 独立策略样例用两个 JSON 输入表达一个 Campaign Group、四个 Campaign、冻结候选池和
-  AMC SHA/窗口；六个推荐 Ad Group 按六个入选触点归一化，明确披露 `17 → 6`，仍是测试
-  夹具，不代表生成器已经实现，也不宣称最优。
+- 独立预算样例用两个 JSON 输入表达一个 Campaign Group、四个 Campaign、候选计数、容量和
+  AMC SHA/窗口；当前容量真实计算为 `1/1/1/1`，全部 17 个 MTA 触点经 AMC bridge 形成
+  Campaign 份额，再在匿名新组内等分。输出不含具体投放方案，也不宣称最优。
 
 ## 快速验证
 
@@ -69,6 +69,7 @@ Campaign → 推荐 Ad Group → Keyword/SKU
 python3 -B modules/amc_mta/run_pipeline.py
 python3 modules/amc_mta/scripts/validate_data_alignment.py
 python3 -B -m unittest discover -s modules/amc_mta/tests -p 'test_*.py'
+python3 -B modules/mta_strategy_recommender/scripts/generate_initial_budget.py --check-fixture
 python3 modules/mta_strategy_recommender/scripts/validate_simulated_hierarchy.py
 python3 -m unittest discover -s modules/mta_strategy_recommender/tests -p 'test_*.py'
 ```
@@ -77,7 +78,7 @@ python3 -m unittest discover -s modules/mta_strategy_recommender/tests -p 'test_
 
 - 流水线从 Ads 输入自动识别日期窗口，重建匿名聚合路径并发布五份契约输出；
 - 17 个 AMC 与 Amazon Ads 五段触点、90 天覆盖和账户/币种范围严格对齐；
-- 107 项 AMC MTA 测试和 39 项策略对齐测试通过；
+- 107 项 AMC MTA 测试和 34 项预算模型测试通过；
 - 当前 51 条推荐记录均为 `RELIABLE`。
 
 ## 项目结构

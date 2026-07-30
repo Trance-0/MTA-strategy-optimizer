@@ -14,19 +14,19 @@ from hierarchy_validator import HierarchyValidationError, validate_simulated_hie
 
 def main() -> int:
     parser = argparse.ArgumentParser(
-        description="Validate the Campaign Group hierarchy initializer sample."
+        description="Validate the budget-only Campaign Group initializer sample."
     )
     parser.add_argument(
         "--data-dir",
         type=Path,
         default=MODULE_ROOT / "data" / "simulated",
-        help="Directory containing strategy_request.json and candidate_pool.json.",
+        help="Directory containing the v4 strategy request and candidate counts.",
     )
     parser.add_argument(
         "--recommendation",
         type=Path,
         default=MODULE_ROOT / "tests" / "fixtures" / "expected_initial_recommendation.json",
-        help="Explicit expected recommendation fixture to validate against the inputs.",
+        help="Expected budget-only recommendation fixture to reproduce.",
     )
     parser.add_argument(
         "--attribution",
