@@ -1,0 +1,57 @@
+{
+  "sample_version": "2.0",
+  "candidate_pool_id": "pool_demo_2026_07",
+  "mta_batch_id": "mta_demo_2026_07",
+  "campaign_group": {
+    "campaign_group_id": "CG_DEMO_001",
+    "group_name": "Amazon US Running Shoes Initial Strategy",
+    "platform": "AMAZON",
+    "marketplace": "US",
+    "advertiser_id": "adv_demo_001",
+    "currency": "USD",
+    "total_daily_budget": 1000.0
+  },
+  "campaigns": [
+    {
+      "campaign_id": "C_DEMO_SP",
+      "campaign_name": "Running Shoes Search",
+      "ad_product": "SPONSORED_PRODUCTS",
+      "targeting": "MANUAL",
+      "status": "enabled"
+    },
+    {
+      "campaign_id": "C_DEMO_SB",
+      "campaign_name": "Running Shoes Brand",
+      "ad_product": "SPONSORED_BRANDS",
+      "targeting": "MANUAL",
+      "status": "enabled"
+    },
+    {
+      "campaign_id": "C_DEMO_SD",
+      "campaign_name": "Running Shoes Display",
+      "ad_product": "SPONSORED_DISPLAY",
+      "targeting": "MANUAL",
+      "status": "enabled"
+    },
+    {
+      "campaign_id": "C_DEMO_DSP",
+      "campaign_name": "Running Shoes Reach",
+      "ad_product": "AMAZON_DSP",
+      "targeting": "MANUAL",
+      "status": "enabled"
+    }
+  ],
+  "outcome_weights": {
+    "converted_users": 0.4,
+    "purchase_count": 0.3,
+    "revenue": 0.3
+  },
+  "ad_group_constraints": {
+    "min_keywords": 1,
+    "max_keywords": 50,
+    "min_skus": 1,
+    "max_skus": 20,
+    "max_ad_groups_per_campaign": 10,
+    "max_exploration_groups_per_campaign": 1
+  }
+}

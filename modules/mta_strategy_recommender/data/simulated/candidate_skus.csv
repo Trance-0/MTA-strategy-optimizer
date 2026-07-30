@@ -1,5 +1,0 @@
-campaign_group_id,candidate_pool_id,sku_id,product_id,brand,category,segment,inventory_available,paid_search_enabled,scope_for_search_optimization,source,eligible
-CG_DEMO_001,pool_demo_2026_07,SKU_PEG_BLACK,P_PEGASUS_41,Nike,Running Shoes,ROAD,true,true,true,EXISTING,true
-CG_DEMO_001,pool_demo_2026_07,SKU_PEG_WHITE,P_PEGASUS_41,Nike,Running Shoes,ROAD,true,true,true,EXISTING,true
-CG_DEMO_001,pool_demo_2026_07,SKU_TRAIL_BLUE,P_PEGASUS_TRAIL,Nike,Running Shoes,TRAIL,true,true,true,VALIDATED,true
-CG_DEMO_001,pool_demo_2026_07,SKU_VOMERO_RED,P_VOMERO,Nike,Running Shoes,PREMIUM,true,true,true,VALIDATED,true

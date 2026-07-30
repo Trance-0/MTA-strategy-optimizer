@@ -36,8 +36,9 @@ AMC MTA 是纯 Python 标准库数据流水线：
 [AMC MTA 架构](amc_mta/amc-mta-architecture.md)。
 
 策略初始化器同样只使用 Python 标准库。它不改变 MTA 五段键，而是以 Campaign Group
-为顶层，校验四个固定 Campaign、冻结候选池和 `Ad Group → Keyword/SKU` 初始分配。
-Campaign 记录持有单值 `ad_product`，Ad Group 不重复保存该字段。
+为顶层，读取运行请求与候选池两个 JSON，校验四个固定 Campaign、冻结候选和
+`Ad Group → Keyword/SKU` 预期分配。手写推荐是测试夹具而非程序生成结果；Campaign
+记录持有单值 `ad_product`，Ad Group 不重复保存该字段。
 
 ## 知识架构
 
@@ -87,7 +88,7 @@ docs、design-artifacts、_bmad-output 或源码改动
 
 ## 数据与安全边界
 
-- 当前业务输入和输出均为仓库内模拟 CSV。
+- 当前业务输入和输出均为仓库内模拟 CSV/JSON。
 - `.env`、本地覆盖、缓存和普通生成输出由 `.gitignore` 隔离。
 - 未发现实际 API key、私钥或凭证；技能知识文件中的 password/token 字样为示例。
 - 合成用户事件主表和AMC概念事件只用于本地演示，不代表真实AMC可导出用户级事件。

@@ -57,8 +57,9 @@ Campaign → 推荐 Ad Group → Keyword/SKU
 - 三份双模型产物直接给出三项可靠性标准；当前90天样例为 `51 RELIABLE / 0 UNRELIABLE`。
 - 推荐结果还按可靠性给出最终值：可靠时使用 Markov 正式 share，不可靠时使用
   Markov/Shapley share 的升序闭区间；不输出自动化许可字段。
-- 独立策略样例包含一个 Campaign Group、四个 Campaign、冻结候选池、六个推荐
-  Ad Group 和守恒的 `INITIAL_SEED`；它不宣称最优。
+- 独立策略样例用两个 JSON 输入表达一个 Campaign Group、四个 Campaign 和冻结候选池；
+  六个推荐 Ad Group 与守恒的 `INITIAL_SEED` 是测试夹具，不代表生成器已经实现，也不
+  宣称最优。
 
 ## 快速验证
 

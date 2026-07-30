@@ -1,6 +1,6 @@
 {
   "schema_version": "1.1",
-  "generated_at": "2026-07-29T16:39:37.000Z",
+  "generated_at": "2026-07-30T06:15:43.000Z",
   "root": "{project-root}",
   "scope": "all regular workspace files excluding declared protected or generated paths",
   "exclusions": [
@@ -25,16 +25,16 @@
       "reason": "human-owned no-touch file for this migration"
     }
   ],
-  "file_count": 2219,
-  "total_bytes": 31465621,
+  "file_count": 2215,
+  "total_bytes": 31484518,
   "by_top_level": {
     "_bmad": {
       "files": 91,
       "bytes": 925984
     },
     "_bmad-output": {
-      "files": 24,
-      "bytes": 128531
+      "files": 25,
+      "bytes": 134999
     },
     ".agents": {
       "files": 1988,
@@ -58,15 +58,15 @@
     },
     "docs": {
       "files": 38,
-      "bytes": 10643038
+      "bytes": 10643953
     },
     "modules": {
-      "files": 67,
-      "bytes": 3874445
+      "files": 62,
+      "bytes": 3885884
     },
     "README.md": {
       "files": 1,
-      "bytes": 6305
+      "bytes": 6380
     }
   },
   "files": [
@@ -245,6 +245,14 @@
       "size_bytes": 6553,
       "mode": "644",
       "sha256": "a8f580be57b29d2132ab4a2074444ce71e83009775c7b6a05524e66661917be1"
+    },
+    {
+      "path": "_bmad-output/implementation-artifacts/spec-simplify-strategy-simulated-data.md",
+      "top_level": "_bmad-output",
+      "extension": ".md",
+      "size_bytes": 6468,
+      "mode": "644",
+      "sha256": "02df7088ff7623e650ef5580ac78ab286ed56423ac2c163de4f4b2794f846b52"
     },
     {
       "path": "_bmad-output/implementation-artifacts/spec-unified-synthetic-user-event-pipeline.md",
@@ -17018,17 +17026,17 @@
       "path": "docs/architecture.md",
       "top_level": "docs",
       "extension": ".md",
-      "size_bytes": 3815,
+      "size_bytes": 3914,
       "mode": "644",
-      "sha256": "e8bcda5dda2ca748e57b281079ff98e9be0c5ce65cf0551e32f90cbc4862800a"
+      "sha256": "22063b42570c64981f04c6141d34fdb5ccfbc407438f465c30f2b83de3db3ec1"
     },
     {
       "path": "docs/component-inventory.md",
       "top_level": "docs",
       "extension": ".md",
-      "size_bytes": 3784,
+      "size_bytes": 4040,
       "mode": "644",
-      "sha256": "2164c4df23e1f8b628eb433cf1f607dac379e2a011c0f83f4033cea601267fe5"
+      "sha256": "c5165f6880d8fe118b6b079cfa949bac20c0dd1e7c8abc669c3b1815c280c107"
     },
     {
       "path": "docs/development-guide.md",
@@ -17042,9 +17050,9 @@
       "path": "docs/index.md",
       "top_level": "docs",
       "extension": ".md",
-      "size_bytes": 6024,
+      "size_bytes": 6051,
       "mode": "644",
-      "sha256": "5160f047a34bd3ad2852a5c2db5ff1e61bff4d77edeed27fda58919442c80990"
+      "sha256": "3e3917ac49d8a2752de351a921d3d0dc2ce06e05db930827ace0506f7eb78920"
     },
     {
       "path": "docs/product/amc-mta/project-introduction.md",
@@ -17066,17 +17074,17 @@
       "path": "docs/project-overview.md",
       "top_level": "docs",
       "extension": ".md",
-      "size_bytes": 6259,
+      "size_bytes": 6340,
       "mode": "644",
-      "sha256": "b34c552e5ae6258d6d2ef816b8de3b4bdc45b69d22edbc404e5cee1670798532"
+      "sha256": "13e6bdf1c003f9a7349dc05d5ddbfda99879ffc4117657d86b3bcc8eb51d57ba"
     },
     {
       "path": "docs/project-scan-report.json",
       "top_level": "docs",
       "extension": ".json",
-      "size_bytes": 6459,
+      "size_bytes": 6748,
       "mode": "644",
-      "sha256": "2f3f527eea5f8815acb98e3e89b0f674dbd774c241dc1d4fa3acdceb7721f263"
+      "sha256": "60eaf6b4fe50378b37aab61f0ffd87ea57da77b6861c6a41a10c513f93a95737"
     },
     {
       "path": "docs/README.md",
@@ -17266,17 +17274,17 @@
       "path": "docs/source-tree-analysis.md",
       "top_level": "docs",
       "extension": ".md",
-      "size_bytes": 5335,
+      "size_bytes": 5418,
       "mode": "644",
-      "sha256": "7c7a0164a1ff047ee78d8db71893c0cf61dff23e5938e91037c94615a0d1332b"
+      "sha256": "1a6522c6ab45eff1716bb45699948856eaaf1157b0604bae7a428e5cc1d690ef"
     },
     {
       "path": "docs/workspace-file-management.md",
       "top_level": "docs",
       "extension": ".md",
-      "size_bytes": 4851,
+      "size_bytes": 4931,
       "mode": "644",
-      "sha256": "a5b8d2af505d69e3e421fae0d95413f03962e9ffda7ae7ef2299f1d406a9eb64"
+      "sha256": "7b984c1616ab13a6081460a7cf48034ca99634851129e8296c9c8758ec094fef"
     },
     {
       "path": "modules/.DS_Store",
@@ -17671,116 +17679,68 @@
       "sha256": "8a9d54588d92e9980330af91f03783fe3291a39b1053254db155a6dda3475952"
     },
     {
-      "path": "modules/mta_strategy_recommender/data/simulated/campaign_group_relationships.csv",
-      "top_level": "modules",
-      "extension": ".csv",
-      "size_bytes": 204,
-      "mode": "644",
-      "sha256": "3e68be610d58cf3999db77f7192409b7e65555844140e871514e32d58ed33fa8"
-    },
-    {
-      "path": "modules/mta_strategy_recommender/data/simulated/campaign_group.json",
+      "path": "modules/mta_strategy_recommender/data/simulated/candidate_pool.json",
       "top_level": "modules",
       "extension": ".json",
-      "size_bytes": 382,
+      "size_bytes": 3709,
       "mode": "644",
-      "sha256": "427ac82c3b06b53e058a83aa6264b96c6bf20760e7348719b8a1c2cda6a2b53d"
-    },
-    {
-      "path": "modules/mta_strategy_recommender/data/simulated/campaigns.csv",
-      "top_level": "modules",
-      "extension": ".csv",
-      "size_bytes": 303,
-      "mode": "644",
-      "sha256": "3f88a90a4115572fd5a0a9577f474bec9b164f93bb1f46e611eea7b990d4b43a"
-    },
-    {
-      "path": "modules/mta_strategy_recommender/data/simulated/candidate_keywords.csv",
-      "top_level": "modules",
-      "extension": ".csv",
-      "size_bytes": 701,
-      "mode": "644",
-      "sha256": "dac34354f42b96dff469839b8a3bf40ebb1f0ab54ed2f6905480ada0b3c0d8b1"
-    },
-    {
-      "path": "modules/mta_strategy_recommender/data/simulated/candidate_skus.csv",
-      "top_level": "modules",
-      "extension": ".csv",
-      "size_bytes": 610,
-      "mode": "644",
-      "sha256": "98de95fd832d825b0a2b248819fd3ce95e0638de2741e656f34475148a0cd7e4"
-    },
-    {
-      "path": "modules/mta_strategy_recommender/data/simulated/eligible_keyword_sku_pairs.csv",
-      "top_level": "modules",
-      "extension": ".csv",
-      "size_bytes": 732,
-      "mode": "644",
-      "sha256": "d38ef6148099fcdbed9deaa0c2e5ba0f2a04f64b6150c374482d0fc4bebb80fe"
-    },
-    {
-      "path": "modules/mta_strategy_recommender/data/simulated/historical_budgets.csv",
-      "top_level": "modules",
-      "extension": ".csv",
-      "size_bytes": 212,
-      "mode": "644",
-      "sha256": "cde82faafbc6a7b53c1a19cded5972c0be98fe847356e4db1f59d9e5f61afd80"
-    },
-    {
-      "path": "modules/mta_strategy_recommender/data/simulated/initial_recommendation.json",
-      "top_level": "modules",
-      "extension": ".json",
-      "size_bytes": 6023,
-      "mode": "644",
-      "sha256": "3cd6b0448a163edba9037bb2692b808d0281a22003678ae0841ce0da82dcdcae"
+      "sha256": "a39ed2d93f8b72ca7668b2af60dbc60fc6f78a465bb1f2ea2368779629e848dc"
     },
     {
       "path": "modules/mta_strategy_recommender/data/simulated/README.md",
       "top_level": "modules",
       "extension": ".md",
-      "size_bytes": 1912,
+      "size_bytes": 1652,
       "mode": "644",
-      "sha256": "0a9edef006a33b00f6e94c558b8f0401c574a40967dad03e929a9a5195333ceb"
+      "sha256": "2595b8797050b9e2592c3e38d7265912bdd77a61d593e5e45518c80b7ffbf9b7"
+    },
+    {
+      "path": "modules/mta_strategy_recommender/data/simulated/strategy_request.json",
+      "top_level": "modules",
+      "extension": ".json",
+      "size_bytes": 1463,
+      "mode": "644",
+      "sha256": "802ba7bd44c0f4141abd1aee2b7685e0f0ff33de9143f693f6ef13793e69072b"
     },
     {
       "path": "modules/mta_strategy_recommender/docs/model-plan.md",
       "top_level": "modules",
       "extension": ".md",
-      "size_bytes": 8729,
+      "size_bytes": 8667,
       "mode": "644",
-      "sha256": "3b48da60e290c6bc469935670be4534fc5705d903646dae3c49d143de6b7ea5b"
+      "sha256": "2b21b4367b20423463a0681397cd9a4f964456f6c066c54178c97035250f2cf8"
     },
     {
       "path": "modules/mta_strategy_recommender/docs/output-data-contract.md",
       "top_level": "modules",
       "extension": ".md",
-      "size_bytes": 9239,
+      "size_bytes": 9564,
       "mode": "644",
-      "sha256": "46c11ada9b863dd5ea65bc3167b500e9929d1ae67238c87c9622d70231e6fe37"
+      "sha256": "892f6829ff33d8da65ede6089008e9336606b3c089b18f9e5cb4617f817bef75"
     },
     {
       "path": "modules/mta_strategy_recommender/docs/strategy-output-contract.md",
       "top_level": "modules",
       "extension": ".md",
-      "size_bytes": 15909,
+      "size_bytes": 15904,
       "mode": "644",
-      "sha256": "b05bca03837dfee08fcc9233f5fdc7d9a0e46c681bcbdeb6f5b26f8898841711"
+      "sha256": "3ddc7685768fe0951249bd115ae6195d8625915948be42dedde6903dc2c4be3a"
     },
     {
       "path": "modules/mta_strategy_recommender/README.md",
       "top_level": "modules",
       "extension": ".md",
-      "size_bytes": 1733,
+      "size_bytes": 1872,
       "mode": "644",
-      "sha256": "8965e0fd810577ea3ad48e7dd5b6e576a0b0b9dfcc77a83af89b9f3d257992d7"
+      "sha256": "4efdd1a9ce8dfa3d84e83406a302b58ab1236669952665b0dda6902ee14f962f"
     },
     {
       "path": "modules/mta_strategy_recommender/scripts/validate_simulated_hierarchy.py",
       "top_level": "modules",
       "extension": ".py",
-      "size_bytes": 990,
+      "size_bytes": 1284,
       "mode": "644",
-      "sha256": "554f40f41bf639155b7f38aa517ffb50162023e57820b24afbaa967163a75d55"
+      "sha256": "bcfe9ccc50ceaec4b37f72817883962073b1abcbae655685d53614bf2d4fd28a"
     },
     {
       "path": "modules/mta_strategy_recommender/src/__init__.py",
@@ -17794,17 +17754,25 @@
       "path": "modules/mta_strategy_recommender/src/hierarchy_validator.py",
       "top_level": "modules",
       "extension": ".py",
-      "size_bytes": 22979,
+      "size_bytes": 27077,
       "mode": "644",
-      "sha256": "9907f4d8c288cb3da9636666d2c21704cf1838916cac95ff402d77bee806c208"
+      "sha256": "063f75102f3aef747a010fd3bf0a905ba9acd5e9fef3e8157478a33d141efbf1"
+    },
+    {
+      "path": "modules/mta_strategy_recommender/tests/fixtures/expected_initial_recommendation.json",
+      "top_level": "modules",
+      "extension": ".json",
+      "size_bytes": 6023,
+      "mode": "644",
+      "sha256": "3cd6b0448a163edba9037bb2692b808d0281a22003678ae0841ce0da82dcdcae"
     },
     {
       "path": "modules/mta_strategy_recommender/tests/test_hierarchy_validator.py",
       "top_level": "modules",
       "extension": ".py",
-      "size_bytes": 11556,
+      "size_bytes": 16438,
       "mode": "644",
-      "sha256": "e91708843e6c9224c22618048bbb1c4592c0afd0187cc33fc645a79e2cf15906"
+      "sha256": "db49426b883ca1351bad230d89f8cd51002922f67ebd375589295e7359776bbb"
     },
     {
       "path": "modules/README.md",
@@ -17818,9 +17786,9 @@
       "path": "README.md",
       "top_level": "README.md",
       "extension": ".md",
-      "size_bytes": 6305,
+      "size_bytes": 6380,
       "mode": "644",
-      "sha256": "ca3e3790fd346852bcaab33dbda680bb7ee7926ad76951034d7d03856af507b1"
+      "sha256": "62cbd2656fbc557885d27738756d33bb6d4860abc64f776060d34ac3a0e14f34"
     }
   ]
 }

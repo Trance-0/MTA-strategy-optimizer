@@ -9,7 +9,7 @@
 ## 1. 输出文件
 
 ```text
-modules/mta_strategy_recommender/data/simulated/initial_recommendation.json
+modules/mta_strategy_recommender/tests/fixtures/expected_initial_recommendation.json
 ```
 
 当前样例包含：
@@ -117,7 +117,7 @@ Ad Group 和部分分配，不能直接作为校验输入。可运行的完整�
 | `recommended_ad_groups` | array | 推荐的一个或多个 Ad Group |
 
 输出不重复保存 Campaign 的 `ad_product`，调用方通过 `campaign_id` 回查
-`campaigns.csv`。
+`strategy_request.json` 中的 `campaigns`。
 
 当前预算结果为：
 
@@ -133,8 +133,8 @@ Ad Group 和部分分配，不能直接作为校验输入。可运行的完整�
 | 字段 | 类型 | 含义 |
 | --- | --- | --- |
 | `ad_group_id` | string | 推荐 Ad Group 的唯一标识 |
-| `strategy_name` | string | 当前样例中的机器可读策略名称；校验器尚未强制 |
-| `strategy_role` | string | 当前样例中的策略角色；校验器尚未强制 |
+| `strategy_name` | string | 非空的机器可读策略名称；校验器强制提供 |
+| `strategy_role` | string | 非空策略角色；`EXPLORATION` 组数量受请求约束 |
 | `source_candidate_pool_id` | string | 必须与顶层候选池版本一致 |
 | `mta_evidence` | array | 支持该策略的 MTA 五段触点 |
 | `reason_codes` | array[string] | 推荐原因码 |
@@ -195,7 +195,9 @@ Keyword 和 SKU 同时进入一个 Ad Group，不代表可以形成任意笛卡�
 - 每个已分配 Keyword 和 SKU 至少出现在一个 pairing 中；
 - pairing 的 Match Type 与 Keyword 分配一致，并受候选池允许；
 - 同一 Ad Group 不重复 SKU 或 pairing；
-- 同一 Campaign 不重复 `Keyword + Match Type`。
+- 同一 Campaign 不重复 `Keyword + Match Type`；
+- 每组 Keyword/SKU 数量、每 Campaign Ad Group 数量和探索组数量满足请求约束；
+- `EXPLORATION` Pair 必须放入受控探索组并携带对应原因码，不能伪装成核心实体证据。
 
 ## 7. 预算口径
 
@@ -236,11 +238,11 @@ Group              1.00 = 1,000 USD
 
 | 输出 ID | 回查文件 | 获取信息 |
 | --- | --- | --- |
-| `campaign_group_id` | `campaign_group.json` | 平台、市场、账户、币种和预算基线 |
-| `campaign_id` | `campaigns.csv` | Campaign 名称、`ad_product` 和状态 |
-| `keyword_id` | `candidate_keywords.csv` | Keyword 文本、意图和允许 Match Type |
-| `sku_id` | `candidate_skus.csv` | Product、品牌、品类、库存和投放资格 |
-| Keyword/SKU | `eligible_keyword_sku_pairs.csv` | 关系类型和相关性 |
+| `campaign_group_id` | `strategy_request.json` | 平台、市场、账户、币种和可选总预算 |
+| `campaign_id` | `strategy_request.json` 的 `campaigns` | Campaign 名称、`ad_product` 和状态 |
+| `keyword_id` | `candidate_pool.json` 的 `keywords` | Keyword 文本、意图和允许 Match Type |
+| `sku_id` | `candidate_pool.json` 的 `skus` | Product、品牌、品类、库存和投放资格 |
+| Keyword/SKU | `candidate_pool.json` 的 `pair_rules` | 关系类型与是否可分配 |
 
 候选文件和输出必须使用同一个 `candidate_pool_id`，避免混用不同版本的数据。
 
@@ -270,4 +272,4 @@ python3 -m unittest discover \
 ```
 
 校验实现见 [`hierarchy_validator.py`](../src/hierarchy_validator.py)，完整结果见
-[`initial_recommendation.json`](../data/simulated/initial_recommendation.json)。
+[`expected_initial_recommendation.json`](../tests/fixtures/expected_initial_recommendation.json)。

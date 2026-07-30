@@ -20,11 +20,17 @@ def main() -> int:
         "--data-dir",
         type=Path,
         default=MODULE_ROOT / "data" / "simulated",
-        help="Directory containing the independent hierarchy sample.",
+        help="Directory containing strategy_request.json and candidate_pool.json.",
+    )
+    parser.add_argument(
+        "--recommendation",
+        type=Path,
+        default=MODULE_ROOT / "tests" / "fixtures" / "expected_initial_recommendation.json",
+        help="Explicit expected recommendation fixture to validate against the inputs.",
     )
     args = parser.parse_args()
     try:
-        summary = validate_simulated_hierarchy(args.data_dir)
+        summary = validate_simulated_hierarchy(args.data_dir, args.recommendation)
     except HierarchyValidationError as exc:
         print(f"INVALID: {exc}", file=sys.stderr)
         return 1

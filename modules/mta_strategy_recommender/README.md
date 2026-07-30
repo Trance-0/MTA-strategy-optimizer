@@ -16,10 +16,10 @@ Campaign Group
 
 ## 当前交付
 
-- 一个 Group、四个 Campaign 的运行条件模拟数据；
-- 冻结 Keyword/SKU 候选池与明确合法 pairing；
-- 历史预算基线和 `INITIAL_SEED` 推荐样例；
-- Group–Campaign N:N 管理范围与版本化候选池；
+- `strategy_request.json` 中一个 Group、四个 Campaign 的运行条件；
+- `candidate_pool.json` 中冻结的 Keyword/SKU 候选与明确 pairing；
+- 独立测试夹具中的 `INITIAL_SEED` 预期输出，不冒充生成结果；
+- 可选 Group 总预算、MTA 批次和版本化候选池；
 - 层级、候选引用、触点证据、pair、预算守恒和无基线规则校验；
 - AMC MTA 五段输出继续作为上游归因证据，schema 不变；
 - 触点实体聚合提供历史Campaign/Ad Group/Keyword/SKU关联，但不替代冻结候选池。
@@ -37,5 +37,6 @@ python3 -m unittest discover -s modules/mta_strategy_recommender/tests -p 'test_
 - [输出数据契约](docs/output-data-contract.md)
 - [模型策略输出契约](docs/strategy-output-contract.md)
 - [模拟数据说明](data/simulated/README.md)
+- [预期输出夹具](tests/fixtures/expected_initial_recommendation.json)
 - [层级校验器](src/hierarchy_validator.py)
 - [AMC MTA 上游输出](../amc_mta/outputs/attribution/)

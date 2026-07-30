@@ -1,7 +1,0 @@
-campaign_group_id,candidate_pool_id,keyword_id,keyword_text,allowed_match_types,intent,source,eligible
-CG_DEMO_001,pool_demo_2026_07,K_RUNNING_EXACT,running shoes,EXACT|PHRASE,HIGH_INTENT,EXISTING,true
-CG_DEMO_001,pool_demo_2026_07,K_NIKE_EXACT,nike running shoes,EXACT|PHRASE,BRAND,EXISTING,true
-CG_DEMO_001,pool_demo_2026_07,K_LIGHTWEIGHT,lightweight running shoes,PHRASE|BROAD,CATEGORY,VALIDATED,true
-CG_DEMO_001,pool_demo_2026_07,K_TRAIL,trail running shoes,EXACT|PHRASE,CATEGORY,VALIDATED,true
-CG_DEMO_001,pool_demo_2026_07,K_PREMIUM,premium running shoes,PHRASE|BROAD,HIGH_VALUE,VALIDATED,true
-CG_DEMO_001,pool_demo_2026_07,K_DISCOVERY,new running shoe styles,BROAD,EXPLORATION,EXPLORATION,true

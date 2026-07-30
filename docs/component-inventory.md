@@ -13,7 +13,8 @@
 | 命令行脚本 | `modules/amc_mta/scripts/` | 分步生成、归因、比较与校验 |
 | 测试 | `modules/amc_mta/tests/` | 107项单元、契约和端到端验证 |
 | Campaign Group 层级校验 | `modules/mta_strategy_recommender/src/hierarchy_validator.py` | 校验四个 Campaign、候选引用、合法 pairing 和预算守恒 |
-| 初始策略样例 | `modules/mta_strategy_recommender/data/simulated/` | 展示 Group→Campaign→Ad Group→Keyword/SKU 与 `INITIAL_SEED` |
+| 初始策略输入 | `modules/mta_strategy_recommender/data/simulated/` | 两个 JSON 给出 Group、四个 Campaign、候选池和运行约束 |
+| 初始策略预期输出 | `modules/mta_strategy_recommender/tests/fixtures/` | 展示 Group→Campaign→Ad Group→Keyword/SKU 的 `INITIAL_SEED` 契约 |
 
 ## 数据资产
 
@@ -21,7 +22,8 @@
 | --- | ---: | --- |
 | 模拟事实源及派生 CSV | 5 | `modules/amc_mta/data/simulated/` |
 | 正式输出 CSV | 5 | `modules/amc_mta/outputs/attribution/` |
-| 策略初始化模拟文件 | 9 | `modules/mta_strategy_recommender/data/simulated/` |
+| 策略初始化输入文件 | 3 | `modules/mta_strategy_recommender/data/simulated/` |
+| 策略初始化预期输出夹具 | 1 | `modules/mta_strategy_recommender/tests/fixtures/` |
 | 外部 PDF | 7 | `docs/research/` |
 | 外部 DOCX | 2 | `docs/research/amazon/research/` |
 | Amazon Ads OpenAPI JSON | 1 | `docs/research/amazon/research/` |

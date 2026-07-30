@@ -54,8 +54,9 @@ Demo**的状态。
 ### 策略初始化：`modules/mta_strategy_recommender`
 
 现阶段实现 `Campaign Group → Campaign → Ad Group → Keyword/SKU` 的运行条件模拟契约与
-确定性校验。`ad_product` 仅存在于 Campaign 记录；输出是 `INITIAL_SEED`，由下游
-优化团队继续迭代，不声称最高 ROI 或全局最优。
+确定性校验。运行请求与候选池是两个输入 JSON，手写的 `INITIAL_SEED` 仅作为独立测试
+夹具。`ad_product` 仅存在于 Campaign 记录；结果由下游优化团队继续迭代，不声称最高
+ROI 或全局最优。
 
 ### 项目知识：`docs`
 

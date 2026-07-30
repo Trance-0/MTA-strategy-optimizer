@@ -1,38 +1,38 @@
-# Campaign Group 层级模拟数据
+# Campaign Group 策略初始化输入
 
-本目录独立演示策略初始化器的业务输入与输出，层级固定为：
+本目录只保存一次策略初始化所需的业务输入，不保存历史 MTA 证据，也不保存推荐输出。
+层级固定为：
 
 ```text
 Campaign Group
-└── Campaign
-    └── Ad Group（模型推荐）
+└── Campaign（固定四个，每个只有一个 ad_product）
+    └── Ad Group（未来由模型推荐）
         ├── Keyword
         └── SKU
 ```
 
-样例包含一个 Campaign Group、四个 Campaign、冻结的 Keyword/SKU 候选池、明确审核的合法组合、历史预算基线和一份 `INITIAL_SEED` 推荐。`ad_product` 只保存于 Campaign 记录，Ad Group 通过 `campaign_id` 继承该属性。
-
-Keyword/SKU/Match Type 在此是跨广告产品的归一化策略分配，不是可直接提交的平台
-targeting payload；后续 adapter 必须按 Campaign 的 `ad_product` 做支持项映射或拒绝。
-
 | 文件 | 用途 |
 | --- | --- |
-| `campaign_group.json` | Group 运行范围、候选池版本、MTA 批次和可选预算基线 |
-| `campaigns.csv` | 四个 Campaign 及其单值 `ad_product` |
-| `campaign_group_relationships.csv` | Group–Campaign N:N 关系的本次管理范围 |
-| `candidate_keywords.csv` | 本次冻结的 Keyword 候选池 |
-| `candidate_skus.csv` | 本次冻结的 SKU 候选池 |
-| `eligible_keyword_sku_pairs.csv` | 已有、验证、探索或禁止的明确组合；不使用笛卡尔积 |
-| `historical_budgets.csv` | 可选的历史 Campaign 预算基线 |
-| `initial_recommendation.json` | Ad Group 数量、策略、Keyword/SKU 分配和预算种子样例 |
+| `strategy_request.json` | Group 范围、四个 Campaign、候选池/MTA 版本、可选总预算、outcome 权重和容量约束 |
+| `candidate_pool.json` | 六个 Keyword、四个 SKU 及九条明确 Pair 规则；不使用笛卡尔积 |
+
+手写的推荐结果仅是输出契约夹具，位于
+`../../tests/fixtures/expected_initial_recommendation.json`，不代表模型已经生成策略。
+
+后续策略生成器将直接读取历史 MTA 与实体证据：
+
+- `modules/amc_mta/outputs/attribution/amc_mta_recommended_attribution.csv`
+- `modules/amc_mta/data/simulated/amc_touchpoint_entity_aggregate_sample.csv`
+
+当前的 `hierarchy_validator.py` 不读取上述两张历史结果表；它只验证输出夹具中的
+`mta_batch_id`、五段触点格式、Campaign `ad_product` 相容性和 outcome 名称。等策略生成器
+实现后，才会用真实归因数值计算分组和预算种子。
+
+策略输入通过 `mta_batch_id` 和 `candidate_pool_id` 保持可追溯。历史中观察过的实体不自动
+等于本次允许投放的候选，候选池中的探索项也不能伪装成具有直接 MTA 实体证据。
 
 校验命令：
 
 ```bash
-python3 modules/mta_strategy_recommender/scripts/validate_simulated_hierarchy.py
+python3 -B modules/mta_strategy_recommender/scripts/validate_simulated_hierarchy.py
 ```
-
-本目录仍负责策略运行时给定的Campaign、候选池、约束和预算基线，不由历史行为自动
-生成。`modules/amc_mta/data/simulated/amc_touchpoint_entity_aggregate_sample.csv`则从
-统一用户事件主表提供历史触点—Keyword/SKU关联。两者通过实体ID连接，但观察过的
-历史实体不自动等于本次允许投放的候选池。

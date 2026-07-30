@@ -25,8 +25,9 @@
 - 根入口固定为 `README.md`，项目知识主入口固定为 `docs/index.md`。
 - AMC MTA 运行入口固定为 `modules/amc_mta/run_pipeline.py`，模块说明固定为
   `modules/amc_mta/README.md`，模块契约固定在 `modules/amc_mta/docs/`。
-- 策略初始化器入口固定为 `modules/mta_strategy_recommender/README.md`，其独立层级
-  样例固定在 `modules/mta_strategy_recommender/data/simulated/`。
+- 策略初始化器入口固定为 `modules/mta_strategy_recommender/README.md`，两个独立输入
+  固定在 `modules/mta_strategy_recommender/data/simulated/`，手写预期输出固定在
+  `modules/mta_strategy_recommender/tests/fixtures/`。
 - 承担目录导航职责的多文件或核心研究子目录用 `README.md` 作为入口；单份背景原件可由
   上级研究索引直接链接。Amazon 原件索引固定为
   `docs/research/amazon/research/README.md`。

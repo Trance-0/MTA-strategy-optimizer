@@ -85,11 +85,13 @@ _bmad-output/
 
 ```text
 modules/mta_strategy_recommender/
-├── data/simulated/                   # 1 Group、4 Campaign、候选池和 INITIAL_SEED
+├── data/simulated/                   # 两个输入 JSON：请求与候选池
 ├── docs/model-plan.md                # 当前模型计划
 ├── src/hierarchy_validator.py        # 层级、引用、pair 和预算校验
 ├── scripts/validate_simulated_hierarchy.py
-└── tests/test_hierarchy_validator.py
+└── tests/
+    ├── fixtures/                     # INITIAL_SEED 预期输出契约
+    └── test_hierarchy_validator.py
 ```
 
 ## 安装工具区

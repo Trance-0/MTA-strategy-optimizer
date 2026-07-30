@@ -1,0 +1,116 @@
+{
+  "sample_version": "2.0",
+  "candidate_pool_id": "pool_demo_2026_07",
+  "campaign_group_id": "CG_DEMO_001",
+  "keywords": [
+    {
+      "keyword_id": "K_RUNNING_EXACT",
+      "keyword_text": "running shoes",
+      "allowed_match_types": ["EXACT", "PHRASE"],
+      "intent": "HIGH_INTENT",
+      "source": "EXISTING",
+      "eligible": true
+    },
+    {
+      "keyword_id": "K_NIKE_EXACT",
+      "keyword_text": "nike running shoes",
+      "allowed_match_types": ["EXACT", "PHRASE"],
+      "intent": "BRAND",
+      "source": "EXISTING",
+      "eligible": true
+    },
+    {
+      "keyword_id": "K_LIGHTWEIGHT",
+      "keyword_text": "lightweight running shoes",
+      "allowed_match_types": ["PHRASE", "BROAD"],
+      "intent": "CATEGORY",
+      "source": "VALIDATED",
+      "eligible": true
+    },
+    {
+      "keyword_id": "K_TRAIL",
+      "keyword_text": "trail running shoes",
+      "allowed_match_types": ["EXACT", "PHRASE"],
+      "intent": "CATEGORY",
+      "source": "VALIDATED",
+      "eligible": true
+    },
+    {
+      "keyword_id": "K_PREMIUM",
+      "keyword_text": "premium running shoes",
+      "allowed_match_types": ["PHRASE", "BROAD"],
+      "intent": "HIGH_VALUE",
+      "source": "VALIDATED",
+      "eligible": true
+    },
+    {
+      "keyword_id": "K_DISCOVERY",
+      "keyword_text": "new running shoe styles",
+      "allowed_match_types": ["BROAD"],
+      "intent": "EXPLORATION",
+      "source": "EXPLORATION",
+      "eligible": true
+    }
+  ],
+  "skus": [
+    {
+      "sku_id": "SKU_PEG_BLACK",
+      "product_id": "P_PEGASUS_41",
+      "brand": "Nike",
+      "category": "Running Shoes",
+      "segment": "ROAD",
+      "inventory_available": true,
+      "paid_search_enabled": true,
+      "scope_for_search_optimization": true,
+      "source": "EXISTING",
+      "eligible": true
+    },
+    {
+      "sku_id": "SKU_PEG_WHITE",
+      "product_id": "P_PEGASUS_41",
+      "brand": "Nike",
+      "category": "Running Shoes",
+      "segment": "ROAD",
+      "inventory_available": true,
+      "paid_search_enabled": true,
+      "scope_for_search_optimization": true,
+      "source": "EXISTING",
+      "eligible": true
+    },
+    {
+      "sku_id": "SKU_TRAIL_BLUE",
+      "product_id": "P_PEGASUS_TRAIL",
+      "brand": "Nike",
+      "category": "Running Shoes",
+      "segment": "TRAIL",
+      "inventory_available": true,
+      "paid_search_enabled": true,
+      "scope_for_search_optimization": true,
+      "source": "VALIDATED",
+      "eligible": true
+    },
+    {
+      "sku_id": "SKU_VOMERO_RED",
+      "product_id": "P_VOMERO",
+      "brand": "Nike",
+      "category": "Running Shoes",
+      "segment": "PREMIUM",
+      "inventory_available": true,
+      "paid_search_enabled": true,
+      "scope_for_search_optimization": true,
+      "source": "VALIDATED",
+      "eligible": true
+    }
+  ],
+  "pair_rules": [
+    {"keyword_id": "K_RUNNING_EXACT", "sku_id": "SKU_PEG_BLACK", "relationship_type": "EXISTING"},
+    {"keyword_id": "K_RUNNING_EXACT", "sku_id": "SKU_PEG_WHITE", "relationship_type": "EXISTING"},
+    {"keyword_id": "K_NIKE_EXACT", "sku_id": "SKU_PEG_BLACK", "relationship_type": "EXISTING"},
+    {"keyword_id": "K_NIKE_EXACT", "sku_id": "SKU_PEG_WHITE", "relationship_type": "EXISTING"},
+    {"keyword_id": "K_LIGHTWEIGHT", "sku_id": "SKU_PEG_WHITE", "relationship_type": "VALIDATED"},
+    {"keyword_id": "K_TRAIL", "sku_id": "SKU_TRAIL_BLUE", "relationship_type": "VALIDATED"},
+    {"keyword_id": "K_PREMIUM", "sku_id": "SKU_VOMERO_RED", "relationship_type": "VALIDATED"},
+    {"keyword_id": "K_DISCOVERY", "sku_id": "SKU_PEG_BLACK", "relationship_type": "EXPLORATION"},
+    {"keyword_id": "K_DISCOVERY", "sku_id": "SKU_VOMERO_RED", "relationship_type": "BLOCKED"}
+  ]
+}

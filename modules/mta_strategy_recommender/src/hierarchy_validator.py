@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import csv
 import json
 import math
 from pathlib import Path
@@ -8,17 +7,12 @@ from typing import Any
 
 
 EXPECTED_CAMPAIGN_COUNT = 4
+SUPPORTED_SAMPLE_VERSION = "2.0"
+ALLOWED_MATCH_TYPES = {"EXACT", "PHRASE", "BROAD"}
+ALLOWED_CANDIDATE_SOURCES = {"EXISTING", "VALIDATED", "EXPLORATION"}
 ALLOWED_PAIR_TYPES = {"EXISTING", "VALIDATED", "EXPLORATION", "BLOCKED"}
 ASSIGNABLE_PAIR_TYPES = ALLOWED_PAIR_TYPES - {"BLOCKED"}
-REQUIRED_FILES = {
-    "campaign_group": "campaign_group.json",
-    "campaigns": "campaigns.csv",
-    "campaign_group_relationships": "campaign_group_relationships.csv",
-    "keywords": "candidate_keywords.csv",
-    "skus": "candidate_skus.csv",
-    "pairs": "eligible_keyword_sku_pairs.csv",
-    "recommendation": "initial_recommendation.json",
-}
+REQUIRED_INPUT_FILES = ("strategy_request.json", "candidate_pool.json")
 
 
 class HierarchyValidationError(ValueError):
@@ -36,24 +30,14 @@ def _read_json(path: Path) -> dict[str, Any]:
     return value
 
 
-def _read_csv(path: Path) -> list[dict[str, str]]:
-    try:
-        with path.open(newline="", encoding="utf-8") as handle:
-            reader = csv.DictReader(handle)
-            if not reader.fieldnames:
-                raise HierarchyValidationError(f"{path}: CSV header is missing")
-            return [
-                {key: (value or "").strip() for key, value in row.items()}
-                for row in reader
-            ]
-    except OSError as exc:
-        raise HierarchyValidationError(f"cannot read {path}: {exc}") from exc
-
-
 def _required_text(value: object, context: str) -> str:
-    text = "" if value is None else str(value).strip()
+    if not isinstance(value, str):
+        raise HierarchyValidationError(f"{context} must be a non-empty string")
+    text = value.strip()
     if not text:
         raise HierarchyValidationError(f"{context} is required")
+    if text != value:
+        raise HierarchyValidationError(f"{context} must not contain surrounding whitespace")
     return text
 
 
@@ -80,102 +64,175 @@ def _number(value: object, context: str) -> float:
     return number
 
 
-def _unique_index(rows: list[dict[str, str]], key: str, context: str) -> dict[str, dict[str, str]]:
-    result: dict[str, dict[str, str]] = {}
-    for row_number, row in enumerate(rows, start=2):
-        value = _required_text(row.get(key), f"{context} row {row_number} {key}")
+def _integer(value: object, context: str, *, minimum: int) -> int:
+    number = _number(value, context)
+    if not number.is_integer() or number < minimum:
+        raise HierarchyValidationError(
+            f"{context} must be an integer greater than or equal to {minimum}"
+        )
+    return int(number)
+
+
+def _object_list(value: object, context: str, *, nonempty: bool = True) -> list[dict[str, Any]]:
+    if not isinstance(value, list) or (nonempty and not value):
+        suffix = "a non-empty list" if nonempty else "a list"
+        raise HierarchyValidationError(f"{context} must be {suffix}")
+    if any(not isinstance(item, dict) for item in value):
+        raise HierarchyValidationError(f"{context} must contain only objects")
+    return value
+
+
+def _unique_index(rows: list[dict[str, Any]], key: str, context: str) -> dict[str, dict[str, Any]]:
+    result: dict[str, dict[str, Any]] = {}
+    for position, row in enumerate(rows, start=1):
+        value = _required_text(row.get(key), f"{context}[{position}].{key}")
         if value in result:
             raise HierarchyValidationError(f"{context}: duplicate {key} {value}")
         result[value] = row
     return result
 
 
+def _allowed_match_types(value: object, keyword_id: str) -> set[str]:
+    if not isinstance(value, list) or not value:
+        raise HierarchyValidationError(f"keyword {keyword_id} allowed_match_types must be a non-empty list")
+    allowed = {_required_text(item, f"keyword {keyword_id} allowed_match_types") for item in value}
+    if len(allowed) != len(value):
+        raise HierarchyValidationError(f"keyword {keyword_id} repeats an allowed match type")
+    invalid = allowed - ALLOWED_MATCH_TYPES
+    if invalid:
+        raise HierarchyValidationError(
+            f"keyword {keyword_id} has unsupported match type(s): {sorted(invalid)}"
+        )
+    return allowed
+
+
 def _close(left: float, right: float) -> bool:
     return math.isclose(left, right, rel_tol=1e-9, abs_tol=1e-8)
 
 
-def validate_simulated_hierarchy(data_dir: str | Path) -> dict[str, Any]:
+def validate_simulated_hierarchy(
+    data_dir: str | Path,
+    recommendation_path: str | Path,
+) -> dict[str, Any]:
     root = Path(data_dir)
-    missing = [name for name in REQUIRED_FILES.values() if not (root / name).is_file()]
+    missing = [name for name in REQUIRED_INPUT_FILES if not (root / name).is_file()]
     if missing:
         raise HierarchyValidationError(f"missing required sample file(s): {', '.join(missing)}")
+    expected_entries = {*REQUIRED_INPUT_FILES, "README.md"}
+    unexpected_entries = sorted(
+        str(path.relative_to(root))
+        for path in root.iterdir()
+        if path.name not in expected_entries
+    )
+    if unexpected_entries:
+        raise HierarchyValidationError(
+            "expected-output or unrelated content must not be stored in the input directory: "
+            + ", ".join(unexpected_entries)
+        )
+    recommendation_file = Path(recommendation_path)
+    if not recommendation_file.is_file():
+        raise HierarchyValidationError(f"missing recommendation fixture: {recommendation_file}")
 
-    envelope = _read_json(root / REQUIRED_FILES["campaign_group"])
-    group = envelope.get("campaign_group")
+    request = _read_json(root / "strategy_request.json")
+    pool = _read_json(root / "candidate_pool.json")
+    recommendation = _read_json(recommendation_file)
+
+    request_version = _required_text(request.get("sample_version"), "strategy_request.sample_version")
+    pool_version = _required_text(pool.get("sample_version"), "candidate_pool.sample_version")
+    if request_version != SUPPORTED_SAMPLE_VERSION or pool_version != request_version:
+        raise HierarchyValidationError(
+            f"sample_version must match supported version {SUPPORTED_SAMPLE_VERSION}"
+        )
+
+    group = request.get("campaign_group")
     if not isinstance(group, dict):
-        raise HierarchyValidationError("campaign_group.json: campaign_group must be an object")
+        raise HierarchyValidationError("strategy_request.json: campaign_group must be an object")
     group_id = _required_text(group.get("campaign_group_id"), "campaign_group_id")
     for field in ("platform", "marketplace", "advertiser_id", "currency"):
         _required_text(group.get(field), f"campaign_group.{field}")
-    pool_id = _required_text(envelope.get("candidate_pool_id"), "candidate_pool_id")
-    mta_batch_id = _required_text(envelope.get("mta_batch_id"), "mta_batch_id")
+    pool_id = _required_text(request.get("candidate_pool_id"), "strategy_request.candidate_pool_id")
+    mta_batch_id = _required_text(request.get("mta_batch_id"), "strategy_request.mta_batch_id")
 
-    campaigns = _read_csv(root / REQUIRED_FILES["campaigns"])
+    campaigns = _object_list(request.get("campaigns"), "strategy_request.campaigns")
     campaign_index = _unique_index(campaigns, "campaign_id", "campaigns")
-    relationship_rows = _read_csv(root / REQUIRED_FILES["campaign_group_relationships"])
-    related_campaign_ids: list[str] = []
-    seen_relationships: set[tuple[str, str]] = set()
-    for row_number, row in enumerate(relationship_rows, start=2):
-        relationship_group_id = _required_text(
-            row.get("campaign_group_id"), f"campaign_group_relationships row {row_number} campaign_group_id"
-        )
-        relationship_campaign_id = _required_text(
-            row.get("campaign_id"), f"campaign_group_relationships row {row_number} campaign_id"
-        )
-        relationship_key = (relationship_group_id, relationship_campaign_id)
-        if relationship_key in seen_relationships:
-            raise HierarchyValidationError(
-                f"duplicate Campaign Group/Campaign relationship {relationship_group_id}/{relationship_campaign_id}"
-            )
-        seen_relationships.add(relationship_key)
-        if relationship_campaign_id not in campaign_index:
-            raise HierarchyValidationError(
-                f"Campaign Group relationship references unknown campaign {relationship_campaign_id}"
-            )
-        if relationship_group_id == group_id:
-            related_campaign_ids.append(relationship_campaign_id)
-    if len(related_campaign_ids) != EXPECTED_CAMPAIGN_COUNT or len(set(related_campaign_ids)) != EXPECTED_CAMPAIGN_COUNT:
+    if len(campaign_index) != EXPECTED_CAMPAIGN_COUNT:
         raise HierarchyValidationError(
             f"campaign_group {group_id} must contain exactly {EXPECTED_CAMPAIGN_COUNT} campaigns; "
-            f"found {len(set(related_campaign_ids))}"
+            f"found {len(campaign_index)}"
         )
-    if set(related_campaign_ids) != set(campaign_index):
-        raise HierarchyValidationError("sample campaigns must all be related to the current Campaign Group")
     for campaign_id, row in campaign_index.items():
+        _required_text(row.get("campaign_name"), f"campaign {campaign_id} campaign_name")
         ad_product = _required_text(row.get("ad_product"), f"campaign {campaign_id} ad_product")
         if any(separator in ad_product for separator in ("|", ",", ";")):
             raise HierarchyValidationError(f"campaign {campaign_id} ad_product must be one scalar value")
-        if row.get("status", "").lower() != "enabled":
+        if str(row.get("status", "")).lower() != "enabled":
             raise HierarchyValidationError(f"campaign {campaign_id} must be enabled")
+        _required_text(row.get("targeting"), f"campaign {campaign_id} targeting")
 
-    keyword_rows = _read_csv(root / REQUIRED_FILES["keywords"])
-    sku_rows = _read_csv(root / REQUIRED_FILES["skus"])
-    keyword_index = _unique_index(keyword_rows, "keyword_id", "candidate_keywords")
-    sku_index = _unique_index(sku_rows, "sku_id", "candidate_skus")
-    for kind, indexed in (("keyword", keyword_index), ("sku", sku_index)):
-        for item_id, row in indexed.items():
-            if row.get("campaign_group_id") != group_id:
-                raise HierarchyValidationError(f"{kind} {item_id} belongs to a different campaign_group_id")
-            if row.get("candidate_pool_id") != pool_id:
-                raise HierarchyValidationError(f"{kind} {item_id} belongs to a different candidate_pool_id")
-            _bool(row.get("eligible"), f"{kind} {item_id} eligible")
-            if kind == "sku":
-                for field in ("inventory_available", "paid_search_enabled", "scope_for_search_optimization"):
-                    if not _bool(row.get(field), f"sku {item_id} {field}"):
-                        raise HierarchyValidationError(f"sku {item_id} is not executable: {field} is false")
+    weights = request.get("outcome_weights")
+    if not isinstance(weights, dict) or set(weights) != {"converted_users", "purchase_count", "revenue"}:
+        raise HierarchyValidationError("outcome_weights must contain converted_users, purchase_count and revenue")
+    if not _close(sum(_number(value, f"outcome_weights.{name}") for name, value in weights.items()), 1.0):
+        raise HierarchyValidationError("outcome_weights must sum to 1")
 
-    pair_rows = _read_csv(root / REQUIRED_FILES["pairs"])
-    pair_index: dict[tuple[str, str], dict[str, str]] = {}
-    for row_number, row in enumerate(pair_rows, start=2):
-        keyword_id = _required_text(row.get("keyword_id"), f"pair row {row_number} keyword_id")
-        sku_id = _required_text(row.get("sku_id"), f"pair row {row_number} sku_id")
-        if row.get("campaign_group_id") != group_id:
-            raise HierarchyValidationError(f"pair {keyword_id}/{sku_id} belongs to a different campaign_group_id")
-        if row.get("candidate_pool_id") != pool_id:
-            raise HierarchyValidationError(f"pair {keyword_id}/{sku_id} belongs to a different candidate_pool_id")
+    constraints = request.get("ad_group_constraints")
+    if not isinstance(constraints, dict):
+        raise HierarchyValidationError("ad_group_constraints must be an object")
+    min_keywords = _integer(constraints.get("min_keywords"), "ad_group_constraints.min_keywords", minimum=1)
+    max_keywords = _integer(constraints.get("max_keywords"), "ad_group_constraints.max_keywords", minimum=1)
+    min_skus = _integer(constraints.get("min_skus"), "ad_group_constraints.min_skus", minimum=1)
+    max_skus = _integer(constraints.get("max_skus"), "ad_group_constraints.max_skus", minimum=1)
+    max_ad_groups = _integer(
+        constraints.get("max_ad_groups_per_campaign"),
+        "ad_group_constraints.max_ad_groups_per_campaign",
+        minimum=1,
+    )
+    max_exploration_groups = _integer(
+        constraints.get("max_exploration_groups_per_campaign"),
+        "ad_group_constraints.max_exploration_groups_per_campaign",
+        minimum=0,
+    )
+    if min_keywords > max_keywords or min_skus > max_skus:
+        raise HierarchyValidationError("ad_group_constraints minimum cannot exceed maximum")
+
+    if pool.get("candidate_pool_id") != pool_id:
+        raise HierarchyValidationError("candidate_pool.json candidate_pool_id does not match strategy request")
+    if pool.get("campaign_group_id") != group_id:
+        raise HierarchyValidationError("candidate_pool.json campaign_group_id does not match strategy request")
+    keyword_rows = _object_list(pool.get("keywords"), "candidate_pool.keywords")
+    sku_rows = _object_list(pool.get("skus"), "candidate_pool.skus")
+    pair_rows = _object_list(pool.get("pair_rules"), "candidate_pool.pair_rules")
+    keyword_index = _unique_index(keyword_rows, "keyword_id", "candidate_pool.keywords")
+    sku_index = _unique_index(sku_rows, "sku_id", "candidate_pool.skus")
+    keyword_match_types: dict[str, set[str]] = {}
+    for keyword_id, row in keyword_index.items():
+        _required_text(row.get("keyword_text"), f"keyword {keyword_id} keyword_text")
+        _required_text(row.get("intent"), f"keyword {keyword_id} intent")
+        source = _required_text(row.get("source"), f"keyword {keyword_id} source")
+        if source not in ALLOWED_CANDIDATE_SOURCES:
+            raise HierarchyValidationError(f"keyword {keyword_id} has unsupported source {source}")
+        _bool(row.get("eligible"), f"keyword {keyword_id} eligible")
+        keyword_match_types[keyword_id] = _allowed_match_types(row.get("allowed_match_types"), keyword_id)
+    for sku_id, row in sku_index.items():
+        for field in ("product_id", "brand", "category", "segment"):
+            _required_text(row.get(field), f"sku {sku_id} {field}")
+        source = _required_text(row.get("source"), f"sku {sku_id} source")
+        if source not in ALLOWED_CANDIDATE_SOURCES:
+            raise HierarchyValidationError(f"sku {sku_id} has unsupported source {source}")
+        _bool(row.get("eligible"), f"sku {sku_id} eligible")
+        for field in ("inventory_available", "paid_search_enabled", "scope_for_search_optimization"):
+            if not _bool(row.get(field), f"sku {sku_id} {field}"):
+                raise HierarchyValidationError(f"sku {sku_id} is not executable: {field} is false")
+
+    pair_index: dict[tuple[str, str], dict[str, Any]] = {}
+    for position, row in enumerate(pair_rows, start=1):
+        keyword_id = _required_text(row.get("keyword_id"), f"pair_rules[{position}].keyword_id")
+        sku_id = _required_text(row.get("sku_id"), f"pair_rules[{position}].sku_id")
         if keyword_id not in keyword_index or sku_id not in sku_index:
             raise HierarchyValidationError(f"pair {keyword_id}/{sku_id} references an item outside the candidate pool")
-        relationship = _required_text(row.get("relationship_type"), f"pair {keyword_id}/{sku_id} relationship_type")
+        relationship = _required_text(
+            row.get("relationship_type"), f"pair {keyword_id}/{sku_id} relationship_type"
+        )
         if relationship not in ALLOWED_PAIR_TYPES:
             raise HierarchyValidationError(f"pair {keyword_id}/{sku_id} has unsupported relationship_type {relationship}")
         key = (keyword_id, sku_id)
@@ -183,25 +240,10 @@ def validate_simulated_hierarchy(data_dir: str | Path) -> dict[str, Any]:
             raise HierarchyValidationError(f"duplicate keyword/SKU pair {keyword_id}/{sku_id}")
         pair_index[key] = row
 
-    historical_path = root / "historical_budgets.csv"
-    historical_rows = _read_csv(historical_path) if historical_path.is_file() else []
-    budget_baseline_value = group.get("budget_baseline")
-    has_budget_baseline = budget_baseline_value not in (None, "")
-    budget_baseline = _number(budget_baseline_value, "campaign_group.budget_baseline") if has_budget_baseline else None
-    if historical_rows and not has_budget_baseline:
-        raise HierarchyValidationError("historical_budgets.csv requires campaign_group.budget_baseline")
-    if historical_rows:
-        historical_index = _unique_index(historical_rows, "campaign_id", "historical_budgets")
-        if set(historical_index) != set(campaign_index):
-            raise HierarchyValidationError("historical_budgets must contain every campaign exactly once")
-        if any(row.get("campaign_group_id") != group_id for row in historical_rows):
-            raise HierarchyValidationError("historical_budgets contains a different campaign_group_id")
-        historical_share = sum(_number(row.get("historical_budget_share"), "historical_budget_share") for row in historical_rows)
-        historical_amount = sum(_number(row.get("current_daily_budget"), "current_daily_budget") for row in historical_rows)
-        if not _close(historical_share, 1.0) or not _close(historical_amount, budget_baseline or 0.0):
-            raise HierarchyValidationError("historical campaign budgets must conserve Group share and amount")
+    budget_value = group.get("total_daily_budget")
+    has_budget_baseline = budget_value not in (None, "")
+    total_daily_budget = _number(budget_value, "campaign_group.total_daily_budget") if has_budget_baseline else None
 
-    recommendation = _read_json(root / REQUIRED_FILES["recommendation"])
     if recommendation.get("campaign_group_id") != group_id:
         raise HierarchyValidationError("recommendation campaign_group_id does not match input")
     if recommendation.get("candidate_pool_id") != pool_id or recommendation.get("mta_batch_id") != mta_batch_id:
@@ -213,10 +255,11 @@ def validate_simulated_hierarchy(data_dir: str | Path) -> dict[str, Any]:
     if _bool(recommendation.get("is_optimized"), "recommendation.is_optimized"):
         raise HierarchyValidationError("initial strategy must not claim to be optimized")
 
-    recommendation_campaigns = recommendation.get("campaigns")
-    if not isinstance(recommendation_campaigns, list):
-        raise HierarchyValidationError("recommendation.campaigns must be a list")
-    recommended_ids = [_required_text(item.get("campaign_id") if isinstance(item, dict) else None, "recommendation campaign_id") for item in recommendation_campaigns]
+    recommendation_campaigns = _object_list(recommendation.get("campaigns"), "recommendation.campaigns")
+    recommended_ids = [
+        _required_text(item.get("campaign_id"), "recommendation campaign_id")
+        for item in recommendation_campaigns
+    ]
     if len(recommended_ids) != len(set(recommended_ids)) or set(recommended_ids) != set(campaign_index):
         raise HierarchyValidationError("recommendation must contain every input campaign exactly once")
 
@@ -226,18 +269,27 @@ def validate_simulated_hierarchy(data_dir: str | Path) -> dict[str, Any]:
     total_amount = 0.0
     ad_group_count = 0
     for campaign_output in recommendation_campaigns:
-        campaign_id = campaign_output["campaign_id"]
+        campaign_id = _required_text(
+            campaign_output.get("campaign_id"), "recommendation campaign_id"
+        )
         if "ad_product" in campaign_output:
-            raise HierarchyValidationError(f"recommendation campaign {campaign_id} must inherit ad_product from campaigns.csv")
-        campaign_share = _number(campaign_output.get("budget_seed_share"), f"campaign {campaign_id} budget_seed_share")
-        groups = campaign_output.get("recommended_ad_groups")
-        if not isinstance(groups, list) or not groups:
-            raise HierarchyValidationError(f"campaign {campaign_id} must contain recommended_ad_groups")
+            raise HierarchyValidationError(
+                f"recommendation campaign {campaign_id} must inherit ad_product from strategy_request.json"
+            )
+        campaign_share = _number(
+            campaign_output.get("budget_seed_share"), f"campaign {campaign_id} budget_seed_share"
+        )
+        groups = _object_list(
+            campaign_output.get("recommended_ad_groups"), f"campaign {campaign_id} recommended_ad_groups"
+        )
+        if len(groups) > max_ad_groups:
+            raise HierarchyValidationError(
+                f"campaign {campaign_id} exceeds max_ad_groups_per_campaign"
+            )
+        exploration_group_count = 0
         group_share = 0.0
         group_amount = 0.0
         for ad_group in groups:
-            if not isinstance(ad_group, dict):
-                raise HierarchyValidationError(f"campaign {campaign_id} has a non-object Ad Group")
             ad_group_id = _required_text(ad_group.get("ad_group_id"), f"campaign {campaign_id} ad_group_id")
             if ad_group_id in seen_ad_groups:
                 raise HierarchyValidationError(f"duplicate ad_group_id {ad_group_id}")
@@ -246,23 +298,34 @@ def validate_simulated_hierarchy(data_dir: str | Path) -> dict[str, Any]:
                 raise HierarchyValidationError(f"Ad Group {ad_group_id} must inherit ad_product from its Campaign")
             if ad_group.get("source_candidate_pool_id") != pool_id:
                 raise HierarchyValidationError(f"Ad Group {ad_group_id} candidate pool lineage does not match")
+            _required_text(ad_group.get("strategy_name"), f"Ad Group {ad_group_id} strategy_name")
+            strategy_role = _required_text(
+                ad_group.get("strategy_role"), f"Ad Group {ad_group_id} strategy_role"
+            )
+            exploration_group_count += strategy_role == "EXPLORATION"
             reason_codes = ad_group.get("reason_codes")
             if not isinstance(reason_codes, list) or not reason_codes:
                 raise HierarchyValidationError(f"Ad Group {ad_group_id} must contain reason_codes")
+            normalized_reason_codes: set[str] = set()
             for reason_code in reason_codes:
-                _required_text(reason_code, f"Ad Group {ad_group_id} reason_code")
+                normalized_reason_codes.add(
+                    _required_text(reason_code, f"Ad Group {ad_group_id} reason_code")
+                )
             confidence = _number(ad_group.get("confidence"), f"Ad Group {ad_group_id} confidence")
             if confidence > 1:
                 raise HierarchyValidationError(f"Ad Group {ad_group_id} confidence must be between 0 and 1")
-            evidence = ad_group.get("mta_evidence")
-            if not isinstance(evidence, list) or not evidence:
-                raise HierarchyValidationError(f"Ad Group {ad_group_id} must contain MTA evidence")
-            expected_ad_product = campaign_index[campaign_id]["ad_product"]
+            evidence = _object_list(ad_group.get("mta_evidence"), f"Ad Group {ad_group_id} MTA evidence")
+            expected_ad_product = _required_text(
+                campaign_index[campaign_id].get("ad_product"), f"campaign {campaign_id} ad_product"
+            )
             for item in evidence:
-                if not isinstance(item, dict):
-                    raise HierarchyValidationError(f"Ad Group {ad_group_id} has invalid MTA evidence")
                 touchpoint = _required_text(item.get("touchpoint"), f"Ad Group {ad_group_id} evidence touchpoint")
-                if len(touchpoint.split(":")) != 5 or touchpoint.split(":", 1)[0] != expected_ad_product:
+                touchpoint_parts = touchpoint.split(":")
+                if (
+                    len(touchpoint_parts) != 5
+                    or any(not part.strip() or part != part.strip() for part in touchpoint_parts)
+                    or touchpoint_parts[0] != expected_ad_product
+                ):
                     raise HierarchyValidationError(
                         f"Ad Group {ad_group_id} MTA touchpoint is not a compatible five-part key"
                     )
@@ -270,52 +333,69 @@ def validate_simulated_hierarchy(data_dir: str | Path) -> dict[str, Any]:
                 if not isinstance(outcomes, list) or not outcomes:
                     raise HierarchyValidationError(f"Ad Group {ad_group_id} evidence must name outcomes")
                 for outcome in outcomes:
+                    outcome = _required_text(
+                        outcome, f"Ad Group {ad_group_id} evidence outcome"
+                    )
                     if outcome not in {"converted_users", "purchase_count", "revenue"}:
                         raise HierarchyValidationError(f"Ad Group {ad_group_id} has unsupported MTA outcome {outcome}")
             ad_group_count += 1
             share = _number(ad_group.get("budget_seed_share"), f"Ad Group {ad_group_id} budget_seed_share")
             group_share += share
 
-            keywords = ad_group.get("keywords")
-            skus = ad_group.get("skus")
-            pairings = ad_group.get("pairings")
-            if not isinstance(keywords, list) or not keywords or not isinstance(skus, list) or not skus:
-                raise HierarchyValidationError(f"Ad Group {ad_group_id} must contain parallel Keyword and SKU lists")
-            if not isinstance(pairings, list) or not pairings:
-                raise HierarchyValidationError(f"Ad Group {ad_group_id} must contain explicit pairings")
+            keywords = _object_list(ad_group.get("keywords"), f"Ad Group {ad_group_id} keywords")
+            skus = _object_list(ad_group.get("skus"), f"Ad Group {ad_group_id} skus")
+            pairings = _object_list(ad_group.get("pairings"), f"Ad Group {ad_group_id} pairings")
+            if not min_keywords <= len(keywords) <= max_keywords:
+                raise HierarchyValidationError(
+                    f"Ad Group {ad_group_id} keyword count violates capacity constraints"
+                )
+            if not min_skus <= len(skus) <= max_skus:
+                raise HierarchyValidationError(
+                    f"Ad Group {ad_group_id} SKU count violates capacity constraints"
+                )
             assigned_keywords: set[str] = set()
+            assigned_keyword_matches: set[tuple[str, str]] = set()
             assigned_skus: set[str] = set()
             for keyword in keywords:
-                if not isinstance(keyword, dict):
-                    raise HierarchyValidationError(f"Ad Group {ad_group_id} has an invalid Keyword assignment")
                 keyword_id = _required_text(keyword.get("keyword_id"), f"Ad Group {ad_group_id} keyword_id")
                 match_type = _required_text(keyword.get("match_type"), f"Ad Group {ad_group_id} match_type")
-                if keyword_id not in keyword_index or not _bool(keyword_index[keyword_id].get("eligible"), f"keyword {keyword_id} eligible"):
-                    raise HierarchyValidationError(f"Ad Group {ad_group_id} references Keyword outside the eligible pool: {keyword_id}")
-                allowed = set(filter(None, keyword_index[keyword_id].get("allowed_match_types", "").split("|")))
-                if match_type not in allowed:
-                    raise HierarchyValidationError(f"Ad Group {ad_group_id} uses unsupported match type {match_type} for {keyword_id}")
+                if keyword_id not in keyword_index or not _bool(
+                    keyword_index[keyword_id].get("eligible"), f"keyword {keyword_id} eligible"
+                ):
+                    raise HierarchyValidationError(
+                        f"Ad Group {ad_group_id} references Keyword outside the eligible pool: {keyword_id}"
+                    )
+                if match_type not in keyword_match_types[keyword_id]:
+                    raise HierarchyValidationError(
+                        f"Ad Group {ad_group_id} uses unsupported match type {match_type} for {keyword_id}"
+                    )
                 duplicate_key = (campaign_id, keyword_id, match_type)
                 if duplicate_key in keyword_match_by_campaign:
-                    raise HierarchyValidationError(f"campaign {campaign_id} repeats Keyword/match type {keyword_id}/{match_type}")
+                    raise HierarchyValidationError(
+                        f"campaign {campaign_id} repeats Keyword/match type {keyword_id}/{match_type}"
+                    )
                 keyword_match_by_campaign.add(duplicate_key)
                 assigned_keywords.add(keyword_id)
+                assigned_keyword_matches.add((keyword_id, match_type))
             for sku in skus:
-                if not isinstance(sku, dict):
-                    raise HierarchyValidationError(f"Ad Group {ad_group_id} has an invalid SKU assignment")
                 sku_id = _required_text(sku.get("sku_id"), f"Ad Group {ad_group_id} sku_id")
                 if sku_id in assigned_skus:
                     raise HierarchyValidationError(f"Ad Group {ad_group_id} repeats SKU {sku_id}")
                 if sku_id not in sku_index or not _bool(sku_index[sku_id].get("eligible"), f"sku {sku_id} eligible"):
-                    raise HierarchyValidationError(f"Ad Group {ad_group_id} references SKU outside the eligible pool: {sku_id}")
+                    raise HierarchyValidationError(
+                        f"Ad Group {ad_group_id} references SKU outside the eligible pool: {sku_id}"
+                    )
                 assigned_skus.add(sku_id)
             paired_keywords: set[str] = set()
+            paired_keyword_matches: set[tuple[str, str]] = set()
             paired_skus: set[str] = set()
             seen_pairings: set[tuple[str, str, str]] = set()
+            uses_exploration_pair = False
             for pairing in pairings:
-                if not isinstance(pairing, dict):
-                    raise HierarchyValidationError(f"Ad Group {ad_group_id} has an invalid pairing")
-                pair = (_required_text(pairing.get("keyword_id"), "pairing keyword_id"), _required_text(pairing.get("sku_id"), "pairing sku_id"))
+                pair = (
+                    _required_text(pairing.get("keyword_id"), "pairing keyword_id"),
+                    _required_text(pairing.get("sku_id"), "pairing sku_id"),
+                )
                 pairing_match_type = _required_text(pairing.get("match_type"), "pairing match_type")
                 pairing_key = (pair[0], pair[1], pairing_match_type)
                 if pairing_key in seen_pairings:
@@ -324,7 +404,9 @@ def validate_simulated_hierarchy(data_dir: str | Path) -> dict[str, Any]:
                     )
                 seen_pairings.add(pairing_key)
                 if pair[0] not in assigned_keywords or pair[1] not in assigned_skus:
-                    raise HierarchyValidationError(f"Ad Group {ad_group_id} pairing references an unassigned Keyword or SKU")
+                    raise HierarchyValidationError(
+                        f"Ad Group {ad_group_id} pairing references an unassigned Keyword or SKU"
+                    )
                 if not any(
                     keyword.get("keyword_id") == pair[0] and keyword.get("match_type") == pairing_match_type
                     for keyword in keywords
@@ -332,29 +414,64 @@ def validate_simulated_hierarchy(data_dir: str | Path) -> dict[str, Any]:
                     raise HierarchyValidationError(f"Ad Group {ad_group_id} pairing references an unassigned match type")
                 source_pair = pair_index.get(pair)
                 if source_pair is None or source_pair["relationship_type"] not in ASSIGNABLE_PAIR_TYPES:
-                    raise HierarchyValidationError(f"Ad Group {ad_group_id} uses a missing or BLOCKED pair {pair[0]}/{pair[1]}")
+                    raise HierarchyValidationError(
+                        f"Ad Group {ad_group_id} uses a missing or BLOCKED pair {pair[0]}/{pair[1]}"
+                    )
+                uses_exploration_pair = (
+                    uses_exploration_pair
+                    or source_pair["relationship_type"] == "EXPLORATION"
+                )
                 paired_keywords.add(pair[0])
+                paired_keyword_matches.add((pair[0], pairing_match_type))
                 paired_skus.add(pair[1])
-            if paired_keywords != assigned_keywords or paired_skus != assigned_skus:
+            if (
+                paired_keywords != assigned_keywords
+                or paired_keyword_matches != assigned_keyword_matches
+                or paired_skus != assigned_skus
+            ):
                 raise HierarchyValidationError(f"Ad Group {ad_group_id} has unpaired Keyword or SKU assignments")
+            if uses_exploration_pair and (
+                strategy_role != "EXPLORATION"
+                or "CONTROLLED_EXPLORATION_PAIR" not in normalized_reason_codes
+            ):
+                raise HierarchyValidationError(
+                    f"Ad Group {ad_group_id} must label exploration pairs as controlled EXPLORATION"
+                )
+            if strategy_role == "EXPLORATION" and not uses_exploration_pair:
+                raise HierarchyValidationError(
+                    f"Ad Group {ad_group_id} claims EXPLORATION without an exploration pair"
+                )
+            if "CONTROLLED_EXPLORATION_PAIR" in normalized_reason_codes and not uses_exploration_pair:
+                raise HierarchyValidationError(
+                    f"Ad Group {ad_group_id} claims controlled exploration without an exploration pair"
+                )
 
             if has_budget_baseline:
                 amount = _number(ad_group.get("initial_daily_budget"), f"Ad Group {ad_group_id} initial_daily_budget")
-                if not _close(amount, share * (budget_baseline or 0.0)):
+                if not _close(amount, share * (total_daily_budget or 0.0)):
                     raise HierarchyValidationError(f"Ad Group {ad_group_id} amount does not match its Group share")
                 group_amount += amount
             elif "initial_daily_budget" in ad_group:
-                raise HierarchyValidationError("no budget baseline: absolute Ad Group budget must be omitted")
+                raise HierarchyValidationError("no total daily budget: absolute Ad Group budget must be omitted")
+
+        if exploration_group_count > max_exploration_groups:
+            raise HierarchyValidationError(
+                f"campaign {campaign_id} exceeds max_exploration_groups_per_campaign"
+            )
 
         if not _close(group_share, campaign_share):
             raise HierarchyValidationError(f"campaign {campaign_id} Ad Group shares do not sum to campaign share")
         if has_budget_baseline:
-            campaign_amount = _number(campaign_output.get("campaign_budget_seed"), f"campaign {campaign_id} campaign_budget_seed")
-            if not _close(campaign_amount, group_amount) or not _close(campaign_amount, campaign_share * (budget_baseline or 0.0)):
+            campaign_amount = _number(
+                campaign_output.get("campaign_budget_seed"), f"campaign {campaign_id} campaign_budget_seed"
+            )
+            if not _close(campaign_amount, group_amount) or not _close(
+                campaign_amount, campaign_share * (total_daily_budget or 0.0)
+            ):
                 raise HierarchyValidationError(f"campaign {campaign_id} budget is not conserved")
             total_amount += campaign_amount
         elif "campaign_budget_seed" in campaign_output:
-            raise HierarchyValidationError("no budget baseline: absolute Campaign budget must be omitted")
+            raise HierarchyValidationError("no total daily budget: absolute Campaign budget must be omitted")
         total_share += campaign_share
 
     if not _close(total_share, 1.0):
@@ -362,11 +479,11 @@ def validate_simulated_hierarchy(data_dir: str | Path) -> dict[str, Any]:
     warnings: list[str] = []
     if has_budget_baseline:
         total = _number(recommendation.get("budget_seed_total"), "recommendation.budget_seed_total")
-        if not _close(total, budget_baseline or 0.0) or not _close(total_amount, total):
+        if not _close(total, total_daily_budget or 0.0) or not _close(total_amount, total):
             raise HierarchyValidationError("Ad Group, Campaign and Campaign Group budgets must be conserved")
     else:
         if "budget_seed_total" in recommendation:
-            raise HierarchyValidationError("no budget baseline: absolute Group budget must be omitted")
+            raise HierarchyValidationError("no total daily budget: absolute Group budget must be omitted")
         warnings.append("NO_BUDGET_BASELINE_RELATIVE_SHARES_ONLY")
 
     return {

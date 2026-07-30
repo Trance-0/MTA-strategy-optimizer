@@ -26,58 +26,33 @@ Campaign Group
 
 ## 2. 初始条件
 
-一次运行必须给定：
+一次运行由 `strategy_request.json` 给定：
 
 ```yaml
+candidate_pool_id: pool_2026_07
+mta_batch_id: mta_2026_07
 campaign_group:
   campaign_group_id: CG001
   platform: AMAZON
   marketplace: US
   advertiser_id: adv_001
   currency: USD
-  candidate_pool_id: pool_2026_07
-  mta_batch_id: mta_2026_07
-
+  total_daily_budget: 1000  # 可省略
 campaigns:
-  - campaign_id: C001
-    ad_product: SPONSORED_PRODUCTS
-    targeting: MANUAL
-    status: enabled
-  - campaign_id: C002
-    ad_product: SPONSORED_BRANDS
-    targeting: MANUAL
-    status: enabled
-  - campaign_id: C003
-    ad_product: SPONSORED_DISPLAY
-    targeting: MANUAL
-    status: enabled
-  - campaign_id: C004
-    ad_product: AMAZON_DSP
-    targeting: MANUAL
-    status: enabled
-
-campaign_group_relationships:
-  - campaign_group_id: CG001
-    campaign_id: C001
-    relationship_type: MANAGED
-    status: active
-  - campaign_group_id: CG001
-    campaign_id: C002
-    relationship_type: MANAGED
-    status: active
-  - campaign_group_id: CG001
-    campaign_id: C003
-    relationship_type: MANAGED
-    status: active
-  - campaign_group_id: CG001
-    campaign_id: C004
-    relationship_type: MANAGED
-    status: active
+  - {campaign_id: C001, ad_product: SPONSORED_PRODUCTS, status: enabled}
+  - {campaign_id: C002, ad_product: SPONSORED_BRANDS, status: enabled}
+  - {campaign_id: C003, ad_product: SPONSORED_DISPLAY, status: enabled}
+  - {campaign_id: C004, ad_product: AMAZON_DSP, status: enabled}
+outcome_weights:
+  converted_users: 0.4
+  purchase_count: 0.3
+  revenue: 0.3
 ```
 
-当前业务规则要求恰有四个唯一 Campaign。底层 Group–Campaign 物理关系仍是 N:N；推荐运行必须校验本 Group 对这四个 Campaign 的管理范围。
+当前业务规则要求恰有四个唯一 Campaign。它们直接嵌套在本次 Group 请求中，因此不再维护
+独立关系表。
 
-可选结构约束：
+必需的结构约束：
 
 ```yaml
 ad_group_constraints:
@@ -91,7 +66,7 @@ ad_group_constraints:
 
 ## 3. 有限候选池
 
-一次运行开始时冻结三组版本化数据：
+一次运行开始时在 `candidate_pool.json` 中冻结三组版本化数据：
 
 1. Keyword 候选：现有有效词、审核后的 harvesting 结果及允许的 Match Type；
 2. SKU 候选：符合 Group 范围、可售、有库存且允许搜索投放的商品；
@@ -114,11 +89,15 @@ AD_PRODUCT:FORMAT:PLACEMENT:CREATIVE:INTERACTION_TYPE
 
 这是 Group 范围内的归因观察维度，不是业务实体树，也不携带 Campaign、Ad Group、Keyword 或 SKU ID。第一段用于把触点策略路由到相容 Campaign，但不会在业务树中新增一层。
 
-实体关联另读取同批模拟事实派生的
+未来的策略生成器还会读取同批模拟事实派生的
 `modules/amc_mta/data/simulated/amc_touchpoint_entity_aggregate_sample.csv`。该表把五段
 触点连接到历史Campaign/Ad Group/Keyword/SKU表现；MTA输出本身仍保持原schema。
 策略只在实体同时属于本次冻结候选池时使用这份历史证据，未观察候选不能伪装成有
 MTA效果。
+
+当前阶段的层级校验器不会打开这些归因结果文件，也不会声称已按 MTA 数值生成策略；
+它只校验人工输出夹具的批次血缘、五段触点格式、outcome 名称和 Campaign 相容性。
+真实归因数值的读取、打分和聚类属于下一阶段策略生成器。
 
 每个触点的初始优先级可按配置计算：
 
@@ -168,15 +147,7 @@ AdGroupScore = Σ TouchpointScore
 MtaSeedShare = AdGroupScore / Σ AdGroupScore
 ```
 
-有历史份额时可进行保守混合：
-
-```text
-FinalSeedShare
-= η × MtaSeedShare
-+ (1 - η) × HistoricalBudgetShare
-```
-
-有绝对预算基线时：
+本阶段不读取历史 Campaign 预算，也不做新旧预算优化。有绝对 Group 总预算时：
 
 ```text
 Ad Group budget seed = Group budget baseline × Ad Group group-level share
@@ -184,7 +155,7 @@ Campaign budget seed = Σ its Ad Group budget seeds
 Group budget seed = Σ Campaign budget seeds
 ```
 
-没有预算基线时，只输出相对份额和 `NO_BUDGET_BASELINE_RELATIVE_SHARES_ONLY` warning，不输出绝对金额。
+没有 Group 总预算时，只输出相对份额和 `NO_BUDGET_BASELINE_RELATIVE_SHARES_ONLY` warning，不输出绝对金额。
 
 ## 7. 输出契约
 
@@ -226,15 +197,18 @@ campaigns:
 
 ```text
 modules/mta_strategy_recommender/
-├── data/simulated/             # 独立业务层级样例与 Group–Campaign 关系表
+├── data/simulated/             # 两个独立输入 JSON
 ├── docs/model-plan.md
 ├── scripts/validate_simulated_hierarchy.py
 ├── src/hierarchy_validator.py
-├── tests/test_hierarchy_validator.py
+├── tests/
+│   ├── fixtures/               # 人工维护的预期输出契约
+│   └── test_hierarchy_validator.py
 └── README.md
 ```
 
-当前阶段实现数据契约、独立样例和确定性校验。后续阶段再接入正式候选数据、MTA adapter、策略聚类与推荐生成，但仍不在本模块中实现优化器。
+当前阶段实现输入契约、独立预期输出夹具和确定性校验。后续阶段再接入正式候选数据、
+MTA adapter、策略聚类与推荐生成，但仍不在本模块中实现优化器。
 
 ## 9. 验收规则
 

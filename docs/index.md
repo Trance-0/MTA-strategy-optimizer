@@ -59,10 +59,10 @@ modules/amc_mta/
 └── docs/      # 当前模块契约与使用说明
 
 modules/mta_strategy_recommender/
-├── data/      # 独立层级模拟输入与 INITIAL_SEED
+├── data/      # strategy_request + candidate_pool 两个输入
 ├── src/       # 层级和候选池校验
 ├── scripts/   # 校验 CLI
-├── tests/     # 合同与边界测试
+├── tests/     # 预期输出夹具、合同与边界测试
 └── docs/      # 模型计划
 
 docs/
