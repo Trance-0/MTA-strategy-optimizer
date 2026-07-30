@@ -86,12 +86,16 @@ _bmad-output/
 ```text
 modules/mta_strategy_recommender/
 ├── data/simulated/                   # 两个输入 JSON：请求与候选池
-├── docs/model-plan.md                # 当前模型计划
-├── src/hierarchy_validator.py        # 层级、引用、pair 和预算校验
-├── scripts/validate_simulated_hierarchy.py
+├── outputs/initial_budget_recommendation.json # 唯一正式预算结果
+├── docs/                             # 当前模型计划与输出契约
+├── src/
+│   ├── budget_recommender.py         # 数量、MTA bridge 与预算生成
+│   └── hierarchy_validator.py        # AMC 血缘与预算结果复算
+├── scripts/
+│   ├── generate_initial_budget.py
+│   └── validate_simulated_hierarchy.py
 └── tests/
-    ├── fixtures/                     # INITIAL_SEED 预期输出契约
-    └── test_hierarchy_validator.py
+    └── test_hierarchy_validator.py   # 34 项合同、兼容与边界测试
 ```
 
 ## 安装工具区
@@ -115,8 +119,9 @@ modules/mta_strategy_recommender/
 
 ## 文件组织判断
 
-- 没有空文件、符号链接、子模块或未归位的业务资产。
-- 生成型 AMC 输出只保留五份正式契约文件，其余 `modules/*/outputs/` 被忽略。
+- 没有空文件、符号链接、子模块、缓存文件或未归位的业务资产。
+- 生成型输出只保留 AMC 五份正式契约 CSV 与策略模块一份正式预算 JSON，其余
+  `modules/*/outputs/` 内容被忽略。
 - 本地个人覆盖 `_bmad/custom/config.user.toml` 已被正确忽略。
 - 研究二进制文件集中在 `docs/research/`，没有混入业务运行目录。
 - 历史文件没有删除，但通过索引和状态说明与当前能力隔离。

@@ -7,10 +7,17 @@ from pathlib import Path
 
 
 MODULE_ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(MODULE_ROOT / "src"))
+PROJECT_ROOT = MODULE_ROOT.parents[1]
+sys.path.insert(0, str(PROJECT_ROOT))
 
-from budget_recommender import BudgetRecommendationError, generate_budget_recommendation  # noqa: E402
-from hierarchy_validator import HierarchyValidationError, load_aligned_strategy_inputs  # noqa: E402
+from modules.mta_strategy_recommender.src.budget_recommender import (  # noqa: E402
+    BudgetRecommendationError,
+    generate_budget_recommendation,
+)
+from modules.mta_strategy_recommender.src.hierarchy_validator import (  # noqa: E402
+    HierarchyValidationError,
+    load_aligned_strategy_inputs,
+)
 
 
 def main() -> int:
@@ -44,15 +51,19 @@ def main() -> int:
         help="Read-only AMC touchpoint/entity aggregate CSV.",
     )
     parser.add_argument(
+        "--check-output",
         "--check-fixture",
+        dest="check_output",
         action="store_true",
-        help="Compare generated output with the committed expected fixture.",
+        help="Compare generated output with the committed formal output.",
     )
     parser.add_argument(
+        "--output",
         "--fixture",
+        dest="output",
         type=Path,
-        default=MODULE_ROOT / "tests" / "fixtures" / "expected_initial_recommendation.json",
-        help="Fixture used by --check-fixture.",
+        default=MODULE_ROOT / "outputs" / "initial_budget_recommendation.json",
+        help="Committed formal output used by --check-output.",
     )
     args = parser.parse_args()
     try:
@@ -66,18 +77,22 @@ def main() -> int:
         print(f"INVALID: {exc}", file=sys.stderr)
         return 1
 
-    if args.check_fixture:
+    if args.check_output:
         try:
-            fixture = json.loads(args.fixture.read_text(encoding="utf-8"))
-        except (OSError, json.JSONDecodeError) as exc:
-            print(f"INVALID: cannot read fixture {args.fixture}: {exc}", file=sys.stderr)
+            committed_output = args.output.read_bytes()
+        except OSError as exc:
+            print(f"INVALID: cannot read output {args.output}: {exc}", file=sys.stderr)
             return 1
-        if fixture != generated:
-            print("INVALID: fixture does not match generated budget seed", file=sys.stderr)
+        expected_output = (
+            json.dumps(generated, ensure_ascii=False, indent=2, sort_keys=False) + "\n"
+        ).encode("utf-8")
+        if committed_output != expected_output:
+            print("INVALID: formal output does not match generated budget seed", file=sys.stderr)
             return 1
         print(
             json.dumps(
                 {
+                    "output_matches": True,
                     "fixture_matches": True,
                     "recommended_ad_group_count": sum(
                         campaign["recommended_ad_group_count"]

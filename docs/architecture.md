@@ -36,9 +36,10 @@ AMC MTA 是纯 Python 标准库数据流水线：
 [AMC MTA 架构](amc_mta/amc-mta-architecture.md)。
 
 策略初始化器同样只使用 Python 标准库。它不改变 MTA 五段键，而是以 Campaign Group
-为顶层，读取运行请求与候选池两个 JSON，校验四个固定 Campaign、冻结候选和
-`Ad Group → Keyword/SKU` 预期分配。手写推荐是测试夹具而非程序生成结果；Campaign
-记录持有单值 `ad_product`，Ad Group 不重复保存该字段。
+为顶层，读取运行请求与候选计数两个 JSON，为四个固定 Campaign 计算新 Ad Group 数量，
+再将全部 MTA 触点经 AMC 实体 bridge 汇总为 Campaign 预算并在匿名新组内等分。正式结果
+由生成器确定性产生；Campaign 记录持有单值 `ad_product`，输出不分配具体 Keyword、SKU
+或 Targeting。
 
 ## 知识架构
 

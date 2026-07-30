@@ -48,3 +48,8 @@ modules/amc_mta/outputs/attribution/*
 !modules/amc_mta/outputs/attribution/amc_mta_model_comparison_touchpoints.csv
 !modules/amc_mta/outputs/attribution/amc_mta_model_comparison_summary.csv
 !modules/amc_mta/outputs/attribution/amc_mta_recommended_attribution.csv
+
+# Keep the deterministic strategy budget seed used by the CLI and tests.
+!modules/mta_strategy_recommender/outputs/
+modules/mta_strategy_recommender/outputs/*
+!modules/mta_strategy_recommender/outputs/initial_budget_recommendation.json

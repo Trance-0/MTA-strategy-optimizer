@@ -1,5 +1,11 @@
 # Ad Group 初始预算输出数据契约（v4）
 
+正式结果固定保存为
+[`../outputs/initial_budget_recommendation.json`](../outputs/initial_budget_recommendation.json)。
+它同时作为自动化测试的唯一提交基准，不在 `tests/` 中维护第二份副本。
+数值保持生成器的 JSON number 原值；展示层可以格式化小数，但本版本不做币种最小单位舍入
+或余数重分配。
+
 ## 1. 当前样例
 
 | 数据 | 数量或口径 |

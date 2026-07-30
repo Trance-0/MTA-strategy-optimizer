@@ -5,6 +5,7 @@ import hashlib
 import json
 import math
 import shutil
+import subprocess
 import sys
 import tempfile
 import unittest
@@ -13,13 +14,13 @@ from pathlib import Path
 
 MODULE_ROOT = Path(__file__).resolve().parents[1]
 PROJECT_ROOT = MODULE_ROOT.parents[1]
-sys.path.insert(0, str(MODULE_ROOT / "src"))
+sys.path.insert(0, str(PROJECT_ROOT))
 
-from budget_recommender import (  # noqa: E402
+from modules.mta_strategy_recommender.src.budget_recommender import (  # noqa: E402
     BudgetRecommendationError,
     generate_budget_recommendation,
 )
-from hierarchy_validator import (  # noqa: E402
+from modules.mta_strategy_recommender.src.hierarchy_validator import (  # noqa: E402
     FORBIDDEN_OUTPUT_FIELDS,
     HierarchyValidationError,
     validate_simulated_hierarchy,
@@ -27,7 +28,7 @@ from hierarchy_validator import (  # noqa: E402
 
 
 SAMPLE_DIR = MODULE_ROOT / "data" / "simulated"
-EXPECTED_FIXTURE = MODULE_ROOT / "tests" / "fixtures" / "expected_initial_recommendation.json"
+EXPECTED_OUTPUT = MODULE_ROOT / "outputs" / "initial_budget_recommendation.json"
 AMC_ATTRIBUTION = (
     PROJECT_ROOT
     / "modules"
@@ -74,11 +75,11 @@ class BudgetOnlyStrategyTests(unittest.TestCase):
         self.temporary = tempfile.TemporaryDirectory()
         temporary_root = Path(self.temporary.name)
         self.data_dir = temporary_root / "simulated"
-        self.recommendation_path = temporary_root / "expected_initial_recommendation.json"
+        self.recommendation_path = temporary_root / "initial_budget_recommendation.json"
         self.attribution_path = temporary_root / AMC_ATTRIBUTION.name
         self.entity_path = temporary_root / AMC_ENTITY.name
         shutil.copytree(SAMPLE_DIR, self.data_dir)
-        shutil.copyfile(EXPECTED_FIXTURE, self.recommendation_path)
+        shutil.copyfile(EXPECTED_OUTPUT, self.recommendation_path)
         shutil.copyfile(AMC_ATTRIBUTION, self.attribution_path)
         shutil.copyfile(AMC_ENTITY, self.entity_path)
 
@@ -111,7 +112,7 @@ class BudgetOnlyStrategyTests(unittest.TestCase):
             entity_rows if entity_rows is not None else _read_csv(self.entity_path),
         )
 
-    def _regenerate_fixture(self) -> dict:
+    def _regenerate_recommendation(self) -> dict:
         result = self._generate()
         self._write_recommendation(result)
         return result
@@ -134,11 +135,28 @@ class BudgetOnlyStrategyTests(unittest.TestCase):
         self.assertEqual(summary["normalization_universe"], "ALL_AVAILABLE_MTA_TOUCHPOINTS")
         self.assertEqual(summary["warnings"], [])
 
-    def test_committed_fixture_is_exact_deterministic_generator_output(self) -> None:
+    def test_committed_output_is_exact_deterministic_generator_output(self) -> None:
         generated_once = self._generate()
         generated_twice = self._generate()
         self.assertEqual(generated_once, generated_twice)
         self.assertEqual(generated_once, self._read_recommendation())
+        command = [
+            sys.executable,
+            "-B",
+            str(MODULE_ROOT / "scripts" / "generate_initial_budget.py"),
+        ]
+        for option in ("--check-output", "--check-fixture"):
+            with self.subTest(option=option):
+                completed = subprocess.run(
+                    [*command, option],
+                    cwd=PROJECT_ROOT,
+                    check=False,
+                    capture_output=True,
+                    text=True,
+                )
+                self.assertEqual(completed.returncode, 0, completed.stderr)
+                self.assertIn('"output_matches": true', completed.stdout)
+                self.assertIn('"fixture_matches": true', completed.stdout)
 
     def test_output_contains_no_detailed_candidate_or_targeting_fields(self) -> None:
         output = self._generate()
@@ -164,7 +182,7 @@ class BudgetOnlyStrategyTests(unittest.TestCase):
             {path.name for path in SAMPLE_DIR.iterdir()},
             {"strategy_request.json", "candidate_pool.json", "README.md"},
         )
-        shutil.copyfile(EXPECTED_FIXTURE, self.data_dir / "extra.json")
+        shutil.copyfile(EXPECTED_OUTPUT, self.data_dir / "extra.json")
         with self.assertRaisesRegex(HierarchyValidationError, "unrelated content"):
             self._validate()
 
@@ -193,7 +211,7 @@ class BudgetOnlyStrategyTests(unittest.TestCase):
         pool = self._read_input("candidate_pool.json")
         pool["campaign_candidate_counts"][0]["eligible_keyword_unit_count"] = 51
         self._write_input("candidate_pool.json", pool)
-        output = self._regenerate_fixture()
+        output = self._regenerate_recommendation()
         campaign = output["campaigns"][0]
         self.assertEqual(campaign["recommended_ad_group_count"], 2)
         self.assertEqual(campaign["count_rationale"]["keyword_capacity_count"], 2)
@@ -206,7 +224,7 @@ class BudgetOnlyStrategyTests(unittest.TestCase):
         pool = self._read_input("candidate_pool.json")
         pool["campaign_candidate_counts"][2]["eligible_target_count"] = 51
         self._write_input("candidate_pool.json", pool)
-        output = self._regenerate_fixture()
+        output = self._regenerate_recommendation()
         self.assertEqual(output["campaigns"][2]["recommended_ad_group_count"], 2)
         self.assertEqual(
             output["campaigns"][2]["count_rationale"]["target_capacity_count"], 2
@@ -472,7 +490,7 @@ class BudgetOnlyStrategyTests(unittest.TestCase):
         request = self._read_input("strategy_request.json")
         request["campaign_group"].pop("total_daily_budget")
         self._write_input("strategy_request.json", request)
-        output = self._regenerate_fixture()
+        output = self._regenerate_recommendation()
         absolute_amount_fields = {
             "budget_seed_total",
             "campaign_budget_seed",
@@ -492,7 +510,7 @@ class BudgetOnlyStrategyTests(unittest.TestCase):
         request = self._read_input("strategy_request.json")
         request["campaign_group"]["total_daily_budget"] = 10
         self._write_input("strategy_request.json", request)
-        output = self._regenerate_fixture()
+        output = self._regenerate_recommendation()
         self.assertEqual(sum(c["recommended_ad_group_count"] for c in output["campaigns"]), 4)
         for campaign in output["campaigns"]:
             self.assertEqual(campaign["execution_status"], "INSUFFICIENT_BUDGET_FOR_MINIMUMS")

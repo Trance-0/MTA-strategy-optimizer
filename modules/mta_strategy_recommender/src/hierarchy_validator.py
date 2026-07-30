@@ -7,7 +7,7 @@ import math
 from pathlib import Path
 from typing import Any
 
-from budget_recommender import (
+from .budget_recommender import (
     BudgetRecommendationError,
     NORMALIZATION_UNIVERSE,
     SUPPORTED_SAMPLE_VERSION,
@@ -279,7 +279,7 @@ def validate_simulated_hierarchy(
     )
     recommendation_file = Path(recommendation_path)
     if not recommendation_file.is_file():
-        raise HierarchyValidationError(f"missing recommendation fixture: {recommendation_file}")
+        raise HierarchyValidationError(f"missing recommendation output: {recommendation_file}")
     recommendation = _read_json(recommendation_file)
     forbidden = _forbidden_paths(recommendation)
     if forbidden:

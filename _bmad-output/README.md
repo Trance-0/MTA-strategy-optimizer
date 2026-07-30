@@ -6,7 +6,10 @@
 
 - [实现产物索引](implementation-artifacts/README.md)
 - [AMC MTA 实现产物](implementation-artifacts/amc_mta/README.md)
-- [Campaign Group 层级迁移规格](implementation-artifacts/spec-campaign-group-hierarchy-migration.md)
+- [MTA 驱动的新 Ad Group 数量与预算规格](implementation-artifacts/spec-mta-driven-ad-group-budget-allocation.md)
+- [工作区结构整理规格](implementation-artifacts/spec-workspace-structure-cleanup.md)
 
-已完成规格和延期正文按模型分组，作为需求、代码范围和验证证据的历史记录。冻结规格是获批时点的快照，其中旧相对路径
-可能已失效，不为修链接而回写；当前事实以模块文档为准。
+`spec-campaign-group-hierarchy-migration.md`、`spec-align-strategy-data-with-amc.md` 和
+`spec-simplify-strategy-simulated-data.md` 保存 budget-only v4 之前的历史阶段，已由当前预算规格
+取代。冻结规格是获批时点的快照，其中旧话术和相对路径不为整理而回写；当前事实以模块
+代码、测试和契约为准。

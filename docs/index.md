@@ -23,6 +23,7 @@ Agent/BMad 工具链。当前业务链路由
 | 全工作区现状 | [工作区总览与现状评价](project-overview.md) |
 | 全量逐文件清单 | [工作区文件清单](workspace-file-inventory.json) |
 | 顶层架构与分区 | [工作区级架构](architecture.md) |
+| 用户维护的系统架构图 | [Draw.io 源文件](系统架构图-07.drawio) |
 | 文件位置与移动规则 | [工作区文件位置管理](workspace-file-management.md) |
 | 可运行模块与命令 | [`modules/amc_mta/README.md`](../modules/amc_mta/README.md) |
 | Campaign Group 初始策略 | [策略初始化器](../modules/mta_strategy_recommender/README.md) |
@@ -60,10 +61,11 @@ modules/amc_mta/
 
 modules/mta_strategy_recommender/
 ├── data/      # strategy_request + candidate_pool 两个输入
-├── src/       # 层级和候选池校验
-├── scripts/   # 校验 CLI
-├── tests/     # 预期输出夹具、合同与边界测试
-└── docs/      # 模型计划
+├── outputs/   # 唯一正式初始预算 JSON
+├── src/       # 数量/预算生成与跨模块校验
+├── scripts/   # 生成和校验 CLI
+├── tests/     # 合同、兼容与边界测试
+└── docs/      # 模型计划与输出契约
 
 docs/
 ├── index.md
@@ -90,10 +92,10 @@ docs/
 
 ## 当前验证基线
 
-截至 2026-07-29，基于统一用户事件主表及其四类派生数据，并运行
+截至 2026-07-30，基于统一用户事件主表及其四类派生数据，并运行
 `python3 modules/amc_mta/run_pipeline.py` 的确定性输出：
 
-- 107 项 AMC MTA 测试通过，策略初始化模块另有19项层级契约测试；
+- 107 项 AMC MTA 测试通过，策略初始化模块另有34项预算模型测试；
 - 17 个五段触点与 Amazon Ads 报告完全对齐；
 - 报告窗口为 2026-01-01 至 2026-03-31，共90天逐日覆盖；
 - 主表有11,147条事件、2,400个合成用户和3,547个journey；
@@ -104,6 +106,6 @@ docs/
 
 这些数字证明样例流水线的一致性，不证明真实投放中的模型有效性或因果增量。
 
-全工作区另已确认：119个技能注册与安装目录一致、105个Python和7个
+全工作区另已确认：119个技能注册与安装目录一致、108个Python和7个
 JavaScript 文件语法通过、项目自有 Markdown 无本地断链。工具层已知限制见
 [工作区总览](project-overview.md)。

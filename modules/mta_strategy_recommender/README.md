@@ -17,7 +17,8 @@ Campaign 份额 ÷ 匿名新组数量 → 每个 Ad Group 初始预算
 - `strategy_request.json`：Group 范围、四个 Campaign、AMC 血缘、outcome 权重、容量和最低预算；
 - `candidate_pool.json`：每个 Campaign 的合格候选计数，不保存具体候选 ID；
 - `budget_recommender.py`：数量、AMC bridge、Campaign 分数和匿名组等分的单一纯函数；
-- 预算-only 预期输出夹具与确定性校验器；
+- `outputs/initial_budget_recommendation.json`：确定性生成的正式预算结果，也是测试唯一基准；
+- budget-only 确定性校验器；
 - AMC 文件只读，`assisted_*` 只在触点内部作为分摊权重。
 
 可靠 MTA 行使用推荐单点；不可靠 `[low,high]` 行只取中点作为可披露的初始预算代表值。
@@ -25,10 +26,13 @@ Campaign 份额 ÷ 匿名新组数量 → 每个 Ad Group 初始预算
 ## 运行
 
 ```bash
-python3 -B modules/mta_strategy_recommender/scripts/generate_initial_budget.py --check-fixture
+python3 -B modules/mta_strategy_recommender/scripts/generate_initial_budget.py --check-output
 python3 -B modules/mta_strategy_recommender/scripts/validate_simulated_hierarchy.py
 python3 -B -m unittest discover -s modules/mta_strategy_recommender/tests -p 'test_*.py'
 ```
+
+不带 `--check-output` 时，生成器把结果写到标准输出，方便下游另行保存。旧
+`--check-fixture` 参数仍是兼容别名；当前文档和新调用统一使用 `--check-output`。
 
 ## 文档
 
@@ -36,3 +40,4 @@ python3 -B -m unittest discover -s modules/mta_strategy_recommender/tests -p 'te
 - [输出数据契约](docs/output-data-contract.md)
 - [预算策略输出契约](docs/strategy-output-contract.md)
 - [模拟输入说明](data/simulated/README.md)
+- [正式初始预算结果](outputs/initial_budget_recommendation.json)

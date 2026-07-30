@@ -1,6 +1,6 @@
 {
   "schema_version": "1.1",
-  "generated_at": "2026-07-30T08:35:37.215Z",
+  "generated_at": "2026-07-30T09:19:08.930Z",
   "root": "{project-root}",
   "scope": "all regular workspace files excluding declared protected or generated paths",
   "exclusions": [
@@ -25,28 +25,24 @@
       "reason": "human-owned no-touch file for this migration"
     }
   ],
-  "file_count": 2219,
-  "total_bytes": 31500511,
+  "file_count": 2217,
+  "total_bytes": 31469955,
   "by_top_level": {
     "_bmad": {
       "files": 91,
       "bytes": 925984
     },
     "_bmad-output": {
-      "files": 27,
-      "bytes": 147086
+      "files": 28,
+      "bytes": 154954
     },
     ".agents": {
       "files": 1988,
       "bytes": 15824487
     },
-    ".DS_Store": {
-      "files": 1,
-      "bytes": 20484
-    },
     ".gitignore": {
       "files": 1,
-      "bytes": 937
+      "bytes": 1174
     },
     ".markdownlint.json": {
       "files": 1,
@@ -57,16 +53,16 @@
       "bytes": 41371
     },
     "docs": {
-      "files": 38,
-      "bytes": 10644482
+      "files": 37,
+      "bytes": 10638264
     },
     "modules": {
-      "files": 64,
-      "bytes": 3889041
+      "files": 63,
+      "bytes": 3876959
     },
     "README.md": {
       "files": 1,
-      "bytes": 6600
+      "bytes": 6723
     }
   },
   "files": [
@@ -234,9 +230,9 @@
       "path": "_bmad-output/implementation-artifacts/README.md",
       "top_level": "_bmad-output",
       "extension": ".md",
-      "size_bytes": 287,
+      "size_bytes": 684,
       "mode": "644",
-      "sha256": "a0ff8a77e140b1285295b9893220d451665d9c85417e532b97b2532a938bb8bd"
+      "sha256": "0db9667770597bc3c55f5b046a172c116e884e84316cdb5a9a6038f5f80e18c4"
     },
     {
       "path": "_bmad-output/implementation-artifacts/spec-align-strategy-data-with-amc.md",
@@ -279,12 +275,20 @@
       "sha256": "28d3768e2b1b63d7a0e182b8707817e2d4ae2e4b6058b9c507d9f0e6bc88d599"
     },
     {
+      "path": "_bmad-output/implementation-artifacts/spec-workspace-structure-cleanup.md",
+      "top_level": "_bmad-output",
+      "extension": ".md",
+      "size_bytes": 7249,
+      "mode": "644",
+      "sha256": "276328e2eb837cd89d210f28c1bb2c6a7d8e4a73ef2cff097f517cd56af3d4e0"
+    },
+    {
       "path": "_bmad-output/README.md",
       "top_level": "_bmad-output",
       "extension": ".md",
-      "size_bytes": 665,
+      "size_bytes": 887,
       "mode": "644",
-      "sha256": "a48ac13cc256e1e78d58a10a8a5ae603da5ac6a4f0447949112717d95837e2e3"
+      "sha256": "bb7a42af267cc241014c7a911d467036f198d9b7c78ede8ba6d29ebfe8309d74"
     },
     {
       "path": "_bmad/_config/bmad-help.csv",
@@ -16919,20 +16923,12 @@
       "sha256": "530dc15444e2230109d11cad917276ab5b4b5d8d5a7f85d810a43dea6847df1e"
     },
     {
-      "path": ".DS_Store",
-      "top_level": ".DS_Store",
-      "extension": "",
-      "size_bytes": 20484,
-      "mode": "644",
-      "sha256": "6214fcc18b82871decfaf7a7ddb3e43c7311a8a2c7830fbfa0cd9f5dd458e8a2"
-    },
-    {
       "path": ".gitignore",
       "top_level": ".gitignore",
       "extension": "",
-      "size_bytes": 937,
+      "size_bytes": 1174,
       "mode": "644",
-      "sha256": "f114e5039db2f6a1c066a80d2fb6fc8927a839ebf7999e8ad489b6dcff6ac5dc"
+      "sha256": "cfa309791650c3aafe93bf4586990c016217c19cde802d030f702f80f798f5ae"
     },
     {
       "path": ".markdownlint.json",
@@ -17007,14 +17003,6 @@
       "sha256": "6e932132a00595d0d4a7c4c80b92d75005e58941c51784b8720509fffaeef5bc"
     },
     {
-      "path": "docs/.DS_Store",
-      "top_level": "docs",
-      "extension": "",
-      "size_bytes": 8196,
-      "mode": "644",
-      "sha256": "097cb1aac5ac703bb98e67c621fd8ea7c68faed273362b37eb0d14059904bdcc"
-    },
-    {
       "path": "docs/amc_mta/amc-mta-architecture.md",
       "top_level": "docs",
       "extension": ".md",
@@ -17042,33 +17030,33 @@
       "path": "docs/architecture.md",
       "top_level": "docs",
       "extension": ".md",
-      "size_bytes": 3914,
+      "size_bytes": 3988,
       "mode": "644",
-      "sha256": "22063b42570c64981f04c6141d34fdb5ccfbc407438f465c30f2b83de3db3ec1"
+      "sha256": "3f9a9eb0d578fe5df2fec469a5238904e176b4ef695f05c5dced64cf3eb41c0c"
     },
     {
       "path": "docs/component-inventory.md",
       "top_level": "docs",
       "extension": ".md",
-      "size_bytes": 4279,
+      "size_bytes": 4319,
       "mode": "644",
-      "sha256": "72ed25d76528af630cd1626b72e4f448e3e8b1ca0d517d7427ef5988c5b007e4"
+      "sha256": "8f617f882ec6c491d01d63f7b0e60df308f22735af53f68001076091226392aa"
     },
     {
       "path": "docs/development-guide.md",
       "top_level": "docs",
       "extension": ".md",
-      "size_bytes": 3242,
+      "size_bytes": 3481,
       "mode": "644",
-      "sha256": "a0e18d681ab8de64c1686d89b365c7ce497cbe7a6f1f9d4c207b88ec33fe4f97"
+      "sha256": "5957c42d0c3892d650ef5cff5230dd3afd4a3072e32abdf237c87a2448516813"
     },
     {
       "path": "docs/index.md",
       "top_level": "docs",
       "extension": ".md",
-      "size_bytes": 6051,
+      "size_bytes": 6213,
       "mode": "644",
-      "sha256": "3e3917ac49d8a2752de351a921d3d0dc2ce06e05db930827ace0506f7eb78920"
+      "sha256": "3301d676a74708962627b0a010f2af4f17cbade7066d3a892e5e39fa51a6106e"
     },
     {
       "path": "docs/product/amc-mta/project-introduction.md",
@@ -17090,25 +17078,25 @@
       "path": "docs/project-overview.md",
       "top_level": "docs",
       "extension": ".md",
-      "size_bytes": 6506,
+      "size_bytes": 6496,
       "mode": "644",
-      "sha256": "576fa473462b8f018082343ee58ed74bebeb8afda4ce134fa94690a9acf220eb"
+      "sha256": "086d4a6be914d0e0c95b7945f870560d52b87da4ac332796211b6d4883cb9153"
     },
     {
       "path": "docs/project-scan-report.json",
       "top_level": "docs",
       "extension": ".json",
-      "size_bytes": 6872,
+      "size_bytes": 7477,
       "mode": "644",
-      "sha256": "5e988338118d72bafa247af904e3d752254bbd6bcb85a3e90ef593aeed8fe249"
+      "sha256": "9be71b686a4a5cfbffcd3c397f8e2a2a816c4c13675ad814dbefcbabb2e6be68"
     },
     {
       "path": "docs/README.md",
       "top_level": "docs",
       "extension": ".md",
-      "size_bytes": 1862,
+      "size_bytes": 1978,
       "mode": "644",
-      "sha256": "95cb051d08baa81d3d27c8218d861c4a507db869e0c94cc912b74afb7b56ca45"
+      "sha256": "97797bd2e1c70d520b1b9c183cc1a5e4b01260798d47019a91511209ee9a792d"
     },
     {
       "path": "docs/research/ab-testing/Controlled Experiments on the Web Survey and Practical Guide.pdf",
@@ -17218,9 +17206,9 @@
       "path": "docs/research/campaign-data-hierarchy.md",
       "top_level": "docs",
       "extension": ".md",
-      "size_bytes": 5091,
+      "size_bytes": 5443,
       "mode": "644",
-      "sha256": "9d7cbf940cfd84691630008b86d33f021b43f705a2aca26e3fd12928afd9a588"
+      "sha256": "7de1c90679e663e4e869685ea130ceff0b66dbdce13e08613c72cf2b889e54e2"
     },
     {
       "path": "docs/research/industry/跨行业AI应用项目-营销场景AI应用与数据.pdf",
@@ -17290,25 +17278,25 @@
       "path": "docs/source-tree-analysis.md",
       "top_level": "docs",
       "extension": ".md",
-      "size_bytes": 5418,
+      "size_bytes": 5690,
       "mode": "644",
-      "sha256": "1a6522c6ab45eff1716bb45699948856eaaf1157b0604bae7a428e5cc1d690ef"
+      "sha256": "88ed833dfa027e1494d39a17256fae641c08967b4af1fbd79fddaf7ebe6eac41"
     },
     {
       "path": "docs/workspace-file-management.md",
       "top_level": "docs",
       "extension": ".md",
-      "size_bytes": 4931,
+      "size_bytes": 5059,
       "mode": "644",
-      "sha256": "7b984c1616ab13a6081460a7cf48034ca99634851129e8296c9c8758ec094fef"
+      "sha256": "5bdbc0c676573ff0290d553464d50a7ce24c8e89d399d43a1857415c0887a207"
     },
     {
-      "path": "modules/.DS_Store",
+      "path": "modules/__init__.py",
       "top_level": "modules",
-      "extension": "",
-      "size_bytes": 8196,
+      "extension": ".py",
+      "size_bytes": 58,
       "mode": "644",
-      "sha256": "c309f41a119a03c840db7a6dfeebb7770d1a17807c8acab48c75960f79fc11cd"
+      "sha256": "0961f5fc66160fafd62875580fafd7c63b517f20f5b8ee5c1335038933968131"
     },
     {
       "path": "modules/amc_mta/config.py",
@@ -17687,14 +17675,6 @@
       "sha256": "3431cf2d055c39fe0d0b68472b271eb2e598f68e138fb8c6d9703cfdbc44f21e"
     },
     {
-      "path": "modules/mta_strategy_recommender/.DS_Store",
-      "top_level": "modules",
-      "extension": "",
-      "size_bytes": 6148,
-      "mode": "644",
-      "sha256": "8a9d54588d92e9980330af91f03783fe3291a39b1053254db155a6dda3475952"
-    },
-    {
       "path": "modules/mta_strategy_recommender/data/simulated/candidate_pool.json",
       "top_level": "modules",
       "extension": ".json",
@@ -17706,9 +17686,9 @@
       "path": "modules/mta_strategy_recommender/data/simulated/README.md",
       "top_level": "modules",
       "extension": ".md",
-      "size_bytes": 1250,
+      "size_bytes": 1385,
       "mode": "644",
-      "sha256": "e4da94a0fff32773d037682cc489667957462002630669dcf72d4c883f1e187e"
+      "sha256": "d9e366da99d1561a8d756bedb3aeedc231992846a8a02cb59a05a4056c5ed9a6"
     },
     {
       "path": "modules/mta_strategy_recommender/data/simulated/strategy_request.json",
@@ -17730,9 +17710,9 @@
       "path": "modules/mta_strategy_recommender/docs/output-data-contract.md",
       "top_level": "modules",
       "extension": ".md",
-      "size_bytes": 2932,
+      "size_bytes": 3303,
       "mode": "644",
-      "sha256": "4eae67fad3190f4b8854117189b847c66a66ee71fe06533cee4ee28f6fe32533"
+      "sha256": "3c8f8954732187500b84b1f5b0668ae283482a8b9933a8b259c166f013eb4e3b"
     },
     {
       "path": "modules/mta_strategy_recommender/docs/strategy-output-contract.md",
@@ -17743,28 +17723,36 @@
       "sha256": "4ebd2781c8e7f33138230da2253404bca3e01e9cf0d901c74b519346c328618d"
     },
     {
+      "path": "modules/mta_strategy_recommender/outputs/initial_budget_recommendation.json",
+      "top_level": "modules",
+      "extension": ".json",
+      "size_bytes": 7729,
+      "mode": "644",
+      "sha256": "7a5c9f1fed8ba208e7db4823e720d1ca39a049792630ede57a960b5190934f6c"
+    },
+    {
       "path": "modules/mta_strategy_recommender/README.md",
       "top_level": "modules",
       "extension": ".md",
-      "size_bytes": 1718,
+      "size_bytes": 2088,
       "mode": "644",
-      "sha256": "b8e11101535d5528f01ef86e704ba33f686929103db9734d4b7a691ae1157ac4"
+      "sha256": "c6b9acd5ed5938c3006cff4568a7e82eef52b260520b0feda441f50370659cc7"
     },
     {
       "path": "modules/mta_strategy_recommender/scripts/generate_initial_budget.py",
       "top_level": "modules",
       "extension": ".py",
-      "size_bytes": 3164,
+      "size_bytes": 3553,
       "mode": "644",
-      "sha256": "ab49938c9d76b65691ac98512f3fb8b70e2a9c5d5c57109aee79e3774bff4c2b"
+      "sha256": "8a1adeefd7ae1b1641912f36da4284a531332c51eb0833e39f80abc3563e4644"
     },
     {
       "path": "modules/mta_strategy_recommender/scripts/validate_simulated_hierarchy.py",
       "top_level": "modules",
       "extension": ".py",
-      "size_bytes": 1861,
+      "size_bytes": 1929,
       "mode": "644",
-      "sha256": "87f47cf7cb09611eb736a0f3a9b1ea696e09420dce548c990722762e47080ac9"
+      "sha256": "ab28df5f8d4b1bae125f29cc8b56fd8b92c2bec0ddade5229c84f78fe2b8de03"
     },
     {
       "path": "modules/mta_strategy_recommender/src/__init__.py",
@@ -17788,39 +17776,31 @@
       "extension": ".py",
       "size_bytes": 13519,
       "mode": "644",
-      "sha256": "9ada117068ba7cc0a4bfb1ccaf8a408a0596a97a5e0b691b17be47550135fa9e"
-    },
-    {
-      "path": "modules/mta_strategy_recommender/tests/fixtures/expected_initial_recommendation.json",
-      "top_level": "modules",
-      "extension": ".json",
-      "size_bytes": 7729,
-      "mode": "644",
-      "sha256": "7a5c9f1fed8ba208e7db4823e720d1ca39a049792630ede57a960b5190934f6c"
+      "sha256": "7f37e2199c1168fc1d257fa51931557b068cceed893b9cdb6be6142209ff9be1"
     },
     {
       "path": "modules/mta_strategy_recommender/tests/test_hierarchy_validator.py",
       "top_level": "modules",
       "extension": ".py",
-      "size_bytes": 25635,
+      "size_bytes": 26462,
       "mode": "644",
-      "sha256": "0e6576ce93321fa0510fe921af0de6a1bdc5a2948e4e4f156a282c7e27e1253c"
+      "sha256": "77ced6fe43555d25aaba06cb2804e9257dc1fc67eff47c2f5bfcd4ba8379659b"
     },
     {
       "path": "modules/README.md",
       "top_level": "modules",
       "extension": ".md",
-      "size_bytes": 1455,
+      "size_bytes": 1499,
       "mode": "644",
-      "sha256": "c0dcda431b0490b7a0fe2e6f303efa9837a39eee113fc9041406dfbbd509b7fb"
+      "sha256": "ca7a04d26c0d41895e94baea701796452fefd59df3a17602adaee08b50ea75fa"
     },
     {
       "path": "README.md",
       "top_level": "README.md",
       "extension": ".md",
-      "size_bytes": 6600,
+      "size_bytes": 6723,
       "mode": "644",
-      "sha256": "57fd99fdca7ee9ab6ec647506aa9b76c54ef279e08cec26fe0453064b8c533b9"
+      "sha256": "b419037ba7a6d8f00066e0d3db0317b10ef90e79523f8680e5c29c4571e41a25"
     }
   ]
 }

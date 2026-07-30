@@ -3,8 +3,8 @@
 本工作区包含两项边界清晰的业务模块、一套本地 Agent/BMad 开发工具以及完整的研究和
 历史追溯资料：[`modules/amc_mta/`](modules/amc_mta/) 提供五段触点归因证据，
 [`modules/mta_strategy_recommender/`](modules/mta_strategy_recommender/) 目前以
-Campaign Group 为顶层，提供与 AMC 触点、实体和预算逐条对齐的初始策略数据契约、样例
-和只读校验；自动生成推荐的 adapter/generator 是后续阶段。
+Campaign Group 为顶层，使用 AMC 触点与实体证据生成新 Ad Group 数量和初始预算，并提供
+可复算的正式结果与只读校验。
 
 AMC MTA 使用五段互动键区分广告产品、形式、位置、创意和曝光/点击，分别运行 Markov 与 Path-level Shapley。策略初始化器采用 `Campaign Group → Campaign → Ad Group → Keyword/SKU` 业务树；`ad_product` 只是 Campaign 的固有字段。两者都不是生产级因果归因或自动预算优化系统。
 
@@ -16,9 +16,10 @@ AMC MTA 使用五段互动键区分广告产品、形式、位置、创意和曝
 | 理解所有目录与阅读顺序 | [全工作区文档总索引](docs/index.md) |
 | 查看项目文档入口说明 | [文档索引说明](docs/README.md) |
 | 管理新增、移动和归档文件 | [工作区文件位置管理](docs/workspace-file-management.md) |
-| 查看声明范围内文件的大小、权限和哈希 | [工作区文件清单](docs/workspace-file-inventory.json)（排除 Git、`log.md`、ignored 个人覆盖及清单自身） |
+| 查看声明范围内文件的大小、权限和哈希 | [工作区文件清单](docs/workspace-file-inventory.json)（排除 Git、两个用户维护文件、ignored 个人覆盖及清单自身） |
 | 运行 AMC MTA 归因 | [AMC MTA 模块说明](modules/amc_mta/README.md) |
-| 验证初始策略层级样例 | [策略初始化器说明](modules/mta_strategy_recommender/README.md) |
+| 生成并验证 Ad Group 初始预算 | [预算初始化器说明](modules/mta_strategy_recommender/README.md) |
+| 查看正式预算结果 | [初始预算 JSON](modules/mta_strategy_recommender/outputs/initial_budget_recommendation.json) |
 | 查看业务模块目录约定 | [模块索引](modules/README.md) |
 | 查看架构与数据流 | [AMC MTA 架构](docs/amc_mta/amc-mta-architecture.md) |
 | 查看成熟度、风险与路线 | [AMC MTA 能力评价](docs/amc_mta/amc-mta-capability-assessment.md) |
@@ -69,7 +70,7 @@ Campaign → 候选容量推荐新 Ad Group 数量 → MTA 初始预算
 python3 -B modules/amc_mta/run_pipeline.py
 python3 modules/amc_mta/scripts/validate_data_alignment.py
 python3 -B -m unittest discover -s modules/amc_mta/tests -p 'test_*.py'
-python3 -B modules/mta_strategy_recommender/scripts/generate_initial_budget.py --check-fixture
+python3 -B modules/mta_strategy_recommender/scripts/generate_initial_budget.py --check-output
 python3 modules/mta_strategy_recommender/scripts/validate_simulated_hierarchy.py
 python3 -m unittest discover -s modules/mta_strategy_recommender/tests -p 'test_*.py'
 ```
@@ -94,7 +95,7 @@ python3 -m unittest discover -s modules/mta_strategy_recommender/tests -p 'test_
 │   └── research/             # 外部研究原件和相关性索引
 ├── modules/
 │   ├── amc_mta/              # 五段触点归因实现
-│   └── mta_strategy_recommender/ # Campaign Group 初始策略模块
+│   └── mta_strategy_recommender/ # Campaign Group 数量与预算初始化器
 ├── design-artifacts/         # 历史 Product Brief、PRD 与决策记录
 ├── .agents/                  # 已安装 Agent 技能
 ├── _bmad/                    # BMad 工作流配置

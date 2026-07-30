@@ -2,13 +2,14 @@
 
 当前项目事实、全工作区结构、阅读顺序和文档状态统一从
 [全工作区文档总索引](index.md)进入。模块参数、字段契约和命令仍放在
-`modules/amc_mta/docs/`。
+`modules/amc_mta/docs/` 与 `modules/mta_strategy_recommender/docs/`。
 
 ## 当前事实
 
 - [当前文档总索引](index.md)
 - [工作区总览与现状评价](project-overview.md)
 - [工作区级架构](architecture.md)
+- [用户维护的系统架构图源文件](系统架构图-07.drawio)
 - [目录结构分析](source-tree-analysis.md)
 - [工作区文件位置管理](workspace-file-management.md)
 - [组件与资产清单](component-inventory.md)

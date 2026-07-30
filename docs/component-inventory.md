@@ -15,7 +15,7 @@
 | Ad Group 数量与预算生成器 | `modules/mta_strategy_recommender/src/budget_recommender.py` | 按候选容量算组数，用 MTA+AMC bridge 算 Campaign 份额并在匿名新组内等分 |
 | Campaign Group 预算校验 | `modules/mta_strategy_recommender/src/hierarchy_validator.py` | 只读校验 AMC SHA/范围、容量复算、bridge、预算守恒和 budget-only schema |
 | 初始预算输入 | `modules/mta_strategy_recommender/data/simulated/` | 两个 JSON 给出 Group、四个 Campaign、AMC 血缘、候选计数、容量和最低预算 |
-| 初始预算预期输出 | `modules/mta_strategy_recommender/tests/fixtures/` | 展示容量生成的 1/1/1/1 与可复算的 `INITIAL_SEED` 预算契约 |
+| 正式初始预算输出 | `modules/mta_strategy_recommender/outputs/initial_budget_recommendation.json` | 保存容量生成的 1/1/1/1 与可复算的 `INITIAL_SEED` 预算结果，也是测试唯一基准 |
 
 ## 数据资产
 
@@ -23,8 +23,8 @@
 | --- | ---: | --- |
 | 模拟事实源及派生 CSV | 5 | `modules/amc_mta/data/simulated/` |
 | 正式输出 CSV | 5 | `modules/amc_mta/outputs/attribution/` |
-| 策略初始化输入文件 | 3 | `modules/mta_strategy_recommender/data/simulated/` |
-| 策略初始化预期输出夹具 | 1 | `modules/mta_strategy_recommender/tests/fixtures/` |
+| 策略初始化输入 JSON | 2 | `modules/mta_strategy_recommender/data/simulated/` |
+| 策略初始化正式输出 | 1 | `modules/mta_strategy_recommender/outputs/` |
 | 外部 PDF | 7 | `docs/research/` |
 | 外部 DOCX | 2 | `docs/research/amazon/research/` |
 | Amazon Ads OpenAPI JSON | 1 | `docs/research/amazon/research/` |
@@ -58,7 +58,7 @@
 
 ## 代码与可执行文件
 
-- Python：105个，语法检查全部通过。
+- Python：108个，语法检查全部通过。
 - JavaScript：7 个，Node.js 语法检查全部通过。
 - Bash：1 个 Story Automator 入口，`bash -n` 通过。
 - Git 可执行文件：15 个，均位于安装工具脚本区域。

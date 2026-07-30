@@ -2,6 +2,9 @@
 
 本目录只有两个 v4 输入 JSON 和本说明，不保存 AMC 数据或模型输出。
 
+确定性正式结果位于
+[`../../outputs/initial_budget_recommendation.json`](../../outputs/initial_budget_recommendation.json)。
+
 | 文件 | 用途 |
 | --- | --- |
 | `strategy_request.json` | Group、四个 Campaign、AMC 文件 SHA/范围、outcome 权重、各广告产品容量与最低预算 |

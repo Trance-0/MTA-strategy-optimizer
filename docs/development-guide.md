@@ -39,11 +39,14 @@ python3 -m unittest discover -s modules/amc_mta/tests -p 'test*.py'
 ## 验证 Campaign Group 初始策略样例
 
 ```bash
+python3 -B modules/mta_strategy_recommender/scripts/generate_initial_budget.py --check-output
 python3 modules/mta_strategy_recommender/scripts/validate_simulated_hierarchy.py
-python3 -m unittest discover -s modules/mta_strategy_recommender/tests -p 'test_*.py'
+python3 -B -m unittest discover -s modules/mta_strategy_recommender/tests -p 'test_*.py'
 ```
 
-该样例与 AMC MTA 输入独立，验证 `Campaign Group → Campaign → Ad Group → Keyword/SKU`、Campaign 单值 `ad_product`、候选引用、合法 pairing、预算守恒和无预算基线行为。
+该初始化器只读 AMC 推荐归因与触点实体聚合文件，并用请求中的 SHA、窗口和范围阻断漂移。
+它验证一个 Campaign Group、四个 Campaign、候选容量得到的新组数量、全部触点 bridge、
+预算守恒和无预算基线行为；不验证或生成具体 Keyword/SKU 分配。当前基线为34项通过。
 
 ## 验证 BMad 配置
 

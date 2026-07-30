@@ -10,7 +10,7 @@
 | --- | --- | --- |
 | 根目录 | 工作区入口和少量全局配置 | `README.md`、忽略/格式规则，以及人工维护的 `log.md` |
 | `modules/amc_mta/` | 五段触点归因实现 | 源码、脚本、测试、模块输入、五份正式输出和模块契约 |
-| `modules/mta_strategy_recommender/` | Campaign Group 初始策略模块 | 模型计划、运行条件模拟数据、校验器和测试 |
+| `modules/mta_strategy_recommender/` | Campaign Group 数量与预算初始化器 | 模型计划、运行条件模拟数据、生成器、正式预算输出、校验器和测试 |
 | `docs/` | 当前项目知识与外部研究 | 总索引、架构、评价、管理规则、扫描结果、当前产品介绍和研究原件 |
 | `design-artifacts/` | 历史产品愿景 | Product Brief、PRD、模型设想、补充和决策记录 |
 | `_bmad-output/` | 工作流追溯 | 已批准规格、实现状态和延期事项 |
@@ -26,8 +26,9 @@
 - AMC MTA 运行入口固定为 `modules/amc_mta/run_pipeline.py`，模块说明固定为
   `modules/amc_mta/README.md`，模块契约固定在 `modules/amc_mta/docs/`。
 - 策略初始化器入口固定为 `modules/mta_strategy_recommender/README.md`，两个独立输入
-  固定在 `modules/mta_strategy_recommender/data/simulated/`，手写预期输出固定在
-  `modules/mta_strategy_recommender/tests/fixtures/`。
+  固定在 `modules/mta_strategy_recommender/data/simulated/`，唯一正式预算结果固定在
+  `modules/mta_strategy_recommender/outputs/initial_budget_recommendation.json`；测试直接复用
+  该结果，不另存 fixture。
 - 承担目录导航职责的多文件或核心研究子目录用 `README.md` 作为入口；单份背景原件可由
   上级研究索引直接链接。Amazon 原件索引固定为
   `docs/research/amazon/research/README.md`。

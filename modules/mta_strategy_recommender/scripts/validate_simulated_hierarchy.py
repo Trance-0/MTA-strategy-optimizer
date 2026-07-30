@@ -7,9 +7,13 @@ from pathlib import Path
 
 
 MODULE_ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(MODULE_ROOT / "src"))
+PROJECT_ROOT = MODULE_ROOT.parents[1]
+sys.path.insert(0, str(PROJECT_ROOT))
 
-from hierarchy_validator import HierarchyValidationError, validate_simulated_hierarchy  # noqa: E402
+from modules.mta_strategy_recommender.src.hierarchy_validator import (  # noqa: E402
+    HierarchyValidationError,
+    validate_simulated_hierarchy,
+)
 
 
 def main() -> int:
@@ -25,8 +29,8 @@ def main() -> int:
     parser.add_argument(
         "--recommendation",
         type=Path,
-        default=MODULE_ROOT / "tests" / "fixtures" / "expected_initial_recommendation.json",
-        help="Expected budget-only recommendation fixture to reproduce.",
+        default=MODULE_ROOT / "outputs" / "initial_budget_recommendation.json",
+        help="Committed formal budget-only recommendation to reproduce.",
     )
     parser.add_argument(
         "--attribution",
