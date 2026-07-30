@@ -28,9 +28,26 @@ def main() -> int:
         default=MODULE_ROOT / "tests" / "fixtures" / "expected_initial_recommendation.json",
         help="Explicit expected recommendation fixture to validate against the inputs.",
     )
+    parser.add_argument(
+        "--attribution",
+        type=Path,
+        default=MODULE_ROOT.parent / "amc_mta" / "outputs" / "attribution" / "amc_mta_recommended_attribution.csv",
+        help="Read-only AMC recommended attribution CSV.",
+    )
+    parser.add_argument(
+        "--entity",
+        type=Path,
+        default=MODULE_ROOT.parent / "amc_mta" / "data" / "simulated" / "amc_touchpoint_entity_aggregate_sample.csv",
+        help="Read-only AMC touchpoint/entity aggregate CSV.",
+    )
     args = parser.parse_args()
     try:
-        summary = validate_simulated_hierarchy(args.data_dir, args.recommendation)
+        summary = validate_simulated_hierarchy(
+            args.data_dir,
+            args.recommendation,
+            args.attribution,
+            args.entity,
+        )
     except HierarchyValidationError as exc:
         print(f"INVALID: {exc}", file=sys.stderr)
         return 1

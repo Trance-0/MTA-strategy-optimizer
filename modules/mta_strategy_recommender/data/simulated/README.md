@@ -13,23 +13,23 @@ Campaign Group
 
 | 文件 | 用途 |
 | --- | --- |
-| `strategy_request.json` | Group 范围、四个 Campaign、候选池/MTA 版本、可选总预算、outcome 权重和容量约束 |
-| `candidate_pool.json` | 六个 Keyword、四个 SKU 及九条明确 Pair 规则；不使用笛卡尔积 |
+| `strategy_request.json` | Group 范围、四个 Campaign、AMC 文件 SHA/窗口、17→6 选点口径、可选总预算、outcome 权重和容量约束 |
+| `candidate_pool.json` | 六个 Keyword、四个 SKU、八条历史 Pair、两条补充 Pair 及两条 SD/DSP 信号规则 |
 
 手写的推荐结果仅是输出契约夹具，位于
 `../../tests/fixtures/expected_initial_recommendation.json`，不代表模型已经生成策略。
 
-后续策略生成器将直接读取历史 MTA 与实体证据：
+当前校验器只读以下历史 MTA 与实体证据：
 
 - `modules/amc_mta/outputs/attribution/amc_mta_recommended_attribution.csv`
 - `modules/amc_mta/data/simulated/amc_touchpoint_entity_aggregate_sample.csv`
 
-当前的 `hierarchy_validator.py` 不读取上述两张历史结果表；它只验证输出夹具中的
-`mta_batch_id`、五段触点格式、Campaign `ad_product` 相容性和 outcome 名称。等策略生成器
-实现后，才会用真实归因数值计算分组和预算种子。
+`hierarchy_validator.py` 校验文件 SHA、账户/窗口、17 个触点、34 条实体、六个选中触点、
+三类 outcome 数值、平台原生定向、实体选择和预算复算。它不会修改或重新生成 AMC。
 
-策略输入通过 `mta_batch_id` 和 `candidate_pool_id` 保持可追溯。历史中观察过的实体不自动
-等于本次允许投放的候选，候选池中的探索项也不能伪装成具有直接 MTA 实体证据。
+策略输入通过 `mta_source`、`mta_batch_id` 和 `candidate_pool_id` 保持可追溯。`evidence_type`
+记录历史或补充证据，`allocation_role` 记录用途，`policy_status` 单独记录允许或禁止；历史中
+出现不等于当前允许投放，补充候选也不能伪装成直接 MTA 实体证据。
 
 校验命令：
 

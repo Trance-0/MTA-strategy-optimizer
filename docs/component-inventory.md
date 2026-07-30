@@ -12,9 +12,9 @@
 | 完整入口 | `modules/amc_mta/run_pipeline.py` | 重建输入派生物与五份输出 |
 | 命令行脚本 | `modules/amc_mta/scripts/` | 分步生成、归因、比较与校验 |
 | 测试 | `modules/amc_mta/tests/` | 107项单元、契约和端到端验证 |
-| Campaign Group 层级校验 | `modules/mta_strategy_recommender/src/hierarchy_validator.py` | 校验四个 Campaign、候选引用、合法 pairing 和预算守恒 |
-| 初始策略输入 | `modules/mta_strategy_recommender/data/simulated/` | 两个 JSON 给出 Group、四个 Campaign、候选池和运行约束 |
-| 初始策略预期输出 | `modules/mta_strategy_recommender/tests/fixtures/` | 展示 Group→Campaign→Ad Group→Keyword/SKU 的 `INITIAL_SEED` 契约 |
+| Campaign Group AMC 对齐校验 | `modules/mta_strategy_recommender/src/hierarchy_validator.py` | 只读校验 AMC SHA/范围、触点数值、历史实体、平台定向和预算复算 |
+| 初始策略输入 | `modules/mta_strategy_recommender/data/simulated/` | 两个 JSON 给出 Group、四个 Campaign、AMC 血缘、候选池和 `17→6` 约束 |
+| 初始策略预期输出 | `modules/mta_strategy_recommender/tests/fixtures/` | 展示 2/2/1/1 六组平台适配且可复算的 `INITIAL_SEED` 契约 |
 
 ## 数据资产
 

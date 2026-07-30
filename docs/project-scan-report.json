@@ -2,14 +2,14 @@
   "workflow_version": "1.3.0",
   "timestamps": {
     "started": "2026-07-20T11:20:00Z",
-    "last_updated": "2026-07-30T06:15:43.000Z"
+    "last_updated": "2026-07-30T07:09:44.024Z"
   },
-  "mode": "simplify_strategy_simulated_data",
+  "mode": "align_strategy_data_with_amc",
   "scan_level": "exhaustive",
   "project_root": "{project-root}",
   "project_knowledge": "docs",
   "scope": "entire workspace excluding declared protected or generated paths",
-  "validated_baseline_commit": "2ad60f2c6a2fdb5cd8e749af13893176caa8b94c",
+  "validated_baseline_commit": "883f7e6",
   "exclusions": [
     {
       "path": ".git/",
@@ -36,22 +36,22 @@
     {
       "step": "inspect",
       "status": "completed",
-      "summary": "Traced the strategy input tables, expected recommendation, hierarchy validator, CLI, tests, and current documentation references."
+      "summary": "Traced the strategy inputs and six expected Ad Groups against the read-only AMC attribution and entity evidence."
     },
     {
       "step": "implement",
       "status": "completed",
-      "summary": "Consolidated seven strategy inputs into strategy_request.json and candidate_pool.json, and separated the expected INITIAL_SEED into a test fixture."
+      "summary": "Aligned source lineage, candidate evidence, platform-native targets, six MTA evidence blocks, and budget seeds without modifying AMC."
     },
     {
       "step": "contract",
       "status": "completed",
-      "summary": "Updated the validator and CLI to read two inputs plus an explicit recommendation path while preserving hierarchy, pair, lineage, evidence, and budget checks."
+      "summary": "Updated the validator and CLI to read both AMC sources and validate SHA, scope, values, historical entities, platform targeting, 17-to-6 selection, and budgets."
     },
     {
       "step": "validate",
       "status": "completed",
-      "summary": "Validated 107 AMC tests, 19 strategy tests, AMC data alignment, the three-file strategy input directory contract, documentation, and inventory parity."
+      "summary": "Validated 107 AMC tests, 39 strategy tests, zero AMC diff from 883f7e6, documentation, and inventory parity."
     }
   ],
   "current_step": "complete",
@@ -69,8 +69,8 @@
       ]
     },
     "inventory": {
-      "files_after_exclusions": 2215,
-      "bytes_after_exclusions": 31484518,
+      "files_after_exclusions": 2216,
+      "bytes_after_exclusions": 31529080,
       "symbolic_links": 0,
       "empty_files": 0,
       "installed_skills": 119
@@ -110,11 +110,13 @@
       "single_model_reliability_fields": 0
     },
     "validation_summary": {
-      "amc_tests": "107 passed; strategy tests: 19 passed after two-input strategy contract migration",
+      "amc_tests": "107 passed; strategy tests: 39 passed after AMC alignment",
       "data_alignment": "17 touchpoints, 90 days, one US / adv_demo_001 / USD scope",
       "project_markdown": "41 reachable non-spec documents, 0 broken local links, 0 orphans",
       "csv_contracts": "51/3/51 rows, exact 14/13/15 headers, 51 reliable recommended values equal official_share, no internal Decimal keys, lowercase booleans, summary touchpoint-AND parity, no surrounding whitespace or CRLF",
       "pipeline_determinism": "all ten simulated dataset artifacts are byte-reproducible across consecutive runs",
+      "strategy_alignment": "17 AMC touchpoints, 34 entity rows, 6 selected touchpoints, 8 historical pairs, 6 Ad Groups, SELECTED_RECOMMENDED_TOUCHPOINTS budget normalization",
+      "amc_baseline_diff": "no changes relative to 883f7e6",
       "inventory_mismatches": 0,
       "new_cache_or_temporary_files": 0,
       "pre_existing_os_metadata_files": "4 .DS_Store files retained; not business artifacts",
@@ -133,9 +135,10 @@
   "review_status": "passed",
   "validation_commands": [
     "python3 -B -m unittest discover -s modules/amc_mta/tests -p test*.py: 107 passed",
-    "python3 -B -m unittest discover -s modules/mta_strategy_recommender/tests -p test*.py: 19 passed",
+    "python3 -B -m unittest discover -s modules/mta_strategy_recommender/tests -p test*.py: 39 passed",
     "python3 -B modules/amc_mta/scripts/validate_data_alignment.py: 17 touchpoints and 90 days aligned",
-    "python3 -B modules/mta_strategy_recommender/scripts/validate_simulated_hierarchy.py: 4 campaigns, 6 keywords, 4 SKUs, 9 pairs, and 6 recommended Ad Groups validated",
+    "python3 -B modules/mta_strategy_recommender/scripts/validate_simulated_hierarchy.py: 4 campaigns, 17 AMC touchpoints, 34 entity rows, 6 selected touchpoints, 8 historical pairs, and 6 Ad Groups validated",
+    "git diff --exit-code 883f7e6 -- modules/amc_mta: no changes",
     "strict CSV header, whitespace, count, recommended-value, threshold, summary-AND, and reliability checks: passed",
     "project Markdown local-link and reachability scan: 41 reachable, 0 broken links, 0 orphans",
     "JSON parse, inventory parity, file hygiene, and git diff --check excluding protected log: passed"

@@ -1,46 +1,33 @@
 {
-  "sample_version": "2.0",
-  "candidate_pool_id": "pool_demo_2026_07",
+  "sample_version": "3.0",
+  "candidate_pool_id": "pool_demo_2026_07_amc_aligned",
   "campaign_group_id": "CG_DEMO_001",
   "keywords": [
     {
       "keyword_id": "K_RUNNING_EXACT",
       "keyword_text": "running shoes",
-      "allowed_match_types": ["EXACT", "PHRASE"],
+      "allowed_match_types": ["EXACT"],
       "intent": "HIGH_INTENT",
-      "source": "EXISTING",
+      "evidence_type": "HISTORICAL",
+      "allocation_role": "CORE",
       "eligible": true
     },
     {
       "keyword_id": "K_NIKE_EXACT",
       "keyword_text": "nike running shoes",
-      "allowed_match_types": ["EXACT", "PHRASE"],
+      "allowed_match_types": ["PHRASE"],
       "intent": "BRAND",
-      "source": "EXISTING",
+      "evidence_type": "HISTORICAL",
+      "allocation_role": "CORE",
       "eligible": true
     },
     {
       "keyword_id": "K_LIGHTWEIGHT",
       "keyword_text": "lightweight running shoes",
-      "allowed_match_types": ["PHRASE", "BROAD"],
+      "allowed_match_types": ["PHRASE"],
       "intent": "CATEGORY",
-      "source": "VALIDATED",
-      "eligible": true
-    },
-    {
-      "keyword_id": "K_TRAIL",
-      "keyword_text": "trail running shoes",
-      "allowed_match_types": ["EXACT", "PHRASE"],
-      "intent": "CATEGORY",
-      "source": "VALIDATED",
-      "eligible": true
-    },
-    {
-      "keyword_id": "K_PREMIUM",
-      "keyword_text": "premium running shoes",
-      "allowed_match_types": ["PHRASE", "BROAD"],
-      "intent": "HIGH_VALUE",
-      "source": "VALIDATED",
+      "evidence_type": "HISTORICAL",
+      "allocation_role": "CORE",
       "eligible": true
     },
     {
@@ -48,7 +35,26 @@
       "keyword_text": "new running shoe styles",
       "allowed_match_types": ["BROAD"],
       "intent": "EXPLORATION",
-      "source": "EXPLORATION",
+      "evidence_type": "HISTORICAL",
+      "allocation_role": "EXPLORATION",
+      "eligible": true
+    },
+    {
+      "keyword_id": "K_TRAIL",
+      "keyword_text": "trail running shoes",
+      "allowed_match_types": ["EXACT", "PHRASE"],
+      "intent": "CATEGORY",
+      "evidence_type": "VALIDATED",
+      "allocation_role": "SIGNAL_ONLY",
+      "eligible": true
+    },
+    {
+      "keyword_id": "K_PREMIUM",
+      "keyword_text": "premium running shoes",
+      "allowed_match_types": ["PHRASE", "BROAD"],
+      "intent": "HIGH_VALUE",
+      "evidence_type": "VALIDATED",
+      "allocation_role": "SIGNAL_ONLY",
       "eligible": true
     }
   ],
@@ -62,7 +68,8 @@
       "inventory_available": true,
       "paid_search_enabled": true,
       "scope_for_search_optimization": true,
-      "source": "EXISTING",
+      "evidence_type": "HISTORICAL",
+      "allocation_role": "CORE",
       "eligible": true
     },
     {
@@ -74,7 +81,8 @@
       "inventory_available": true,
       "paid_search_enabled": true,
       "scope_for_search_optimization": true,
-      "source": "EXISTING",
+      "evidence_type": "HISTORICAL",
+      "allocation_role": "CORE",
       "eligible": true
     },
     {
@@ -86,7 +94,8 @@
       "inventory_available": true,
       "paid_search_enabled": true,
       "scope_for_search_optimization": true,
-      "source": "VALIDATED",
+      "evidence_type": "HISTORICAL",
+      "allocation_role": "CORE",
       "eligible": true
     },
     {
@@ -98,19 +107,25 @@
       "inventory_available": true,
       "paid_search_enabled": true,
       "scope_for_search_optimization": true,
-      "source": "VALIDATED",
+      "evidence_type": "HISTORICAL",
+      "allocation_role": "CORE",
       "eligible": true
     }
   ],
   "pair_rules": [
-    {"keyword_id": "K_RUNNING_EXACT", "sku_id": "SKU_PEG_BLACK", "relationship_type": "EXISTING"},
-    {"keyword_id": "K_RUNNING_EXACT", "sku_id": "SKU_PEG_WHITE", "relationship_type": "EXISTING"},
-    {"keyword_id": "K_NIKE_EXACT", "sku_id": "SKU_PEG_BLACK", "relationship_type": "EXISTING"},
-    {"keyword_id": "K_NIKE_EXACT", "sku_id": "SKU_PEG_WHITE", "relationship_type": "EXISTING"},
-    {"keyword_id": "K_LIGHTWEIGHT", "sku_id": "SKU_PEG_WHITE", "relationship_type": "VALIDATED"},
-    {"keyword_id": "K_TRAIL", "sku_id": "SKU_TRAIL_BLUE", "relationship_type": "VALIDATED"},
-    {"keyword_id": "K_PREMIUM", "sku_id": "SKU_VOMERO_RED", "relationship_type": "VALIDATED"},
-    {"keyword_id": "K_DISCOVERY", "sku_id": "SKU_PEG_BLACK", "relationship_type": "EXPLORATION"},
-    {"keyword_id": "K_DISCOVERY", "sku_id": "SKU_VOMERO_RED", "relationship_type": "BLOCKED"}
+    {"keyword_id": "K_RUNNING_EXACT", "sku_id": "SKU_PEG_BLACK", "match_type": "EXACT", "evidence_type": "HISTORICAL", "policy_status": "ALLOWED", "allocation_role": "CORE", "eligible_ad_products": ["SPONSORED_PRODUCTS"], "historical_touchpoints": ["SPONSORED_PRODUCTS:PRODUCT_AD:PRODUCT_PAGE:UNSPECIFIED:CLICK", "SPONSORED_PRODUCTS:PRODUCT_AD:REST_OF_SEARCH:UNSPECIFIED:CLICK"]},
+    {"keyword_id": "K_RUNNING_EXACT", "sku_id": "SKU_TRAIL_BLUE", "match_type": "EXACT", "evidence_type": "HISTORICAL", "policy_status": "ALLOWED", "allocation_role": "CORE", "eligible_ad_products": ["SPONSORED_BRANDS"], "historical_touchpoints": ["SPONSORED_BRANDS:COMPONENT:TOP_OF_SEARCH:IMAGE:CLICK", "SPONSORED_BRANDS:COMPONENT:TOP_OF_SEARCH:IMAGE:IMPRESSION", "SPONSORED_BRANDS:DISPLAY:REST_OF_SEARCH:IMAGE:IMPRESSION"]},
+    {"keyword_id": "K_NIKE_EXACT", "sku_id": "SKU_PEG_WHITE", "match_type": "PHRASE", "evidence_type": "HISTORICAL", "policy_status": "ALLOWED", "allocation_role": "CORE", "eligible_ad_products": ["SPONSORED_PRODUCTS"], "historical_touchpoints": ["SPONSORED_PRODUCTS:PRODUCT_AD:REST_OF_SEARCH:UNSPECIFIED:CLICK", "SPONSORED_PRODUCTS:PRODUCT_AD:TOP_OF_SEARCH:UNSPECIFIED:CLICK", "SPONSORED_PRODUCTS:PRODUCT_AD:TOP_OF_SEARCH:UNSPECIFIED:IMPRESSION"]},
+    {"keyword_id": "K_NIKE_EXACT", "sku_id": "SKU_VOMERO_RED", "match_type": "PHRASE", "evidence_type": "HISTORICAL", "policy_status": "ALLOWED", "allocation_role": "CORE", "eligible_ad_products": ["SPONSORED_BRANDS"], "historical_touchpoints": ["SPONSORED_BRANDS:DISPLAY:REST_OF_SEARCH:IMAGE:IMPRESSION", "SPONSORED_BRANDS:VIDEO:TOP_OF_SEARCH:VIDEO:CLICK", "SPONSORED_BRANDS:VIDEO:TOP_OF_SEARCH:VIDEO:IMPRESSION"]},
+    {"keyword_id": "K_LIGHTWEIGHT", "sku_id": "SKU_TRAIL_BLUE", "match_type": "PHRASE", "evidence_type": "HISTORICAL", "policy_status": "ALLOWED", "allocation_role": "CORE", "eligible_ad_products": ["SPONSORED_PRODUCTS"], "historical_touchpoints": ["SPONSORED_PRODUCTS:PRODUCT_AD:TOP_OF_SEARCH:UNSPECIFIED:CLICK", "SPONSORED_PRODUCTS:PRODUCT_AD:TOP_OF_SEARCH:UNSPECIFIED:IMPRESSION"]},
+    {"keyword_id": "K_LIGHTWEIGHT", "sku_id": "SKU_PEG_BLACK", "match_type": "PHRASE", "evidence_type": "HISTORICAL", "policy_status": "ALLOWED", "allocation_role": "CORE", "eligible_ad_products": ["SPONSORED_BRANDS"], "historical_touchpoints": ["SPONSORED_BRANDS:VIDEO:TOP_OF_SEARCH:VIDEO:CLICK", "SPONSORED_BRANDS:VIDEO:TOP_OF_SEARCH:VIDEO:IMPRESSION"]},
+    {"keyword_id": "K_DISCOVERY", "sku_id": "SKU_PEG_WHITE", "match_type": "BROAD", "evidence_type": "HISTORICAL", "policy_status": "ALLOWED", "allocation_role": "EXPLORATION", "eligible_ad_products": ["SPONSORED_BRANDS"], "historical_touchpoints": ["SPONSORED_BRANDS:COMPONENT:TOP_OF_SEARCH:IMAGE:CLICK", "SPONSORED_BRANDS:COMPONENT:TOP_OF_SEARCH:IMAGE:IMPRESSION"]},
+    {"keyword_id": "K_DISCOVERY", "sku_id": "SKU_VOMERO_RED", "match_type": "BROAD", "evidence_type": "HISTORICAL", "policy_status": "BLOCKED", "allocation_role": "EXPLORATION", "eligible_ad_products": ["SPONSORED_PRODUCTS"], "historical_touchpoints": ["SPONSORED_PRODUCTS:PRODUCT_AD:PRODUCT_PAGE:UNSPECIFIED:CLICK"]},
+    {"keyword_id": "K_TRAIL", "sku_id": "SKU_TRAIL_BLUE", "match_type": "EXACT", "evidence_type": "VALIDATED", "policy_status": "ALLOWED", "allocation_role": "SIGNAL_ONLY", "eligible_ad_products": ["SPONSORED_DISPLAY"], "historical_touchpoints": []},
+    {"keyword_id": "K_PREMIUM", "sku_id": "SKU_VOMERO_RED", "match_type": "PHRASE", "evidence_type": "VALIDATED", "policy_status": "ALLOWED", "allocation_role": "SIGNAL_ONLY", "eligible_ad_products": ["AMAZON_DSP"], "historical_touchpoints": []}
+  ],
+  "signal_rules": [
+    {"keyword_id": "K_NIKE_EXACT", "sku_id": "SKU_PEG_WHITE", "eligible_ad_products": ["SPONSORED_DISPLAY"], "evidence_type": "HISTORICAL_CANDIDATE", "direct_mta_entity_evidence": false},
+    {"keyword_id": "K_PREMIUM", "sku_id": "SKU_VOMERO_RED", "eligible_ad_products": ["AMAZON_DSP"], "evidence_type": "VALIDATED_CANDIDATE", "direct_mta_entity_evidence": false}
   ]
 }

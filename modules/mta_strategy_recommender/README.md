@@ -1,8 +1,8 @@
 # MTA-Informed Strategy Initializer
 
-本模块以 Campaign Group 为顶层，当前交付带 AMC MTA 触点证据的初始投放数据契约、
-运行条件样例和确定性校验。上游现已提供由同一模拟事实源生成的触点实体聚合，但
-自动读取归因与实体证据并生成方案的adapter/generator尚未实现。
+本模块以 Campaign Group 为顶层，当前交付与 AMC MTA 逐条对齐的初始投放数据契约、
+运行条件样例和确定性校验。校验器只读推荐归因与触点实体聚合，复算六组策略证据和预算；
+自动生成策略的 adapter/generator 仍未实现。
 
 ```text
 Campaign Group
@@ -16,13 +16,14 @@ Campaign Group
 
 ## 当前交付
 
-- `strategy_request.json` 中一个 Group、四个 Campaign 的运行条件；
-- `candidate_pool.json` 中冻结的 Keyword/SKU 候选与明确 pairing；
+- `strategy_request.json` 中一个 Group、四个 Campaign、AMC SHA/范围和 `17 → 6` 选点口径；
+- `candidate_pool.json` 中冻结的 Keyword/SKU、八条历史 Pair、补充 Pair 与 SD/DSP 信号规则；
 - 独立测试夹具中的 `INITIAL_SEED` 预期输出，不冒充生成结果；
 - 可选 Group 总预算、MTA 批次和版本化候选池；
-- 层级、候选引用、触点证据、pair、预算守恒和无基线规则校验；
+- AMC SHA/范围、17 个触点、34 条实体、MTA 数值、历史 Pair、平台定向和预算复算；
 - AMC MTA 五段输出继续作为上游归因证据，schema 不变；
-- 触点实体聚合提供历史Campaign/Ad Group/Keyword/SKU关联，但不替代冻结候选池。
+- SP/SB 原生使用 Keyword/Match Type/SKU；SD/DSP 原生使用 SKU/Target/Audience，Keyword 只作非直接证据的策略信号；
+- 历史 Ad Group ID 仅用于证据可读性，不要求等于新推荐 ID。
 
 ## 验证
 

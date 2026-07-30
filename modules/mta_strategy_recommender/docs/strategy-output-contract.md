@@ -3,8 +3,9 @@
 本文专门定义模型应输出的“策略”。目标是让下游清楚知道：四个 Campaign 各需要多少
 Ad Group、为什么需要这些 Ad Group，以及每个 Ad Group 具体应该采用什么投放策略。
 
-本文描述目标契约。当前模块已经具备模拟结果和结构校验，但尚未实现从正式 MTA 输出
-自动生成这些策略的 adapter、评分和聚类逻辑。
+本文同时描述当前可运行夹具与后续生成器目标。当前校验器已经只读 AMC 推荐归因和实体
+聚合，逐项复算六组证据、平台定向和预算；但尚未实现自动选择触点并生产推荐的 adapter、
+评分和聚类流程。
 
 ## 1. 策略输出必须回答的问题
 
@@ -139,7 +140,7 @@ pairing 同样需要 `USE_ALL_REQUIRED_PAIRS` 或 `VALIDITY_EDGES_ONLY`。如果
 | `strategy_name` | 机器可读策略名称 |
 | `strategy_role` | 转化、增长、认知或探索等角色 |
 | `primary_objective` | 该组优先支持的业务 outcome |
-| `source_touchpoints` | 支持该策略的 MTA 数值证据 |
+| `mta_evidence` | 支持该策略的 MTA 数值证据 |
 | `recommended_actions` | 平台可执行或可配置的具体动作 |
 | `targeting_assignment` | 从给定候选池选择的 Keyword/SKU 等对象 |
 | `exclusions` | 明确不能使用的对象或动作 |
@@ -160,25 +161,25 @@ pairing 同样需要 `USE_ALL_REQUIRED_PAIRS` 或 `VALIDITY_EDGES_ONLY`。如果
   "touchpoint": "SPONSORED_PRODUCTS:PRODUCT_AD:TOP_OF_SEARCH:UNSPECIFIED:CLICK",
   "outcomes": {
     "converted_users": {
-      "official_share": 0.08,
-      "recommended_value": 0.08,
-      "benchmark_share": 0.079,
+      "official_share": 0.070755,
+      "recommended_value": 0.070755,
+      "benchmark_share": 0.069927,
       "reliability_status": "RELIABLE"
     },
     "purchase_count": {
-      "official_share": 0.10,
-      "recommended_value": 0.10,
-      "benchmark_share": 0.098,
+      "official_share": 0.071569,
+      "recommended_value": 0.071569,
+      "benchmark_share": 0.070544,
       "reliability_status": "RELIABLE"
     },
     "revenue": {
-      "official_share": 0.12,
-      "recommended_value": 0.12,
-      "benchmark_share": 0.118,
+      "official_share": 0.069381,
+      "recommended_value": 0.069381,
+      "benchmark_share": 0.068139,
       "reliability_status": "RELIABLE"
     }
   },
-  "composite_score": 0.10
+  "composite_score": 0.070587
 }
 ```
 
@@ -361,7 +362,7 @@ SkuRemainder = S_c mod N
       "strategy_name": "high_intent_top_search",
       "strategy_role": "CORE_CONVERSION",
       "primary_objective": "BALANCED_CONVERSION_AND_REVENUE",
-      "source_touchpoints": ["见第 4 节结构"],
+      "mta_evidence": ["见第 4 节结构"],
       "recommended_actions": [
         {
           "dimension": "PLACEMENT",
@@ -375,10 +376,10 @@ SkuRemainder = S_c mod N
       "targeting_assignment": {
         "native_targets": {
           "keywords": [
-            {"keyword_id": "K_RUNNING_EXACT", "match_type": "EXACT"}
+            {"keyword_id": "K_LIGHTWEIGHT", "match_type": "PHRASE", "target_id": "TGT_SP_K_LIGHTWEIGHT_PHRASE"}
           ],
           "skus": [
-            {"sku_id": "SKU_PEG_BLACK", "target_role": "ADVERTISED_PRODUCT"}
+            {"sku_id": "SKU_TRAIL_BLUE", "advertised_asin": "B0DEMOTRAILB"}
           ]
         },
         "allocation_basis": {
@@ -393,7 +394,7 @@ SkuRemainder = S_c mod N
         "DISTINCT_EXECUTABLE_STRATEGY_CLUSTER"
       ],
       "confidence": 0.91,
-      "budget_seed_share": 0.25
+      "budget_seed_share": 0.20511552368285625
     }
   ]
 }
@@ -422,20 +423,17 @@ SkuRemainder = S_c mod N
 
 ## 11. 当前实现差距
 
-当前模拟输出已经包含策略名称、策略角色、MTA 触点名称、Keyword/SKU、原因码、置信度和
-预算种子，但还缺少：
+当前 AMC 对齐夹具已经包含 MTA outcome 实际数值、`recommended_ad_group_count`、
+`count_rationale`、原生定向/信号分离、实体证据、原因码、置信度和可复算预算，但自动生成器
+还缺少：
 
-- MTA outcome 的实际数值；
-- `recommended_ad_group_count` 的自动计算；
-- `count_rationale`；
+- `recommended_ad_group_count` 的自动计算流程（当前夹具固定 `2/2/1/1`）；
 - 候选数量、容量和 MTA 策略簇的联合计数；
 - Group 候选池到四个 Campaign 的配额与确定性分配；
 - 触点到策略簇的自动形成过程；
-- 平台原生 `recommended_actions`；
-- 原生定向与策略信号的区分；
 - 未分配信号及原因。
 
-因此当前文件是策略输出的模拟样例，而本文定义的是后续生成器应达到的目标策略契约。
+因此当前文件是可由 AMC 数据验证的预期输出，不是生成器已经完成的证明。
 
 通用 JSON 层级、预算和关联规则见 [输出数据契约](output-data-contract.md)，整体计算流程见
 [模型计划](model-plan.md)。

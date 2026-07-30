@@ -53,10 +53,10 @@ Demo**的状态。
 
 ### 策略初始化：`modules/mta_strategy_recommender`
 
-现阶段实现 `Campaign Group → Campaign → Ad Group → Keyword/SKU` 的运行条件模拟契约与
-确定性校验。运行请求与候选池是两个输入 JSON，手写的 `INITIAL_SEED` 仅作为独立测试
-夹具。`ad_product` 仅存在于 Campaign 记录；结果由下游优化团队继续迭代，不声称最高
-ROI 或全局最优。
+现阶段实现 `Campaign Group → Campaign → Ad Group` 的运行条件模拟契约与 AMC 跨模块
+只读校验。运行请求与候选池是两个输入 JSON，手写的 `INITIAL_SEED` 逐条匹配 AMC MTA
+数值和实体，预算在六个入选触点内归一化并披露 `17 → 6`。SP/SB 原生使用 Keyword/SKU，
+SD/DSP 原生使用 SKU/Target/Audience；结果交给下游优化，不声称最高 ROI 或全局最优。
 
 ### 项目知识：`docs`
 
@@ -95,7 +95,7 @@ ROI 或全局最优。
 | 验证 | 结果 |
 | --- | --- |
 | AMC MTA 单元与端到端测试 | 107/107 通过 |
-| 策略初始化层级测试 | 19/19 通过 |
+| 策略初始化对齐测试 | 39/39 通过 |
 | AMC 完整流水线 | 通过，五份输出可重建 |
 | AMC/Ads 数据对齐 | 17/17 触点，90天、账户、国家、币种一致 |
 | `_bmad` 配置解析测试 | 1/1 通过 |

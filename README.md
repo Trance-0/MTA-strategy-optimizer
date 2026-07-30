@@ -3,8 +3,8 @@
 本工作区包含两项边界清晰的业务模块、一套本地 Agent/BMad 开发工具以及完整的研究和
 历史追溯资料：[`modules/amc_mta/`](modules/amc_mta/) 提供五段触点归因证据，
 [`modules/mta_strategy_recommender/`](modules/mta_strategy_recommender/) 目前以
-Campaign Group 为顶层，提供带 MTA 触点证据的初始策略数据契约、样例和校验；自动读取
-MTA 输出并生成推荐的 adapter/generator 是后续阶段。
+Campaign Group 为顶层，提供与 AMC 触点、实体和预算逐条对齐的初始策略数据契约、样例
+和只读校验；自动生成推荐的 adapter/generator 是后续阶段。
 
 AMC MTA 使用五段互动键区分广告产品、形式、位置、创意和曝光/点击，分别运行 Markov 与 Path-level Shapley。策略初始化器采用 `Campaign Group → Campaign → Ad Group → Keyword/SKU` 业务树；`ad_product` 只是 Campaign 的固有字段。两者都不是生产级因果归因或自动预算优化系统。
 
@@ -57,9 +57,9 @@ Campaign → 推荐 Ad Group → Keyword/SKU
 - 三份双模型产物直接给出三项可靠性标准；当前90天样例为 `51 RELIABLE / 0 UNRELIABLE`。
 - 推荐结果还按可靠性给出最终值：可靠时使用 Markov 正式 share，不可靠时使用
   Markov/Shapley share 的升序闭区间；不输出自动化许可字段。
-- 独立策略样例用两个 JSON 输入表达一个 Campaign Group、四个 Campaign 和冻结候选池；
-  六个推荐 Ad Group 与守恒的 `INITIAL_SEED` 是测试夹具，不代表生成器已经实现，也不
-  宣称最优。
+- 独立策略样例用两个 JSON 输入表达一个 Campaign Group、四个 Campaign、冻结候选池和
+  AMC SHA/窗口；六个推荐 Ad Group 按六个入选触点归一化，明确披露 `17 → 6`，仍是测试
+  夹具，不代表生成器已经实现，也不宣称最优。
 
 ## 快速验证
 
@@ -77,7 +77,7 @@ python3 -m unittest discover -s modules/mta_strategy_recommender/tests -p 'test_
 
 - 流水线从 Ads 输入自动识别日期窗口，重建匿名聚合路径并发布五份契约输出；
 - 17 个 AMC 与 Amazon Ads 五段触点、90 天覆盖和账户/币种范围严格对齐；
-- 107 项 AMC MTA 测试和 19 项策略层级测试通过；
+- 107 项 AMC MTA 测试和 39 项策略对齐测试通过；
 - 当前 51 条推荐记录均为 `RELIABLE`。
 
 ## 项目结构

@@ -1,127 +1,286 @@
 {
   "campaign_group_id": "CG_DEMO_001",
-  "candidate_pool_id": "pool_demo_2026_07",
-  "mta_batch_id": "mta_demo_2026_07",
+  "candidate_pool_id": "pool_demo_2026_07_amc_aligned",
+  "mta_batch_id": "mta_demo_2026_q1",
   "recommendation_type": "INITIAL_SEED",
   "handoff_status": "READY_FOR_OPTIMIZATION",
   "is_optimized": false,
+  "mta_source_snapshot": {
+    "report_start_date": "2026-01-01",
+    "report_end_date": "2026-03-31",
+    "marketplace": "US",
+    "advertiser_id": "adv_demo_001",
+    "attribution_sha256": "df47aac7e0cff152d77b375900a16ac6057289f376e63339e66712fb34fc9066",
+    "entity_sha256": "208f038314b9e9a3549cfd1e992adb8b1940ad5b03cbee48ae535611e70fad3e"
+  },
+  "touchpoint_selection": {
+    "normalization_universe": "SELECTED_RECOMMENDED_TOUCHPOINTS",
+    "available_touchpoint_count": 17,
+    "selected_touchpoint_count": 6,
+    "excluded_touchpoint_count": 11,
+    "entity_selection_method": "ASSISTED_REVENUE_DESC_THEN_NO_DUPLICATE_KEYWORD_MATCH_WITHIN_CAMPAIGN",
+    "selected_touchpoints": [
+      "SPONSORED_PRODUCTS:PRODUCT_AD:TOP_OF_SEARCH:UNSPECIFIED:CLICK",
+      "SPONSORED_PRODUCTS:PRODUCT_AD:REST_OF_SEARCH:UNSPECIFIED:CLICK",
+      "SPONSORED_BRANDS:COMPONENT:TOP_OF_SEARCH:IMAGE:CLICK",
+      "SPONSORED_BRANDS:DISPLAY:REST_OF_SEARCH:IMAGE:IMPRESSION",
+      "SPONSORED_DISPLAY:DISPLAY:PRODUCT_PAGE:IMAGE:CLICK",
+      "AMAZON_DSP:DISPLAY:UNSPECIFIED:IMAGE:IMPRESSION"
+    ]
+  },
+  "budget_derivation": {
+    "formula_version": "WEIGHTED_MTA_SHARE_V1",
+    "normalization_universe": "SELECTED_RECOMMENDED_TOUCHPOINTS",
+    "outcome_weights": {
+      "converted_users": 0.4,
+      "purchase_count": 0.3,
+      "revenue": 0.3
+    },
+    "selected_composite_score_total": 0.3441329
+  },
   "budget_seed_total": 1000.0,
   "campaigns": [
     {
       "campaign_id": "C_DEMO_SP",
-      "budget_seed_share": 0.45,
-      "campaign_budget_seed": 450.0,
+      "recommended_ad_group_count": 2,
+      "count_rationale": {
+        "stable_strategy_cluster_count": 2,
+        "capacity_required_count": 1,
+        "final_recommended_count": 2,
+        "summary": "Top of Search 与 Rest of Search 形成两个可执行触点策略簇"
+      },
+      "budget_seed_share": 0.3552095716509523,
+      "campaign_budget_seed": 355.2095716509523,
       "recommended_ad_groups": [
         {
           "ad_group_id": "C_DEMO_SP_AG_01",
-          "strategy_name": "high_intent_top_search",
+          "strategy_name": "top_search_lightweight_trail",
           "strategy_role": "CORE_CONVERSION",
-          "source_candidate_pool_id": "pool_demo_2026_07",
-          "mta_evidence": [{"touchpoint": "SPONSORED_PRODUCTS:PRODUCT_AD:TOP_OF_SEARCH:UNSPECIFIED:CLICK", "outcomes": ["converted_users", "purchase_count", "revenue"]}],
-          "reason_codes": ["RELIABLE_MTA_TOUCHPOINT", "HIGH_INTENT_KEYWORD_SKU_PAIR"],
+          "source_candidate_pool_id": "pool_demo_2026_07_amc_aligned",
+          "mta_evidence": [
+            {
+              "touchpoint": "SPONSORED_PRODUCTS:PRODUCT_AD:TOP_OF_SEARCH:UNSPECIFIED:CLICK",
+              "outcomes": {
+                "converted_users": {"official_share": 0.070755, "recommended_value": 0.070755, "benchmark_share": 0.069927, "reliability_status": "RELIABLE"},
+                "purchase_count": {"official_share": 0.071569, "recommended_value": 0.071569, "benchmark_share": 0.070544, "reliability_status": "RELIABLE"},
+                "revenue": {"official_share": 0.069381, "recommended_value": 0.069381, "benchmark_share": 0.068139, "reliability_status": "RELIABLE"}
+              },
+              "composite_score": 0.070587
+            }
+          ],
+          "entity_evidence": {"source_ad_group_id": "C_DEMO_SP_AG01", "selection_rank": 1, "assisted_revenue": 9581.89},
+          "recommended_actions": [{"dimension": "PLACEMENT", "action": "INITIAL_EMPHASIS", "value": "TOP_OF_SEARCH", "control_level": "PLACEMENT_ADJUSTMENT", "evidence_type": "ATTRIBUTION_BASED", "causal_claim": false}],
+          "targeting_assignment": {
+            "native_targets": {
+              "keywords": [{"keyword_id": "K_LIGHTWEIGHT", "match_type": "PHRASE", "target_id": "TGT_SP_K_LIGHTWEIGHT_PHRASE"}],
+              "skus": [{"sku_id": "SKU_TRAIL_BLUE", "advertised_asin": "B0DEMOTRAILB"}],
+              "target_ids": [],
+              "audience_ids": []
+            },
+            "strategy_signals": {"keyword_ids": [], "sku_ids": []},
+            "pairings": [{"keyword_id": "K_LIGHTWEIGHT", "sku_id": "SKU_TRAIL_BLUE", "match_type": "PHRASE"}]
+          },
+          "reason_codes": ["RELIABLE_MTA_TOUCHPOINT", "HISTORICAL_ENTITY_MATCH", "DETERMINISTIC_INITIAL_POINT"],
           "confidence": 0.91,
-          "budget_seed_share": 0.25,
-          "initial_daily_budget": 250.0,
-          "keywords": [{"keyword_id": "K_RUNNING_EXACT", "match_type": "EXACT"}],
-          "skus": [{"sku_id": "SKU_PEG_BLACK"}, {"sku_id": "SKU_PEG_WHITE"}],
-          "pairings": [
-            {"keyword_id": "K_RUNNING_EXACT", "sku_id": "SKU_PEG_BLACK", "match_type": "EXACT"},
-            {"keyword_id": "K_RUNNING_EXACT", "sku_id": "SKU_PEG_WHITE", "match_type": "EXACT"}
-          ]
+          "budget_seed_share": 0.20511552368285625,
+          "initial_daily_budget": 205.11552368285625
         },
         {
           "ad_group_id": "C_DEMO_SP_AG_02",
-          "strategy_name": "category_discovery",
-          "strategy_role": "EXPLORATION",
-          "source_candidate_pool_id": "pool_demo_2026_07",
-          "mta_evidence": [{"touchpoint": "SPONSORED_PRODUCTS:PRODUCT_AD:REST_OF_SEARCH:UNSPECIFIED:CLICK", "outcomes": ["converted_users", "purchase_count", "revenue"]}],
-          "reason_codes": ["RELIABLE_MTA_TOUCHPOINT", "CONTROLLED_EXPLORATION_PAIR"],
-          "confidence": 0.72,
-          "budget_seed_share": 0.20,
-          "initial_daily_budget": 200.0,
-          "keywords": [{"keyword_id": "K_DISCOVERY", "match_type": "BROAD"}],
-          "skus": [{"sku_id": "SKU_PEG_BLACK"}],
-          "pairings": [{"keyword_id": "K_DISCOVERY", "sku_id": "SKU_PEG_BLACK", "match_type": "BROAD"}]
+          "strategy_name": "rest_search_brand_road",
+          "strategy_role": "CORE_CONVERSION",
+          "source_candidate_pool_id": "pool_demo_2026_07_amc_aligned",
+          "mta_evidence": [
+            {
+              "touchpoint": "SPONSORED_PRODUCTS:PRODUCT_AD:REST_OF_SEARCH:UNSPECIFIED:CLICK",
+              "outcomes": {
+                "converted_users": {"official_share": 0.052612, "recommended_value": 0.052612, "benchmark_share": 0.050906, "reliability_status": "RELIABLE"},
+                "purchase_count": {"official_share": 0.051961, "recommended_value": 0.051961, "benchmark_share": 0.050179, "reliability_status": "RELIABLE"},
+                "revenue": {"official_share": 0.050064, "recommended_value": 0.050064, "benchmark_share": 0.049064, "reliability_status": "RELIABLE"}
+              },
+              "composite_score": 0.0516523
+            }
+          ],
+          "entity_evidence": {"source_ad_group_id": "C_DEMO_SP_AG02", "selection_rank": 1, "assisted_revenue": 6798.55},
+          "recommended_actions": [{"dimension": "PLACEMENT", "action": "USE_AS_INITIAL_CLUSTER", "value": "REST_OF_SEARCH", "control_level": "PLACEMENT_ADJUSTMENT", "evidence_type": "ATTRIBUTION_BASED", "causal_claim": false}],
+          "targeting_assignment": {
+            "native_targets": {
+              "keywords": [{"keyword_id": "K_NIKE_EXACT", "match_type": "PHRASE", "target_id": "TGT_SP_K_NIKE_EXACT_PHRASE"}],
+              "skus": [{"sku_id": "SKU_PEG_WHITE", "advertised_asin": "B0DEMOPEG41W"}],
+              "target_ids": [],
+              "audience_ids": []
+            },
+            "strategy_signals": {"keyword_ids": [], "sku_ids": []},
+            "pairings": [{"keyword_id": "K_NIKE_EXACT", "sku_id": "SKU_PEG_WHITE", "match_type": "PHRASE"}]
+          },
+          "reason_codes": ["RELIABLE_MTA_TOUCHPOINT", "HISTORICAL_ENTITY_MATCH", "DETERMINISTIC_INITIAL_POINT"],
+          "confidence": 0.88,
+          "budget_seed_share": 0.15009404796809605,
+          "initial_daily_budget": 150.09404796809605
         }
       ]
     },
     {
       "campaign_id": "C_DEMO_SB",
-      "budget_seed_share": 0.30,
-      "campaign_budget_seed": 300.0,
+      "recommended_ad_group_count": 2,
+      "count_rationale": {
+        "stable_strategy_cluster_count": 2,
+        "capacity_required_count": 1,
+        "final_recommended_count": 2,
+        "summary": "Component 与 Display 形成两个可执行触点策略簇"
+      },
+      "budget_seed_share": 0.3059803349229324,
+      "campaign_budget_seed": 305.9803349229324,
       "recommended_ad_groups": [
         {
           "ad_group_id": "C_DEMO_SB_AG_01",
-          "strategy_name": "brand_search",
+          "strategy_name": "component_brand_trail",
           "strategy_role": "CORE_CONVERSION",
-          "source_candidate_pool_id": "pool_demo_2026_07",
-          "mta_evidence": [{"touchpoint": "SPONSORED_BRANDS:COMPONENT:TOP_OF_SEARCH:IMAGE:CLICK", "outcomes": ["converted_users", "purchase_count", "revenue"]}],
-          "reason_codes": ["RELIABLE_MTA_TOUCHPOINT", "BRAND_INTENT_PAIR"],
+          "source_candidate_pool_id": "pool_demo_2026_07_amc_aligned",
+          "mta_evidence": [
+            {
+              "touchpoint": "SPONSORED_BRANDS:COMPONENT:TOP_OF_SEARCH:IMAGE:CLICK",
+              "outcomes": {
+                "converted_users": {"official_share": 0.056967, "recommended_value": 0.056967, "benchmark_share": 0.054167, "reliability_status": "RELIABLE"},
+                "purchase_count": {"official_share": 0.057843, "recommended_value": 0.057843, "benchmark_share": 0.05523, "reliability_status": "RELIABLE"},
+                "revenue": {"official_share": 0.053486, "recommended_value": 0.053486, "benchmark_share": 0.051853, "reliability_status": "RELIABLE"}
+              },
+              "composite_score": 0.0561855
+            }
+          ],
+          "entity_evidence": {"source_ad_group_id": "C_DEMO_SB_AG01", "selection_rank": 1, "assisted_revenue": 7210.99},
+          "recommended_actions": [{"dimension": "FORMAT", "action": "USE_AS_INITIAL_CLUSTER", "value": "COMPONENT", "control_level": "AD_GROUP_STRATEGY", "evidence_type": "ATTRIBUTION_BASED", "causal_claim": false}],
+          "targeting_assignment": {
+            "native_targets": {
+              "keywords": [{"keyword_id": "K_RUNNING_EXACT", "match_type": "EXACT", "target_id": "TGT_SB_K_RUNNING_EXACT_EXACT"}],
+              "skus": [{"sku_id": "SKU_TRAIL_BLUE", "advertised_asin": "B0DEMOTRAILB"}],
+              "target_ids": [],
+              "audience_ids": []
+            },
+            "strategy_signals": {"keyword_ids": [], "sku_ids": []},
+            "pairings": [{"keyword_id": "K_RUNNING_EXACT", "sku_id": "SKU_TRAIL_BLUE", "match_type": "EXACT"}]
+          },
+          "reason_codes": ["RELIABLE_MTA_TOUCHPOINT", "HISTORICAL_ENTITY_MATCH", "DETERMINISTIC_INITIAL_POINT"],
           "confidence": 0.90,
-          "budget_seed_share": 0.16,
-          "initial_daily_budget": 160.0,
-          "keywords": [{"keyword_id": "K_NIKE_EXACT", "match_type": "EXACT"}],
-          "skus": [{"sku_id": "SKU_PEG_BLACK"}, {"sku_id": "SKU_PEG_WHITE"}],
-          "pairings": [
-            {"keyword_id": "K_NIKE_EXACT", "sku_id": "SKU_PEG_BLACK", "match_type": "EXACT"},
-            {"keyword_id": "K_NIKE_EXACT", "sku_id": "SKU_PEG_WHITE", "match_type": "EXACT"}
-          ]
+          "budget_seed_share": 0.16326686579516228,
+          "initial_daily_budget": 163.26686579516228
         },
         {
           "ad_group_id": "C_DEMO_SB_AG_02",
-          "strategy_name": "lightweight_category",
+          "strategy_name": "display_brand_premium",
           "strategy_role": "ORDER_GROWTH",
-          "source_candidate_pool_id": "pool_demo_2026_07",
-          "mta_evidence": [{"touchpoint": "SPONSORED_BRANDS:DISPLAY:REST_OF_SEARCH:IMAGE:IMPRESSION", "outcomes": ["converted_users", "purchase_count", "revenue"]}],
-          "reason_codes": ["RELIABLE_MTA_TOUCHPOINT", "VALIDATED_CATEGORY_PAIR"],
+          "source_candidate_pool_id": "pool_demo_2026_07_amc_aligned",
+          "mta_evidence": [
+            {
+              "touchpoint": "SPONSORED_BRANDS:DISPLAY:REST_OF_SEARCH:IMAGE:IMPRESSION",
+              "outcomes": {
+                "converted_users": {"official_share": 0.04971, "recommended_value": 0.04971, "benchmark_share": 0.049004, "reliability_status": "RELIABLE"},
+                "purchase_count": {"official_share": 0.049347, "recommended_value": 0.049347, "benchmark_share": 0.048469, "reliability_status": "RELIABLE"},
+                "revenue": {"official_share": 0.048081, "recommended_value": 0.048081, "benchmark_share": 0.046811, "reliability_status": "RELIABLE"}
+              },
+              "composite_score": 0.0491124
+            }
+          ],
+          "entity_evidence": {"source_ad_group_id": "C_DEMO_SB_AG02", "selection_rank": 2, "assisted_revenue": 6274.12},
+          "recommended_actions": [{"dimension": "FORMAT", "action": "USE_AS_INITIAL_CLUSTER", "value": "DISPLAY", "control_level": "AD_GROUP_STRATEGY", "evidence_type": "ATTRIBUTION_BASED", "causal_claim": false}],
+          "targeting_assignment": {
+            "native_targets": {
+              "keywords": [{"keyword_id": "K_NIKE_EXACT", "match_type": "PHRASE", "target_id": "TGT_SB_K_NIKE_EXACT_PHRASE"}],
+              "skus": [{"sku_id": "SKU_VOMERO_RED", "advertised_asin": "B0DEMOVOMEROR"}],
+              "target_ids": [],
+              "audience_ids": []
+            },
+            "strategy_signals": {"keyword_ids": [], "sku_ids": []},
+            "pairings": [{"keyword_id": "K_NIKE_EXACT", "sku_id": "SKU_VOMERO_RED", "match_type": "PHRASE"}]
+          },
+          "reason_codes": ["RELIABLE_MTA_TOUCHPOINT", "HISTORICAL_ENTITY_MATCH", "NO_DUPLICATE_KEYWORD_MATCH_WITHIN_CAMPAIGN"],
           "confidence": 0.84,
-          "budget_seed_share": 0.14,
-          "initial_daily_budget": 140.0,
-          "keywords": [{"keyword_id": "K_LIGHTWEIGHT", "match_type": "PHRASE"}],
-          "skus": [{"sku_id": "SKU_PEG_WHITE"}],
-          "pairings": [{"keyword_id": "K_LIGHTWEIGHT", "sku_id": "SKU_PEG_WHITE", "match_type": "PHRASE"}]
+          "budget_seed_share": 0.1427134691277701,
+          "initial_daily_budget": 142.7134691277701
         }
       ]
     },
     {
       "campaign_id": "C_DEMO_SD",
-      "budget_seed_share": 0.15,
-      "campaign_budget_seed": 150.0,
+      "recommended_ad_group_count": 1,
+      "count_rationale": {"stable_strategy_cluster_count": 1, "capacity_required_count": 1, "final_recommended_count": 1, "summary": "Product Page Image Click 形成一个原生商品与受众定向组"},
+      "budget_seed_share": 0.1745447761606054,
+      "campaign_budget_seed": 174.5447761606054,
       "recommended_ad_groups": [
         {
           "ad_group_id": "C_DEMO_SD_AG_01",
-          "strategy_name": "trail_product_page",
+          "strategy_name": "product_page_category_audience",
           "strategy_role": "HIGH_VALUE",
-          "source_candidate_pool_id": "pool_demo_2026_07",
-          "mta_evidence": [{"touchpoint": "SPONSORED_DISPLAY:DISPLAY:PRODUCT_PAGE:IMAGE:CLICK", "outcomes": ["converted_users", "purchase_count", "revenue"]}],
-          "reason_codes": ["RELIABLE_MTA_TOUCHPOINT", "VALIDATED_TRAIL_PAIR"],
+          "source_candidate_pool_id": "pool_demo_2026_07_amc_aligned",
+          "mta_evidence": [
+            {
+              "touchpoint": "SPONSORED_DISPLAY:DISPLAY:PRODUCT_PAGE:IMAGE:CLICK",
+              "outcomes": {
+                "converted_users": {"official_share": 0.062046, "recommended_value": 0.062046, "benchmark_share": 0.063225, "reliability_status": "RELIABLE"},
+                "purchase_count": {"official_share": 0.061111, "recommended_value": 0.061111, "benchmark_share": 0.062072, "reliability_status": "RELIABLE"},
+                "revenue": {"official_share": 0.056383, "recommended_value": 0.056383, "benchmark_share": 0.057699, "reliability_status": "RELIABLE"}
+              },
+              "composite_score": 0.0600666
+            }
+          ],
+          "entity_evidence": {"source_ad_group_id": "C_DEMO_SD_AG02", "selection_rank": 1, "assisted_revenue": 7480.2},
+          "recommended_actions": [{"dimension": "AUDIENCE", "action": "USE", "value": "AUD_CATEGORY_INTEREST", "control_level": "TARGET", "evidence_type": "HISTORICAL_ENTITY", "causal_claim": false}],
+          "targeting_assignment": {
+            "native_targets": {
+              "keywords": [],
+              "skus": [{"sku_id": "SKU_PEG_WHITE", "advertised_asin": "B0DEMOPEG41W"}],
+              "target_ids": ["TGT_SD_PRODUCT_SKU_PEG_WHITE"],
+              "audience_ids": ["AUD_CATEGORY_INTEREST"]
+            },
+            "strategy_signals": {"keyword_ids": [{"keyword_id": "K_NIKE_EXACT", "evidence_type": "HISTORICAL_CANDIDATE", "direct_mta_entity_evidence": false}], "sku_ids": []},
+            "pairings": []
+          },
+          "reason_codes": ["RELIABLE_MTA_TOUCHPOINT", "HISTORICAL_NATIVE_TARGET_SET", "KEYWORD_AS_SIGNAL_ONLY"],
           "confidence": 0.87,
-          "budget_seed_share": 0.15,
-          "initial_daily_budget": 150.0,
-          "keywords": [{"keyword_id": "K_TRAIL", "match_type": "EXACT"}],
-          "skus": [{"sku_id": "SKU_TRAIL_BLUE"}],
-          "pairings": [{"keyword_id": "K_TRAIL", "sku_id": "SKU_TRAIL_BLUE", "match_type": "EXACT"}]
+          "budget_seed_share": 0.1745447761606054,
+          "initial_daily_budget": 174.5447761606054
         }
       ]
     },
     {
       "campaign_id": "C_DEMO_DSP",
-      "budget_seed_share": 0.10,
-      "campaign_budget_seed": 100.0,
+      "recommended_ad_group_count": 1,
+      "count_rationale": {"stable_strategy_cluster_count": 1, "capacity_required_count": 1, "final_recommended_count": 1, "summary": "Display Image Impression 形成一个原生受众与目标组"},
+      "budget_seed_share": 0.16426531726550993,
+      "campaign_budget_seed": 164.26531726550993,
       "recommended_ad_groups": [
         {
           "ad_group_id": "C_DEMO_DSP_AG_01",
-          "strategy_name": "premium_reach",
+          "strategy_name": "premium_lifestyle_display_reach",
           "strategy_role": "AWARENESS",
-          "source_candidate_pool_id": "pool_demo_2026_07",
-          "mta_evidence": [{"touchpoint": "AMAZON_DSP:DISPLAY:UNSPECIFIED:IMAGE:IMPRESSION", "outcomes": ["converted_users", "purchase_count", "revenue"]}],
-          "reason_codes": ["RELIABLE_MTA_TOUCHPOINT", "PREMIUM_SKU_REACH"],
+          "source_candidate_pool_id": "pool_demo_2026_07_amc_aligned",
+          "mta_evidence": [
+            {
+              "touchpoint": "AMAZON_DSP:DISPLAY:UNSPECIFIED:IMAGE:IMPRESSION",
+              "outcomes": {
+                "converted_users": {"official_share": 0.054427, "recommended_value": 0.054427, "benchmark_share": 0.058061, "reliability_status": "RELIABLE"},
+                "purchase_count": {"official_share": 0.054575, "recommended_value": 0.054575, "benchmark_share": 0.05857, "reliability_status": "RELIABLE"},
+                "revenue": {"official_share": 0.061286, "recommended_value": 0.061286, "benchmark_share": 0.066603, "reliability_status": "RELIABLE"}
+              },
+              "composite_score": 0.0565291
+            }
+          ],
+          "entity_evidence": {"source_ad_group_id": "C_DEMO_DSP_AG02", "selection_rank": 1, "assisted_revenue": 8358.99},
+          "recommended_actions": [{"dimension": "AUDIENCE", "action": "USE", "value": "AUD_LIFESTYLE_FITNESS", "control_level": "LINE_ITEM_TARGETING", "evidence_type": "HISTORICAL_ENTITY", "causal_claim": false}],
+          "targeting_assignment": {
+            "native_targets": {
+              "keywords": [],
+              "skus": [{"sku_id": "SKU_VOMERO_RED", "advertised_asin": "B0DEMOVOMEROR"}],
+              "target_ids": ["TGT_DSP_DISPLAY_2"],
+              "audience_ids": ["AUD_LIFESTYLE_FITNESS"]
+            },
+            "strategy_signals": {"keyword_ids": [{"keyword_id": "K_PREMIUM", "evidence_type": "VALIDATED_CANDIDATE", "direct_mta_entity_evidence": false}], "sku_ids": []},
+            "pairings": []
+          },
+          "reason_codes": ["RELIABLE_MTA_TOUCHPOINT", "HISTORICAL_NATIVE_TARGET_SET", "VALIDATED_KEYWORD_AS_SIGNAL_ONLY"],
           "confidence": 0.79,
-          "budget_seed_share": 0.10,
-          "initial_daily_budget": 100.0,
-          "keywords": [{"keyword_id": "K_PREMIUM", "match_type": "PHRASE"}],
-          "skus": [{"sku_id": "SKU_VOMERO_RED"}],
-          "pairings": [{"keyword_id": "K_PREMIUM", "sku_id": "SKU_VOMERO_RED", "match_type": "PHRASE"}]
+          "budget_seed_share": 0.16426531726550993,
+          "initial_daily_budget": 164.26531726550993
         }
       ]
     }
