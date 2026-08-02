@@ -1,6 +1,6 @@
 {
   "schema_version": "1.1",
-  "generated_at": "2026-07-30T09:19:08.930Z",
+  "generated_at": "2026-07-31T07:18:49.986Z",
   "root": "{project-root}",
   "scope": "all regular workspace files excluding declared protected or generated paths",
   "exclusions": [
@@ -25,8 +25,8 @@
       "reason": "human-owned no-touch file for this migration"
     }
   ],
-  "file_count": 2217,
-  "total_bytes": 31469955,
+  "file_count": 2221,
+  "total_bytes": 31515427,
   "by_top_level": {
     "_bmad": {
       "files": 91,
@@ -54,11 +54,11 @@
     },
     "docs": {
       "files": 37,
-      "bytes": 10638264
+      "bytes": 10638531
     },
     "modules": {
-      "files": 63,
-      "bytes": 3876959
+      "files": 67,
+      "bytes": 3922164
     },
     "README.md": {
       "files": 1,
@@ -17094,9 +17094,9 @@
       "path": "docs/README.md",
       "top_level": "docs",
       "extension": ".md",
-      "size_bytes": 1978,
+      "size_bytes": 2245,
       "mode": "644",
-      "sha256": "97797bd2e1c70d520b1b9c183cc1a5e4b01260798d47019a91511209ee9a792d"
+      "sha256": "c69879304741a13f7ea312537a1a053338adbe9240263ccecc1eb8c8bb772723"
     },
     {
       "path": "docs/research/ab-testing/Controlled Experiments on the Web Survey and Practical Guide.pdf",
@@ -17297,6 +17297,14 @@
       "size_bytes": 58,
       "mode": "644",
       "sha256": "0961f5fc66160fafd62875580fafd7c63b517f20f5b8ee5c1335038933968131"
+    },
+    {
+      "path": "modules/.DS_Store",
+      "top_level": "modules",
+      "extension": "",
+      "size_bytes": 12292,
+      "mode": "644",
+      "sha256": "d929fa21239b147db55846d70ea70ab5c2bba8a84ec33ff2363a2b774a775b7d"
     },
     {
       "path": "modules/amc_mta/config.py",
@@ -17675,6 +17683,14 @@
       "sha256": "3431cf2d055c39fe0d0b68472b271eb2e598f68e138fb8c6d9703cfdbc44f21e"
     },
     {
+      "path": "modules/mta_strategy_recommender/.DS_Store",
+      "top_level": "modules",
+      "extension": "",
+      "size_bytes": 10244,
+      "mode": "644",
+      "sha256": "f1e73cb48ff28c5fef3661151f1a21a315a7ef7f301a9fffe133d3420e2e4a1c"
+    },
+    {
       "path": "modules/mta_strategy_recommender/data/simulated/candidate_pool.json",
       "top_level": "modules",
       "extension": ".json",
@@ -17699,12 +17715,28 @@
       "sha256": "3b2feaeef1304d8a018ce51938a087ab1936985b11c034e7f232954adcb39965"
     },
     {
+      "path": "modules/mta_strategy_recommender/docs/current-ad-group-budget-calculation.md",
+      "top_level": "modules",
+      "extension": ".md",
+      "size_bytes": 14924,
+      "mode": "644",
+      "sha256": "8cdd9f7e50c302e3736403d57e49261a28bcc91b35f5ec7ca56dff841a6db151"
+    },
+    {
       "path": "modules/mta_strategy_recommender/docs/model-plan.md",
       "top_level": "modules",
       "extension": ".md",
       "size_bytes": 2942,
       "mode": "644",
       "sha256": "24291843da0b8a600b4075a669f1c11afb13a9e7d1b617ce0ce09d4ee6b3994f"
+    },
+    {
+      "path": "modules/mta_strategy_recommender/docs/mta-to-ad-group-budget-optimization-plan.md",
+      "top_level": "modules",
+      "extension": ".md",
+      "size_bytes": 7550,
+      "mode": "644",
+      "sha256": "9e55e536f3112938398d35264bc782fccd20c6952d2a57d8cb6a1bb46e650820"
     },
     {
       "path": "modules/mta_strategy_recommender/docs/output-data-contract.md",
@@ -17734,9 +17766,9 @@
       "path": "modules/mta_strategy_recommender/README.md",
       "top_level": "modules",
       "extension": ".md",
-      "size_bytes": 2088,
+      "size_bytes": 2283,
       "mode": "644",
-      "sha256": "c6b9acd5ed5938c3006cff4568a7e82eef52b260520b0feda441f50370659cc7"
+      "sha256": "0138043bf966e26e69ba5fc0a8d99ad1ece8dfdce42a5bfdfca3c29b5963ed2b"
     },
     {
       "path": "modules/mta_strategy_recommender/scripts/generate_initial_budget.py",

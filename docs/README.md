@@ -31,6 +31,8 @@
 - [模型比较治理](../modules/amc_mta/docs/model-comparison-governance.md)
 - [触点可靠性指南](../modules/amc_mta/docs/touchpoint-reliability-guide.md)
 - [初始策略模型计划](../modules/mta_strategy_recommender/docs/model-plan.md)
+- [当前 Ad Group 初始预算计算详解](../modules/mta_strategy_recommender/docs/current-ad-group-budget-calculation.md)
+- [MTA 到 Ad Group 预算问题定义与研究计划](../modules/mta_strategy_recommender/docs/mta-to-ad-group-budget-optimization-plan.md)
 
 ## 历史与研究
 

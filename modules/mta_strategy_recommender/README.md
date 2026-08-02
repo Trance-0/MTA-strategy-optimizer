@@ -37,6 +37,8 @@ python3 -B -m unittest discover -s modules/mta_strategy_recommender/tests -p 'te
 ## 文档
 
 - [整体模型计划](docs/model-plan.md)
+- [当前 Ad Group 初始预算计算详解](docs/current-ad-group-budget-calculation.md)
+- [MTA 到 Ad Group 预算问题定义与研究计划](docs/mta-to-ad-group-budget-optimization-plan.md)
 - [输出数据契约](docs/output-data-contract.md)
 - [预算策略输出契约](docs/strategy-output-contract.md)
 - [模拟输入说明](data/simulated/README.md)
