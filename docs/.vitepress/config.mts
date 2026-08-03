@@ -1,126 +1,153 @@
-import { defineConfig } from "vitepress";
+import { defineConfig, type DefaultTheme } from "vitepress";
 import { copyStaticAssets } from "../scripts/copy-static-assets.mjs";
-import { prepareSite } from "../scripts/prepare-site.mjs";
 import { researchPdfDevPlugin } from "../scripts/static-pdf-dev-plugin.mjs";
 
-await prepareSite();
+const repositoryUrl = "https://github.com/Trance-0/marketing-roi-analysis";
 
-const repositorySourceUrl =
-  "https://github.com/yao-LLL/marketing-roi-analysis/blob/main/";
-
-function rewriteRepositorySourceLinks(markdown) {
-  markdown.core.ruler.after("inline", "repository-source-links", (state) => {
-    for (const token of state.tokens) {
-      if (token.type !== "inline" || !token.children) continue;
-      for (const child of token.children) {
-        if (child.type !== "link_open") continue;
-        const href = child.attrGet("href");
-        if (!href || /^[a-z][a-z0-9+.-]*:/i.test(href)) continue;
-        const match = href.match(
-          /(?:^|\/)(modules|design-artifacts|_bmad-output)\/(.+)$/,
-        );
-        if (!match) continue;
-        child.attrSet("href", `${repositorySourceUrl}${match[1]}/${match[2]}`);
-      }
-    }
-  });
-}
+const enTheme: DefaultTheme.Config = {
+  logoLink: "/en/",
+  nav: [
+    { text: "Home", link: "/en/" },
+    { text: "Overview", link: "/en/introduction/" },
+    { text: "Environment", link: "/en/environment/" },
+    { text: "Datasets", link: "/en/datasets/" },
+    { text: "Attribution", link: "/en/attribution/" },
+    { text: "Strategy", link: "/en/strategy/" },
+    { text: "Product", link: "/en/product/" },
+    { text: "Workspace", link: "/en/workspace/" },
+    { text: "Research", link: "/en/research/" },
+  ],
+  sidebar: [
+    {
+      text: "Introduction",
+      items: [
+        { text: "Project overview", link: "/en/introduction/" },
+        { text: "Structure and pipeline", link: "/en/introduction/project-structure" },
+        { text: "Progress and todos", link: "/en/introduction/progress" },
+      ],
+    },
+    {
+      text: "Environment setup",
+      items: [
+        { text: "Local setup and directories", link: "/en/environment/" },
+        { text: "Run the AMC MTA module", link: "/en/environment/amc-mta-usage" },
+      ],
+    },
+    {
+      text: "Datasets",
+      items: [
+        { text: "Contracts and compatibility", link: "/en/datasets/" },
+        { text: "AMC input data contract", link: "/en/datasets/amc-data-contract" },
+        { text: "Amazon Ads sample", link: "/en/datasets/amazon-ads-sample" },
+        { text: "AMC simulated data", link: "/en/datasets/amc-simulated-data" },
+        { text: "Strategy simulated data", link: "/en/datasets/strategy-simulated-data" },
+      ],
+    },
+    {
+      text: "Attribution models",
+      items: [
+        { text: "Model overview", link: "/en/attribution/" },
+        { text: "AMC MTA module", link: "/en/attribution/amc-mta-module" },
+        { text: "Complete usage guide", link: "/en/attribution/complete-guide" },
+        { text: "Markov removal effect", link: "/en/attribution/markov" },
+        { text: "Path-level Shapley", link: "/en/attribution/shapley" },
+        { text: "Model comparison governance", link: "/en/attribution/model-governance" },
+        { text: "Touchpoint reliability", link: "/en/attribution/reliability" },
+        { text: "Output file reference", link: "/en/attribution/output-reference" },
+        { text: "Attribution reference index", link: "/en/attribution/reference-index" },
+      ],
+    },
+    {
+      text: "Strategy optimization",
+      items: [
+        { text: "Seed and optimization roadmap", link: "/en/strategy/" },
+        { text: "Strategy module", link: "/en/strategy/module-overview" },
+        { text: "Current budget calculation", link: "/en/strategy/current-budget-calculation" },
+        { text: "Model plan", link: "/en/strategy/model-plan" },
+        { text: "Optimization research plan", link: "/en/strategy/optimization-plan" },
+        { text: "Output data contract", link: "/en/strategy/output-data-contract" },
+        { text: "Strategy output boundary", link: "/en/strategy/strategy-output-contract" },
+      ],
+    },
+    {
+      text: "Product and capability",
+      items: [
+        { text: "Product documentation", link: "/en/product/" },
+        { text: "AMC MTA introduction", link: "/en/product/amc-mta/project-introduction" },
+        { text: "AMC MTA architecture", link: "/en/product/amc-mta/architecture" },
+        { text: "Capability assessment", link: "/en/product/amc-mta/capability-assessment" },
+      ],
+    },
+    {
+      text: "Workspace",
+      items: [
+        { text: "Workspace index", link: "/en/workspace/" },
+        { text: "Current assessment", link: "/en/workspace/project-overview" },
+        { text: "Workspace architecture", link: "/en/workspace/architecture" },
+        { text: "Source-tree analysis", link: "/en/workspace/source-tree-analysis" },
+        { text: "File-location rules", link: "/en/workspace/file-management" },
+        { text: "Component inventory", link: "/en/workspace/component-inventory" },
+        { text: "Development and verification", link: "/en/workspace/development-guide" },
+        { text: "Documentation index", link: "/en/workspace/documentation-index" },
+      ],
+    },
+    {
+      text: "Research",
+      items: [
+        { text: "Research index", link: "/en/research/" },
+        { text: "Campaign Group hierarchy", link: "/en/research/campaign-data-hierarchy" },
+        { text: "MTA reading order", link: "/en/research/mta/" },
+        { text: "MTA model study notes", link: "/en/research/mta/data-driven-mta-models-study-note" },
+        { text: "Amazon research", link: "/en/research/amazon/" },
+        { text: "Amazon Marketing Cloud", link: "/en/research/amazon/amc/" },
+        { text: "AMC, MTA, and ROI flow", link: "/en/research/amazon/amc/data-flow" },
+        { text: "Marketing Stream fields", link: "/en/research/amazon/research/amazon-marketing-stream-fields" },
+        { text: "Historical technical research", link: "/en/research/amazon/research/technical-amazon-attribution-mta-2026-07-06" },
+        { text: "A/B testing reading order", link: "/en/research/ab-testing/" },
+      ],
+    },
+    {
+      text: "Reference",
+      items: [
+        { text: "Definitions", link: "/en/definitions" },
+        { text: "Module inventory", link: "/en/reference/module-inventory" },
+        { text: "Submission manifest", link: "/en/reference/submission-manifest" },
+      ],
+    },
+  ],
+  outline: { level: [2, 3], label: "On this page" },
+  search: { provider: "local" },
+  socialLinks: [{ icon: "github", link: repositoryUrl }],
+  footer: {
+    message: "Historical attribution evidence, explainable budget seeds, and constrained optimization.",
+    copyright: "Marketing ROI Analysis",
+  },
+};
 
 export default defineConfig({
   title: "Marketing ROI Analysis",
   description:
-    "Documentation for Multi-Touch Attribution evidence and campaign budget initialization",
-  lang: "zh-CN",
+    "Multi-Touch Attribution evidence and Ad Group budget strategy documentation",
   cleanUrls: true,
   lastUpdated: true,
+  themeConfig: enTheme,
+  // Preserve Chinese sources for future use, but do not publish them for now.
+  srcExclude: ["zh/**", "_site/**"],
+  locales: {
+    en: {
+      label: "English",
+      lang: "en-US",
+      link: "/en/",
+      themeConfig: enTheme,
+    },
+  },
   rewrites: {
-    "_site/index.md": "index.md",
-    "index.md": "workspace-index.md",
-    "README.md": "documentation-index.md",
-    "amc_mta/README.md": "amc_mta/index.md",
-    "product/README.md": "product/index.md",
-    "research/README.md": "research/index.md",
-    "research/ab-testing/README.md": "research/ab-testing/index.md",
-    "research/amazon/README.md": "research/amazon/index.md",
-    "research/amazon/amc/README.md": "research/amazon/amc/index.md",
-    "research/amazon/research/README.md": "research/amazon/research/index.md",
-    "research/mta/README.md": "research/mta/index.md",
+    "zh-placeholder.md": "zh/index.md",
   },
   markdown: {
     math: true,
-    config: rewriteRepositorySourceLinks,
   },
-  vite: {
-    plugins: [researchPdfDevPlugin()],
-  },
+  vite: { plugins: [researchPdfDevPlugin()] },
   buildEnd: copyStaticAssets,
-  ignoreDeadLinks: [
-    /\.(?:docx|json|txt|drawio)(?:$|[?#])/i,
-  ],
-  themeConfig: {
-    nav: [
-      { text: "首页", link: "/" },
-      { text: "工作区索引", link: "/workspace-index" },
-      { text: "架构", link: "/architecture" },
-      { text: "AMC MTA", link: "/amc_mta/" },
-      { text: "研究资料", link: "/research/" },
-      {
-        text: "GitHub",
-        link: "https://github.com/yao-LLL/marketing-roi-analysis",
-      },
-    ],
-    sidebar: [
-      {
-        text: "项目现状",
-        items: [
-          { text: "工作区总索引", link: "/workspace-index" },
-          { text: "工作区总览", link: "/project-overview" },
-          { text: "架构", link: "/architecture" },
-          { text: "组件清单", link: "/component-inventory" },
-          { text: "目录分析", link: "/source-tree-analysis" },
-          { text: "开发指南", link: "/development-guide" },
-        ],
-      },
-      {
-        text: "AMC MTA",
-        items: [
-          { text: "模块入口", link: "/amc_mta/" },
-          { text: "架构说明", link: "/amc_mta/amc-mta-architecture" },
-          {
-            text: "能力评价",
-            link: "/amc_mta/amc-mta-capability-assessment",
-          },
-          {
-            text: "项目介绍",
-            link: "/product/amc-mta/project-introduction",
-          },
-        ],
-      },
-      {
-        text: "研究资料",
-        items: [
-          { text: "研究索引", link: "/research/" },
-          { text: "MTA 研究", link: "/research/mta/" },
-          { text: "A/B 测试", link: "/research/ab-testing/" },
-          { text: "Amazon 研究", link: "/research/amazon/" },
-          {
-            text: "Campaign 数据层级",
-            link: "/research/campaign-data-hierarchy",
-          },
-        ],
-      },
-    ],
-    outline: { level: [2, 3], label: "本页内容" },
-    search: { provider: "local" },
-    socialLinks: [
-      {
-        icon: "github",
-        link: "https://github.com/yao-LLL/marketing-roi-analysis",
-      },
-    ],
-    footer: {
-      message: "Attribution evidence and non-optimized campaign budget initialization.",
-      copyright: "Marketing ROI Analysis",
-    },
-  },
+  ignoreDeadLinks: [/\.(?:docx|json|txt|drawio)(?:$|[?#])/i],
 });

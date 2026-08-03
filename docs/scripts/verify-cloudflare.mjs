@@ -71,6 +71,23 @@ try {
     throw new Error("Cloudflare did not serve the copied PDF correctly");
   }
 
+  const chinesePlaceholderResponse = await fetch(`${origin}/zh/`);
+  const chinesePlaceholder = await chinesePlaceholderResponse.text();
+  if (
+    !chinesePlaceholderResponse.ok ||
+    !chinesePlaceholder.includes("网站正在建设中")
+  ) {
+    throw new Error("Cloudflare did not serve the Chinese construction placeholder");
+  }
+
+  const legacyChineseResponse = await fetch(
+    `${origin}/zh/attribution/amc-mta-module`,
+  );
+  const legacyChinesePage = await legacyChineseResponse.text();
+  if (!legacyChineseResponse.ok || !legacyChinesePage.includes("网站正在建设中")) {
+    throw new Error("A legacy Chinese route did not serve the construction placeholder");
+  }
+
   const missingResponse = await fetch(`${origin}/definitely-missing-page`);
   if (missingResponse.status !== 404) {
     throw new Error(
@@ -85,6 +102,8 @@ try {
         pdf_status: pdfResponse.status,
         pdf_content_type: pdfResponse.headers.get("content-type"),
         pdf_bytes: pdfSize,
+        chinese_placeholder_status: chinesePlaceholderResponse.status,
+        legacy_chinese_route_status: legacyChineseResponse.status,
         missing_page_status: missingResponse.status,
       },
       null,

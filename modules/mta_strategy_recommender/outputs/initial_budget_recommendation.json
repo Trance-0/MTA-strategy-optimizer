@@ -158,7 +158,7 @@
         "purchase_count": 0.23496699999999998,
         "revenue": 0.23112400000000002
       },
-      "campaign_mta_score": 0.23416689999999996,
+      "campaign_mta_score": 0.23416689999999998,
       "bridge_summary": {
         "historical_ad_group_count": 2,
         "touchpoint_count": 4,
@@ -170,16 +170,16 @@
         },
         "fallback_used": false
       },
-      "budget_seed_share": 0.23416689999999996,
+      "budget_seed_share": 0.23416689999999998,
       "minimum_required_daily_budget": 25.0,
-      "campaign_budget_seed": 234.16689999999994,
+      "campaign_budget_seed": 234.16689999999997,
       "execution_status": "EXECUTABLE",
       "recommended_ad_groups": [
         {
           "ad_group_slot_id": "C_DEMO_SD_NEW_AG_01",
           "allocation_basis": "CAMPAIGN_MTA_EQUAL_SPLIT",
-          "budget_seed_share": 0.23416689999999996,
-          "initial_daily_budget": 234.16689999999994
+          "budget_seed_share": 0.23416689999999998,
+          "initial_daily_budget": 234.16689999999997
         }
       ]
     },

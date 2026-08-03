@@ -39,11 +39,33 @@ export function researchPdfDevPlugin() {
             next();
             return;
           }
-          response.statusCode = 200;
+          const method = request.method ?? "GET";
+          const rangeMatch = request.headers.range?.match(/^bytes=(\d*)-(\d*)$/);
+          let start = 0;
+          let end = fileStatus.size - 1;
+          if (rangeMatch) {
+            start = rangeMatch[1] ? Number(rangeMatch[1]) : start;
+            end = rangeMatch[2] ? Number(rangeMatch[2]) : end;
+            if (start > end || end >= fileStatus.size) {
+              response.statusCode = 416;
+              response.setHeader("Content-Range", `bytes */${fileStatus.size}`);
+              response.end();
+              return;
+            }
+            response.statusCode = 206;
+            response.setHeader("Content-Range", `bytes ${start}-${end}/${fileStatus.size}`);
+          } else {
+            response.statusCode = 200;
+          }
           response.setHeader("Content-Type", "application/pdf");
-          response.setHeader("Content-Length", fileStatus.size);
+          response.setHeader("Accept-Ranges", "bytes");
+          response.setHeader("Content-Length", end - start + 1);
           response.setHeader("Content-Disposition", "inline");
-          createReadStream(sourcePath).pipe(response);
+          if (method === "HEAD") {
+            response.end();
+            return;
+          }
+          createReadStream(sourcePath, { start, end }).pipe(response);
         } catch {
           next();
         }

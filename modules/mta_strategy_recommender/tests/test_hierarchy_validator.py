@@ -177,10 +177,10 @@ class BudgetOnlyStrategyTests(unittest.TestCase):
         self.assertEqual(_sha256(AMC_ATTRIBUTION), ATTRIBUTION_SHA)
         self.assertEqual(_sha256(AMC_ENTITY), ENTITY_SHA)
 
-    def test_input_directory_contains_only_two_json_inputs_and_readme(self) -> None:
+    def test_input_directory_contains_only_two_json_inputs(self) -> None:
         self.assertEqual(
             {path.name for path in SAMPLE_DIR.iterdir()},
-            {"strategy_request.json", "candidate_pool.json", "README.md"},
+            {"strategy_request.json", "candidate_pool.json"},
         )
         shutil.copyfile(EXPECTED_OUTPUT, self.data_dir / "extra.json")
         with self.assertRaisesRegex(HierarchyValidationError, "unrelated content"):

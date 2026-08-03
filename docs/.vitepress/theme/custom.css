@@ -53,3 +53,8 @@
     margin-left: 0.35rem;
   }
 }
+
+.pipeline-table td:first-child {
+  white-space: nowrap;
+  font-weight: 650;
+}
