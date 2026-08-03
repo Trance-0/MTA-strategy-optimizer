@@ -92,10 +92,10 @@ context:
 **核心提交入口**
 
 - 从唯一提交入口理解范围、运行方式和材料导航。
-  [`README.md:1`](../../../../modules/amc_mta/README.md#L1)
+  [`README.md:1`](../../../../docs/zh/attribution/amc-mta-module.md#L1)
 
 - 核对核心、选交和不提交内容及最终验收状态。
-  [`SUBMISSION_MANIFEST.md:1`](../../../../modules/amc_mta/SUBMISSION_MANIFEST.md#L1)
+  [`SUBMISSION_MANIFEST.md:1`](../../../../docs/zh/reference/submission-manifest.md#L1)
 
 **数据流与结果解释**
 
@@ -103,10 +103,10 @@ context:
   [`amc-mta-data-flow.svg:1`](../../../../modules/amc_mta/docs/assets/amc-mta-data-flow.svg#L1)
 
 - 阅读不内嵌流程图的完整文字使用说明。
-  [`amc-mta-complete-guide.md:1`](../../../../modules/amc_mta/docs/amc-mta-complete-guide.md#L1)
+  [`amc-mta-complete-guide.md:1`](../../../../docs/zh/attribution/complete-guide.md#L1)
 
 - 按正确顺序理解五份输出及字段限制。
-  [`output-reference.md:1`](../../../../modules/amc_mta/docs/output-reference.md#L1)
+  [`output-reference.md:1`](../../../../docs/zh/attribution/output-reference.md#L1)
 
 **辅助材料边界**
 

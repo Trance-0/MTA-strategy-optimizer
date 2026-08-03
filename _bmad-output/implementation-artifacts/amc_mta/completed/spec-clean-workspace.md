@@ -99,7 +99,7 @@ context:
   [`amc_touchpoint_events_sample.csv:1`](../../../../modules/amc_mta/data/simulated/amc_touchpoint_events_sample.csv#L1)
 
 - 模块入口明确五份输出及其不可自动预算状态。
-  [`README.md:16`](../../../../modules/amc_mta/README.md#L16)
+  [`README.md:16`](../../../../docs/zh/attribution/amc-mta-module.md#L16)
 
 - 端到端测试逐字段验证存储路径可复现。
   [`test_amc_mta_end_to_end.py:64`](../../../../modules/amc_mta/tests/test_amc_mta_end_to_end.py#L64)

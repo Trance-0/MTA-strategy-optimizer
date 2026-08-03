@@ -98,10 +98,10 @@ context:
 **输出与阅读契约**
 
 - 治理文档明确所有指标和状态只使用完整五段键。
-  [`model-comparison-governance.md:256`](../../../../modules/amc_mta/docs/model-comparison-governance.md#L256)
+  [`model-comparison-governance.md:256`](../../../../docs/zh/attribution/model-governance.md#L256)
 
 - 使用说明锁定 51/3/51 行结构和五段摘要。
-  [`usage.md:69`](../../../../modules/amc_mta/docs/usage.md#L69)
+  [`usage.md:69`](../../../../docs/zh/environment/amc-mta-usage.md#L69)
 
 - 正式摘要产物仅保留三个五段 outcome。
   [`amc_mta_model_comparison_summary.csv:1`](../../../../modules/amc_mta/outputs/attribution/amc_mta_model_comparison_summary.csv#L1)

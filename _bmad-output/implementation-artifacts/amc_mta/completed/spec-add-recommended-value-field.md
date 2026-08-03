@@ -97,7 +97,7 @@ context:
 **使用说明**
 
 - 治理规范定义 15 列顺序和三种推荐值形态。
-  [`model-comparison-governance.md:71`](../../../../modules/amc_mta/docs/model-comparison-governance.md#L71)
+  [`model-comparison-governance.md:71`](../../../../docs/zh/attribution/model-governance.md#L71)
 
 - 使用文档解释如何按可靠性读取单点或区间。
-  [`usage.md:109`](../../../../modules/amc_mta/docs/usage.md#L109)
+  [`usage.md:109`](../../../../docs/zh/environment/amc-mta-usage.md#L109)

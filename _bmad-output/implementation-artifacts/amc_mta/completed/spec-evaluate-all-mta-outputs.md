@@ -124,4 +124,4 @@ context:
   [`test_model_comparison.py:309`](../../../../modules/amc_mta/tests/test_model_comparison.py#L309)
 
 - 记录当前正式诊断结果与不可决策原因。
-  [`model-comparison-governance.md:661`](../../../../modules/amc_mta/docs/model-comparison-governance.md#L661)
+  [`model-comparison-governance.md:661`](../../../../docs/zh/attribution/model-governance.md#L661)

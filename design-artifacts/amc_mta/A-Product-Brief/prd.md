@@ -9,7 +9,7 @@ updated: 2026-06-20
 
 > 历史愿景：本文定义的是早期平台方案，其中预测、预算优化、实验平台、Dashboard
 > 和 AI 问答均未实现。当前唯一正式实现与事实入口见
-> [`modules/amc_mta`](../../../modules/amc_mta/README.md) 和
+> [AMC MTA 模块文档](../../../docs/zh/attribution/amc-mta-module.md) 和
 > [`docs/index.md`](../../../docs/index.md)。
 
 ## 0. Document Purpose

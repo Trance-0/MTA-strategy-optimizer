@@ -121,10 +121,10 @@ done
 **行为边界与说明**
 
 - 数据契约明确输入宽容、内部空格保留和输出严格。
-  [`amc-data-requirements.md:7`](../../../../modules/amc_mta/docs/amc-data-requirements.md#L7)
+  [`amc-data-requirements.md:7`](../../../../docs/zh/datasets/amc-data-contract.md#L7)
 
 - 使用说明解释比较入口不会修复其他非法数据。
-  [`usage.md:62`](../../../../modules/amc_mta/docs/usage.md#L62)
+  [`usage.md:62`](../../../../docs/zh/environment/amc-mta-usage.md#L62)
 
 **回归保护**
 

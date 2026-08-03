@@ -94,7 +94,7 @@ context:
   [`research/README.md:1`](../../../../docs/research/amazon/research/README.md#L1)
 
 - 确认模块索引已登记触点可靠性指南。
-  [`docs/README.md:1`](../../../../modules/amc_mta/docs/README.md#L1)
+  [`docs/README.md:1`](../../../../docs/zh/attribution/reference-index.md#L1)
 
 **派生状态与后续风险**
 

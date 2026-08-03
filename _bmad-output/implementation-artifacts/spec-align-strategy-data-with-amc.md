@@ -95,7 +95,7 @@ context:
   [`expected_initial_recommendation.json:8`](../../modules/mta_strategy_recommender/tests/fixtures/expected_initial_recommendation.json#L8)
 
 - 数据契约解释平台定向和单实体样例边界。
-  [`output-data-contract.md:126`](../../modules/mta_strategy_recommender/docs/output-data-contract.md#L126)
+  [`output-data-contract.md:126`](../../docs/zh/strategy/output-data-contract.md#L126)
 
 **验证与回归**
 

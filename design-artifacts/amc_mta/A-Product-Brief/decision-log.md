@@ -13,7 +13,7 @@ Updated: 2026-07-16
 3. PRD 主文档聚焦产品能力与可测试需求；模型选择、算法边界、数据限制等细节放入 addendum.md。
 4. MVP 以可演示、可解释、可验证为目标，不包含广告投放执行系统、创意制作系统、自动媒体采购和生产级实验平台。
 5. 项目同时保留 campaign 聚合样例和 AMC 匿名聚合路径样例；前者用于 ROI、预测和预算模拟，后者用于当前 AMC MTA 归因演示。
-6. 将跨模块模型说明放入 `docs/product/`，将 MTA 数据需求放入对应模块的 `modules/<module>/docs/`，保持 Product Brief 文件夹只承载产品定义、附录和决策记录。
+6. 当时决定将跨模块模型说明放入 `docs/product/`，将 MTA 数据需求放入模块目录；该文档布局已被后续双语 VitePress 迁移取代，当前模块文档统一位于 `docs/en/` 与 `docs/zh/`。
 
 ## Assumptions To Confirm
 

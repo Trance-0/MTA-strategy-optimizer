@@ -78,7 +78,7 @@ context:
 **输入职责与边界**
 
 - 先看两输入、一夹具及未来 MTA 生成器边界。
-  [`README.md:3`](../../modules/mta_strategy_recommender/data/simulated/README.md#L3)
+  [`README.md:3`](../../docs/zh/datasets/strategy-simulated-data.md#L3)
 
 - Group、四个 Campaign、权重和容量约束集中在请求中。
   [`strategy_request.json:2`](../../modules/mta_strategy_recommender/data/simulated/strategy_request.json#L2)
@@ -103,7 +103,7 @@ context:
 **模型边界与验收证据**
 
 - 计划明确当前校验器与未来策略生成器的职责差异。
-  [`model-plan.md:77`](../../modules/mta_strategy_recommender/docs/model-plan.md#L77)
+  [`model-plan.md:77`](../../docs/zh/strategy/model-plan.md#L77)
 
 - 十九项测试覆盖文件隔离、候选、探索、触点与预算反例。
   [`test_hierarchy_validator.py:45`](../../modules/mta_strategy_recommender/tests/test_hierarchy_validator.py#L45)

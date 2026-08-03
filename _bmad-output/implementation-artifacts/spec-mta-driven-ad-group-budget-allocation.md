@@ -96,7 +96,7 @@ context:
   [`budget_recommender.py:453`](../../modules/mta_strategy_recommender/src/budget_recommender.py#L453)
 
 - 设计文档解释公式边界与同 Campaign 等分原因。
-  [`model-plan.md:11`](../../modules/mta_strategy_recommender/docs/model-plan.md#L11)
+  [`model-plan.md:11`](../../docs/zh/strategy/model-plan.md#L11)
 
 **校验与交付**
 

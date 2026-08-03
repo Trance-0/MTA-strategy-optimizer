@@ -115,7 +115,7 @@ Ads购买与销售只对14天内存在有效末次点击的结果子集守恒；
   [`test_amc_mta_end_to_end.py:114`](../../modules/amc_mta/tests/test_amc_mta_end_to_end.py#L114)
 
 - 数据说明明确各指标的可加性与对账口径。
-  [`README.md:1`](../../modules/amc_mta/data/simulated/README.md#L1)
+  [`README.md:1`](../../docs/zh/datasets/amc-simulated-data.md#L1)
 
 - 配置固定来源路径、90天窗口和模拟隐私门槛。
   [`config.py:9`](../../modules/amc_mta/config.py#L9)

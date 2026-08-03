@@ -17,15 +17,15 @@ AMC MTA 使用五段互动键区分广告产品、形式、位置、创意和曝
 | 查看项目文档入口说明 | [文档索引说明](docs/README.md) |
 | 管理新增、移动和归档文件 | [工作区文件位置管理](docs/workspace-file-management.md) |
 | 查看声明范围内文件的大小、权限和哈希 | [工作区文件清单](docs/workspace-file-inventory.json)（排除 Git、两个用户维护文件、ignored 个人覆盖及清单自身） |
-| 运行 AMC MTA 归因 | [AMC MTA 模块说明](modules/amc_mta/README.md) |
-| 生成并验证 Ad Group 初始预算 | [预算初始化器说明](modules/mta_strategy_recommender/README.md) |
+| 运行 AMC MTA 归因 | [AMC MTA 模块说明](docs/en/attribution/amc-mta-module.md) |
+| 生成并验证 Ad Group 初始预算 | [预算初始化器说明](docs/en/strategy/module-overview.md) |
 | 查看正式预算结果 | [初始预算 JSON](modules/mta_strategy_recommender/outputs/initial_budget_recommendation.json) |
-| 查看业务模块目录约定 | [模块索引](modules/README.md) |
+| 查看业务模块目录约定 | [模块索引](docs/en/reference/module-inventory.md) |
 | 查看架构与数据流 | [AMC MTA 架构](docs/amc_mta/amc-mta-architecture.md) |
 | 查看成熟度、风险与路线 | [AMC MTA 能力评价](docs/amc_mta/amc-mta-capability-assessment.md) |
-| 查看输入、路径和指标契约 | [AMC MTA 数据契约](modules/amc_mta/docs/amc-data-requirements.md) |
-| 查看双模型治理与证据阻断 | [模型比较治理规范](modules/amc_mta/docs/model-comparison-governance.md) |
-| 判断单触点归因是否可靠 | [触点可靠性指南](modules/amc_mta/docs/touchpoint-reliability-guide.md) |
+| 查看输入、路径和指标契约 | [AMC MTA 数据契约](docs/en/datasets/amc-data-contract.md) |
+| 查看双模型治理与证据阻断 | [模型比较治理规范](docs/en/attribution/model-governance.md) |
+| 判断单触点归因是否可靠 | [触点可靠性指南](docs/en/attribution/reliability.md) |
 | 查看外部研究资料 | [研究资料分级索引](docs/research/README.md) |
 | 查看历史产品愿景 | [历史设计产物](design-artifacts/README.md) |
 | 查看规格与实现记录 | [BMad 产物索引](_bmad-output/README.md) |
@@ -90,12 +90,14 @@ python3 -m unittest discover -s modules/mta_strategy_recommender/tests -p 'test_
 ├── log.md
 ├── docs/
 │   ├── index.md
+│   ├── en/                    # English VitePress content
+│   ├── zh/                    # 保留但暂不发布的中文 VitePress 源文件
 │   ├── amc_mta/               # AMC MTA 工作区文档
 │   ├── product/              # 当前项目介绍
 │   └── research/             # 外部研究原件和相关性索引
 ├── modules/
-│   ├── amc_mta/              # 五段触点归因实现
-│   └── mta_strategy_recommender/ # Campaign Group 数量与预算初始化器
+│   ├── amc_mta/              # 五段触点归因代码、数据与可再生产物
+│   └── mta_strategy_recommender/ # Campaign Group 数量与预算初始化代码
 ├── design-artifacts/         # 历史 Product Brief、PRD 与决策记录
 ├── .agents/                  # 已安装 Agent 技能
 ├── _bmad/                    # BMad 工作流配置

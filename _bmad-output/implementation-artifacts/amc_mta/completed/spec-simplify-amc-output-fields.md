@@ -108,7 +108,7 @@ context:
 **当前事实源**
 
 - 治理说明集中记录精简字段和解释边界。
-  [`model-comparison-governance.md:59`](../../../../modules/amc_mta/docs/model-comparison-governance.md#L59)
+  [`model-comparison-governance.md:59`](../../../../docs/zh/attribution/model-governance.md#L59)
 
 - 使用说明给出三份正式结果的消费方式。
-  [`usage.md:70`](../../../../modules/amc_mta/docs/usage.md#L70)
+  [`usage.md:70`](../../../../docs/zh/environment/amc-mta-usage.md#L70)

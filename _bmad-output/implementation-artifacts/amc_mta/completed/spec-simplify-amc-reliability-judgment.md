@@ -122,10 +122,10 @@ CSV 检查确认 17/17/51/3/51 行、摘要与触点布尔 AND 一致、`0/51` �
   [`model_comparison.py:49`](../../../../modules/amc_mta/src/model_comparison.py#L49)
 
 - 查看业务说明、零 outcome 和结果文件边界。
-  [`touchpoint-reliability-guide.md:14`](../../../../modules/amc_mta/docs/touchpoint-reliability-guide.md#L14)
+  [`touchpoint-reliability-guide.md:14`](../../../../docs/zh/attribution/reliability.md#L14)
 
 - 核对旧治理指标与可靠性判断的隔离规则。
-  [`model-comparison-governance.md:208`](../../../../modules/amc_mta/docs/model-comparison-governance.md#L208)
+  [`model-comparison-governance.md:208`](../../../../docs/zh/attribution/model-governance.md#L208)
 
 **边界与回归**
 

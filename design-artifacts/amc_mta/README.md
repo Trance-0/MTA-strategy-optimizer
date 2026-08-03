@@ -8,5 +8,4 @@
 - [模型功能与关系说明](A-Product-Brief/model-relationship-guide.md)
 - [决策记录](A-Product-Brief/decision-log.md)
 
-AMC MTA 当前实现以 [`modules/amc_mta`](../../modules/amc_mta/README.md) 为准。
-
+AMC MTA 当前实现以 [AMC MTA 模块说明](../../docs/zh/attribution/amc-mta-module.md) 和运行代码为准。

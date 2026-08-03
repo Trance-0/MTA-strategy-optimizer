@@ -13,7 +13,7 @@ context_file: ''
 # Brainstorming Session Results
 
 > 历史探索说明：本会话记录了早期 ROI 优化方向，已由现行
-> [`MTA-Informed Strategy Initializer` 计划](../../modules/mta_strategy_recommender/docs/model-plan.md)
+> [`MTA-Informed Strategy Initializer` 计划](../../docs/zh/strategy/model-plan.md)
 > 取代。当前模型以 Campaign Group 为顶层，只生成 `INITIAL_SEED`，不实现优化器。
 
 **Facilitator:** ericson

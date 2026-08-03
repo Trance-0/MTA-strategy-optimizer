@@ -85,7 +85,7 @@ context:
   [`index.md:17`](../../../../docs/index.md#L17)
 
 - 模块索引只保留 AMC MTA 运行入口。
-  [`modules/README.md:7`](../../../../modules/README.md#L7)
+  [`modules/README.md:7`](../../../../docs/zh/reference/module-inventory.md#L7)
 
 **能力与方法评价**
 
