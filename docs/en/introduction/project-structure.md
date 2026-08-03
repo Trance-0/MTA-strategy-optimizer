@@ -34,6 +34,7 @@ flowchart TB
 | Directory | Project responsibility | Key entry point |
 | --- | --- | --- |
 | `modules/amc_mta/` | Build aggregated paths, run both attribution models, compare them, and publish recommended attribution | `run_pipeline.py`, `src/amc_mta_attribution.py` |
+| `modules/mta_standard/` | Load MTA-SIM tables, adapt four-segment keys, run any model through one interface, and score results against ground truth | `src/dataloader.py`, `src/model_registry.py` |
 | `modules/mta_strategy_recommender/` | Bridge touchpoint attribution to Campaigns and calculate the new Ad Group count and initial budget | `src/budget_recommender.py` |
 | `docs/` | Current VitePress documentation, Cloudflare configuration, and research attachments | This site |
 | `docs/research/` | External research PDFs, reports, and indexes; referenced only by relevant pages and not used when models run | Research attachments |

@@ -31,6 +31,8 @@ python -B modules/amc_mta/run_pipeline.py
 python modules/amc_mta/scripts/validate_data_alignment.py
 python -B -m unittest discover -s modules/amc_mta/tests -p "test_*.py"
 
+python -B -m unittest discover -s modules/mta_standard/tests -p "test_*.py"
+
 python -B modules/mta_strategy_recommender/scripts/generate_initial_budget.py --check-output
 python modules/mta_strategy_recommender/scripts/validate_simulated_hierarchy.py
 python -B -m unittest discover -s modules/mta_strategy_recommender/tests -p "test_*.py"

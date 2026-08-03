@@ -29,6 +29,8 @@ For background on reconstructing and interpreting customer journeys, read [Mappi
 | Shapley attribution | `AggregatedShapleyAttribution` | Allocate each Outcome fairly among unique touchpoints within each path, then aggregate across paths |
 | Model comparison | `src/model_comparison.py` | Check calculation validity, data support, and model consistency |
 | Pipeline | `run_pipeline.py` | Run and publish validated artifacts together |
+| Standardized interface | `modules/mta_standard/` | Load MTA-SIM data, run any model through one interface, validate and score the results |
+| DNN credit model | `DeepNeuralAttributionModel` | Learn credit from touchpoint segment structure and predict a split for a campaign with no path history |
 
 > The correct terms are **Shapley value** and **Markov chain**. Shapely is a different Python library for geometric computation, not this project's attribution model.
 
@@ -49,6 +51,14 @@ Markov is the current official display basis, and Shapley is the sensitivity ref
 - if the strategy module receives an interval, it currently uses only its midpoint and emits a Warning.
 
 Continue with [Markov removal effect](./markov.md) and [Shapley path attribution](./shapley.md).
+
+## Running Models Through One Interface <span class="status-label status-verified" aria-label="Verified"></span>
+
+`modules/mta_standard/` adds a standardized layer over the two estimators above: one dataloader for MTA-SIM tables, one `fit`/`attribute` interface, one output row, and one evaluator. It is additive — the estimators, entry points, and published outputs described on this page are unchanged, and the wrappers reproduce their numbers exactly.
+
+The same interface admits models the original two cannot express. `dnn_credit` learns credit from touchpoint segment structure, which lets it predict a split for a campaign that has produced no paths yet.
+
+Continue with [the standardized interface](./standardized-interface.md) and [the DNN credit model](./dnn.md).
 
 ## References
 

@@ -51,6 +51,8 @@ const enTheme: DefaultTheme.Config = {
         { text: "Complete usage guide", link: "/en/attribution/complete-guide" },
         { text: "Markov removal effect", link: "/en/attribution/markov" },
         { text: "Path-level Shapley", link: "/en/attribution/shapley" },
+        { text: "Standardized MTA interface", link: "/en/attribution/standardized-interface" },
+        { text: "DNN credit model", link: "/en/attribution/dnn" },
         { text: "Model comparison governance", link: "/en/attribution/model-governance" },
         { text: "Touchpoint reliability", link: "/en/attribution/reliability" },
         { text: "Output file reference", link: "/en/attribution/output-reference" },

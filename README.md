@@ -70,6 +70,7 @@ Campaign → 候选容量推荐新 Ad Group 数量 → MTA 初始预算
 python3 -B modules/amc_mta/run_pipeline.py
 python3 modules/amc_mta/scripts/validate_data_alignment.py
 python3 -B -m unittest discover -s modules/amc_mta/tests -p 'test_*.py'
+python3 -B -m unittest discover -s modules/mta_standard/tests -p 'test_*.py'
 python3 -B modules/mta_strategy_recommender/scripts/generate_initial_budget.py --check-output
 python3 modules/mta_strategy_recommender/scripts/validate_simulated_hierarchy.py
 python3 -m unittest discover -s modules/mta_strategy_recommender/tests -p 'test_*.py'
@@ -79,7 +80,7 @@ python3 -m unittest discover -s modules/mta_strategy_recommender/tests -p 'test_
 
 - 流水线从 Ads 输入自动识别日期窗口，重建匿名聚合路径并发布五份契约输出；
 - 17 个 AMC 与 Amazon Ads 五段触点、90 天覆盖和账户/币种范围严格对齐；
-- 107 项 AMC MTA 测试和 34 项预算模型测试通过；
+- 107 项 AMC MTA 测试、136 项标准化接口测试和 34 项预算模型测试通过；
 - 当前 51 条推荐记录均为 `RELIABLE`。
 
 ## 项目结构
@@ -97,6 +98,7 @@ python3 -m unittest discover -s modules/mta_strategy_recommender/tests -p 'test_
 │   └── research/             # 外部研究原件和相关性索引
 ├── modules/
 │   ├── amc_mta/              # 五段触点归因代码、数据与可再生产物
+│   ├── mta_standard/         # MTA-SIM 标准化 dataloader、模型接口与评估
 │   └── mta_strategy_recommender/ # Campaign Group 数量与预算初始化代码
 ├── design-artifacts/         # 历史 Product Brief、PRD 与决策记录
 ├── .agents/                  # 已安装 Agent 技能

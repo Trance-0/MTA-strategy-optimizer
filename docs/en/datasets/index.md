@@ -54,3 +54,19 @@ Build an explicit Dataset Adapter:
 6. Isolate `simulation_ground_truth` in the evaluation workflow.
 
 This lets the two generated tables support prediction and attribution validation while preserving Ground Truth as an independent “answer table.”
+
+## Adapter Status <span class="status-label status-verified" aria-label="Verified"></span>
+
+`modules/mta_standard/` implements items 1, 2, 3, 5, and 6 of the recommendation above:
+
+| Recommendation | Where it is implemented |
+| --- | --- |
+| 1. Validate column order | `dataloader` requires the exact contract header for each table |
+| 2. Never guess `INTERACTION_TYPE` | `SimulatorConfig` supplies it explicitly and rejects missing, ambiguous, or colliding mappings |
+| 3. Preserve `unitsSold` | Kept verbatim on the annotated performance rows as a diagnostic |
+| 5. Validate before attributing | Loading fails before any model runs; `validate_standard_output` guards the results |
+| 6. Isolate Ground Truth | `MtaSimDataset` has no ground-truth field and the loader accepts no ground-truth path |
+
+Item 4, the Campaign and Ad Group entity Bridge, remains the responsibility of the strategy module and is unchanged.
+
+See [the standardized MTA interface](../attribution/standardized-interface.md) for the adapter's contract, failure modes, and evaluation metrics.
