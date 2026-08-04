@@ -21,7 +21,7 @@ This module performs attribution analysis only. It is not responsible for budget
 
 ## Current Implementation <span class="status-label status-verified" aria-label="Verified"></span>
 
-The current implementation is a six-stage deterministic pipeline. The table follows the actual call order in `modules/amc_mta/run_pipeline.py`, not merely the order in which the output files are presented.
+The current implementation is a six-stage deterministic pipeline. The table follows the actual call order in `modules/mta_attribution/run_pipeline.py`, not merely the order in which the output files are presented.
 
 | Stage | Code entry point | Algorithm responsibility | Why it is separated |
 | --- | --- | --- | --- |
@@ -181,8 +181,8 @@ Zero-total Outcomes remain empty because a normalized attribution recommendation
 Run from the repository root:
 
 ```bash
-python3 -B modules/amc_mta/run_pipeline.py
-python3 -B modules/amc_mta/scripts/validate_data_alignment.py
+python3 -B modules/mta_attribution/run_pipeline.py
+python3 -B modules/mta_attribution/scripts/validate_data_alignment.py
 ```
 
 Update the events and Amazon Ads input files, then run directly. The canonical pipeline determines its window automatically from the earliest through latest Ads `reportDate`; it supports any duration, cross-year windows, and leap days without changing configuration dates. Aggregated paths and all five model results are published together only after every artifact passes validation. On failure, the previous six derived artifacts remain in place, and raw inputs are not overwritten. See [running the module](../environment/amc-mta-usage.md) for custom file locations and complete validation rules.
@@ -190,11 +190,11 @@ Update the events and Amazon Ads input files, then run directly. The canonical p
 Default canonical outputs:
 
 ```text
-modules/amc_mta/outputs/attribution/amc_markov_attribution_results.csv
-modules/amc_mta/outputs/attribution/amc_shapley_attribution_results.csv
-modules/amc_mta/outputs/attribution/amc_mta_model_comparison_touchpoints.csv
-modules/amc_mta/outputs/attribution/amc_mta_model_comparison_summary.csv
-modules/amc_mta/outputs/attribution/amc_mta_recommended_attribution.csv
+modules/mta_attribution/outputs/attribution/amc_markov_attribution_results.csv
+modules/mta_attribution/outputs/attribution/amc_shapley_attribution_results.csv
+modules/mta_attribution/outputs/attribution/amc_mta_model_comparison_touchpoints.csv
+modules/mta_attribution/outputs/attribution/amc_mta_model_comparison_summary.csv
+modules/mta_attribution/outputs/attribution/amc_mta_recommended_attribution.csv
 ```
 
 The first two are each model's primary five-segment result. The final three provide diagnostics for “touchpoint count × 3 Outcomes,” an overall summary for three Outcomes, and recommendation records for the same “touchpoint count × 3” shape. The current 90-day sample has 17 touchpoints, so diagnostics and recommendations contain 51 rows each. All three dual-model artifacts directly expose the three Booleans “calculation valid,” “data support sufficient,” and “models consistent,” plus a binary reliability result. All three must be true for `RELIABLE`. For each Outcome, the summary AND-aggregates the three Booleans over every touchpoint; the overall comparison status and other difference metrics are diagnostic only. The current sample has `51 RELIABLE / 0 UNRELIABLE`.

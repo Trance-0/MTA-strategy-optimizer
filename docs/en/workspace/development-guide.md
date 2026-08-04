@@ -17,8 +17,8 @@ Some installed-tool tests use `pytest`, but the audited repository had no unifie
 ## Run the Business Pipeline
 
 ```bash
-python3 -B modules/amc_mta/run_pipeline.py
-python3 modules/amc_mta/scripts/validate_data_alignment.py
+python3 -B modules/mta_attribution/run_pipeline.py
+python3 modules/mta_attribution/scripts/validate_data_alignment.py
 ```
 
 The pipeline derives its window from the earliest through latest Amazon Ads `reportDate`; adding data should not require changing configured dates. See [AMC MTA execution](../environment/amc-mta-usage.md) for custom input and output arguments.
@@ -26,7 +26,7 @@ The pipeline derives its window from the earliest through latest Amazon Ads `rep
 Canonical attribution output is stored in:
 
 ```text
-modules/amc_mta/outputs/attribution/
+modules/mta_attribution/outputs/attribution/
 ```
 
 Five CSV files are retained as the canonical model/governance outputs. Other generated output is excluded by `.gitignore`.
@@ -34,7 +34,7 @@ Five CSV files are retained as the canonical model/governance outputs. Other gen
 ## Run Business Tests
 
 ```bash
-python3 -m unittest discover -s modules/amc_mta/tests -p 'test*.py'
+python3 -m unittest discover -s modules/mta_attribution/tests -p 'test*.py'
 ```
 
 The migration-source audit recorded 107 passing tests. Always treat the current test run, rather than that historical count, as ground truth.
@@ -42,9 +42,9 @@ The migration-source audit recorded 107 passing tests. Always treat the current 
 ## Validate the Campaign Group Initial-Strategy Sample
 
 ```bash
-python3 -B modules/mta_strategy_recommender/scripts/generate_initial_budget.py --check-output
-python3 modules/mta_strategy_recommender/scripts/validate_simulated_hierarchy.py
-python3 -B -m unittest discover -s modules/mta_strategy_recommender/tests -p 'test_*.py'
+python3 -B modules/mta_strategy_recommendation/scripts/generate_initial_budget.py --check-output
+python3 modules/mta_strategy_recommendation/scripts/validate_simulated_hierarchy.py
+python3 -B -m unittest discover -s modules/mta_strategy_recommendation/tests -p 'test_*.py'
 ```
 
 The initializer reads AMC recommended attribution and touchpoint-entity aggregates without modifying them. It uses the request's hashes, window, and scope to block drift. Validation covers one Campaign Group, four Campaigns, capacity-derived new-group counts, every touchpoint bridge, budget conservation, and the missing-budget-baseline behavior. It neither validates nor generates specific Keyword/SKU allocations. The migration-source audit recorded 34 passing tests.
@@ -79,7 +79,7 @@ These belong to installed-tool maintenance and should not be merged into AMC MTA
 ## Change Principles
 
 - Follow [workspace file-location management](file-management.md) before adding, moving, or archiving files.
-- Extend attribution capability under `modules/amc_mta`; extend initial-strategy capability under `modules/mta_strategy_recommender`.
+- Extend attribution capability under `modules/mta_attribution`; extend initial-strategy capability under `modules/mta_strategy_recommendation`.
 - When input fields, the five-segment key, or output columns change, update code, samples, tests, and module contracts together.
 - External originals in `docs/research` are not runtime inputs.
 - Preserve `design-artifacts` and completed specifications as historical records; add status explanations instead of rewriting earlier intent.

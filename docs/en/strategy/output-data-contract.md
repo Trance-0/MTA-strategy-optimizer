@@ -5,7 +5,7 @@ lang: en-US
 
 # Ad Group Initial-Budget Output Data Contract (v4)
 
-The canonical result is always saved at `modules/mta_strategy_recommender/outputs/initial_budget_recommendation.json`. It is also the only submission baseline for automated tests; no second copy is maintained under `tests/`. Numeric values preserve the generator's original JSON numbers. A presentation layer may format decimals, but this version does not round to the currency's smallest unit or redistribute remainders.
+The canonical result is always saved at `modules/mta_strategy_recommendation/outputs/initial_budget_recommendation.json`. It is also the only submission baseline for automated tests; no second copy is maintained under `tests/`. Numeric values preserve the generator's original JSON numbers. A presentation layer may format decimals, but this version does not round to the currency's smallest unit or redistribute remainders.
 
 ## 1. Current Sample
 

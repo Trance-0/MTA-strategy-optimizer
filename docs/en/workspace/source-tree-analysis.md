@@ -14,8 +14,9 @@ marketing-roi-analysis/
 ├── .gitignore                        # cache, secret, and generated-output rules
 ├── .markdownlint.json                # Markdown lint exceptions
 ├── modules/
-│   ├── amc_mta/                      # five-segment attribution implementation
-│   └── mta_strategy_recommender/     # Campaign Group initial-strategy module
+│   ├── mta_attribution/             # five-segment attribution implementation
+│   ├── mta_standard/                # MTA-SIM interface, adapter, evaluator
+│   └── mta_strategy_recommendation/ # Campaign Group initial-strategy module
 ├── docs/                             # bilingual knowledge and external research
 ├── design-artifacts/                 # historical product vision
 ├── _bmad-output/                     # completed specifications and deferred work
@@ -29,20 +30,27 @@ marketing-roi-analysis/
 ## Current Business Area
 
 ```text
-modules/amc_mta/
+modules/mta_attribution/
 ├── config.py                         # windows, thresholds, field constants
 ├── run_pipeline.py                   # complete pipeline entry point
 ├── src/
-│   ├── touchpoint_key.py             # five-segment parsing and validation
-│   ├── synthetic_event_pipeline.py   # synthetic users and AMC/Ads/entity derivation
-│   ├── amc_path_builder.py           # conceptual events to anonymous paths
-│   ├── amc_mta_attribution.py        # Markov, Shapley, cost joins
-│   └── model_comparison.py           # gaps, support, reliability, recommendations
-├── scripts/                          # step-specific command-line interfaces
-├── tests/                            # automated tests
-├── data/simulated/                   # one source and four derived datasets
-└── outputs/attribution/              # five canonical generated outputs
+│   ├── touchpoint_key.py                # five-segment parsing and validation
+│   ├── synthetic_event_pipeline.py      # synthetic users and AMC/Ads/entity derivation
+│   ├── path_report_builder.py           # conceptual events to anonymous paths
+│   ├── attribution_contract.py          # CSV IO, row validation, result shaping
+│   ├── markov_attribution_model.py      # removal-effect model
+│   ├── shapley_attribution_model.py     # path-level Shapley model
+│   └── attribution_model_comparison.py  # gaps, support, reliability, recommendations
+├── scripts/                             # step-specific command-line interfaces
+├── tests/                               # automated tests
+├── data/simulated/                      # one source and four derived datasets
+└── outputs/attribution/                 # five canonical generated outputs
 ```
+
+One file per model is deliberate. `attribution_contract.py` owns everything both
+models share — the CSV boundary, row validation, and result shaping — so each
+model file contains only its own mathematics and can be read, reviewed, or
+replaced on its own.
 
 Dependency direction is:
 
@@ -53,11 +61,14 @@ synthetic_event_pipeline (simulation only)
           ├─ Ads / touchpoint-entity aggregates
           └─ anonymous conceptual events
                     ↓
-             amc_path_builder
+            path_report_builder
                     ↓
-          amc_mta_attribution
-                    ↓
-           model_comparison
+           attribution_contract
+            ↓                ↓
+markov_attribution   shapley_attribution
+     _model               _model
+            ↓                ↓
+        attribution_model_comparison
                     ↓
        run_pipeline / scripts / outputs
 ```
@@ -65,7 +76,7 @@ synthetic_event_pipeline (simulation only)
 The Strategy Initializer is:
 
 ```text
-modules/mta_strategy_recommender/
+modules/mta_strategy_recommendation/
 ├── data/simulated/                   # strategy request and candidate pool
 ├── outputs/initial_budget_recommendation.json
 ├── src/

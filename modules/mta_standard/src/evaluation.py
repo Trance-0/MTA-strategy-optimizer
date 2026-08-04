@@ -1,3 +1,22 @@
+"""Score models against simulator ground truth.
+
+The only module that opens `simulation_ground_truth`. It returns a `GroundTruth`
+that no loader, dataset, or model accepts as input, which is what keeps the
+answer out of any training feature.
+
+Data flow:
+    simulation_ground_truth -> `load_simulation_ground_truth` -> `GroundTruth`
+    model + dataset         -> `fit` -> timed `attribute` -> standard rows
+    both                    -> `evaluate_standard_output` -> `EvaluationReport`
+
+Metrics per outcome: credit-share MAE and RMSE, total variation distance,
+Spearman rho, top-k overlap, and conservation error, plus one runtime per model.
+
+Model and ground-truth touchpoints are aligned on their union with a missing
+touchpoint scored as zero, so omitting a touchpoint is penalised rather than
+silently excused.
+"""
+
 from __future__ import annotations
 
 import math
@@ -8,8 +27,8 @@ from types import MappingProxyType
 from typing import Mapping, Sequence
 
 from dataloader import MtaSimDataset, ReportScope, parse_iso_date, required_text
-from legacy_paths import ensure_amc_mta_src_on_path
-from mta_attribution_model import MtaAttributionModel
+from attribution_src_path import ensure_attribution_src_on_path
+from attribution_model_interface import MtaAttributionModel
 from output_contract import (
     SUPPORTED_OUTCOMES,
     StandardAttributionRow,
@@ -17,10 +36,10 @@ from output_contract import (
 )
 from touchpoint_adapter import canonicalize_four_segment_key
 
-ensure_amc_mta_src_on_path()
+ensure_attribution_src_on_path()
 
-from amc_mta_attribution import read_csv_normalized  # noqa: E402
-from model_comparison import spearman_rho  # noqa: E402
+from attribution_contract import read_csv_normalized  # noqa: E402
+from attribution_model_comparison import spearman_rho  # noqa: E402
 
 
 MTA_SIM_GROUND_TRUTH_FIELDS: tuple[str, ...] = (

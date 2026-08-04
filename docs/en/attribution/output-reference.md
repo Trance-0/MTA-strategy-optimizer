@@ -5,7 +5,7 @@ lang: en-US
 
 # AMC MTA Canonical Output Index
 
-The five canonical CSV files are in `modules/amc_mta/outputs/attribution/`. They share five-segment touchpoint semantics but have different responsibilities. Do not mix files from different runs, and do not interpret `RELIABLE` as causal validity.
+The five canonical CSV files are in `modules/mta_attribution/outputs/attribution/`. They share five-segment touchpoint semantics but have different responsibilities. Do not mix files from different runs, and do not interpret `RELIABLE` as causal validity.
 
 ## Recommended Reading Order
 

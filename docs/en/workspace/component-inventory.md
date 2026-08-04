@@ -9,27 +9,27 @@ lang: en-US
 
 | Component | Entry point | Responsibility |
 | --- | --- | --- |
-| Five-segment touchpoint key | `modules/amc_mta/src/touchpoint_key.py` | Normalize ad product, format, placement, creative, and interaction type |
-| Synthetic event-data factory | `modules/amc_mta/src/synthetic_event_pipeline.py` | User-event fact source, three aggregate derivations, privacy, and conservation checks |
-| Path construction | `modules/amc_mta/src/amc_path_builder.py` | Convert events to AMC-style anonymous aggregate paths |
-| Attribution engine | `modules/amc_mta/src/amc_mta_attribution.py` | Markov, Shapley, cost, and efficiency metrics |
-| Model governance | `modules/amc_mta/src/model_comparison.py` | Five-segment support, gaps, three reliability criteria, overall diagnostics, and recommendation status |
-| Complete AMC entry point | `modules/amc_mta/run_pipeline.py` | Rebuild derived inputs and the five model/governance outputs |
-| AMC command-line scripts | `modules/amc_mta/scripts/` | Stepwise generation, attribution, comparison, and validation |
-| AMC tests | `modules/amc_mta/tests/` | Unit, contract, and end-to-end verification |
-| Ad Group count and budget generator | `modules/mta_strategy_recommender/src/budget_recommender.py` | Calculate capacity counts, derive Campaign shares from MTA plus the AMC bridge, and divide them among anonymous new groups |
-| Campaign Group budget validator | `modules/mta_strategy_recommender/src/hierarchy_validator.py` | Read-only AMC hash/scope validation, capacity regeneration, bridge checks, budget conservation, and budget-only schema validation |
-| Initial-budget inputs | `modules/mta_strategy_recommender/data/simulated/` | Two JSON files defining the Group, four Campaigns, AMC lineage, candidate counts, capacities, and minimum budgets |
-| Canonical initial-budget output | `modules/mta_strategy_recommender/outputs/initial_budget_recommendation.json` | Reproducible `INITIAL_SEED` result and the test baseline |
+| Five-segment touchpoint key | `modules/mta_attribution/src/touchpoint_key.py` | Normalize ad product, format, placement, creative, and interaction type |
+| Synthetic event-data factory | `modules/mta_attribution/src/synthetic_event_pipeline.py` | User-event fact source, three aggregate derivations, privacy, and conservation checks |
+| Path construction | `modules/mta_attribution/src/path_report_builder.py` | Convert events to AMC-style anonymous aggregate paths |
+| Attribution engine | `modules/mta_attribution/src/attribution_contract.py` | Markov, Shapley, cost, and efficiency metrics |
+| Model governance | `modules/mta_attribution/src/attribution_model_comparison.py` | Five-segment support, gaps, three reliability criteria, overall diagnostics, and recommendation status |
+| Complete AMC entry point | `modules/mta_attribution/run_pipeline.py` | Rebuild derived inputs and the five model/governance outputs |
+| AMC command-line scripts | `modules/mta_attribution/scripts/` | Stepwise generation, attribution, comparison, and validation |
+| AMC tests | `modules/mta_attribution/tests/` | Unit, contract, and end-to-end verification |
+| Ad Group count and budget generator | `modules/mta_strategy_recommendation/src/budget_recommender.py` | Calculate capacity counts, derive Campaign shares from MTA plus the AMC bridge, and divide them among anonymous new groups |
+| Campaign Group budget validator | `modules/mta_strategy_recommendation/src/hierarchy_validator.py` | Read-only AMC hash/scope validation, capacity regeneration, bridge checks, budget conservation, and budget-only schema validation |
+| Initial-budget inputs | `modules/mta_strategy_recommendation/data/simulated/` | Two JSON files defining the Group, four Campaigns, AMC lineage, candidate counts, capacities, and minimum budgets |
+| Canonical initial-budget output | `modules/mta_strategy_recommendation/outputs/initial_budget_recommendation.json` | Reproducible `INITIAL_SEED` result and the test baseline |
 
 ## Data Assets
 
 | Type | Recorded count | Location |
 | --- | ---: | --- |
-| Synthetic fact source and derived CSV files | 5 | `modules/amc_mta/data/simulated/` |
-| Canonical attribution CSV files | 5 | `modules/amc_mta/outputs/attribution/` |
-| Strategy initialization input JSON files | 2 | `modules/mta_strategy_recommender/data/simulated/` |
-| Canonical Strategy Initializer output | 1 | `modules/mta_strategy_recommender/outputs/` |
+| Synthetic fact source and derived CSV files | 5 | `modules/mta_attribution/data/simulated/` |
+| Canonical attribution CSV files | 5 | `modules/mta_attribution/outputs/attribution/` |
+| Strategy initialization input JSON files | 2 | `modules/mta_strategy_recommendation/data/simulated/` |
+| Canonical Strategy Initializer output | 1 | `modules/mta_strategy_recommendation/outputs/` |
 | External PDFs | 7 | `docs/research/` |
 | External DOCX files | 2 | `docs/research/amazon/research/` |
 | Amazon Ads OpenAPI JSON | 1 | `docs/research/amazon/research/` |

@@ -5,7 +5,7 @@ lang: en-US
 
 # AMC MTA Submission Manifest
 
-`amc_mta/` is the only core submission. Use that directory as the working directory after extraction. The boundaries below are for code review, demonstration, and archival; they do not change any runtime path or CSV contract.
+`mta_attribution/` is the only core submission. Use that directory as the working directory after extraction. The boundaries below are for code review, demonstration, and archival; they do not change any runtime path or CSV contract.
 
 ## Required: Core Package
 

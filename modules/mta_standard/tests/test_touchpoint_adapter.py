@@ -1,3 +1,10 @@
+"""Tests for four-to-five segment key adaptation.
+
+Covers component rules at the four-segment grain, round-trip reversibility, and
+the three configuration failures that must be rejected rather than guessed:
+missing, ambiguous, and colliding cost-type mappings.
+"""
+
 from __future__ import annotations
 
 import sys

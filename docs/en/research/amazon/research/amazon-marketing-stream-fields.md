@@ -181,7 +181,7 @@ Marketing Stream is suited to near-real-time operations and aggregate-metric mon
 
 ## Project Recommendation
 
-Current `modules/amc_mta` uses two analytical input types:
+Current `modules/mta_attribution` uses two analytical input types:
 
 - AMC path report for paths and conversion Outcomes;
 - Amazon Ads report—or a normalized Marketing Stream performance table—for five-segment cost, sales, impressions, and clicks, with CPC assigned to `CLICK` and CPM assigned to `IMPRESSION`.

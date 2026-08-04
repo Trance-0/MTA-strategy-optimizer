@@ -91,7 +91,7 @@ Current AMC MTA instead uses five-segment interactions, five CSV model/governanc
 The demonstration uses module-local CSV under:
 
 ```text
-modules/amc_mta/data/simulated/
+modules/mta_attribution/data/simulated/
 ```
 
 The research distinguishes three data types:

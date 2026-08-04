@@ -24,10 +24,10 @@ For background on reconstructing and interpreting customer journeys, read [Mappi
 
 | Component | Primary file | Objective |
 | --- | --- | --- |
-| Path and schema validation | `src/amc_mta_attribution.py` | Read aggregated paths; validate counts, monetary values, and five-segment keys |
-| Markov attribution | `WeightedMarkovAttribution` | Calculate contribution shares from the change in conversion probability when a touchpoint is removed |
-| Shapley attribution | `AggregatedShapleyAttribution` | Allocate each Outcome fairly among unique touchpoints within each path, then aggregate across paths |
-| Model comparison | `src/model_comparison.py` | Check calculation validity, data support, and model consistency |
+| Path and schema validation | `src/attribution_contract.py` | Read aggregated paths; validate counts, monetary values, and five-segment keys |
+| Markov attribution | `src/markov_attribution_model.py` | Calculate contribution shares from the change in conversion probability when a touchpoint is removed |
+| Shapley attribution | `src/shapley_attribution_model.py` | Allocate each Outcome fairly among unique touchpoints within each path, then aggregate across paths |
+| Model comparison | `src/attribution_model_comparison.py` | Check calculation validity, data support, and model consistency |
 | Pipeline | `run_pipeline.py` | Run and publish validated artifacts together |
 | Standardized interface | `modules/mta_standard/` | Load MTA-SIM data, run any model through one interface, validate and score the results |
 | DNN credit model | `DeepNeuralAttributionModel` | Learn credit from touchpoint segment structure and predict a split for a campaign with no path history |
@@ -58,7 +58,7 @@ Continue with [Markov removal effect](./markov.md) and [Shapley path attribution
 
 The same interface admits models the original two cannot express. `dnn_credit` learns credit from touchpoint segment structure, which lets it predict a split for a campaign that has produced no paths yet.
 
-Continue with [the standardized interface](./standardized-interface.md) and [the DNN credit model](./dnn.md).
+Continue with [the standardized interface](./standardized-interface.md) and [the DNN credit model](./dnn.md). For how the four models are verified and scored against each other, see [model testing and comparison](./model-testing.md).
 
 ## References
 

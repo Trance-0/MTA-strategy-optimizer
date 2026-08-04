@@ -15,7 +15,7 @@ In real AMC, event ordering, path construction, and privacy aggregation should o
 
 ## 2. Inputs and Data Locations
 
-Default demonstration inputs are under `modules/amc_mta/data/simulated/`. See the [simulated data description](../datasets/amc-simulated-data.md) for file roles:
+Default demonstration inputs are under `modules/mta_attribution/data/simulated/`. See the [simulated data description](../datasets/amc-simulated-data.md) for file roles:
 
 - Synthetic user events: local simulation only and the common source of the other dynamic samples.
 - Anonymous conceptual events: aggregated from the master table by path template and used only for local path construction.
@@ -75,8 +75,8 @@ See [reliability assessment](reliability.md) and the [dual-model governance spec
 Run from the repository root:
 
 ```bash
-python3 -B modules/amc_mta/run_pipeline.py
-python3 -B modules/amc_mta/scripts/validate_data_alignment.py
+python3 -B modules/mta_attribution/run_pipeline.py
+python3 -B modules/mta_attribution/scripts/validate_data_alignment.py
 ```
 
 The complete pipeline first creates and validates one aggregated path report and five canonical outputs in a temporary location. It publishes only after all six derived artifacts succeed as a group. If inputs are invalid, paths are empty, validation fails, or publishing fails, raw inputs are not overwritten and the previous derived artifact group remains unchanged. See [running the module](../environment/amc-mta-usage.md) for custom paths and stepwise commands.
@@ -84,7 +84,7 @@ The complete pipeline first creates and validates one aggregated path report and
 To validate module tests independently without running the pipeline, execute from the repository root:
 
 ```bash
-python3 -B -m unittest discover -s modules/amc_mta/tests -p 'test_*.py'
+python3 -B -m unittest discover -s modules/mta_attribution/tests -p 'test_*.py'
 ```
 
 The expected result is 107 passing tests; this command does not publish or overwrite canonical CSV files.

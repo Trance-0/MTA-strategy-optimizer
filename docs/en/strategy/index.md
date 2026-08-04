@@ -8,7 +8,7 @@ lang: en-US
 
 ## Current: Budget Initializer <span class="status-label status-verified" aria-label="Verified"></span>
 
-The public `generate_budget_recommendation()` function in `modules/mta_strategy_recommender/src/budget_recommender.py` explicitly returns a deterministic, **unoptimized** Ad Group count and budget starting point.
+The public `generate_budget_recommendation()` function in `modules/mta_strategy_recommendation/src/budget_recommender.py` explicitly returns a deterministic, **unoptimized** Ad Group count and budget starting point.
 
 ```text
 Recommended MTA shares + AMC entity Bridge → Campaign Outcome contribution

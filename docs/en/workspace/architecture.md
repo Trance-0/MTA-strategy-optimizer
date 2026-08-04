@@ -19,9 +19,9 @@ docs/en + docs/zh + shared research assets
                      │
                      ▼
 Business execution and initialization
-modules/amc_mta -> five-segment attribution evidence
+modules/mta_attribution -> five-segment attribution evidence
                         ↓
-modules/mta_strategy_recommender -> INITIAL_SEED
+modules/mta_strategy_recommendation -> INITIAL_SEED
 
 .agents + _bmad form the development plane and do not enter attribution calculations
 ```

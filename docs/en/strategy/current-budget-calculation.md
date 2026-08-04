@@ -7,7 +7,7 @@ lang: en-US
 
 ## 1. Document Purpose
 
-This document explains in detail how the current `mta_strategy_recommender` derives the initial daily budget for each new Ad Group from MTA attribution results.
+This document explains in detail how the current `mta_strategy_recommendation` module derives the initial daily budget for each new Ad Group from MTA attribution results.
 
 The current implementation can be stated precisely as follows:
 
@@ -23,14 +23,14 @@ allocation_basis = CAMPAIGN_MTA_EQUAL_SPLIT
 
 ## 2. Data Used by the Current Calculation
 
-Strategy-model paths in the following table are relative to the `modules/mta_strategy_recommender` module root; MTA source-data paths are relative to the workspace root.
+Strategy-model paths in the following table are relative to the `modules/mta_strategy_recommendation` module root; MTA source-data paths are relative to the workspace root.
 
 | Data | Current file | Content entering the calculation |
 | --- | --- | --- |
 | Strategy request | `data/simulated/strategy_request.json` | Campaign Group daily budget, four Campaigns, Outcome weights, capacity rules, and minimum daily budget per group |
 | Candidate pool | `data/simulated/candidate_pool.json` | Eligible Keyword-unit, SKU, valid-Pair, Target, and Audience counts for each Campaign |
 | MTA attribution | `../amc_mta/outputs/attribution/amc_mta_recommended_attribution.csv` | `recommended_value` and reliability status for every touchpoint and Outcome |
-| AMC entity aggregate | `../amc_mta/data/simulated/amc_touchpoint_entity_aggregate_sample.csv` | Relationships between touchpoints and historical Campaigns/Ad Groups, plus supporting metrics for the Bridge |
+| AMC entity aggregate | `../mta_attribution/data/simulated/amc_touchpoint_entity_aggregate_sample.csv` | Relationships between touchpoints and historical Campaigns/Ad Groups, plus supporting metrics for the Bridge |
 | Canonical result | `outputs/initial_budget_recommendation.json` | Score, count, and budget of four Campaigns, plus each anonymous new group's budget |
 
 The current sample Campaign Group has a daily budget of 1,000 USD and contains four Campaigns:

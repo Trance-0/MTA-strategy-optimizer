@@ -12,7 +12,7 @@ This section contains Amazon background research and external references only; t
 - [AMC](amc/): concise background, platform boundaries, and the MTA/ROI data flow.
 - [Research-original index](research/): Amazon Ads API schema, Marketing Stream fields, historical technical research, and original research material.
 
-Runnable AMC MTA code, CSV files, and output are under `modules/amc_mta/`. See [AMC MTA module documentation](../../attribution/amc-mta-module.md) and the [project introduction](../../product/amc-mta/project-introduction.md).
+Runnable AMC MTA code, CSV files, and output are under `modules/mta_attribution/`. See [AMC MTA module documentation](../../attribution/amc-mta-module.md) and the [project introduction](../../product/amc-mta/project-introduction.md).
 
 Recommended order:
 

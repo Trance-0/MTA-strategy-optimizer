@@ -1,9 +1,19 @@
+"""The identifier-to-class map for every shipped model.
+
+Kept in its own file so a model implementation can import the interface without
+the interface having to import every implementation, which would be circular.
+
+Data flow: a model identifier -> `build_model` -> an unfitted model instance.
+Contributors iterate `MODEL_REGISTRY` to compare implementations rather than
+importing each estimator directly.
+"""
+
 from __future__ import annotations
 
 from dnn_attribution_model import DeepNeuralAttributionModel
-from mta_attribution_model import (
+from attribution_model_interface import MtaAttributionModel
+from wrapped_attribution_models import (
     MarkovRemovalEffectModel,
-    MtaAttributionModel,
     PathLevelShapleyModel,
     UniformCreditModel,
 )

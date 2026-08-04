@@ -38,13 +38,13 @@ The file-by-file paths, sizes, permissions, and SHA-256 digests are recorded in 
 
 ## Partition Assessment
 
-### Business Implementation: `modules/amc_mta`
+### Business Implementation: `modules/mta_attribution`
 
 This is an AMC anonymous-aggregate-path, five-segment multi-touch-attribution diagnostic demonstration. Its strengths are an explicit contract, complete outputs, distinct Markov and path-level Shapley governance, and strong test coverage. Its principal limits are synthetic data, no rolling-window or resampling stability evidence, no real AMC privacy-execution validation, and no causal-incrementality or automatic-budget capability.
 
 See [AMC MTA capability assessment](../product/amc-mta/capability-assessment.md).
 
-### Strategy Initialization: `modules/mta_strategy_recommender`
+### Strategy Initialization: `modules/mta_strategy_recommendation`
 
 This module deterministically generates `Campaign Group -> Campaign -> new Ad Group count and budget` and performs read-only cross-module AMC validation. Two JSON inputs provide candidate counts, product capacities, minimum budgets, and AMC lineage. The audited sample's real capacity calculation yielded `1/1/1/1`. All 17 MTA touchpoints rolled through the AMC `assisted_*` bridge into Campaign shares, which were divided equally among anonymous new groups in the same Campaign. The output contains no specific candidate, Targeting, or action and makes no claim of maximum return on investment, causal incrementality, or global optimality.
 

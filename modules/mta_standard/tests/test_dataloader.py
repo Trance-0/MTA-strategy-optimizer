@@ -1,3 +1,10 @@
+"""Tests for MTA-SIM dataset loading.
+
+Covers loading from a directory outside the repository, header and scope
+validation, the optional performance table, and the structural guarantees that
+keep ground truth out of the model-facing dataset.
+"""
+
 from __future__ import annotations
 
 import csv

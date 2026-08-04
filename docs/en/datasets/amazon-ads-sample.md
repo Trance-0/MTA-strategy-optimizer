@@ -21,7 +21,7 @@ lang: en-US
 AD_PRODUCT:FORMAT:PLACEMENT:CREATIVE:INTERACTION_TYPE
 ```
 
-`INTERACTION_TYPE` may only be `IMPRESSION` or `CLICK`. Run `python3 -B modules/amc_mta/scripts/validate_data_alignment.py` from the repository root to validate the account, currency, window, five-segment touchpoint set, and daily coverage.
+`INTERACTION_TYPE` may only be `IMPRESSION` or `CLICK`. Run `python3 -B modules/mta_attribution/scripts/validate_data_alignment.py` from the repository root to validate the account, currency, window, five-segment touchpoint set, and daily coverage.
 
 This file is a five-segment summary for attribution cost joins within the Campaign Group scope; it is not a Campaign/Ad Group management-structure sample. `AD_PRODUCT` in the five-segment key is an attribution observation dimension. The business tree remains `Campaign Group → Campaign → Ad Group → Keyword/SKU`, and `ad_product` is stored only on Campaign. See [strategy simulated inputs](strategy-simulated-data.md) for the hierarchy sample.
 

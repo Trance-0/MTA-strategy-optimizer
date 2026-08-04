@@ -51,6 +51,7 @@ const enTheme: DefaultTheme.Config = {
         { text: "Complete usage guide", link: "/en/attribution/complete-guide" },
         { text: "Markov removal effect", link: "/en/attribution/markov" },
         { text: "Path-level Shapley", link: "/en/attribution/shapley" },
+        { text: "Model testing and comparison", link: "/en/attribution/model-testing" },
         { text: "Standardized MTA interface", link: "/en/attribution/standardized-interface" },
         { text: "DNN credit model", link: "/en/attribution/dnn" },
         { text: "Model comparison governance", link: "/en/attribution/model-governance" },
@@ -113,6 +114,7 @@ const enTheme: DefaultTheme.Config = {
       items: [
         { text: "Definitions", link: "/en/definitions" },
         { text: "Module inventory", link: "/en/reference/module-inventory" },
+        { text: "Module and script data flow", link: "/en/reference/data-flow" },
         { text: "Submission manifest", link: "/en/reference/submission-manifest" },
       ],
     },

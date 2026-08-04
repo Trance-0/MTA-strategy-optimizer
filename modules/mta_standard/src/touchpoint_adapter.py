@@ -1,14 +1,29 @@
+"""Convert between MTA-SIM's four-segment key and the five-segment key.
+
+The two contracts differ by one segment, and `IMPRESSION` versus `CLICK` cannot
+be recovered from four-segment data. This file is the only sanctioned bridge, and
+it never infers the missing segment from delivery metrics.
+
+Adaptation is driven by an explicit `SimulatorConfig` mapping each touchpoint to
+its billing cost type, `CPC -> CLICK` and `CPM -> IMPRESSION`. Missing,
+ambiguous, and colliding mappings are rejected rather than guessed.
+
+Data flow: four-segment key -> `to_five_segment` -> the existing estimators
+-> `to_four_segment` -> standard output. `assert_reversible` proves the round
+trip is lossless for the touchpoints a dataset actually contains.
+"""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
 from types import MappingProxyType
 from typing import Iterable, Mapping
 
-from legacy_paths import ensure_amc_mta_src_on_path
+from attribution_src_path import ensure_attribution_src_on_path
 
-ensure_amc_mta_src_on_path()
+ensure_attribution_src_on_path()
 
-from amc_mta_attribution import NULL  # noqa: E402
+from attribution_contract import NULL  # noqa: E402
 from touchpoint_key import (  # noqa: E402
     canonical_touchpoint_key,
     canonicalize_touchpoint_key,

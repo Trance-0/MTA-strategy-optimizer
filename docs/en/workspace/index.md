@@ -5,7 +5,7 @@ lang: en-US
 
 # Complete Workspace Documentation Index
 
-This index covers the complete workspace: current business implementations, project knowledge, research originals, historical artifacts, and the local Agent/BMad toolchain. The current business chain consists of [`modules/amc_mta`](../attribution/amc-mta-module.md) and [`modules/mta_strategy_recommender`](../strategy/module-overview.md). `.agents` and `_bmad` are development tools, not marketing-product features.
+This index covers the complete workspace: current business implementations, project knowledge, research originals, historical artifacts, and the local Agent/BMad toolchain. The current business chain consists of [`modules/mta_attribution`](../attribution/amc-mta-module.md) and [`modules/mta_strategy_recommendation`](../strategy/module-overview.md). `.agents` and `_bmad` are development tools, not marketing-product features.
 
 ## Recommended Reading Order
 
@@ -50,14 +50,14 @@ Authority order is: runtime code and tests, module data/governance contracts, re
 ├── docs/              # bilingual knowledge and research originals
 └── modules/           # AMC MTA + Campaign Group Strategy Initializer
 
-modules/amc_mta/
+modules/mta_attribution/
 ├── src/       # path keys, path building, attribution, comparison
 ├── scripts/   # independent command-line entry points
 ├── tests/     # automated tests
 ├── data/      # one simulated fact source and four derived datasets
 └── outputs/   # five canonical generated CSV files
 
-modules/mta_strategy_recommender/
+modules/mta_strategy_recommendation/
 ├── data/      # strategy_request + candidate_pool inputs
 ├── outputs/   # the canonical initial-budget JSON
 ├── src/       # count/budget generation and cross-module validation
@@ -86,7 +86,7 @@ See [Source-tree analysis](source-tree-analysis.md) for the annotated structure.
 
 ## Current Verification Baseline
 
-The baseline recorded on 2026-07-30 used the unified synthetic user-event source, its four derived datasets, and deterministic output from `python3 modules/amc_mta/run_pipeline.py`:
+The baseline recorded on 2026-07-30 used the unified synthetic user-event source, its four derived datasets, and deterministic output from `python3 modules/mta_attribution/run_pipeline.py`:
 
 - 107 AMC MTA tests passed, with 34 additional Strategy Initializer tests;
 - 17 five-segment touchpoints aligned completely with the Amazon Ads report;

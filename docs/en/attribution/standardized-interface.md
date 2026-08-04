@@ -10,13 +10,16 @@ lang: en-US
 
 Before this layer existed, running an attribution model against MTA-SIM data meant hand-editing paths, guessing an interaction type, and comparing results that had no common schema. `modules/mta_standard/` closes that gap so contributors can load the same synthetic dataset, run any algorithm through one interface, and compare results consistently.
 
-It is additive. Every existing entry point, output file, and number in `modules/amc_mta/` is unchanged; the standardized layer wraps them.
+It is additive. Every existing entry point, output file, and number in `modules/mta_attribution/` is unchanged; the standardized layer wraps them.
 
 | Component | File | Objective |
 | --- | --- | --- |
 | Key adapter | `src/touchpoint_adapter.py` | Convert between MTA-SIM's four-segment key and this repository's five-segment key |
 | Dataloader | `src/dataloader.py` | Load `amc_path_report` and `amazon_ads_daily_touchpoint_performance` from any path |
-| Model interface | `src/mta_attribution_model.py` | Define `fit`/`attribute`/`save`/`load` and capability metadata |
+| Model interface | `src/attribution_model_interface.py` | Define `fit`/`attribute`/`save`/`load` and capability metadata |
+| Wrapped models | `src/wrapped_attribution_models.py` | Markov, Shapley, and uniform-credit implementations |
+| DNN model | `src/dnn_attribution_model.py` | The learned model and new-campaign prediction |
+| Path bootstrap | `src/attribution_src_path.py` | Make `mta_attribution` importable from this module |
 | Model registry | `src/model_registry.py` | Expose every shipped model under one identifier map |
 | Output contract | `src/output_contract.py` | Define the standard row and validate its four invariants |
 | Evaluator | `src/evaluation.py` | Load ground truth and score models against it |

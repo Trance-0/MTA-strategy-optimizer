@@ -16,7 +16,7 @@ Under this value function, the exact Shapley value has a closed-form solution: s
 
 ## Current Implementation <span class="status-label status-verified" aria-label="Verified"></span>
 
-Implementation: class `AggregatedShapleyAttribution` in `modules/amc_mta/src/amc_mta_attribution.py`. The relevant source blocks are reproduced directly below and decomposed line by line.
+Implementation: class `AggregatedShapleyAttribution` in `modules/mta_attribution/src/attribution_contract.py`. The relevant source blocks are reproduced directly below and decomposed line by line.
 
 The code is decomposed into four steps: adapt ordered paths to coalitions, define the coalition value, apply the exact closed form, and convert scores into shares and attributed totals.
 

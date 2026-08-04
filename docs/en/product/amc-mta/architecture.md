@@ -31,9 +31,9 @@ In real use, user events must become anonymous aggregates inside the AMC clean r
 | --- | --- |
 | `src/synthetic_event_pipeline.py` | synthetic fact source, AMC/Ads/entity derivation, privacy and conservation checks |
 | `src/touchpoint_key.py` | construct and strictly validate five-segment keys; keep impressions and clicks separate |
-| `src/amc_path_builder.py` | event ordering, 14-day contiguous gaps, multiple-purchase segmentation, anonymous aggregation |
-| `src/amc_mta_attribution.py` | input validation, Markov, Shapley, Ads cost aggregation, efficiency measures, atomic CSV writes |
-| `src/model_comparison.py` | five-segment support, model gaps, three reliability criteria, total variation distance, ranking, governed recommendations |
+| `src/path_report_builder.py` | event ordering, 14-day contiguous gaps, multiple-purchase segmentation, anonymous aggregation |
+| `src/attribution_contract.py` | input validation, Markov, Shapley, Ads cost aggregation, efficiency measures, atomic CSV writes |
+| `src/attribution_model_comparison.py` | five-segment support, model gaps, three reliability criteria, total variation distance, ranking, governed recommendations |
 | `scripts/` | path building, data generation, attribution, standalone comparison, and alignment validation entry points |
 | `run_pipeline.py` | derive the window from Ads dates, build complete temporary artifacts, and restore previous files if publication fails |
 | `tests/` | lock field contracts, boundaries, conservation, strict parsing, and publication rollback |
@@ -126,9 +126,9 @@ Tests establish conformance with the current contract; they do not independently
 | Claim | Implementation | Principal test |
 | --- | --- | --- |
 | five-segment key and CPC/CPM assignment | `src/touchpoint_key.py`, `aggregate_spend_by_touchpoint()` | `test_touchpoint_key.py` |
-| 14-day path, start boundary, purchase segmentation | `src/amc_path_builder.py` | `test_amc_path_builder.py` |
-| Markov/Shapley semantics and conservation | `src/amc_mta_attribution.py` | `test_amc_mta_attribution.py` |
-| gaps, support, reliability, governance | `src/model_comparison.py` | `test_model_comparison.py` |
+| 14-day path, start boundary, purchase segmentation | `src/path_report_builder.py` | `test_amc_path_builder.py` |
+| Markov/Shapley semantics and conservation | `src/attribution_contract.py` | `test_amc_mta_attribution.py` |
+| gaps, support, reliability, governance | `src/attribution_model_comparison.py` | `test_model_comparison.py` |
 | full reproduction and publication rollback | `run_pipeline.py`, `scripts/` | `test_amc_mta_end_to_end.py` |
 
 The migrated source recorded baseline commit `1000bcc` plus its reliability implementation and stated that code, tests, documents, and five outputs were synchronized to the three-criterion contract. Current code and tests supersede that dated statement if they differ.

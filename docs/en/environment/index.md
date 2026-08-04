@@ -27,15 +27,15 @@ Alternatively, invoke Python with `python -X utf8 ...`. Without UTF-8 mode, Chin
 Run from the repository root:
 
 ```bash
-python -B modules/amc_mta/run_pipeline.py
-python modules/amc_mta/scripts/validate_data_alignment.py
-python -B -m unittest discover -s modules/amc_mta/tests -p "test_*.py"
+python -B modules/mta_attribution/run_pipeline.py
+python modules/mta_attribution/scripts/validate_data_alignment.py
+python -B -m unittest discover -s modules/mta_attribution/tests -p "test_*.py"
 
 python -B -m unittest discover -s modules/mta_standard/tests -p "test_*.py"
 
-python -B modules/mta_strategy_recommender/scripts/generate_initial_budget.py --check-output
-python modules/mta_strategy_recommender/scripts/validate_simulated_hierarchy.py
-python -B -m unittest discover -s modules/mta_strategy_recommender/tests -p "test_*.py"
+python -B modules/mta_strategy_recommendation/scripts/generate_initial_budget.py --check-output
+python modules/mta_strategy_recommendation/scripts/validate_simulated_hierarchy.py
+python -B -m unittest discover -s modules/mta_strategy_recommendation/tests -p "test_*.py"
 ```
 
 ## Local Documentation Site <span class="status-label status-verified" aria-label="Verified"></span>
@@ -62,13 +62,13 @@ On Windows, you can also run `run-doc-site.bat dev`; on macOS/Linux, run `sh run
 
 | Directory | When to use it |
 | --- | --- |
-| `modules/amc_mta/src/` | Modify attribution algorithms and aggregation logic |
-| `modules/amc_mta/scripts/` | Generate, run, compare, or validate attribution artifacts |
-| `modules/amc_mta/data/simulated/` | Inspect this repository's synthetic demonstration inputs |
-| `modules/amc_mta/outputs/` | Inspect current attribution outputs |
-| `modules/mta_strategy_recommender/src/` | Modify budget-initialization logic |
-| `modules/mta_strategy_recommender/data/simulated/` | Inspect the strategy request and candidate pool |
-| `modules/mta_strategy_recommender/outputs/` | Inspect the canonical initial-budget JSON |
+| `modules/mta_attribution/src/` | Modify attribution algorithms and aggregation logic |
+| `modules/mta_attribution/scripts/` | Generate, run, compare, or validate attribution artifacts |
+| `modules/mta_attribution/data/simulated/` | Inspect this repository's synthetic demonstration inputs |
+| `modules/mta_attribution/outputs/` | Inspect current attribution outputs |
+| `modules/mta_strategy_recommendation/src/` | Modify budget-initialization logic |
+| `modules/mta_strategy_recommendation/data/simulated/` | Inspect the strategy request and candidate pool |
+| `modules/mta_strategy_recommendation/outputs/` | Inspect the canonical initial-budget JSON |
 | `docs/.vitepress/` | Modify site configuration and theme |
 | `docs/research/` | Store and display research attachments on the site; not runtime input |
 

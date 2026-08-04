@@ -34,8 +34,8 @@ Reconciliation follows metric semantics. Impressions, clicks, and cost conserve 
 Regenerate and validate:
 
 ```bash
-python3 -B modules/amc_mta/scripts/regenerate_simulated_dataset.py
-python3 -B modules/amc_mta/scripts/validate_data_alignment.py
+python3 -B modules/mta_attribution/scripts/regenerate_simulated_dataset.py
+python3 -B modules/mta_attribution/scripts/validate_data_alignment.py
 ```
 
 Complete regeneration publishes all ten artifacts atomically; any failed step rolls back the operation, and fixed inputs reproduce byte-for-byte.

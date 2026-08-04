@@ -1,0 +1,547 @@
+"""Shared data contract for the AMC MTA attribution layer.
+
+This is the foundation every attribution model sits on. It owns four things and
+deliberately owns no model mathematics:
+
+1. **Reserved states and field contracts** — ``START``/``CONVERSION``/``NULL``
+   and the exact column sets of the aggregated path report and the Amazon Ads
+   report.
+2. **CSV boundary** — strict readers that normalize edge whitespace and reject a
+   malformed header, plus atomic writers that publish a whole artifact set or
+   restore the previous one.
+3. **Row validation and coercion** — ``validate_amc_aggregated_row`` enforces the
+   aggregated-path invariants once, so no model has to re-derive them.
+4. **Result shaping** — ``AttributionResult``, ``TouchpointSpend``, spend
+   aggregation, and ``result_rows``, which turns any model's shares into the
+   published 18-column output with conservation-preserving rounding.
+
+Data flow: CSV -> ``read_csv`` -> ``validate_amc_aggregated_row`` -> a model in
+``markov_attribution_model`` or ``shapley_attribution_model`` -> ``result_rows``
+-> ``write_csv_set_atomic``.
+"""
+
+from __future__ import annotations
+
+import csv
+import math
+import os
+import shutil
+import tempfile
+from collections import defaultdict
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Dict, List, Mapping, Sequence, Tuple
+
+from touchpoint_key import (
+    canonicalize_amc_touchpoint_key,
+    touchpoint_key_from_ads_row,
+)
+
+
+START = "Start"
+CONVERSION = "Conversion"
+NULL = "Null"
+
+PATH_FIELD_DESCRIPTIONS = {
+    "report_start_date": "报告开始日期",
+    "report_end_date": "报告结束日期",
+    "marketplace": "广告市场",
+    "advertiser_id": "AMC 广告主 ID",
+    "path": "匿名聚合五段触点路径",
+    "users": "路径用户数",
+    "converted_users": "转化用户数",
+    "purchase_count": "购买次数",
+    "revenue": "销售额",
+}
+
+ADS_FIELD_DESCRIPTIONS = {
+    "reportDate": "报告日期",
+    "marketplace": "广告市场",
+    "accountId": "广告账户 ID 对应 AMC advertiser id",
+    "adProduct": "广告产品",
+    "adType": "Sponsored Ads 广告形式",
+    "creativeType": "创意类型",
+    "inventoryType": "DSP 库存类型",
+    "placement": "广告位置",
+    "interaction_type": "互动类型（IMPRESSION 或 CLICK）",
+    "cost_type": "计费类型（CPC 或 CPM）",
+    "normalizedTouchpoint": "标准化五段触点键",
+    "currencyCode": "币种",
+    "impressions": "曝光量",
+    "clicks": "点击量",
+    "cost": "广告花费",
+    "purchases": "平台报告购买量",
+    "sales": "平台报告销售额",
+}
+
+KNOWN_FIELD_DESCRIPTION_ROWS = (
+    PATH_FIELD_DESCRIPTIONS,
+    ADS_FIELD_DESCRIPTIONS,
+)
+
+
+@dataclass(frozen=True)
+class AttributionResult:
+    touchpoint: str
+    converted_user_share: float
+    purchase_count_share: float
+    revenue_share: float
+    attributed_converted_users: float
+    attributed_purchase_count: float
+    attributed_revenue: float
+
+
+@dataclass(frozen=True)
+class TouchpointSpend:
+    touchpoint: str
+    impressions: int
+    clicks: int
+    cost: float
+    reported_purchases: int
+    reported_sales: float
+
+
+def _is_field_description_row(row: Mapping[object, object]) -> bool:
+    """Match only a complete, known human-readable field guide row."""
+    return any(dict(row) == description for description in KNOWN_FIELD_DESCRIPTION_ROWS)
+
+
+def read_csv_normalized(path: str | Path) -> Tuple[List[str], List[dict]]:
+    """Read CSV structure after stripping only field and value edge whitespace."""
+    path = Path(path)
+    with path.open(newline="") as f:
+        reader = csv.reader(f, strict=True)
+        try:
+            raw_fieldnames = next(reader)
+        except StopIteration as exc:
+            raise ValueError(f"{path}: CSV header is missing") from exc
+        except csv.Error as exc:
+            raise ValueError(f"{path}: malformed CSV header: {exc}") from exc
+
+        fieldnames = [field.strip() for field in raw_fieldnames]
+        if not fieldnames or any(not field for field in fieldnames):
+            raise ValueError(
+                f"{path}: CSV header contains an empty field name after stripping "
+                "surrounding whitespace"
+            )
+
+        seen: set[str] = set()
+        duplicate_fields: list[str] = []
+        for field in fieldnames:
+            if field in seen and field not in duplicate_fields:
+                duplicate_fields.append(field)
+            seen.add(field)
+        if duplicate_fields:
+            raise ValueError(
+                f"{path}: CSV header contains duplicate field name(s) after stripping "
+                f"surrounding whitespace: {duplicate_fields}"
+            )
+
+        rows: List[dict] = []
+        expected_width = len(fieldnames)
+        try:
+            for row_number, values in enumerate(reader, start=2):
+                if len(values) > expected_width:
+                    raise ValueError(
+                        f"{path}: CSV row {row_number} contains extra column value(s); "
+                        f"expected {expected_width}, got {len(values)}"
+                    )
+                if len(values) < expected_width:
+                    raise ValueError(
+                        f"{path}: CSV row {row_number} has missing columns; "
+                        f"expected {expected_width}, got {len(values)}"
+                    )
+                rows.append(
+                    {
+                        field: value.strip()
+                        for field, value in zip(fieldnames, values)
+                    }
+                )
+        except csv.Error as exc:
+            raise ValueError(f"{path}: malformed CSV data: {exc}") from exc
+    return fieldnames, rows
+
+
+def read_csv(path: str | Path) -> List[dict]:
+    _, rows = read_csv_normalized(path)
+    return [row for row in rows if not _is_field_description_row(row)]
+
+
+def write_csv(path: str | Path, rows: Sequence[Mapping], fieldnames: Sequence[str]) -> None:
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("w", newline="") as f:
+        writer = csv.DictWriter(f, fieldnames=fieldnames, lineterminator="\n")
+        writer.writeheader()
+        writer.writerows(rows)
+
+
+def write_csv_atomic(
+    path: str | Path, rows: Sequence[Mapping], fieldnames: Sequence[str]
+) -> None:
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    fd, temporary_name = tempfile.mkstemp(
+        prefix=f".{path.name}.", suffix=".tmp", dir=path.parent
+    )
+    os.close(fd)
+    temporary_path = Path(temporary_name)
+    try:
+        write_csv(temporary_path, rows, fieldnames)
+        os.replace(temporary_path, path)
+    finally:
+        temporary_path.unlink(missing_ok=True)
+
+
+def write_csv_set_atomic(
+    artifacts: Sequence[tuple[str | Path, Sequence[Mapping], Sequence[str]]]
+) -> List[Path]:
+    """Stage and publish a CSV set, restoring the complete prior set on failure."""
+    if not artifacts:
+        return []
+    destinations = [Path(path) for path, _, _ in artifacts]
+    resolved = [path.resolve() for path in destinations]
+    if len(resolved) != len(set(resolved)):
+        raise ValueError("CSV artifact set contains duplicate destinations")
+    parents = {path.parent.resolve() for path in destinations}
+    if len(parents) != 1:
+        raise ValueError("CSV artifact set must use one output directory")
+    output_dir = destinations[0].parent
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    with tempfile.TemporaryDirectory(prefix=".csv_set_", dir=output_dir) as tmp:
+        temporary_root = Path(tmp)
+        staged: list[Path] = []
+        for index, (destination, rows, fieldnames) in enumerate(artifacts):
+            stage = temporary_root / f"stage_{index:02d}_{Path(destination).name}"
+            write_csv(stage, rows, fieldnames)
+            staged.append(stage)
+
+        backups: dict[Path, Path | None] = {}
+        for index, destination in enumerate(destinations):
+            if destination.exists():
+                backup = temporary_root / f"backup_{index:02d}_{destination.name}"
+                shutil.copy2(destination, backup)
+                backups[destination] = backup
+            else:
+                backups[destination] = None
+
+        published: list[Path] = []
+        try:
+            for stage, destination in zip(staged, destinations):
+                os.replace(stage, destination)
+                published.append(destination)
+        except Exception:
+            rollback_errors = []
+            for destination in reversed(published):
+                backup = backups[destination]
+                try:
+                    if backup is None:
+                        destination.unlink(missing_ok=True)
+                    else:
+                        os.replace(backup, destination)
+                except Exception as rollback_error:  # pragma: no cover
+                    rollback_errors.append(f"{destination}: {rollback_error}")
+            if rollback_errors:
+                raise RuntimeError(
+                    "CSV publication and rollback both failed: "
+                    + "; ".join(rollback_errors)
+                )
+            raise
+    return destinations
+
+
+def parse_path(path: str) -> List[str]:
+    return [part.strip() for part in path.split(">") if part.strip()]
+
+
+def parse_channels(channels: str) -> Tuple[str, ...]:
+    return tuple(channel.strip() for channel in channels.split(",") if channel.strip())
+
+
+def unique_touchpoints(path: Sequence[str]) -> Tuple[str, ...]:
+    return tuple(dict.fromkeys(state for state in path if state not in {START, CONVERSION, NULL}))
+
+
+def safe_float(value: object) -> float:
+    if value in ("", None):
+        return 0.0
+    return float(value)
+
+
+def safe_int(value: object) -> int:
+    if value in ("", None):
+        return 0
+    return int(float(value))
+
+
+def _strict_number(value: object, field: str, *, integer: bool = False) -> float | int:
+    if value in (None, "") or not str(value).strip():
+        raise ValueError(f"{field} is required")
+    try:
+        number = float(value)
+    except (TypeError, ValueError) as exc:
+        raise ValueError(f"{field} must be numeric: {value!r}") from exc
+    if not math.isfinite(number) or number < 0:
+        raise ValueError(f"{field} must be a finite non-negative number: {value!r}")
+    if integer and not number.is_integer():
+        raise ValueError(f"{field} must be an integer: {value!r}")
+    return int(number) if integer else number
+
+
+def _optional_non_negative_number(
+    value: object, field: str, *, integer: bool = False
+) -> float | int:
+    if value in (None, "") or not str(value).strip():
+        return 0 if integer else 0.0
+    return _strict_number(value, field, integer=integer)
+
+
+def validate_amc_aggregated_row(
+    row: Mapping[str, object], row_number: int
+) -> List[str]:
+    missing = [
+        field
+        for field in (
+            "path",
+            "users",
+            "converted_users",
+            "purchase_count",
+            "revenue",
+        )
+        if row.get(field) in (None, "") or not str(row.get(field, "")).strip()
+    ]
+    if missing:
+        raise ValueError(
+            f"AMC row {row_number}: required field(s) missing: {', '.join(missing)}"
+        )
+
+    raw_path = str(row["path"]).strip()
+    raw_parts = raw_path.split(">")
+    if any(not part.strip() for part in raw_parts):
+        raise ValueError(f"AMC row {row_number}: path contains an empty touchpoint")
+    raw_touchpoints = [part.strip() for part in raw_parts]
+    if START in raw_touchpoints or CONVERSION in raw_touchpoints:
+        raise ValueError(f"AMC row {row_number}: path cannot contain reserved terminal states")
+    if NULL in raw_touchpoints[:-1] or (raw_touchpoints == [NULL]):
+        raise ValueError(f"AMC row {row_number}: Null is allowed only after a touchpoint")
+    explicit_null = raw_touchpoints[-1] == NULL
+    key_parts = raw_touchpoints[:-1] if explicit_null else raw_touchpoints
+    try:
+        parts = [canonicalize_amc_touchpoint_key(part) for part in key_parts]
+    except ValueError as exc:
+        raise ValueError(f"AMC row {row_number}: {exc}") from exc
+    if explicit_null:
+        parts.append(NULL)
+
+    users = int(_strict_number(row.get("users"), "users", integer=True))
+    converted_users = int(
+        _strict_number(row.get("converted_users"), "converted_users", integer=True)
+    )
+    purchase_count = int(
+        _strict_number(row.get("purchase_count"), "purchase_count", integer=True)
+    )
+    revenue = float(_strict_number(row.get("revenue"), "revenue"))
+    if converted_users > users:
+        raise ValueError(f"AMC row {row_number}: converted_users must be <= users")
+    if purchase_count < converted_users:
+        raise ValueError(
+            f"AMC row {row_number}: purchase_count must be >= converted_users"
+        )
+    if converted_users == 0 and (purchase_count > 0 or revenue > 0):
+        raise ValueError(
+            f"AMC row {row_number}: positive outcomes require converted_users > 0"
+        )
+    if parts[-1] == NULL and (
+        converted_users > 0 or purchase_count > 0 or revenue > 0
+    ):
+        raise ValueError(
+            f"AMC row {row_number}: a path ending in Null cannot contain outcomes"
+        )
+    return parts
+
+
+def safe_divide(numerator: float, denominator: float) -> float | None:
+    if denominator <= 0:
+        return None
+    return numerator / denominator
+
+def aggregate_spend_by_touchpoint(
+    amazon_ads_rows: Sequence[Mapping[str, object]],
+) -> Dict[str, TouchpointSpend]:
+    grouped: Dict[str, dict] = defaultdict(
+        lambda: {
+            "impressions": 0,
+            "clicks": 0,
+            "cost": 0.0,
+            "reported_purchases": 0,
+            "reported_sales": 0.0,
+        }
+    )
+    for row_number, row in enumerate(amazon_ads_rows, start=2):
+        touchpoint = touchpoint_key_from_ads_row(row, row_number=row_number)
+        interaction_type = touchpoint.rsplit(":", 1)[1]
+        cost_type = str(row.get("cost_type", "")).strip().upper()
+        if cost_type not in {"CPC", "CPM"}:
+            raise ValueError(
+                f"Amazon Ads row {row_number}: cost_type must be CPC or CPM"
+            )
+        metrics = grouped[touchpoint]
+        try:
+            cost = float(_optional_non_negative_number(row.get("cost"), "cost"))
+            if (
+                (cost_type == "CPC" and interaction_type != "CLICK")
+                or (cost_type == "CPM" and interaction_type != "IMPRESSION")
+            ):
+                raise ValueError(
+                    f"cost_type={cost_type} conflicts with interaction_type={interaction_type}"
+                )
+            purchases = int(_optional_non_negative_number(
+                row.get("purchases"), "purchases", integer=True
+            ))
+            sales = float(_optional_non_negative_number(row.get("sales"), "sales"))
+            if interaction_type != "CLICK" and (purchases or sales):
+                raise ValueError(
+                    "platform purchases and sales are allowed only for CLICK"
+                )
+            impressions = int(_optional_non_negative_number(
+                row.get("impressions"), "impressions", integer=True
+            ))
+            clicks = int(_optional_non_negative_number(
+                row.get("clicks"), "clicks", integer=True
+            ))
+            if interaction_type == "CLICK" and impressions:
+                raise ValueError("impressions are allowed only for IMPRESSION")
+            if interaction_type == "IMPRESSION" and clicks:
+                raise ValueError("clicks are allowed only for CLICK")
+            metrics["impressions"] += impressions
+            metrics["clicks"] += clicks
+            metrics["cost"] += cost
+            metrics["reported_purchases"] += purchases
+            metrics["reported_sales"] += sales
+        except ValueError as exc:
+            raise ValueError(f"Amazon Ads row {row_number}: {exc}") from exc
+
+    return {
+        touchpoint: TouchpointSpend(touchpoint=touchpoint, **metrics)
+        for touchpoint, metrics in grouped.items()
+    }
+
+
+def _rounded_with_residual(
+    results: Sequence[AttributionResult], field: str, digits: int
+) -> List[float]:
+    raw_values = [float(getattr(result, field)) for result in results]
+    if not raw_values:
+        return []
+    if any(value < 0 or not math.isfinite(value) for value in raw_values):
+        raise ValueError(f"{field} values must be finite and non-negative")
+
+    # Allocate integer units using the largest-remainder method. This preserves
+    # the rounded total without ever making a small non-negative value negative.
+    scale = 10**digits
+    scaled_values = [value * scale for value in raw_values]
+    units = [math.floor(value) for value in scaled_values]
+    target_units = int(round(round(sum(raw_values), digits) * scale))
+    remaining = target_units - sum(units)
+    order = sorted(
+        range(len(raw_values)),
+        key=lambda index: (
+            scaled_values[index] - math.floor(scaled_values[index]),
+            raw_values[index],
+            -index,
+        ),
+        reverse=True,
+    )
+    if remaining < 0 or remaining > len(order):
+        raise ValueError(f"{field} cannot be rounded without losing conservation")
+    for offset in range(remaining):
+        units[order[offset % len(order)]] += 1
+    return [unit / scale for unit in units]
+
+
+def result_rows(
+    model_name: str,
+    attribution_results: Sequence[AttributionResult],
+    spend_by_touchpoint: Mapping[str, TouchpointSpend],
+) -> List[dict]:
+    results = list(attribution_results)
+    for result in results:
+        try:
+            canonical = canonicalize_amc_touchpoint_key(result.touchpoint)
+        except ValueError as exc:
+            raise ValueError(
+                "result rows require canonical five-part touchpoints"
+            ) from exc
+        if canonical != result.touchpoint:
+            raise ValueError(
+                "result rows require canonical five-part touchpoints"
+            )
+    rounded_fields = {
+        "converted_user_share": _rounded_with_residual(
+            results, "converted_user_share", 6
+        ),
+        "purchase_count_share": _rounded_with_residual(
+            results, "purchase_count_share", 6
+        ),
+        "revenue_share": _rounded_with_residual(results, "revenue_share", 6),
+        "attributed_converted_users": _rounded_with_residual(
+            results, "attributed_converted_users", 4
+        ),
+        "attributed_purchase_count": _rounded_with_residual(
+            results, "attributed_purchase_count", 4
+        ),
+        "attributed_revenue": _rounded_with_residual(
+            results, "attributed_revenue", 2
+        ),
+    }
+
+    rows = []
+    for index, result in enumerate(results):
+        if result.touchpoint not in spend_by_touchpoint:
+            raise ValueError(
+                f"missing Amazon Ads spend for touchpoint: {result.touchpoint}"
+            )
+        spend = spend_by_touchpoint[result.touchpoint]
+        attributed_converted_users = rounded_fields["attributed_converted_users"][index]
+        attributed_purchase_count = rounded_fields["attributed_purchase_count"][index]
+        attributed_revenue = rounded_fields["attributed_revenue"][index]
+        roas = safe_divide(attributed_revenue, spend.cost)
+        roi = safe_divide(attributed_revenue - spend.cost, spend.cost)
+        cpa = (
+            None
+            if spend.cost == 0
+            else safe_divide(spend.cost, attributed_purchase_count)
+        )
+        cost_per_converted_user = (
+            None
+            if spend.cost == 0
+            else safe_divide(spend.cost, attributed_converted_users)
+        )
+        rows.append(
+            {
+                "attribution_model": model_name,
+                "touchpoint": result.touchpoint,
+                "interaction_type": result.touchpoint.rsplit(":", 1)[1],
+                "converted_user_share": rounded_fields["converted_user_share"][index],
+                "purchase_count_share": rounded_fields["purchase_count_share"][index],
+                "revenue_share": rounded_fields["revenue_share"][index],
+                "attributed_converted_users": attributed_converted_users,
+                "attributed_purchase_count": attributed_purchase_count,
+                "attributed_revenue": attributed_revenue,
+                "impressions": spend.impressions,
+                "clicks": spend.clicks,
+                "cost": round(spend.cost, 2),
+                "reported_purchases": spend.reported_purchases,
+                "reported_sales": round(spend.reported_sales, 2),
+                "roas": "" if roas is None else round(roas, 6),
+                "roi": "" if roi is None else round(roi, 6),
+                "cpa": "" if cpa is None else round(cpa, 6),
+                "cost_per_converted_user": (
+                    ""
+                    if cost_per_converted_user is None
+                    else round(cost_per_converted_user, 6)
+                ),
+            }
+        )
+    return rows

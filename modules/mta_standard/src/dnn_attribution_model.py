@@ -1,3 +1,32 @@
+"""Deep neural credit model, and the only model that generalizes.
+
+Markov and Shapley score a touchpoint by its identity, so neither can say
+anything about a touchpoint with no path history. This model scores the four
+contract segments instead, which is what makes prediction for an unlaunched
+campaign possible at all.
+
+Architecture: a listwise scorer. It emits one logit per outcome for every
+touchpoint in a report, then applies a softmax across the touchpoint set, once
+per outcome. Because a softmax always sums to one, share conservation holds by
+construction rather than by a post-hoc rescale.
+
+Data flow:
+    MtaSimDataset
+      -> `build_touchpoint_features` : segment values + path-derived features
+      -> `_FeatureEncoder`           : fixed-width vector, unknown bucket at 0
+      -> `_MultiLayerPerceptron`     : tanh hidden layers, linear logits
+      -> softmax per outcome         : attribution shares
+      -> `StandardAttributionRow`
+
+Targets are path-level Shapley shares computed from the observed path report, so
+the model is supervised by data a contributor actually has and
+`simulation_ground_truth` stays reserved for evaluation.
+
+Implemented with the standard library only, matching the repository's
+zero-dependency constraint. It is a genuine network trained by backpropagation,
+sized for report-scale touchpoint counts rather than for large-scale training.
+"""
+
 from __future__ import annotations
 
 import json
@@ -8,8 +37,8 @@ from pathlib import Path
 from typing import ClassVar, Mapping, Sequence
 
 from dataloader import MtaSimDataset
-from legacy_paths import ensure_amc_mta_src_on_path
-from mta_attribution_model import ModelCapabilities, MtaAttributionModel
+from attribution_src_path import ensure_attribution_src_on_path
+from attribution_model_interface import ModelCapabilities, MtaAttributionModel
 from output_contract import (
     SUPPORTED_OUTCOMES,
     ZERO_OUTCOME_WARNING,
@@ -17,10 +46,11 @@ from output_contract import (
 )
 from touchpoint_adapter import canonicalize_four_segment_key, to_four_segment
 
-ensure_amc_mta_src_on_path()
+ensure_attribution_src_on_path()
 
-from amc_mta_attribution import NULL, run_shapley_attribution, safe_float  # noqa: E402
-from model_comparison import OUTCOME_FIELDS  # noqa: E402
+from attribution_contract import NULL, safe_float  # noqa: E402
+from shapley_attribution_model import run_shapley_attribution  # noqa: E402
+from attribution_model_comparison import OUTCOME_FIELDS  # noqa: E402
 
 
 SEGMENT_NAMES: tuple[str, ...] = ("ad_product", "format", "placement", "creative")

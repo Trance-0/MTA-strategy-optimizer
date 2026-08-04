@@ -1,3 +1,10 @@
+"""Tests for the DNN credit model.
+
+Covers feature derivation, the reserved unknown bucket that makes new-campaign
+prediction possible, convergence towards the Shapley training target, bit-identical
+determinism, weight persistence, and the zero-outcome rule.
+"""
+
 from __future__ import annotations
 
 import math
@@ -9,9 +16,13 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path[:0] = [str(ROOT / "src"), str(ROOT / "tests")]
 
+from attribution_src_path import ensure_attribution_src_on_path  # noqa: E402
+
+ensure_attribution_src_on_path()
+
 import mta_sim_fixtures as fixtures  # noqa: E402
-from amc_mta_attribution import run_shapley_attribution  # noqa: E402
 from dataloader import load_mta_sim_dataset  # noqa: E402
+from shapley_attribution_model import run_shapley_attribution  # noqa: E402
 from dnn_attribution_model import (  # noqa: E402
     NUMERIC_FEATURE_NAMES,
     SEGMENT_NAMES,
@@ -19,7 +30,7 @@ from dnn_attribution_model import (  # noqa: E402
     _FeatureEncoder,
     build_touchpoint_features,
 )
-from model_comparison import OUTCOME_FIELDS  # noqa: E402
+from attribution_model_comparison import OUTCOME_FIELDS  # noqa: E402
 from model_registry import MODEL_REGISTRY, build_model  # noqa: E402
 from output_contract import (  # noqa: E402
     SUPPORTED_OUTCOMES,

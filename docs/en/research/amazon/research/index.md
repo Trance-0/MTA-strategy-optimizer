@@ -5,7 +5,7 @@ lang: en-US
 
 # Amazon Research Originals Index
 
-This index describes external Amazon Ads, Amazon Attribution, and AMC originals plus historical research. They are not runtime inputs to `modules/amc_mta`.
+This index describes external Amazon Ads, Amazon Attribution, and AMC originals plus historical research. They are not runtime inputs to `modules/mta_attribution`.
 
 | Original | Type | Purpose and boundary |
 | --- | --- | --- |

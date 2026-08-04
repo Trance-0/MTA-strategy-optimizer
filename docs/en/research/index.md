@@ -5,7 +5,7 @@ lang: en-US
 
 # Research Material Classification Index
 
-This section indexes external papers, platform research, and background material in the current research set. Explicitly retired material is not part of that set. Research does not equal current implementation and is not runtime input to `modules/amc_mta`.
+This section indexes external papers, platform research, and background material in the current research set. Explicitly retired material is not part of that set. Research does not equal current implementation and is not runtime input to `modules/mta_attribution`.
 
 The current internal business hierarchy is defined in [Campaign Group hierarchy and finest performance grain](campaign-data-hierarchy.md): `Campaign Group -> Campaign -> Ad Group -> Keyword/SKU`; `ad_product` is a Campaign field rather than a hierarchy level.
 
@@ -43,7 +43,7 @@ The current internal business hierarchy is defined in [Campaign Group hierarchy 
 
 ## Boundary
 
-- MTA samples are in `modules/amc_mta/data/simulated/`; independent business-hierarchy samples are in `modules/mta_strategy_recommender/data/simulated/`.
+- MTA samples are in `modules/mta_attribution/data/simulated/`; independent business-hierarchy samples are in `modules/mta_strategy_recommendation/data/simulated/`.
 - Current input/output contracts begin at the [AMC MTA reference index](../attribution/reference-index.md).
 - The pipeline does not read research originals and does not infer AMC user paths from aggregate Amazon Attribution reports.
 - Classify new material in this index as core, future validation, or background.

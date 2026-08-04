@@ -16,7 +16,7 @@ For background on data-driven path attribution, including transition-based metho
 
 ## Current Implementation <span class="status-label status-verified" aria-label="Verified"></span>
 
-Implementation: class `WeightedMarkovAttribution` in `modules/amc_mta/src/amc_mta_attribution.py`. The relevant source blocks are reproduced directly below and decomposed line by line.
+Implementation: class `WeightedMarkovAttribution` in `modules/mta_attribution/src/attribution_contract.py`. The relevant source blocks are reproduced directly below and decomposed line by line.
 
 The implementation has five explicit parts: adapt AMC aggregates, inventory states, estimate transitions, solve absorption probability, and normalize removal effects. Each Outcome runs through a separate instance of the same algorithm.
 

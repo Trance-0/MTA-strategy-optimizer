@@ -1,3 +1,23 @@
+"""Load MTA-SIM tables into a model-facing dataset.
+
+Entry point of the standardized layer. Reads MTA-SIM's tables from any
+filesystem path, adapts their four-segment keys onto the repository's
+five-segment contract, and returns a dataset the models can consume.
+
+Data flow:
+    amc_path_report (four-segment paths)
+      -> header and scope validation
+      -> `SimulatorConfig.adapt_path`      : five-segment paths
+      -> `validate_amc_aggregated_row`     : existing path invariants
+      -> `MtaSimDataset.path_rows`         : model-facing rows
+    amazon_ads_daily_touchpoint_performance
+      -> validated and annotated -> `MtaSimDataset.ads_rows` (diagnostic only)
+
+Ground-truth isolation is structural: `MtaSimDataset` has no field that can hold
+`simulation_ground_truth`, this module exposes no loader for it, and both
+model-facing loaders reject a header carrying a ground-truth column.
+"""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -6,7 +26,7 @@ from pathlib import Path
 from types import MappingProxyType
 from typing import Mapping, Sequence
 
-from legacy_paths import ensure_amc_mta_src_on_path
+from attribution_src_path import ensure_attribution_src_on_path
 from touchpoint_adapter import (
     SimulatorConfig,
     canonicalize_four_segment_key,
@@ -14,9 +34,9 @@ from touchpoint_adapter import (
     to_four_segment,
 )
 
-ensure_amc_mta_src_on_path()
+ensure_attribution_src_on_path()
 
-from amc_mta_attribution import (  # noqa: E402
+from attribution_contract import (  # noqa: E402
     NULL,
     PATH_FIELD_DESCRIPTIONS,
     read_csv_normalized,
@@ -24,7 +44,7 @@ from amc_mta_attribution import (  # noqa: E402
     safe_int,
     validate_amc_aggregated_row,
 )
-from model_comparison import read_amc_csv_strict  # noqa: E402
+from attribution_model_comparison import read_amc_csv_strict  # noqa: E402
 
 
 # MTA-SIM's amc_path_report columns are identical to this repository's path

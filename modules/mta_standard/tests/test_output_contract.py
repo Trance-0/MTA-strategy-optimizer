@@ -1,3 +1,10 @@
+"""Tests for the standard output row and its validation.
+
+Covers the four invariants and the zero-outcome rule, asserting that every
+registered model satisfies the contract and that each individual violation is
+rejected with a specific message.
+"""
+
 from __future__ import annotations
 
 import dataclasses

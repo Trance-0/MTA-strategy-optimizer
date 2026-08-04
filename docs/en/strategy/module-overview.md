@@ -17,7 +17,7 @@ The current Campaign Group always contains four Campaigns, using Sponsored Produ
 
 ## Current Implementation <span class="status-label status-verified" aria-label="Verified"></span>
 
-The implementation is a deterministic initializer, not a learned optimizer. Its main function, `generate_budget_recommendation()` in `modules/mta_strategy_recommender/src/budget_recommender.py`, follows this execution order:
+The implementation is a deterministic initializer, not a learned optimizer. Its main function, `generate_budget_recommendation()` in `modules/mta_strategy_recommendation/src/budget_recommender.py`, follows this execution order:
 
 | Stage | Code | Algorithm responsibility | Why it is separate |
 | --- | --- | --- | --- |
@@ -264,9 +264,9 @@ Lines 1 and 2 conserve each Campaign allocation across its new groups. Lines 3 a
 ## Run
 
 ```bash
-python3 -B modules/mta_strategy_recommender/scripts/generate_initial_budget.py --check-output
-python3 -B modules/mta_strategy_recommender/scripts/validate_simulated_hierarchy.py
-python3 -B -m unittest discover -s modules/mta_strategy_recommender/tests -p 'test_*.py'
+python3 -B modules/mta_strategy_recommendation/scripts/generate_initial_budget.py --check-output
+python3 -B modules/mta_strategy_recommendation/scripts/validate_simulated_hierarchy.py
+python3 -B -m unittest discover -s modules/mta_strategy_recommendation/tests -p 'test_*.py'
 ```
 
 Without `--check-output`, the generator writes its result to standard output so downstream consumers can save it separately. The old `--check-fixture` option remains as a compatibility alias; current documentation and new calls consistently use `--check-output`.
@@ -279,4 +279,4 @@ Without `--check-output`, the generator writes its result to standard output so 
 - [Output data contract](output-data-contract.md)
 - [Budget strategy output contract](strategy-output-contract.md)
 - [Simulated input description](../datasets/strategy-simulated-data.md)
-- Canonical initial-budget result: `modules/mta_strategy_recommender/outputs/initial_budget_recommendation.json`
+- Canonical initial-budget result: `modules/mta_strategy_recommendation/outputs/initial_budget_recommendation.json`

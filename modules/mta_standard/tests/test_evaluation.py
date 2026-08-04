@@ -1,3 +1,10 @@
+"""Tests for ground-truth loading and model evaluation.
+
+Covers both ground-truth grains, the aggregate-and-renormalise rule, metric
+bounds, determinism across runs, and the structural checks proving ground truth
+is unreachable from any model entry point.
+"""
+
 from __future__ import annotations
 
 import csv

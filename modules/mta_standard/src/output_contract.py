@@ -1,15 +1,32 @@
+"""The standard attribution row and its four invariants.
+
+Defines the one row shape every model emits, so results from different models are
+directly comparable, and validates that a model's output is internally coherent
+before anything downstream trusts it.
+
+Invariants enforced: non-negativity, row uniqueness per model/scope/touchpoint/
+outcome, share conservation, and outcome conservation.
+
+Data flow: a model's `attribute` -> `list[StandardAttributionRow]`
+-> `validate_standard_output` -> the evaluator or a CSV writer.
+
+An outcome whose observed total is zero must have shares summing to zero, not
+one, and must carry the `ZERO_OUTCOME_TOTAL` warning. Redistributing credit for
+an outcome that never occurred would manufacture attribution from nothing.
+"""
+
 from __future__ import annotations
 
 import math
 from dataclasses import dataclass, field
 from typing import Mapping, Sequence
 
-from legacy_paths import ensure_amc_mta_src_on_path
+from attribution_src_path import ensure_attribution_src_on_path
 from touchpoint_adapter import canonicalize_four_segment_key
 
-ensure_amc_mta_src_on_path()
+ensure_attribution_src_on_path()
 
-from model_comparison import OUTCOME_FIELDS  # noqa: E402
+from attribution_model_comparison import OUTCOME_FIELDS  # noqa: E402
 
 
 # The standardized contract reports the same three outcomes the existing

@@ -1,8 +1,8 @@
 # Marketing ROI Analysis
 
 本工作区包含两项边界清晰的业务模块、一套本地 Agent/BMad 开发工具以及完整的研究和
-历史追溯资料：[`modules/amc_mta/`](modules/amc_mta/) 提供五段触点归因证据，
-[`modules/mta_strategy_recommender/`](modules/mta_strategy_recommender/) 目前以
+历史追溯资料：[`modules/mta_attribution/`](modules/mta_attribution/) 提供五段触点归因证据，
+[`modules/mta_strategy_recommendation/`](modules/mta_strategy_recommendation/) 目前以
 Campaign Group 为顶层，使用 AMC 触点与实体证据生成新 Ad Group 数量和初始预算，并提供
 可复算的正式结果与只读校验。
 
@@ -19,7 +19,7 @@ AMC MTA 使用五段互动键区分广告产品、形式、位置、创意和曝
 | 查看声明范围内文件的大小、权限和哈希 | [工作区文件清单](docs/workspace-file-inventory.json)（排除 Git、两个用户维护文件、ignored 个人覆盖及清单自身） |
 | 运行 AMC MTA 归因 | [AMC MTA 模块说明](docs/en/attribution/amc-mta-module.md) |
 | 生成并验证 Ad Group 初始预算 | [预算初始化器说明](docs/en/strategy/module-overview.md) |
-| 查看正式预算结果 | [初始预算 JSON](modules/mta_strategy_recommender/outputs/initial_budget_recommendation.json) |
+| 查看正式预算结果 | [初始预算 JSON](modules/mta_strategy_recommendation/outputs/initial_budget_recommendation.json) |
 | 查看业务模块目录约定 | [模块索引](docs/en/reference/module-inventory.md) |
 | 查看架构与数据流 | [AMC MTA 架构](docs/amc_mta/amc-mta-architecture.md) |
 | 查看成熟度、风险与路线 | [AMC MTA 能力评价](docs/amc_mta/amc-mta-capability-assessment.md) |
@@ -67,13 +67,13 @@ Campaign → 候选容量推荐新 Ad Group 数量 → MTA 初始预算
 运行环境需要 Python 3.10 或更高版本；当前实现只使用 Python 标准库。
 
 ```bash
-python3 -B modules/amc_mta/run_pipeline.py
-python3 modules/amc_mta/scripts/validate_data_alignment.py
-python3 -B -m unittest discover -s modules/amc_mta/tests -p 'test_*.py'
+python3 -B modules/mta_attribution/run_pipeline.py
+python3 modules/mta_attribution/scripts/validate_data_alignment.py
+python3 -B -m unittest discover -s modules/mta_attribution/tests -p 'test_*.py'
 python3 -B -m unittest discover -s modules/mta_standard/tests -p 'test_*.py'
-python3 -B modules/mta_strategy_recommender/scripts/generate_initial_budget.py --check-output
-python3 modules/mta_strategy_recommender/scripts/validate_simulated_hierarchy.py
-python3 -m unittest discover -s modules/mta_strategy_recommender/tests -p 'test_*.py'
+python3 -B modules/mta_strategy_recommendation/scripts/generate_initial_budget.py --check-output
+python3 modules/mta_strategy_recommendation/scripts/validate_simulated_hierarchy.py
+python3 -m unittest discover -s modules/mta_strategy_recommendation/tests -p 'test_*.py'
 ```
 
 预期结果：
@@ -93,13 +93,12 @@ python3 -m unittest discover -s modules/mta_strategy_recommender/tests -p 'test_
 │   ├── index.md
 │   ├── en/                    # English VitePress content
 │   ├── zh/                    # 保留但暂不发布的中文 VitePress 源文件
-│   ├── amc_mta/               # AMC MTA 工作区文档
 │   ├── product/              # 当前项目介绍
 │   └── research/             # 外部研究原件和相关性索引
 ├── modules/
-│   ├── amc_mta/              # 五段触点归因代码、数据与可再生产物
+│   ├── mta_attribution/     # 路径构建、Markov/Shapley 归因与模型比较
 │   ├── mta_standard/         # MTA-SIM 标准化 dataloader、模型接口与评估
-│   └── mta_strategy_recommender/ # Campaign Group 数量与预算初始化代码
+│   └── mta_strategy_recommendation/ # Campaign Group 数量与预算初始化代码
 ├── design-artifacts/         # 历史 Product Brief、PRD 与决策记录
 ├── .agents/                  # 已安装 Agent 技能
 ├── _bmad/                    # BMad 工作流配置

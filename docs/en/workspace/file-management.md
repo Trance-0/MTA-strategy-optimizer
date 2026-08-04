@@ -12,8 +12,8 @@ This page defines each workspace partition's sole responsibility, stable paths, 
 | Partition | Sole responsibility | Allowed content |
 | --- | --- | --- |
 | repository root | workspace entry and a small set of global configuration | `README.md`, ignore/format rules, and protected human-maintained `log.md` |
-| `modules/amc_mta/` | five-segment touchpoint attribution | source, scripts, tests, module input, and five canonical outputs; no Markdown documentation |
-| `modules/mta_strategy_recommender/` | Campaign Group count and budget initialization | synthetic run-condition data, generator, canonical budget output, validator, and tests; no Markdown documentation |
+| `modules/mta_attribution/` | five-segment touchpoint attribution | source, scripts, tests, module input, and five canonical outputs; no Markdown documentation |
+| `modules/mta_strategy_recommendation/` | Campaign Group count and budget initialization | synthetic run-condition data, generator, canonical budget output, validator, and tests; no Markdown documentation |
 | `docs/en/` and `docs/zh/` | current project knowledge | mirrored language documentation for contracts, architecture, assessments, management rules, product introductions, and research explanations |
 | `docs/research/` | external research originals | PDFs, DOCX, JSON, TXT, and other source binaries; no project-authored Markdown after migration |
 | `design-artifacts/` | historical product vision | Product Brief, PRD, model concepts, addenda, and decision records |
@@ -25,8 +25,8 @@ Research papers and platform originals are not AMC MTA inputs. Historical design
 ## Stable Paths and Entry Points
 
 - The repository entry remains `README.md`; `docs/index.md` redirects to the active English site.
-- AMC MTA runs from `modules/amc_mta/run_pipeline.py`; module explanations and contracts live in the bilingual Attribution, Datasets, and Environment sections.
-- Strategy Initializer documentation lives in the bilingual Strategy section. Its two inputs remain in `modules/mta_strategy_recommender/data/simulated/`; the single canonical budget result remains `modules/mta_strategy_recommender/outputs/initial_budget_recommendation.json` and is reused directly by tests.
+- AMC MTA runs from `modules/mta_attribution/run_pipeline.py`; module explanations and contracts live in the bilingual Attribution, Datasets, and Environment sections.
+- Strategy Initializer documentation lives in the bilingual Strategy section. Its two inputs remain in `modules/mta_strategy_recommendation/data/simulated/`; the single canonical budget result remains `modules/mta_strategy_recommendation/outputs/initial_budget_recommendation.json` and is reused directly by tests.
 - Bilingual multi-page sections use `index.md`. External binary originals are linked from bilingual research indexes.
 - Historical vision remains under `design-artifacts/`; implementation records remain under `_bmad-output/`.
 - `docs/.archive/` is reserved for historical scan output and is not a current documentation entry point.

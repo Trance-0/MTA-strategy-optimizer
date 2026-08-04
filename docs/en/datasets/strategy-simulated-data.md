@@ -7,7 +7,7 @@ lang: en-US
 
 This directory contains only two v4 input JSON files and this explanation. It does not store AMC data or model output.
 
-The deterministic canonical result is at `modules/mta_strategy_recommender/outputs/initial_budget_recommendation.json`.
+The deterministic canonical result is at `modules/mta_strategy_recommendation/outputs/initial_budget_recommendation.json`.
 
 | File | Purpose |
 | --- | --- |
@@ -25,7 +25,7 @@ After filtering by ad product, the current sample counts are Keyword/SKU/Pair=`3
 
 Budget evidence reads only these AMC files:
 
-- `modules/amc_mta/outputs/attribution/amc_mta_recommended_attribution.csv`
-- `modules/amc_mta/data/simulated/amc_touchpoint_entity_aggregate_sample.csv`
+- `modules/mta_attribution/outputs/attribution/amc_mta_recommended_attribution.csv`
+- `modules/mta_attribution/data/simulated/amc_touchpoint_entity_aggregate_sample.csv`
 
 Historical `campaign_id`/`ad_group_id` values exist only inside the AMC Bridge. The output uses new anonymous slot IDs and does not treat historical groups as future new groups.
