@@ -20,6 +20,8 @@ AMC MTA 使用五段互动键区分广告产品、形式、位置、创意和曝
 | 运行 AMC MTA 归因 | [AMC MTA 模块说明](modules/amc_mta/README.md) |
 | 生成并验证 Ad Group 初始预算 | [预算初始化器说明](modules/mta_strategy_recommender/README.md) |
 | 查看正式预算结果 | [初始预算 JSON](modules/mta_strategy_recommender/outputs/initial_budget_recommendation.json) |
+| 复核当前预算的逐步计算 | [当前 Ad Group 初始预算计算详解](modules/mta_strategy_recommender/docs/current-ad-group-budget-calculation.md) |
+| 规划从 MTA 到预算优化的后续研究 | [预算优化问题定义与研究计划](modules/mta_strategy_recommender/docs/mta-to-ad-group-budget-optimization-plan.md) |
 | 查看业务模块目录约定 | [模块索引](modules/README.md) |
 | 查看架构与数据流 | [AMC MTA 架构](docs/amc_mta/amc-mta-architecture.md) |
 | 查看成熟度、风险与路线 | [AMC MTA 能力评价](docs/amc_mta/amc-mta-capability-assessment.md) |
@@ -95,7 +97,7 @@ python3 -m unittest discover -s modules/mta_strategy_recommender/tests -p 'test_
 │   └── research/             # 外部研究原件和相关性索引
 ├── modules/
 │   ├── amc_mta/              # 五段触点归因实现
-│   └── mta_strategy_recommender/ # Campaign Group 数量与预算初始化器
+│   └── mta_strategy_recommender/ # Campaign Group 数量与预算初始化器、契约及研究计划
 ├── design-artifacts/         # 历史 Product Brief、PRD 与决策记录
 ├── .agents/                  # 已安装 Agent 技能
 ├── _bmad/                    # BMad 工作流配置

@@ -1,0 +1,153 @@
+{
+  "workflow_version": "1.3.0",
+  "timestamps": {
+    "started": "2026-07-20T11:20:00Z",
+    "last_updated": "2026-07-30T09:18:54.439Z"
+  },
+  "mode": "workspace_cleanup_after_budget_model",
+  "scan_level": "exhaustive",
+  "project_root": "{project-root}",
+  "project_knowledge": "docs",
+  "scope": "entire workspace excluding declared protected or generated paths",
+  "amc_unchanged_baseline_commit": "7907b101",
+  "workspace_cleanup_baseline_commit": "7d521578b131447dc67a1daf6f1f13551e6089b8",
+  "exclusions": [
+    {
+      "path": ".git/",
+      "reason": "Git internals are not project content"
+    },
+    {
+      "path": "docs/workspace-file-inventory.json",
+      "reason": "generated inventory excludes itself"
+    },
+    {
+      "path": "_bmad/custom/*.user.toml",
+      "reason": "ignored personal configuration overrides"
+    },
+    {
+      "path": "log.md",
+      "reason": "human-owned no-touch file; content and hash are not read"
+    },
+    {
+      "path": "docs/系统架构图-07.drawio",
+      "reason": "human-owned no-touch file for this migration"
+    }
+  ],
+  "completed_steps": [
+    {
+      "step": "inspect",
+      "status": "completed",
+      "summary": "Audited current business code, documentation, generated assets, caches, historical records, and installed tool boundaries."
+    },
+    {
+      "step": "implement",
+      "status": "completed",
+      "summary": "Removed four ignored .DS_Store files and moved the byte-identical budget result from a test fixture to the formal outputs path."
+    },
+    {
+      "step": "align",
+      "status": "completed",
+      "summary": "Aligned package imports, CLI compatibility, current documentation, business hierarchy wording, and BMad indexes without rewriting historical specs."
+    },
+    {
+      "step": "validate",
+      "status": "completed",
+      "summary": "Validated 107 AMC tests, 34 budget-model tests, package imports, both CLI spellings, zero AMC diff from 7907b101, documentation, and inventory parity."
+    }
+  ],
+  "current_step": "complete",
+  "findings": {
+    "project_classification": {
+      "repository_type": "two active business modules with embedded development toolchain",
+      "primary_project_type": "data",
+      "active_business_part": "modules/amc_mta and modules/mta_strategy_recommender",
+      "preserved_non_business_parts": [
+        ".agents",
+        "_bmad",
+        "_bmad-output",
+        "design-artifacts",
+        "docs/research"
+      ]
+    },
+    "inventory": {
+      "files_after_exclusions": 2217,
+      "bytes_after_exclusions": 31469955,
+      "symbolic_links": 0,
+      "empty_files": 0,
+      "installed_skills": 119
+    },
+    "reliability_contract": {
+      "criteria": [
+        "calculation_valid",
+        "data_support_sufficient",
+        "models_consistent"
+      ],
+      "combination": "all three criteria must be true",
+      "statuses": [
+        "RELIABLE",
+        "UNRELIABLE"
+      ],
+      "minimum_support": "raw_purchase_count >= 30 and raw_converted_users >= 20 and raw_unique_paths >= 5",
+      "model_consistency": "non-zero outcome and gap_pp <= 1.0 and relative_gap <= 0.20",
+      "threshold_arithmetic": "Decimal calculations from preserved unrounded original string/Decimal shares; float inputs retain their string representation; no epsilon beyond either inclusive boundary",
+      "summary_aggregation": "for each outcome, AND each of the three touchpoint-level booleans and reuse the same reliability composition",
+      "diagnostics_excluded": "TVD, Spearman, and Top-K overlap rate",
+      "output_schemas": "exact 14/13/15 dual-model columns; only the recommendation output adds recommended_value; legacy stability/status/decision/review/automation/reason-code and duplicate efficiency fields remain absent",
+      "recommended_value": "non-zero RELIABLE rows use the Markov official point; non-zero UNRELIABLE rows use an ordered [low,high] model range; zero outcomes remain blank"
+    },
+    "output_summary": {
+      "touchpoint_comparison_rows": 51,
+      "summary_rows": 3,
+      "recommended_rows": 51,
+      "calculation_valid_rows": 51,
+      "data_support_sufficient_rows": 51,
+      "supported_but_model_inconsistent_rows": 0,
+      "reliable_rows": 51,
+      "unreliable_rows": 0,
+      "recommended_point_rows": 51,
+      "recommended_range_rows": 0,
+      "recommended_blank_rows": 0,
+      "reliable_summary_rows": 3,
+      "single_model_reliability_fields": 0
+    },
+    "validation_summary": {
+      "amc_tests": "107 passed; Ad Group budget-model tests: 34 passed",
+      "data_alignment": "17 touchpoints, 90 days, one US / adv_demo_001 / USD scope",
+      "project_markdown": "44 current/research/module Markdown documents, 217 local links, 0 broken links",
+      "csv_contracts": "51/3/51 rows, exact 14/13/15 headers, 51 reliable recommended values equal official_share, no internal Decimal keys, lowercase booleans, summary touchpoint-AND parity, no surrounding whitespace or CRLF",
+      "pipeline_determinism": "all ten simulated dataset artifacts are byte-reproducible across consecutive runs",
+      "strategy_alignment": "17 AMC touchpoints, 34 entity rows, capacity-derived 1/1/1/1 new Ad Groups, ALL_AVAILABLE_MTA_TOUCHPOINTS normalization, and Campaign-level MTA equal split",
+      "amc_baseline_diff": "no changes relative to 7907b101",
+      "inventory_mismatches": 0,
+      "new_cache_or_temporary_files": 0,
+      "pre_existing_os_metadata_files": "0 .DS_Store files after approved cleanup",
+      "protected_user_files": "log.md and docs/系统架构图-07.drawio excluded from inventory without content read, hash, move, or modification; both may be tracked in Git unchanged"
+    }
+  },
+  "scan_outputs_refreshed": [
+    "docs/project-scan-report.json",
+    "docs/workspace-file-inventory.json",
+    "modules/mta_strategy_recommender/outputs/initial_budget_recommendation.json",
+    "README.md",
+    "docs/*.md",
+    "docs/research/campaign-data-hierarchy.md",
+    "modules/README.md",
+    "modules/mta_strategy_recommender/**/*.md",
+    "_bmad-output/README.md",
+    "_bmad-output/implementation-artifacts/README.md"
+  ],
+  "resume_instructions": "Use modules/mta_strategy_recommender/data/simulated/README.md as the input boundary, outputs/initial_budget_recommendation.json as the formal deterministic result, and docs/workspace-file-management.md for file placement decisions.",
+  "execution_status": "completed",
+  "review_status": "passed",
+  "validation_evidence": [
+    "python3 -B -m unittest discover -s modules/amc_mta/tests -p test*.py: 107 passed",
+    "python3 -B modules/mta_strategy_recommender/scripts/generate_initial_budget.py --check-output: formal output matches",
+    "python3 -B -m unittest discover -s modules/mta_strategy_recommender/tests -p test*.py: 34 passed",
+    "python3 -B modules/amc_mta/scripts/validate_data_alignment.py: 17 touchpoints and 90 days aligned",
+    "python3 -B modules/mta_strategy_recommender/scripts/validate_simulated_hierarchy.py: 4 campaigns, 17 AMC touchpoints, 34 entity rows, and capacity-derived 1/1/1/1 Ad Groups validated",
+    "git diff --exit-code 7907b101 -- modules/amc_mta: no changes",
+    "strict CSV header, whitespace, count, recommended-value, threshold, summary-AND, and reliability checks: passed",
+    "project Markdown local-link scan: 44 documents, 217 local links, 0 broken links",
+    "JSON parse, inventory parity, file hygiene, and git diff --check excluding both protected user files: passed"
+  ]
+}

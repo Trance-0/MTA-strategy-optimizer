@@ -1,6 +1,6 @@
 {
   "schema_version": "1.1",
-  "generated_at": "2026-07-31T07:18:49.986Z",
+  "generated_at": "2026-08-07T06:07:19.674Z",
   "root": "{project-root}",
   "scope": "all regular workspace files excluding declared protected or generated paths",
   "exclusions": [
@@ -22,19 +22,19 @@
     },
     {
       "path": "docs/系统架构图-07.drawio",
-      "reason": "human-owned no-touch file for this migration"
+      "reason": "human-owned no-touch file"
     }
   ],
-  "file_count": 2221,
-  "total_bytes": 31515427,
+  "file_count": 2220,
+  "total_bytes": 31500243,
   "by_top_level": {
-    "_bmad": {
-      "files": 91,
-      "bytes": 925984
-    },
     "_bmad-output": {
       "files": 28,
       "bytes": 154954
+    },
+    "_bmad": {
+      "files": 91,
+      "bytes": 925984
     },
     ".agents": {
       "files": 1988,
@@ -53,16 +53,16 @@
       "bytes": 41371
     },
     "docs": {
-      "files": 37,
-      "bytes": 10638531
+      "files": 38,
+      "bytes": 10645522
     },
     "modules": {
-      "files": 67,
-      "bytes": 3922164
+      "files": 65,
+      "bytes": 3899628
     },
     "README.md": {
       "files": 1,
-      "bytes": 6723
+      "bytes": 7084
     }
   },
   "files": [
@@ -17003,6 +17003,14 @@
       "sha256": "6e932132a00595d0d4a7c4c80b92d75005e58941c51784b8720509fffaeef5bc"
     },
     {
+      "path": "docs/.archive/project-scan-report-2026-07-30-workspace-cleanup.json",
+      "top_level": "docs",
+      "extension": ".json",
+      "size_bytes": 7477,
+      "mode": "644",
+      "sha256": "9be71b686a4a5cfbffcd3c397f8e2a2a816c4c13675ad814dbefcbabb2e6be68"
+    },
+    {
       "path": "docs/amc_mta/amc-mta-architecture.md",
       "top_level": "docs",
       "extension": ".md",
@@ -17038,9 +17046,9 @@
       "path": "docs/component-inventory.md",
       "top_level": "docs",
       "extension": ".md",
-      "size_bytes": 4319,
+      "size_bytes": 4618,
       "mode": "644",
-      "sha256": "8f617f882ec6c491d01d63f7b0e60df308f22735af53f68001076091226392aa"
+      "sha256": "daa66cff612c9271be67768515d90327f9a58e15f0b4aaab54adb2e40f2a0a25"
     },
     {
       "path": "docs/development-guide.md",
@@ -17054,9 +17062,9 @@
       "path": "docs/index.md",
       "top_level": "docs",
       "extension": ".md",
-      "size_bytes": 6213,
+      "size_bytes": 6550,
       "mode": "644",
-      "sha256": "3301d676a74708962627b0a010f2af4f17cbade7066d3a892e5e39fa51a6106e"
+      "sha256": "0968299f3d2dcaa9203e36a9d7d6d714779f66f3c51229f5dc409c4c740ac9aa"
     },
     {
       "path": "docs/product/amc-mta/project-introduction.md",
@@ -17078,17 +17086,17 @@
       "path": "docs/project-overview.md",
       "top_level": "docs",
       "extension": ".md",
-      "size_bytes": 6496,
+      "size_bytes": 6836,
       "mode": "644",
-      "sha256": "086d4a6be914d0e0c95b7945f870560d52b87da4ac332796211b6d4883cb9153"
+      "sha256": "52c0e144c71a7bd234e795bc581b8a6431841f9f5f5869eec9977bb148fda9b0"
     },
     {
       "path": "docs/project-scan-report.json",
       "top_level": "docs",
       "extension": ".json",
-      "size_bytes": 7477,
+      "size_bytes": 5463,
       "mode": "644",
-      "sha256": "9be71b686a4a5cfbffcd3c397f8e2a2a816c4c13675ad814dbefcbabb2e6be68"
+      "sha256": "a88114c0adeb59b1c06623f154729fdd06ffe5dff749f154239002a123e5b22a"
     },
     {
       "path": "docs/README.md",
@@ -17278,17 +17286,17 @@
       "path": "docs/source-tree-analysis.md",
       "top_level": "docs",
       "extension": ".md",
-      "size_bytes": 5690,
+      "size_bytes": 6005,
       "mode": "644",
-      "sha256": "88ed833dfa027e1494d39a17256fae641c08967b4af1fbd79fddaf7ebe6eac41"
+      "sha256": "bd74d60b8dfc7c3f397a18c78f6f4527004f5880f77fe6f7d4dacb453be8ee8d"
     },
     {
       "path": "docs/workspace-file-management.md",
       "top_level": "docs",
       "extension": ".md",
-      "size_bytes": 5059,
+      "size_bytes": 5296,
       "mode": "644",
-      "sha256": "5bdbc0c676573ff0290d553464d50a7ce24c8e89d399d43a1857415c0887a207"
+      "sha256": "02c6c45d1ad7e2fc5a7e8c129409741f9a548965607e2f3f5bdd972410d1bb26"
     },
     {
       "path": "modules/__init__.py",
@@ -17297,14 +17305,6 @@
       "size_bytes": 58,
       "mode": "644",
       "sha256": "0961f5fc66160fafd62875580fafd7c63b517f20f5b8ee5c1335038933968131"
-    },
-    {
-      "path": "modules/.DS_Store",
-      "top_level": "modules",
-      "extension": "",
-      "size_bytes": 12292,
-      "mode": "644",
-      "sha256": "d929fa21239b147db55846d70ea70ab5c2bba8a84ec33ff2363a2b774a775b7d"
     },
     {
       "path": "modules/amc_mta/config.py",
@@ -17683,14 +17683,6 @@
       "sha256": "3431cf2d055c39fe0d0b68472b271eb2e598f68e138fb8c6d9703cfdbc44f21e"
     },
     {
-      "path": "modules/mta_strategy_recommender/.DS_Store",
-      "top_level": "modules",
-      "extension": "",
-      "size_bytes": 10244,
-      "mode": "644",
-      "sha256": "f1e73cb48ff28c5fef3661151f1a21a315a7ef7f301a9fffe133d3420e2e4a1c"
-    },
-    {
       "path": "modules/mta_strategy_recommender/data/simulated/candidate_pool.json",
       "top_level": "modules",
       "extension": ".json",
@@ -17830,9 +17822,9 @@
       "path": "README.md",
       "top_level": "README.md",
       "extension": ".md",
-      "size_bytes": 6723,
+      "size_bytes": 7084,
       "mode": "644",
-      "sha256": "b419037ba7a6d8f00066e0d3db0317b10ef90e79523f8680e5c29c4571e41a25"
+      "sha256": "897e49f9098549e309795471aee6f89e165c285c86f7bfad17e3e6157df8253b"
     }
   ]
 }

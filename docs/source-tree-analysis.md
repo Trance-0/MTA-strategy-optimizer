@@ -87,7 +87,12 @@ _bmad-output/
 modules/mta_strategy_recommender/
 ├── data/simulated/                   # 两个输入 JSON：请求与候选池
 ├── outputs/initial_budget_recommendation.json # 唯一正式预算结果
-├── docs/                             # 当前模型计划与输出契约
+├── docs/
+│   ├── model-plan.md                 # 当前初始化模型计划
+│   ├── output-data-contract.md       # 正式输出字段契约
+│   ├── strategy-output-contract.md   # 策略输出边界
+│   ├── current-ad-group-budget-calculation.md # 当前结果逐步复算
+│   └── mta-to-ad-group-budget-optimization-plan.md # 后续研究计划
 ├── src/
 │   ├── budget_recommender.py         # 数量、MTA bridge 与预算生成
 │   └── hierarchy_validator.py        # AMC 血缘与预算结果复算

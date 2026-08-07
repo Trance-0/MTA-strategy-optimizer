@@ -35,6 +35,9 @@
 - 当前项目入口与评价：`docs/index.md`、`docs/project-overview.md`。
 - 文件位置与移动规则：`docs/workspace-file-management.md`。
 - 当前业务架构与契约：`docs/amc_mta/`、`modules/amc_mta/docs/`。
+- 策略初始化说明与研究：`modules/mta_strategy_recommender/docs/`，其中当前实现以
+  `model-plan.md`、两份输出契约和 `current-ad-group-budget-calculation.md` 为准；
+  `mta-to-ad-group-budget-optimization-plan.md` 是后续问题定义，不代表已实现优化能力。
 - AMC MTA 历史产品愿景：`design-artifacts/amc_mta/A-Product-Brief/`。
 - 已完成实现规格：`_bmad-output/implementation-artifacts/amc_mta/`。
 - 全量机器清单：`docs/workspace-file-inventory.json`。

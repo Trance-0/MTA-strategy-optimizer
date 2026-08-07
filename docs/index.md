@@ -28,6 +28,8 @@ Agent/BMad 工具链。当前业务链路由
 | 可运行模块与命令 | [`modules/amc_mta/README.md`](../modules/amc_mta/README.md) |
 | Campaign Group 初始策略 | [策略初始化器](../modules/mta_strategy_recommender/README.md) |
 | 初始策略计划与契约 | [整体模型计划](../modules/mta_strategy_recommender/docs/model-plan.md) |
+| 当前预算逐步复算 | [Ad Group 初始预算计算详解](../modules/mta_strategy_recommender/docs/current-ad-group-budget-calculation.md) |
+| 后续预算优化研究 | [问题定义与研究计划](../modules/mta_strategy_recommender/docs/mta-to-ad-group-budget-optimization-plan.md) |
 | 输入字段、路径和成本规则 | [AMC MTA 数据契约](../modules/amc_mta/docs/amc-data-requirements.md) |
 | Markov/Shapley 差距与决策状态 | [模型比较治理规范](../modules/amc_mta/docs/model-comparison-governance.md) |
 | 单触点结果可靠性 | [触点可靠性指南](../modules/amc_mta/docs/touchpoint-reliability-guide.md) |
@@ -65,7 +67,7 @@ modules/mta_strategy_recommender/
 ├── src/       # 数量/预算生成与跨模块校验
 ├── scripts/   # 生成和校验 CLI
 ├── tests/     # 合同、兼容与边界测试
-└── docs/      # 模型计划与输出契约
+└── docs/      # 模型计划、输出契约、当前计算详解与后续研究计划
 
 docs/
 ├── index.md
@@ -92,7 +94,7 @@ docs/
 
 ## 当前验证基线
 
-截至 2026-07-30，基于统一用户事件主表及其四类派生数据，并运行
+截至 2026-08-07，基于统一用户事件主表及其四类派生数据，并运行
 `python3 modules/amc_mta/run_pipeline.py` 的确定性输出：
 
 - 107 项 AMC MTA 测试通过，策略初始化模块另有34项预算模型测试；
