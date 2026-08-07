@@ -1,118 +1,242 @@
 # Marketing ROI Analysis
 
-本工作区包含两项边界清晰的业务模块、一套本地 Agent/BMad 开发工具以及完整的研究和
-历史追溯资料：[`modules/amc_mta/`](modules/amc_mta/) 提供五段触点归因证据，
-[`modules/mta_strategy_recommender/`](modules/mta_strategy_recommender/) 目前以
-Campaign Group 为顶层，使用 AMC 触点与实体证据生成新 Ad Group 数量和初始预算，并提供
-可复算的正式结果与只读校验。
+[English documentation](docs/en/index.md) · [Project overview](docs/en/introduction/index.md) · [Environment setup](docs/en/environment/index.md) · [Module inventory](docs/en/reference/module-inventory.md)
 
-AMC MTA 使用五段互动键区分广告产品、形式、位置、创意和曝光/点击，分别运行 Markov 与 Path-level Shapley。策略初始化器采用 `Campaign Group → Campaign → Ad Group → Keyword/SKU` 业务树；`ad_product` 只是 Campaign 的固有字段。两者都不是生产级因果归因或自动预算优化系统。
+Marketing ROI Analysis is a validation-oriented Python workspace for historical Multi-Touch Attribution (MTA), standardized model evaluation, and explainable advertising budget initialization. It builds five-segment Amazon Marketing Cloud-style paths, compares Markov and path-level Shapley attribution, adapts four-segment MTA-SIM data to a shared model contract, and produces a deterministic Ad Group budget seed from governed attribution evidence.
 
-## 从这里开始
+The workspace contains three business modules, local Agent and BMad development tools, research sources, and historical implementation records. Development tools and historical artifacts are retained for traceability but do not participate in the model runtime.
 
-| 目标 | 入口 |
+## Project status
+
+**Current stage: runnable pre-production analytics and model-validation workspace.**
+
+- The attribution pipeline, standardized model interface, deterministic budget initializer, validators, and test suites are implemented and runnable.
+- Markov is the official displayed attribution method; Shapley provides model-sensitivity evidence.
+- The Deep Neural Network (DNN) model in `mta_standard` is a learned surrogate of path-level Shapley shares, not an independent causal estimator.
+- The strategy module produces an explainable initial budget with `is_optimized=false`; it does not predict marginal returns or optimize future spend.
+- Current inputs and canonical outputs are synthetic demonstration data.
+- Production Amazon Marketing Cloud privacy execution, rolling-window stability analysis, causal incrementality validation, automated activation, and online experimentation have not been completed.
+
+The current results are appropriate for reproducible development, contract testing, and offline model comparison. They must not be presented as production-grade causal attribution or an automated Return on Investment (ROI) optimizer.
+
+## Start here
+
+| Goal | Documentation |
 | --- | --- |
-| 查看全工作区盘点、评价与风险 | [工作区总览](docs/project-overview.md) |
-| 理解所有目录与阅读顺序 | [全工作区文档总索引](docs/index.md) |
-| 查看项目文档入口说明 | [文档索引说明](docs/README.md) |
-| 管理新增、移动和归档文件 | [工作区文件位置管理](docs/workspace-file-management.md) |
-| 查看声明范围内文件的大小、权限和哈希 | [工作区文件清单](docs/workspace-file-inventory.json)（排除 Git、两个用户维护文件、ignored 个人覆盖及清单自身） |
-| 运行 AMC MTA 归因 | [AMC MTA 模块说明](modules/amc_mta/README.md) |
-| 生成并验证 Ad Group 初始预算 | [预算初始化器说明](modules/mta_strategy_recommender/README.md) |
-| 查看正式预算结果 | [初始预算 JSON](modules/mta_strategy_recommender/outputs/initial_budget_recommendation.json) |
-| 复核当前预算的逐步计算 | [当前 Ad Group 初始预算计算详解](modules/mta_strategy_recommender/docs/current-ad-group-budget-calculation.md) |
-| 规划从 MTA 到预算优化的后续研究 | [预算优化问题定义与研究计划](modules/mta_strategy_recommender/docs/mta-to-ad-group-budget-optimization-plan.md) |
-| 查看业务模块目录约定 | [模块索引](modules/README.md) |
-| 查看架构与数据流 | [AMC MTA 架构](docs/amc_mta/amc-mta-architecture.md) |
-| 查看成熟度、风险与路线 | [AMC MTA 能力评价](docs/amc_mta/amc-mta-capability-assessment.md) |
-| 查看输入、路径和指标契约 | [AMC MTA 数据契约](modules/amc_mta/docs/amc-data-requirements.md) |
-| 查看双模型治理与证据阻断 | [模型比较治理规范](modules/amc_mta/docs/model-comparison-governance.md) |
-| 判断单触点归因是否可靠 | [触点可靠性指南](modules/amc_mta/docs/touchpoint-reliability-guide.md) |
-| 查看外部研究资料 | [研究资料分级索引](docs/research/README.md) |
-| 查看历史产品愿景 | [历史设计产物](design-artifacts/README.md) |
-| 查看规格与实现记录 | [BMad 产物索引](_bmad-output/README.md) |
+| Review the workspace assessment and risks | [Workspace overview](docs/en/workspace/project-overview.md) |
+| Understand the project objective and delivery boundary | [Project overview](docs/en/introduction/index.md) |
+| Follow the directory and data flow | [Project structure](docs/en/introduction/project-structure.md) |
+| Set up and run the project | [Environment setup](docs/en/environment/index.md) |
+| Run Amazon Marketing Cloud MTA attribution | [AMC MTA usage](docs/en/environment/amc-mta-usage.md) |
+| Understand the standardized model interface | [Standardized MTA interface](docs/en/attribution/standardized-interface.md) |
+| Generate and validate an initial Ad Group budget | [Strategy initializer](docs/en/strategy/module-overview.md) |
+| Reproduce the current budget step by step | [Current Ad Group budget calculation](docs/en/strategy/current-budget-calculation.md) |
+| Plan the research path from MTA to budget optimization | [Budget optimization problem and research plan](docs/en/strategy/optimization-plan.md) |
+| Review the current module boundaries | [Module inventory](docs/en/reference/module-inventory.md) |
+| Review input, path, and metric contracts | [AMC data contract](docs/en/datasets/amc-data-contract.md) |
+| Review dual-model governance | [Model governance](docs/en/attribution/model-governance.md) |
+| Interpret touchpoint reliability | [Reliability guide](docs/en/attribution/reliability.md) |
+| Review maturity and planned work | [Progress and todos](docs/en/introduction/progress.md) |
+| Review implementation specifications | [Specification catalog](docs/en/specifications/index.md) |
+| Review the translated project work log | [Development history](docs/en/workspace/development-history.md) |
+| Inspect historical product decisions | [Design artifacts](design-artifacts/README.md) |
+| Inspect specifications and implementation records | [BMad output index](_bmad-output/README.md) |
 
-## 当前能力
-
-```text
-合成用户事件主表（仅本地演示）
-          ↓
-匿名概念事件 + Ads 日报 + 触点实体聚合
-          ↓
-AMC 风格匿名聚合五段路径
-          ↓
-Markov + Path-level Shapley
-          ↓
-五段归因结果 + Amazon Ads 成本
-          ↓
-双模型差异、支持度和治理状态
-
-独立预算初始化器：Campaign Group
-          ↓
-Campaign → 候选容量推荐新 Ad Group 数量 → MTA 初始预算
-```
-
-- 一份模拟事实源及四类派生数据：匿名概念事件、聚合路径、Amazon Ads 日报和触点实体聚合。
-- 五段键：`AD_PRODUCT:FORMAT:PLACEMENT:CREATIVE:INTERACTION_TYPE`。
-- 三个独立 outcome：购买用户、购买次数和收入。
-- 五份正式输出：两份 18 列模型结果，以及 14/13/15 列的触点比较、整体摘要和推荐结果。
-- 当前样例有 17 个五段触点；推荐文件包含 51 条触点/outcome 记录。
-- 三份双模型产物直接给出三项可靠性标准；当前90天样例为 `51 RELIABLE / 0 UNRELIABLE`。
-- 推荐结果还按可靠性给出最终值：可靠时使用 Markov 正式 share，不可靠时使用
-  Markov/Shapley share 的升序闭区间；不输出自动化许可字段。
-- 独立预算样例用两个 JSON 输入表达一个 Campaign Group、四个 Campaign、候选计数、容量和
-  AMC SHA/窗口；当前容量真实计算为 `1/1/1/1`，全部 17 个 MTA 触点经 AMC bridge 形成
-  Campaign 份额，再在匿名新组内等分。输出不含具体投放方案，也不宣称最优。
-
-## 快速验证
-
-运行环境需要 Python 3.10 或更高版本；当前实现只使用 Python 标准库。
-
-```bash
-python3 -B modules/amc_mta/run_pipeline.py
-python3 modules/amc_mta/scripts/validate_data_alignment.py
-python3 -B -m unittest discover -s modules/amc_mta/tests -p 'test_*.py'
-python3 -B modules/mta_strategy_recommender/scripts/generate_initial_budget.py --check-output
-python3 modules/mta_strategy_recommender/scripts/validate_simulated_hierarchy.py
-python3 -m unittest discover -s modules/mta_strategy_recommender/tests -p 'test_*.py'
-```
-
-预期结果：
-
-- 流水线从 Ads 输入自动识别日期窗口，重建匿名聚合路径并发布五份契约输出；
-- 17 个 AMC 与 Amazon Ads 五段触点、90 天覆盖和账户/币种范围严格对齐；
-- 107 项 AMC MTA 测试和 34 项预算模型测试通过；
-- 当前 51 条推荐记录均为 `RELIABLE`。
-
-## 项目结构
+## Current capabilities
 
 ```text
-.
-├── README.md
-├── log.md
-├── docs/
-│   ├── index.md
-│   ├── amc_mta/               # AMC MTA 工作区文档
-│   ├── product/              # 当前项目介绍
-│   └── research/             # 外部研究原件和相关性索引
+Synthetic user-event source
+          ↓
+Anonymous events + Amazon Ads daily report + touchpoint/entity aggregate
+          ↓
+Amazon Marketing Cloud-style anonymous five-segment aggregate paths
+          ↓
+Markov + path-level Shapley attribution
+          ↓
+Five-segment model results + Amazon Ads cost
+          ↓
+Dual-model differences, support, reliability, and recommendations
+
+Independent budget initializer: Campaign Group
+          ↓
+Campaign → capacity-derived new Ad Group count → MTA-informed initial budget
+
+MTA-SIM four-segment tables
+          ↓
+Explicit interaction-type adapter
+          ↓
+Shared model interface, output contract, DNN credit model, and evaluator
+```
+
+The maintained implementation currently provides:
+
+- One synthetic source of truth and four derived data views: anonymous conceptual events, aggregate paths, an Amazon Ads-style daily report, and a touchpoint/entity aggregate.
+- A five-segment interaction key: `AD_PRODUCT:FORMAT:PLACEMENT:CREATIVE:INTERACTION_TYPE`.
+- Three independent outcomes: converted users, purchase count, and revenue.
+- Two 18-column model results plus 14-column touchpoint comparison, 13-column overall summary, and 15-column recommendation outputs.
+- A current sample containing 17 five-segment touchpoints and 51 touchpoint/outcome recommendation rows.
+- Three explicit reliability checks in the dual-model artifacts; the current 90-day sample contains `51 RELIABLE / 0 UNRELIABLE` recommendation rows.
+- Reliable recommendations use the official Markov share. Unreliable recommendations expose the ascending closed interval between Markov and Shapley rather than averaging them.
+- A strategy sample representing one Campaign Group and four Campaigns through two JSON inputs, with candidate counts, capacity, budget, and Amazon Marketing Cloud lineage.
+- A capacity-derived `1/1/1/1` new Ad Group count for the current sample. All 17 attribution touchpoints pass through the entity bridge to Campaign shares before equal allocation among anonymous new groups within each Campaign.
+- A standardized MTA-SIM dataloader, explicit four-to-five segment adapter, common attribution interface, output contract, evaluator, and DNN credit model.
+
+The budget result contains no targeting plan, activation instructions, or claim of optimality.
+
+## Repository structure
+
+```text
+marketing-roi-analysis/
 ├── modules/
-│   ├── amc_mta/              # 五段触点归因实现
-│   └── mta_strategy_recommender/ # Campaign Group 数量与预算初始化器、契约及研究计划
-├── design-artifacts/         # 历史 Product Brief、PRD 与决策记录
-├── .agents/                  # 已安装 Agent 技能
-├── _bmad/                    # BMad 工作流配置
-└── _bmad-output/             # 规格、评审状态和实现记录
+│   ├── mta_attribution/              # Path building, Markov/Shapley attribution, comparison, and outputs
+│   ├── mta_standard/                 # MTA-SIM adapter, model interface, DNN model, contracts, and evaluation
+│   └── mta_strategy_recommendation/  # Campaign Group and Ad Group count/budget initializer
+├── docs/
+│   ├── en/                           # Active published English documentation
+│   ├── zh/                           # Preserved Chinese sources; currently excluded from publication
+│   ├── en/specifications/            # Project-level English specification catalog
+│   ├── zh/specifications/            # Chinese specification source backups for future publication
+│   ├── research/                     # External references; never runtime model input
+│   └── .vitepress/                   # Documentation site configuration
+├── design-artifacts/                 # Historical product briefs and decisions
+├── _bmad-output/                     # Specifications and implementation records
+├── .agents/ and _bmad/               # Development workflow tools; not runtime dependencies
+├── pyproject.toml                    # Non-package uv project configuration
+├── uv.lock                           # Reproducible Python environment lockfile
+└── .python-version                   # Python 3.12 selection for uv
 ```
 
-`.agents` 和 `_bmad` 是安装型开发工具，不参与 AMC MTA 运行；`design-artifacts`
-和 `_bmad-output` 用于历史追溯；`docs/research` 的外部原件不是模型输入。
+Only `modules/` contains the current business implementations. Historical artifacts, installed development tools, and research attachments do not participate in the runtime data flow.
 
-## 明确边界
+## Prerequisites
 
-- 概念事件样例只用于演示本地路径算法，不代表 AMC 可以导出用户级明细。
-- Markov 是治理上的正式展示口径，Shapley 是模型敏感性参照；两者不取平均。
-- 当前结果是归因诊断，不是广告因果增量证据。
-- 当前没有滚动窗口、重采样稳定性、生产隐私执行、自动预算或投放执行能力。
-- 策略模块只交付可解释初始点；长期优化由下游专业流程负责。
-- Product Brief、PRD、预测、优化、实验和 AI 问答内容保留为历史愿景，不代表当前交付范围。
-- 外部 PDF、DOCX、JSON 和研究笔记保留在 `docs/research/`，不作为模块运行输入。
+- [uv](https://docs.astral.sh/uv/)
+- Python 3.12 or newer
+- Node.js 20 or a newer Long-Term Support release, and npm, only for the documentation site
+
+The Python implementation uses only the standard library. The `uv` configuration is intentionally non-package: it creates an environment for running and testing this repository but does not build, install, or publish it as a Python module.
+
+## Create the uv environment
+
+From the repository root:
+
+```sh
+uv sync --locked
+```
+
+This creates `.venv` with Python 3.12 and verifies the environment against `uv.lock`. The environment is ignored by Git. Python 3.12 is pinned because the strategy suite compares the canonical budget result exactly, including floating-point serialization.
+
+Use `uv run` for project commands; manual activation is not required. To activate it explicitly:
+
+```powershell
+.\.venv\Scripts\Activate.ps1
+```
+
+```sh
+source .venv/bin/activate
+```
+
+## Run the attribution pipeline
+
+Run from the repository root:
+
+```sh
+uv run python -X utf8 -B modules/mta_attribution/run_pipeline.py
+```
+
+The default pipeline reads synthetic inputs under `modules/mta_attribution/data/simulated/`, rebuilds the aggregate path report, runs Markov and Shapley attribution, validates the complete result, and publishes five canonical attribution CSV files under `modules/mta_attribution/outputs/attribution/`.
+
+Use caller-owned paths when testing other approved datasets:
+
+```sh
+uv run python -X utf8 -B modules/mta_attribution/run_pipeline.py --events-file path/to/amc_touchpoint_events.csv --amazon-ads-report path/to/amazon_ads_report.csv --path-report path/to/amc_path_report.csv --output-dir path/to/attribution_outputs
+```
+
+The pipeline detects its reporting window from the Amazon Ads input. Review the [AMC data contract](docs/en/datasets/amc-data-contract.md) before replacing inputs.
+
+## Run the strategy initializer
+
+Check that the deterministic strategy result still matches the committed canonical output:
+
+```sh
+uv run python -X utf8 -B modules/mta_strategy_recommendation/scripts/generate_initial_budget.py --check-output
+uv run python -X utf8 modules/mta_strategy_recommendation/scripts/validate_simulated_hierarchy.py
+```
+
+Without `--check-output`, the generator writes a newly calculated result to standard output. It does not activate campaigns or change advertising budgets.
+
+## Run all business-module tests
+
+```sh
+uv run python -X utf8 -B -m unittest discover -s modules/mta_attribution/tests -p "test_*.py"
+uv run python -X utf8 -B -m unittest discover -s modules/mta_standard/tests -p "test_*.py"
+uv run python -X utf8 -B -m unittest discover -s modules/mta_strategy_recommendation/tests -p "test_*.py"
+```
+
+The current suites contain 107 attribution tests, 136 standardized-interface tests, and 34 strategy tests.
+
+## Run focused validation
+
+```sh
+uv run python -X utf8 modules/mta_attribution/scripts/validate_data_alignment.py
+uv run python -X utf8 modules/mta_strategy_recommendation/scripts/validate_simulated_hierarchy.py
+uv run python -X utf8 -m compileall modules
+```
+
+Expected results for the committed synthetic data:
+
+- The attribution pipeline detects the 90-day Amazon Ads window, rebuilds the anonymous aggregate paths, and publishes all five contract outputs.
+- All 17 Amazon Marketing Cloud and Amazon Ads five-segment touchpoints align across reporting window, account, marketplace, and currency.
+- All 277 business-module tests pass.
+- All 51 recommendation rows have `RELIABLE` status.
+- The strategy initializer reproduces and validates the committed budget seed.
+
+## Run the documentation site
+
+The Python `uv` environment and Node.js documentation environment are independent:
+
+```sh
+cd docs
+npm ci
+npm run dev
+```
+
+Build the English production site with:
+
+```sh
+npm run build
+```
+
+English is the active published language. Detailed Chinese sources under `docs/zh/` are preserved but excluded from the current site build.
+
+## Runtime outputs
+
+The attribution pipeline publishes:
+
+```text
+modules/mta_attribution/outputs/attribution/amc_markov_attribution_results.csv
+modules/mta_attribution/outputs/attribution/amc_shapley_attribution_results.csv
+modules/mta_attribution/outputs/attribution/amc_mta_model_comparison_touchpoints.csv
+modules/mta_attribution/outputs/attribution/amc_mta_model_comparison_summary.csv
+modules/mta_attribution/outputs/attribution/amc_mta_recommended_attribution.csv
+```
+
+The strategy module maintains the deterministic canonical result at:
+
+```text
+modules/mta_strategy_recommendation/outputs/initial_budget_recommendation.json
+```
+
+## Explicit boundaries
+
+- Synthetic conceptual event samples demonstrate local path algorithms; they do not imply that Amazon Marketing Cloud exports user-level event details.
+- Markov is the governed display method and Shapley is a sensitivity reference; their outputs are not averaged.
+- Current results are attribution diagnostics, not causal advertising incrementality evidence.
+- Simulation ground truth is evaluation-only and must never be used as a training feature.
+- The workspace has no rolling-window stability analysis, resampling evidence, production privacy enforcement, automated budget optimization, or campaign activation.
+- The strategy module supplies an explainable initial point only; long-term optimization belongs to a separate downstream process.
+- Product briefs, requirements, forecasts, optimization proposals, experiments, and AI-assisted design records are historical vision unless current source and contracts implement them.
+- External PDF, DOCX, JSON, and research notes under `docs/research/` are retained references and are not runtime model inputs.
+- Do not commit credentials, customer-level data, production account identifiers, or real generated campaign data.
+
+For detailed architecture, contracts, limitations, and the development roadmap, start with the [English documentation home](docs/en/index.md).

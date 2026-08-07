@@ -1,0 +1,85 @@
+# 工作区文件位置管理
+
+本文定义工作区文件的唯一职责区、稳定路径和安全移动流程。它用于判断新文件应放在
+哪里，以及路径调整时必须同步更新哪些派生资料；当前业务事实仍以运行代码、测试和
+模块契约为准。
+
+## 职责分区
+
+| 分区 | 唯一职责 | 允许内容 |
+| --- | --- | --- |
+| 根目录 | 工作区入口和少量全局配置 | `README.md`、忽略/格式规则，以及人工维护的 `log.md` |
+| `modules/amc_mta/` | 五段触点归因实现 | 源码、脚本、测试、模块输入和五份正式输出；不放 Markdown 文档 |
+| `modules/mta_strategy_recommender/` | Campaign Group 数量与预算初始化器 | 运行条件模拟数据、生成器、正式预算输出、校验器和测试；不放 Markdown 文档 |
+| `docs/` | 当前项目知识与外部研究 | 双语站点、模块契约、架构、评价、管理规则、扫描结果、当前产品介绍和研究原件 |
+| `design-artifacts/` | 历史产品愿景 | Product Brief、PRD、模型设想、补充和决策记录 |
+| `_bmad-output/` | 工作流追溯 | 已批准规格、实现状态和延期事项 |
+| `.agents/`、`_bmad/` | 安装型开发工具 | 技能、清单、配置、模板和共享运行资料 |
+
+`docs/research/` 的论文、平台原件和研究笔记不是 AMC MTA 输入；
+`design-artifacts/` 和 `_bmad-output/` 不代表当前已交付能力；安装工具中的重复资源是
+自包含分发结构，不能按普通重复文件清理。
+
+## 稳定路径与入口
+
+- 根入口固定为 `README.md`，项目知识主入口固定为 `docs/index.md`。
+- AMC MTA 运行入口固定为 `modules/amc_mta/run_pipeline.py`，模块说明与契约固定在
+  `docs/en/` 和 `docs/zh/` 的 Attribution、Datasets、Environment 栏目。
+- 策略初始化器说明固定在 `docs/en/strategy/` 和 `docs/zh/strategy/`，两个独立输入
+  固定在 `modules/mta_strategy_recommender/data/simulated/`，唯一正式预算结果固定在
+  `modules/mta_strategy_recommender/outputs/initial_budget_recommendation.json`；测试直接复用
+  该结果，不另存 fixture。
+- 策略模块的当前实现契约、结果复算说明和后续研究计划统一放在项目级
+  `docs/en/strategy/`；中文源文件保存在 `docs/zh/strategy/`。研究计划必须明确标记为
+  “未实现”，不能放入 `outputs/` 或写成当前能力。
+- 双语多文件栏目统一用 `index.md` 作为入口；单份外部背景原件由
+  双语研究索引直接链接。Amazon 原件索引固定在两个语言树的
+  `research/amazon/research/index.md`。
+- 历史愿景入口固定为 `design-artifacts/README.md`；实现记录入口固定为
+  `_bmad-output/README.md`。
+- `docs/.archive/` 是扫描工作流的固定历史归档区，不作为当前文档入口。
+- `.agents/`、`_bmad/` 和 `_bmad-output/implementation-artifacts/` 中已存在的安装或
+  历史路径保持稳定，除非有单独批准的升级或迁移规格。
+
+## 命名与归档规则
+
+- 双语栏目的目录入口统一命名为 `index.md`；其他 Markdown 使用描述性
+  `kebab-case` 英文文件名。
+- 外部研究原件默认保留出版物名称和扩展名。只修正明确的文件名拼写错误，并在移动
+  前后核对 SHA-256；不得借更名改写二进制内容。
+- 当前事实与模块契约留在 `docs/`；已经失效但仍需追溯的扫描结果进入
+  `docs/.archive/`，历史产品愿景进入 `design-artifacts/`。
+- 不建立符号链接来模拟旧路径；路径变化必须修复当前索引和链接。冻结规格中的旧路径
+  是历史证据，不回写。
+
+## 移动与新增流程
+
+1. 先按上表确定目标文件的唯一职责区，并检查目标路径不存在。
+2. 查看 Git 状态，识别并保留用户已有的未提交内容。
+3. 对研究原件和二进制文件记录源 SHA-256。
+4. 只移动已批准的单个明确路径，不使用递归删除或模糊通配符。
+5. 更新根入口、分区入口、相对链接和说明中的当前路径。
+6. 对研究原件复核目标 SHA-256；对 Markdown 检查断链和从根入口的可达性。
+7. 最后刷新 `docs/project-scan-report.json` 和
+   `docs/workspace-file-inventory.json`，再执行测试与差异检查。
+8. 删除、改变业务语义或移动稳定运行路径必须另行批准。
+
+## `log.md` 保护规则
+
+`log.md` 是人工工作记录，不属于自动整理、格式化、移动、内容检查或摘要计算范围。
+任何自动清单和扫描均明确排除该文件，不读取其内容，也不生成其内容哈希。除非用户
+以后明确单独授权，否则所有维护任务都必须保持它原位并避开该路径。
+
+## 派生清单规则
+
+`docs/workspace-file-inventory.json` 记录其余工作区普通文件的相对路径、大小、Unix
+权限和 SHA-256。清单必须明确排除：
+
+- `.git/` 内部文件；
+- 清单文件自身；
+- `_bmad/custom/*.user.toml` 匹配的 ignored 个人覆盖；
+- 受保护的 `log.md`。
+- 当前任务明确保护的 `docs/系统架构图-07.drawio`。
+
+清单按路径排序，生成后应与磁盘进行双向对账。`docs/project-scan-report.json` 记录
+扫描范围、最终计数、验证结果和上述排除项；两者都是派生状态，不替代源码或契约。

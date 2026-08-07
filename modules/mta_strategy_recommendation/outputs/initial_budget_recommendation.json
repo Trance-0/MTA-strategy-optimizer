@@ -1,0 +1,236 @@
+{
+  "schema_version": "4.0",
+  "campaign_group_id": "CG_DEMO_001",
+  "candidate_pool_id": "pool_demo_2026_07_budget_only",
+  "mta_batch_id": "mta_demo_2026_q1",
+  "recommendation_type": "INITIAL_SEED",
+  "handoff_status": "READY_FOR_OPTIMIZATION",
+  "is_optimized": false,
+  "mta_source_snapshot": {
+    "report_start_date": "2026-01-01",
+    "report_end_date": "2026-03-31",
+    "marketplace": "US",
+    "advertiser_id": "adv_demo_001",
+    "attribution_sha256": "df47aac7e0cff152d77b375900a16ac6057289f376e63339e66712fb34fc9066",
+    "entity_sha256": "208f038314b9e9a3549cfd1e992adb8b1940ad5b03cbee48ae535611e70fad3e"
+  },
+  "budget_derivation": {
+    "formula_version": "MTA_AMC_CAMPAIGN_BRIDGE_V1",
+    "normalization_universe": "ALL_AVAILABLE_MTA_TOUCHPOINTS",
+    "outcome_weights": {
+      "converted_users": 0.4,
+      "purchase_count": 0.3,
+      "revenue": 0.3
+    },
+    "attribution_touchpoint_count": 17,
+    "entity_row_count": 34,
+    "bridge_fallback_order": [
+      "ASSISTED_OUTCOME",
+      "CLICKS",
+      "IMPRESSIONS",
+      "UNIQUE_USERS",
+      "EQUAL"
+    ],
+    "mta_value_policy": "RELIABLE_POINT_OR_UNRELIABLE_RANGE_MIDPOINT",
+    "reliability_status_counts": {
+      "RELIABLE": 51
+    },
+    "campaign_score_total": 1.0
+  },
+  "warnings": [],
+  "campaigns": [
+    {
+      "campaign_id": "C_DEMO_SP",
+      "recommended_ad_group_count": 1,
+      "count_rationale": {
+        "count_formula_version": "CANDIDATE_CAPACITY_MAX_V1",
+        "eligible_keyword_unit_count": 3,
+        "eligible_sku_count": 3,
+        "eligible_legal_pair_count": 3,
+        "eligible_target_count": 0,
+        "eligible_audience_count": 0,
+        "keyword_capacity_count": 1,
+        "sku_capacity_count": 1,
+        "legal_pair_capacity_count": 1,
+        "target_capacity_count": 0,
+        "audience_capacity_count": 0,
+        "capacity_required_count": 1,
+        "final_recommended_count": 1
+      },
+      "outcome_contributions": {
+        "converted_users": 0.242017,
+        "purchase_count": 0.24183,
+        "revenue": 0.23492
+      },
+      "campaign_mta_score": 0.23983179999999998,
+      "bridge_summary": {
+        "historical_ad_group_count": 2,
+        "touchpoint_count": 4,
+        "touchpoint_outcome_count": 12,
+        "method_counts": {
+          "ASSISTED_CONVERTED_USERS": 4,
+          "ASSISTED_PURCHASE_COUNT": 4,
+          "ASSISTED_REVENUE": 4
+        },
+        "fallback_used": false
+      },
+      "budget_seed_share": 0.23983179999999998,
+      "minimum_required_daily_budget": 25.0,
+      "campaign_budget_seed": 239.8318,
+      "execution_status": "EXECUTABLE",
+      "recommended_ad_groups": [
+        {
+          "ad_group_slot_id": "C_DEMO_SP_NEW_AG_01",
+          "allocation_basis": "CAMPAIGN_MTA_EQUAL_SPLIT",
+          "budget_seed_share": 0.23983179999999998,
+          "initial_daily_budget": 239.8318
+        }
+      ]
+    },
+    {
+      "campaign_id": "C_DEMO_SB",
+      "recommended_ad_group_count": 1,
+      "count_rationale": {
+        "count_formula_version": "CANDIDATE_CAPACITY_MAX_V1",
+        "eligible_keyword_unit_count": 4,
+        "eligible_sku_count": 4,
+        "eligible_legal_pair_count": 4,
+        "eligible_target_count": 0,
+        "eligible_audience_count": 0,
+        "keyword_capacity_count": 1,
+        "sku_capacity_count": 1,
+        "legal_pair_capacity_count": 1,
+        "target_capacity_count": 0,
+        "audience_capacity_count": 0,
+        "capacity_required_count": 1,
+        "final_recommended_count": 1
+      },
+      "outcome_contributions": {
+        "converted_users": 0.29898399999999997,
+        "purchase_count": 0.29967299999999997,
+        "revenue": 0.29301
+      },
+      "campaign_mta_score": 0.2973985,
+      "bridge_summary": {
+        "historical_ad_group_count": 2,
+        "touchpoint_count": 5,
+        "touchpoint_outcome_count": 15,
+        "method_counts": {
+          "ASSISTED_CONVERTED_USERS": 5,
+          "ASSISTED_PURCHASE_COUNT": 5,
+          "ASSISTED_REVENUE": 5
+        },
+        "fallback_used": false
+      },
+      "budget_seed_share": 0.2973985,
+      "minimum_required_daily_budget": 25.0,
+      "campaign_budget_seed": 297.3985,
+      "execution_status": "EXECUTABLE",
+      "recommended_ad_groups": [
+        {
+          "ad_group_slot_id": "C_DEMO_SB_NEW_AG_01",
+          "allocation_basis": "CAMPAIGN_MTA_EQUAL_SPLIT",
+          "budget_seed_share": 0.2973985,
+          "initial_daily_budget": 297.3985
+        }
+      ]
+    },
+    {
+      "campaign_id": "C_DEMO_SD",
+      "recommended_ad_group_count": 1,
+      "count_rationale": {
+        "count_formula_version": "CANDIDATE_CAPACITY_MAX_V1",
+        "eligible_keyword_unit_count": 0,
+        "eligible_sku_count": 4,
+        "eligible_legal_pair_count": 0,
+        "eligible_target_count": 4,
+        "eligible_audience_count": 2,
+        "keyword_capacity_count": 0,
+        "sku_capacity_count": 1,
+        "legal_pair_capacity_count": 0,
+        "target_capacity_count": 1,
+        "audience_capacity_count": 1,
+        "capacity_required_count": 1,
+        "final_recommended_count": 1
+      },
+      "outcome_contributions": {
+        "converted_users": 0.23584899999999998,
+        "purchase_count": 0.23496699999999998,
+        "revenue": 0.23112400000000002
+      },
+      "campaign_mta_score": 0.23416689999999998,
+      "bridge_summary": {
+        "historical_ad_group_count": 2,
+        "touchpoint_count": 4,
+        "touchpoint_outcome_count": 12,
+        "method_counts": {
+          "ASSISTED_CONVERTED_USERS": 4,
+          "ASSISTED_PURCHASE_COUNT": 4,
+          "ASSISTED_REVENUE": 4
+        },
+        "fallback_used": false
+      },
+      "budget_seed_share": 0.23416689999999998,
+      "minimum_required_daily_budget": 25.0,
+      "campaign_budget_seed": 234.16689999999997,
+      "execution_status": "EXECUTABLE",
+      "recommended_ad_groups": [
+        {
+          "ad_group_slot_id": "C_DEMO_SD_NEW_AG_01",
+          "allocation_basis": "CAMPAIGN_MTA_EQUAL_SPLIT",
+          "budget_seed_share": 0.23416689999999998,
+          "initial_daily_budget": 234.16689999999997
+        }
+      ]
+    },
+    {
+      "campaign_id": "C_DEMO_DSP",
+      "recommended_ad_group_count": 1,
+      "count_rationale": {
+        "count_formula_version": "CANDIDATE_CAPACITY_MAX_V1",
+        "eligible_keyword_unit_count": 0,
+        "eligible_sku_count": 4,
+        "eligible_legal_pair_count": 0,
+        "eligible_target_count": 8,
+        "eligible_audience_count": 2,
+        "keyword_capacity_count": 0,
+        "sku_capacity_count": 1,
+        "legal_pair_capacity_count": 0,
+        "target_capacity_count": 1,
+        "audience_capacity_count": 1,
+        "capacity_required_count": 1,
+        "final_recommended_count": 1
+      },
+      "outcome_contributions": {
+        "converted_users": 0.22315000000000002,
+        "purchase_count": 0.22352999999999998,
+        "revenue": 0.240946
+      },
+      "campaign_mta_score": 0.2286028,
+      "bridge_summary": {
+        "historical_ad_group_count": 2,
+        "touchpoint_count": 4,
+        "touchpoint_outcome_count": 12,
+        "method_counts": {
+          "ASSISTED_CONVERTED_USERS": 4,
+          "ASSISTED_PURCHASE_COUNT": 4,
+          "ASSISTED_REVENUE": 4
+        },
+        "fallback_used": false
+      },
+      "budget_seed_share": 0.2286028,
+      "minimum_required_daily_budget": 25.0,
+      "campaign_budget_seed": 228.6028,
+      "execution_status": "EXECUTABLE",
+      "recommended_ad_groups": [
+        {
+          "ad_group_slot_id": "C_DEMO_DSP_NEW_AG_01",
+          "allocation_basis": "CAMPAIGN_MTA_EQUAL_SPLIT",
+          "budget_seed_share": 0.2286028,
+          "initial_daily_budget": 228.6028
+        }
+      ]
+    }
+  ],
+  "budget_seed_total": 1000.0
+}

@@ -1,7 +1,7 @@
 # Product Brief: AI驱动营销投放优化平台
 
 > 历史愿景：本文不代表当前交付范围。当前唯一正式实现是
-> [`modules/amc_mta`](../../../modules/amc_mta/README.md)，当前事实入口见
+> [AMC MTA 模块文档](../../../docs/zh/attribution/amc-mta-module.md)，当前事实入口见
 > [`docs/index.md`](../../../docs/index.md)。
 
 ## Executive Summary

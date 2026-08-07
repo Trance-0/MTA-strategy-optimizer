@@ -30,6 +30,10 @@ htmlcov/
 *.temp
 *.tmp
 
+# Agent helper scripts. See AGENTS.md: agents put their own one-off scripts here
+# and they are never committed or pushed.
+/script/
+
 # Local configuration and secrets
 .env
 .env.*
@@ -39,17 +43,17 @@ htmlcov/
 modules/*/outputs/
 
 # Keep the five AMC contract outputs used by documentation and end-to-end tests.
-!modules/amc_mta/outputs/
-modules/amc_mta/outputs/*
-!modules/amc_mta/outputs/attribution/
-modules/amc_mta/outputs/attribution/*
-!modules/amc_mta/outputs/attribution/amc_markov_attribution_results.csv
-!modules/amc_mta/outputs/attribution/amc_shapley_attribution_results.csv
-!modules/amc_mta/outputs/attribution/amc_mta_model_comparison_touchpoints.csv
-!modules/amc_mta/outputs/attribution/amc_mta_model_comparison_summary.csv
-!modules/amc_mta/outputs/attribution/amc_mta_recommended_attribution.csv
+!modules/mta_attribution/outputs/
+modules/mta_attribution/outputs/*
+!modules/mta_attribution/outputs/attribution/
+modules/mta_attribution/outputs/attribution/*
+!modules/mta_attribution/outputs/attribution/amc_markov_attribution_results.csv
+!modules/mta_attribution/outputs/attribution/amc_shapley_attribution_results.csv
+!modules/mta_attribution/outputs/attribution/amc_mta_model_comparison_touchpoints.csv
+!modules/mta_attribution/outputs/attribution/amc_mta_model_comparison_summary.csv
+!modules/mta_attribution/outputs/attribution/amc_mta_recommended_attribution.csv
 
 # Keep the deterministic strategy budget seed used by the CLI and tests.
-!modules/mta_strategy_recommender/outputs/
-modules/mta_strategy_recommender/outputs/*
-!modules/mta_strategy_recommender/outputs/initial_budget_recommendation.json
+!modules/mta_strategy_recommendation/outputs/
+modules/mta_strategy_recommendation/outputs/*
+!modules/mta_strategy_recommendation/outputs/initial_budget_recommendation.json

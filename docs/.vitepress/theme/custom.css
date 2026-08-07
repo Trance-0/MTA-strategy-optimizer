@@ -1,0 +1,60 @@
+.status-label {
+  float: right;
+  margin: 0.18rem 0 0.1rem 0.75rem;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  padding: 0.1rem 0.45rem;
+  font-size: 0.68em;
+  font-weight: 700;
+  line-height: 1.35;
+  white-space: nowrap;
+}
+
+.status-verified {
+  color: #16863a;
+  background: rgb(22 134 58 / 10%);
+}
+
+.status-verified::after {
+  content: "Verified";
+}
+
+.status-external {
+  color: #1672b8;
+  background: rgb(22 114 184 / 10%);
+}
+
+.status-external::after {
+  content: "External";
+}
+
+.status-inference {
+  color: #a36500;
+  background: rgb(163 101 0 / 10%);
+}
+
+.status-inference::after {
+  content: "Inference";
+}
+
+.status-recommendation {
+  color: #7b4ab5;
+  background: rgb(123 74 181 / 10%);
+}
+
+.status-recommendation::after {
+  content: "Recommendation";
+}
+
+@media (max-width: 720px) {
+  .status-label {
+    float: none;
+    display: inline-block;
+    margin-left: 0.35rem;
+  }
+}
+
+.pipeline-table td:first-child {
+  white-space: nowrap;
+  font-weight: 650;
+}

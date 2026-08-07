@@ -1,6 +1,6 @@
 # 营销模型功能与关联说明（历史愿景）
 
-> 文档状态：历史产品愿景。本文保留早期广义营销平台的概念链路，用于追溯，不代表当前交付范围。当前唯一正式实现是 [`modules/amc_mta`](../../../modules/amc_mta/README.md)；效果预测、预算优化、实验平台和 AI 问答均未实现。当前事实以[文档总索引](../../../docs/index.md)、[AMC MTA 数据契约](../../../modules/amc_mta/docs/amc-data-requirements.md)和[模型比较治理规范](../../../modules/amc_mta/docs/model-comparison-governance.md)为准。
+> 文档状态：历史产品愿景。本文保留早期广义营销平台的概念链路，用于追溯，不代表当前交付范围。当前唯一正式实现见 [AMC MTA 模块文档](../../../docs/zh/attribution/amc-mta-module.md)；效果预测、预算优化、实验平台和 AI 问答均未实现。当前事实以[文档总索引](../../../docs/index.md)、[AMC MTA 数据契约](../../../docs/zh/datasets/amc-data-contract.md)和[模型比较治理规范](../../../docs/zh/attribution/model-governance.md)为准。
 
 本文档单独说明早期 AI 驱动营销投放优化平台中几个设想模块及分析产物的作用、输入输出和关系。以下“项目建议”“MVP”等表述均属于当时方案，不是当前实现声明。
 
