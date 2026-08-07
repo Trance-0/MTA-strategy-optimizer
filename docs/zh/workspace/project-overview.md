@@ -58,6 +58,10 @@ Demo**的状态。
 份额，再在同 Campaign 的匿名新组内等分。输出不含具体候选、Targeting 或动作；结果交给
 下游优化，不声称最高 ROI、因果增量或全局最优。
 
+当前预算的逐步复算见[计算详解](../strategy/current-budget-calculation.md)；
+从 MTA 证据走向 Ad Group 预算优化仍处于[问题定义与研究计划](../strategy/optimization-plan.md)阶段，
+不属于现有生成器能力。
+
 ### 项目知识：`docs`
 
 当前事实、模块架构、能力边界、研究原件和历史愿景已分层；位置规则见

@@ -92,6 +92,11 @@ modules/mta_strategy_recommender/
     └── test_hierarchy_validator.py   # 34 项合同、兼容与边界测试
 ```
 
+模块内原有策略说明已迁移到项目级文档目录 `docs/en/strategy/`，包括
+`model-plan.md`、`output-data-contract.md`、`strategy-output-contract.md`、
+`current-budget-calculation.md` 和 `optimization-plan.md`。对应中文源文件保存在
+`docs/zh/strategy/`，供未来中文站点使用；其中优化计划仍是未实现的后续研究。
+
 ## 安装工具区
 
 `.agents/skills/` 是面向 Codex 的扁平技能安装目录。119 个一级技能目录均包含

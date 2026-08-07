@@ -1,6 +1,6 @@
 {
   "schema_version": "1.1",
-  "generated_at": "2026-08-07T07:33:17.745Z",
+  "generated_at": "2026-08-07T07:40:06.324Z",
   "root": "{project-root}",
   "scope": "all regular workspace files excluding declared protected or generated paths",
   "exclusions": [
@@ -26,7 +26,7 @@
     }
   ],
   "file_count": 2358,
-  "total_bytes": 33144132,
+  "total_bytes": 33145534,
   "by_top_level": {
     ".agents": {
       "files": 1988,
@@ -56,13 +56,13 @@
       "files": 1,
       "bytes": 14060
     },
-    "_bmad": {
-      "files": 91,
-      "bytes": 925984
-    },
     "_bmad-output": {
       "files": 28,
       "bytes": 154812
+    },
+    "_bmad": {
+      "files": 91,
+      "bytes": 925984
     },
     "design-artifacts": {
       "files": 7,
@@ -70,7 +70,7 @@
     },
     "docs": {
       "files": 174,
-      "bytes": 12356199
+      "bytes": 12357601
     },
     "modules": {
       "files": 62,
@@ -18378,9 +18378,9 @@
       "path": "docs/zh/workspace/component-inventory.md",
       "top_level": "docs",
       "extension": ".md",
-      "size_bytes": 4401,
+      "size_bytes": 4709,
       "mode": "644",
-      "sha256": "c75b65458d462900179e192e79ec0dce3da17de2780aea9c93b9c4cb22dceab1"
+      "sha256": "e20f617b78de005d61e0c8cf8f51e778e609e1efb521fa50ddaed0bd20f7b8ae"
     },
     {
       "path": "docs/zh/workspace/development-guide.md",
@@ -18410,33 +18410,33 @@
       "path": "docs/zh/workspace/file-management.md",
       "top_level": "docs",
       "extension": ".md",
-      "size_bytes": 5079,
+      "size_bytes": 5352,
       "mode": "644",
-      "sha256": "c463d80d2133df319981154777e0035162854af756b634774153663746e6882e"
+      "sha256": "8d9e707ea78ed19da3607e9a719aac9896d01cfbd27bdb504263a9102a1fe9e1"
     },
     {
       "path": "docs/zh/workspace/index.md",
       "top_level": "docs",
       "extension": ".md",
-      "size_bytes": 6007,
+      "size_bytes": 6212,
       "mode": "644",
-      "sha256": "e3a8ddeafe5a9f5c9eddb828329aa4d036efe13ea4c1c8f2fd281b2012a3cca2"
+      "sha256": "3ec811c8ae8da2bf5839bb96a64a473275db3743df8368c7c12e28dd10becc55"
     },
     {
       "path": "docs/zh/workspace/project-overview.md",
       "top_level": "docs",
       "extension": ".md",
-      "size_bytes": 6495,
+      "size_bytes": 6745,
       "mode": "644",
-      "sha256": "87be3344ef56f77c0709747d155ca89094cb130d89a524e5148c2d69f467cffe"
+      "sha256": "4b1defde8ed7fb3fee19684577c16b4d1e602e5700f9dc107e5995c7fd3e73da"
     },
     {
       "path": "docs/zh/workspace/source-tree-analysis.md",
       "top_level": "docs",
       "extension": ".md",
-      "size_bytes": 5192,
+      "size_bytes": 5558,
       "mode": "644",
-      "sha256": "21936cb516db5bc3f4965d6fba78192ffa07a6b30a45f6b952a98222a365f4c1"
+      "sha256": "9e225a7c145c060ec10872606b003affcbb74d637aa75c2cccfb3c21ad154e46"
     },
     {
       "path": "modules/__init__.py",

@@ -194,7 +194,8 @@
       "strategy_tests": "34 passed",
       "pipeline": "passed; 17 touchpoints aligned over 90 days",
       "strategy_output": "canonical output and 1/1/1/1 count reproduced",
-      "documentation_build": "passed with English publication and Chinese placeholders"
+      "documentation_build": "passed with English publication and Chinese placeholders",
+      "merge": "upstream/main is an ancestor of code-migrate; README and preserved Chinese documentation conflicts were resolved additively"
     },
     "archived_upstream_state": [
       "docs/.archive/project-scan-report-2026-07-30-workspace-cleanup.json",
