@@ -40,6 +40,7 @@ lang: en-US
 - Active project entry and assessment: `docs/en/workspace/`.
 - File-location and movement rules: `docs/en/workspace/file-management.md` and its Chinese source counterpart.
 - Published business architecture and contracts: the English Attribution, Datasets, Environment, Strategy, Product, and Workspace sections; Chinese sources are preserved under `docs/zh/` but not published.
+- Strategy initialization documentation is centralized under `docs/en/strategy/`: `model-plan.md`, `output-data-contract.md`, `strategy-output-contract.md`, and `current-budget-calculation.md` describe the current implementation; `optimization-plan.md` is a future problem definition and research plan, not an implemented optimizer.
 - Historical AMC MTA product vision: `design-artifacts/amc_mta/A-Product-Brief/`.
 - Completed implementation specifications: `_bmad-output/implementation-artifacts/amc_mta/`.
 - Full machine inventory: `docs/workspace-file-inventory.json`.

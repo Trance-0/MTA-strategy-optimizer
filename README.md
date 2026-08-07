@@ -30,11 +30,15 @@ The current results are appropriate for reproducible development, contract testi
 | Run Amazon Marketing Cloud MTA attribution | [AMC MTA usage](docs/en/environment/amc-mta-usage.md) |
 | Understand the standardized model interface | [Standardized MTA interface](docs/en/attribution/standardized-interface.md) |
 | Generate and validate an initial Ad Group budget | [Strategy initializer](docs/en/strategy/module-overview.md) |
+| Reproduce the current budget step by step | [Current Ad Group budget calculation](docs/en/strategy/current-budget-calculation.md) |
+| Plan the research path from MTA to budget optimization | [Budget optimization problem and research plan](docs/en/strategy/optimization-plan.md) |
 | Review the current module boundaries | [Module inventory](docs/en/reference/module-inventory.md) |
 | Review input, path, and metric contracts | [AMC data contract](docs/en/datasets/amc-data-contract.md) |
 | Review dual-model governance | [Model governance](docs/en/attribution/model-governance.md) |
 | Interpret touchpoint reliability | [Reliability guide](docs/en/attribution/reliability.md) |
 | Review maturity and planned work | [Progress and todos](docs/en/introduction/progress.md) |
+| Review implementation specifications | [Specification catalog](docs/en/specifications/index.md) |
+| Review the translated project work log | [Development history](docs/en/workspace/development-history.md) |
 | Inspect historical product decisions | [Design artifacts](design-artifacts/README.md) |
 | Inspect specifications and implementation records | [BMad output index](_bmad-output/README.md) |
 
@@ -90,6 +94,8 @@ marketing-roi-analysis/
 ├── docs/
 │   ├── en/                           # Active published English documentation
 │   ├── zh/                           # Preserved Chinese sources; currently excluded from publication
+│   ├── en/specifications/            # Project-level English specification catalog
+│   ├── zh/specifications/            # Chinese specification source backups for future publication
 │   ├── research/                     # External references; never runtime model input
 │   └── .vitepress/                   # Documentation site configuration
 ├── design-artifacts/                 # Historical product briefs and decisions

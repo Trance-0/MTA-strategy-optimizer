@@ -48,6 +48,8 @@ See [AMC MTA capability assessment](../product/amc-mta/capability-assessment.md)
 
 This module deterministically generates `Campaign Group -> Campaign -> new Ad Group count and budget` and performs read-only cross-module AMC validation. Two JSON inputs provide candidate counts, product capacities, minimum budgets, and AMC lineage. The audited sample's real capacity calculation yielded `1/1/1/1`. All 17 MTA touchpoints rolled through the AMC `assisted_*` bridge into Campaign shares, which were divided equally among anonymous new groups in the same Campaign. The output contains no specific candidate, Targeting, or action and makes no claim of maximum return on investment, causal incrementality, or global optimality.
 
+The [step-by-step calculation](../strategy/current-budget-calculation.md) reproduces the current budget result. Moving from MTA evidence to Ad Group budget optimization remains a [problem definition and research plan](../strategy/optimization-plan.md), not a capability of the current generator.
+
 ### Project Knowledge: `docs`
 
 Current facts, module architecture, capability boundaries, research originals, and historical vision are layered. [Workspace file-location management](file-management.md) defines their placement. The recorded seven PDFs, two DOCX files, and Amazon Ads OpenAPI JSON are research inputs, not runtime dependencies.

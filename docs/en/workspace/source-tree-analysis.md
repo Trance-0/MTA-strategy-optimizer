@@ -88,6 +88,8 @@ modules/mta_strategy_recommendation/
 └── tests/                            # contract, compatibility, boundary tests
 ```
 
+Strategy descriptions were migrated out of the runtime module and into the project-level `docs/en/strategy/` section. `model-plan.md`, `output-data-contract.md`, `strategy-output-contract.md`, and `current-budget-calculation.md` describe the implemented initializer. `optimization-plan.md` records the future optimization problem and research plan without presenting it as current capability. Preserved Chinese counterparts remain under `docs/zh/strategy/` for future publication.
+
 ## Knowledge and Traceability Area
 
 ```text

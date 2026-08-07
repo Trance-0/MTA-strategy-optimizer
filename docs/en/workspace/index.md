@@ -15,7 +15,9 @@ This index covers the complete workspace: current business implementations, proj
 4. [Workspace architecture](architecture.md): the business, knowledge, and tool layers.
 5. [Component and asset inventory](component-inventory.md): code, data, research, and skill assets.
 6. [Development and verification guide](development-guide.md): run the project and reproduce verification.
-7. [AMC MTA capability assessment](../product/amc-mta/capability-assessment.md): detailed assessment of attribution capabilities.
+7. [Implementation specification catalog](../specifications/): categorized implementation intent and historical verification records.
+8. [Development history](development-history.md): English translation of the complete preserved work log.
+9. [AMC MTA capability assessment](../product/amc-mta/capability-assessment.md): detailed assessment of attribution capabilities.
 
 ## Current Entry Points and Authority
 
@@ -29,11 +31,15 @@ This index covers the complete workspace: current business implementations, proj
 | Runnable modules and commands | [AMC MTA module](../attribution/amc-mta-module.md) |
 | Campaign Group initial strategy | [Strategy Initializer](../strategy/module-overview.md) |
 | Initial-strategy plan and contract | [Overall model plan](../strategy/model-plan.md) |
+| Current budget calculation | [Step-by-step Ad Group initial-budget calculation](../strategy/current-budget-calculation.md) |
+| Future budget optimization research | [Problem definition and research plan](../strategy/optimization-plan.md) |
 | Input fields, paths, and cost rules | [AMC MTA data contract](../datasets/amc-data-contract.md) |
 | Markov/Shapley gaps and decision status | [Model-comparison governance](../attribution/model-governance.md) |
 | Individual-touchpoint reliability | [Touchpoint reliability guide](../attribution/reliability.md) |
 | Code structure and data flow | [AMC MTA architecture](../product/amc-mta/architecture.md) |
 | Project maturity and priorities | [AMC MTA capability assessment](../product/amc-mta/capability-assessment.md) |
+| Implementation specifications | [Project-level specification catalog](../specifications/) |
+| Historical work log | [Development history](development-history.md) |
 | Campaign Group data hierarchy | [Campaign Group hierarchy and finest performance grain](../research/campaign-data-hierarchy.md) |
 | Deferred AMC MTA technical work | `_bmad-output/implementation-artifacts/amc_mta/deferred/deferred-work.md` |
 
@@ -68,6 +74,8 @@ docs/
 ├── index.md            # redirect to active English documentation
 ├── en/                 # complete English documentation
 ├── zh/                 # preserved, unpublished Chinese source documentation
+├── en/specifications/  # active project-level English specification catalog
+├── zh/specifications/  # unpublished Chinese specification source backups
 ├── assets/             # shared site assets
 └── research/           # external binary research originals, not runtime inputs
 ```
@@ -83,6 +91,18 @@ See [Source-tree analysis](source-tree-analysis.md) for the annotated structure.
 - **Historical vision:** `design-artifacts/`, including the model-function and relationship guide.
 - **Historical implementation record:** `_bmad-output/implementation-artifacts/`; frozen specifications record their original context and do not automatically describe current capability.
 - **Installed tools:** `.agents` and `_bmad`; their self-contained distribution structure is not deduplicated as business documentation.
+
+## Current Verification: 2026-08-07
+
+The migrated repository was verified with its locked Python 3.12 environment after the upstream documentation reconciliation:
+
+- 107 attribution tests, 136 standardized-interface tests, and 34 strategy tests passed;
+- the complete attribution pipeline reproduced all five governed outputs;
+- 17 Amazon Marketing Cloud and Amazon Ads touchpoints aligned across the 90-day window, account, marketplace, and currency;
+- the strategy initializer reproduced the canonical `1/1/1/1` Ad Group count and budget seed;
+- the English VitePress site built successfully while all preserved Chinese routes remained unpublished placeholders.
+
+These checks establish repository reproducibility only. They do not establish causal validity or production readiness.
 
 ## Current Verification Baseline
 

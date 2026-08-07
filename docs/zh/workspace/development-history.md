@@ -1,3 +1,9 @@
+---
+title: 开发历史源记录
+description: 为未来中文站点保留的完整项目工作日志
+lang: zh-CN
+---
+
 # 工作日志
 
 > 项目：Marketing ROI Analysis

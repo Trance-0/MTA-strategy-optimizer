@@ -37,6 +37,8 @@ flowchart TB
 | `modules/mta_standard/` | Load MTA-SIM tables, adapt four-segment keys, run any model through one interface, and score results against ground truth | `src/dataloader.py`, `src/model_registry.py` |
 | `modules/mta_strategy_recommendation/` | Bridge touchpoint attribution to Campaigns and calculate the new Ad Group count and initial budget | `src/budget_recommender.py` |
 | `docs/` | Current VitePress documentation, Cloudflare configuration, and research attachments | This site |
+| `docs/en/specifications/` | Project-level English catalog of implementation intent and historical verification records | [Specification catalog](../specifications/) |
+| `docs/zh/specifications/` | Preserved Chinese specification sources for future translation; excluded from the current build | Unpublished source backup |
 | `docs/research/` | External research PDFs, reports, and indexes; referenced only by relevant pages and not used when models run | Research attachments |
 | `design-artifacts/` | Historical Product Briefs, product requirements documents, and decision records | Traceability material |
 | `_bmad-output/` | Completed or deferred specifications and implementation records | Traceability material |

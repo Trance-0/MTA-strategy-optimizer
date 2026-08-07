@@ -17,6 +17,8 @@ Use the [complete workspace documentation index](index.md) as the single entry p
 - [Workspace file-location management](file-management.md)
 - [Component and asset inventory](component-inventory.md)
 - [Development and verification guide](development-guide.md)
+- [Development history](development-history.md)
+- [Project-level implementation specification catalog](../specifications/)
 - [Full machine-generated file inventory](../../workspace-file-inventory.json)
 - [AMC MTA workspace documentation](../product/amc-mta/)
 - [AMC MTA architecture](../product/amc-mta/architecture.md)
@@ -40,6 +42,8 @@ Use the [complete workspace documentation index](index.md) as the single entry p
 ## History and Research
 
 - [Product-document status](../product/)
+- [English development history](development-history.md)
+- [Implementation specification catalog](../specifications/)
 - Historical design artifacts: `design-artifacts/README.md`
 - [Research-material classification index](../research/)
 - [Campaign Group hierarchy and finest performance grain](../research/campaign-data-hierarchy.md)

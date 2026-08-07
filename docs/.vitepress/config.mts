@@ -15,6 +15,7 @@ const enTheme: DefaultTheme.Config = {
     { text: "Strategy", link: "/en/strategy/" },
     { text: "Product", link: "/en/product/" },
     { text: "Workspace", link: "/en/workspace/" },
+    { text: "Specifications", link: "/en/specifications/" },
     { text: "Research", link: "/en/research/" },
   ],
   sidebar: [
@@ -91,7 +92,14 @@ const enTheme: DefaultTheme.Config = {
         { text: "File-location rules", link: "/en/workspace/file-management" },
         { text: "Component inventory", link: "/en/workspace/component-inventory" },
         { text: "Development and verification", link: "/en/workspace/development-guide" },
+        { text: "Development history", link: "/en/workspace/development-history" },
         { text: "Documentation index", link: "/en/workspace/documentation-index" },
+      ],
+    },
+    {
+      text: "Specifications",
+      items: [
+        { text: "Implementation catalog", link: "/en/specifications/" },
       ],
     },
     {

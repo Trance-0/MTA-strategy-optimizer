@@ -2,7 +2,7 @@
   "workflow_version": "1.3.0",
   "timestamps": {
     "started": "2026-07-20T11:20:00Z",
-    "last_updated": "2026-08-07T07:33:17.745Z"
+    "last_updated": "2026-07-30T09:18:54.439Z"
   },
   "mode": "workspace_cleanup_after_budget_model",
   "scan_level": "exhaustive",
@@ -53,26 +53,6 @@
       "step": "validate",
       "status": "completed",
       "summary": "Validated 107 AMC tests, 34 budget-model tests, package imports, both CLI spellings, zero AMC diff from 7907b101, documentation, and inventory parity."
-    },
-    {
-      "step": "reconcile_upstream",
-      "status": "completed",
-      "summary": "Fetched upstream/main, preserved both divergent work-log content and final scan snapshots, and confirmed the merge tree is clean."
-    },
-    {
-      "step": "verify_adapter",
-      "status": "completed",
-      "summary": "Confirmed the existing MTA-SIM four-to-five segment adapter and all 136 standardized-interface tests before migrating documents."
-    },
-    {
-      "step": "migrate_documentation",
-      "status": "completed",
-      "summary": "Moved active strategy descriptions into project-level English documentation and preserved Chinese work-log and specification sources."
-    },
-    {
-      "step": "validate_migration",
-      "status": "completed",
-      "summary": "Passed 277 business tests, both business workflows, source-preservation checks, local-link checks, and the VitePress production build."
     }
   ],
   "current_step": "complete",
@@ -154,11 +134,7 @@
     "modules/README.md",
     "modules/mta_strategy_recommender/**/*.md",
     "_bmad-output/README.md",
-    "_bmad-output/implementation-artifacts/README.md",
-    "docs/en/specifications/index.md",
-    "docs/en/workspace/development-history.md",
-    "docs/zh/specifications/",
-    "docs/zh/workspace/development-history.md"
+    "_bmad-output/implementation-artifacts/README.md"
   ],
   "resume_instructions": "Use modules/mta_strategy_recommender/data/simulated/README.md as the input boundary, outputs/initial_budget_recommendation.json as the formal deterministic result, and docs/workspace-file-management.md for file placement decisions.",
   "execution_status": "completed",
@@ -172,34 +148,6 @@
     "git diff --exit-code 7907b101 -- modules/amc_mta: no changes",
     "strict CSV header, whitespace, count, recommended-value, threshold, summary-AND, and reliability checks: passed",
     "project Markdown local-link scan: 44 documents, 217 local links, 0 broken links",
-    "JSON parse, inventory parity, file hygiene, and git diff --check excluding both protected user files: passed",
-    "uv run --locked python -X utf8 -B -m unittest discover -s modules/mta_attribution/tests -p test_*.py: 107 passed",
-    "uv run --locked python -X utf8 -B -m unittest discover -s modules/mta_standard/tests -p test_*.py: 136 passed",
-    "uv run --locked python -X utf8 -B -m unittest discover -s modules/mta_strategy_recommendation/tests -p test_*.py: 34 passed",
-    "uv run --locked python -X utf8 -B modules/mta_attribution/run_pipeline.py: passed",
-    "uv run --locked python -X utf8 modules/mta_strategy_recommendation/scripts/validate_simulated_hierarchy.py: passed",
-    "npm run build: passed; 81 preserved Chinese routes mapped to the construction placeholder",
-    "26 mirrored Chinese specification files matched their source SHA-256 hashes",
-    "git merge-tree --write-tree HEAD upstream/main: clean"
-  ],
-  "migration_2026_08_07": {
-    "source": "upstream/main at e2465812d358830c26c20df78fbbbd928568773c",
-    "common_base": "dc0dbfa741f4878f533f5a850a4b7986d259828d",
-    "runtime_migration": "No runtime files were added after the common base in upstream/main. The current mta_attribution, mta_standard adapter, and mta_strategy_recommendation modules remain the active code structure.",
-    "documentation_migration": "Migrated the upstream budget-calculation and optimization-research descriptions into the project-level English documentation; preserved Chinese specifications and the work log as unpublished source backups.",
-    "preservation": "No tracked component or historical description was deleted. Original BMad specifications remain unchanged and 26 byte-identical Chinese source files are mirrored under docs/zh/specifications/source.",
-    "verification": {
-      "attribution_tests": "107 passed",
-      "standardized_interface_tests": "136 passed",
-      "strategy_tests": "34 passed",
-      "pipeline": "passed; 17 touchpoints aligned over 90 days",
-      "strategy_output": "canonical output and 1/1/1/1 count reproduced",
-      "documentation_build": "passed with English publication and Chinese placeholders"
-    },
-    "archived_upstream_state": [
-      "docs/.archive/project-scan-report-2026-07-30-workspace-cleanup.json",
-      "docs/.archive/project-scan-report-2026-08-07-upstream-final.json",
-      "docs/.archive/workspace-file-inventory-2026-08-07-upstream-final.json"
-    ]
-  }
+    "JSON parse, inventory parity, file hygiene, and git diff --check excluding both protected user files: passed"
+  ]
 }
