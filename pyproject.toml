@@ -1,0 +1,10 @@
+[project]
+name = "marketing-roi-analysis"
+version = "0.1.0"
+description = "Validation-oriented multi-touch attribution and explainable advertising budget initialization"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = []
+
+[tool.uv]
+package = false
