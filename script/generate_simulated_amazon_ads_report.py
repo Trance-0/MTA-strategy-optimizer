@@ -1,8 +1,11 @@
-"""Generate the simulated Amazon Ads daily performance sample.
+"""Generate the legacy simulated Amazon Ads daily performance sample.
 
 Derives delivery, cost, and platform-reported outcomes from the same synthetic
 events that produced the paths, which is what lets the alignment validator pass
 on the shipped sample.
+
+This compatibility command reproduces the committed five-segment fixture. New
+datasets use ``generate_mta_sim_dataset.py``.
 
 Data flow: synthetic user events -> `derive_amazon_ads_rows`
 -> `amazon_ads_report_sample.csv` -> spend aggregation and alignment validation.
@@ -16,7 +19,8 @@ from datetime import date, timedelta
 from pathlib import Path
 from typing import Mapping, Sequence
 
-AMC_MTA_ROOT = Path(__file__).resolve().parents[1]
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+AMC_MTA_ROOT = PROJECT_ROOT / "modules" / "mta_attribution"
 sys.path.insert(0, str(AMC_MTA_ROOT))
 sys.path.insert(0, str(AMC_MTA_ROOT / "src"))
 

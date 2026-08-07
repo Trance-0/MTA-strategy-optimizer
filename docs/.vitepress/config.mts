@@ -1,6 +1,6 @@
 import { defineConfig, type DefaultTheme } from "vitepress";
-import { copyStaticAssets } from "../scripts/copy-static-assets.mjs";
-import { researchPdfDevPlugin } from "../scripts/static-pdf-dev-plugin.mjs";
+import { copyStaticAssets } from "../../script/copy_static_assets.mjs";
+import { researchPdfDevPlugin } from "../../script/static_pdf_dev_plugin.mjs";
 
 const repositoryUrl = "https://github.com/Trance-0/marketing-roi-analysis";
 
@@ -31,6 +31,7 @@ const enTheme: DefaultTheme.Config = {
       text: "Environment setup",
       items: [
         { text: "Local setup and directories", link: "/en/environment/" },
+        { text: "Generate MTA-SIM data", link: "/en/environment/mta-sim-generation" },
         { text: "Run the AMC MTA module", link: "/en/environment/amc-mta-usage" },
       ],
     },

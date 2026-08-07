@@ -23,8 +23,8 @@ features:
     details: Local commands, runtime requirements, and directory responsibilities.
     link: /en/environment/
   - title: Datasets
-    details: Data contracts, synthetic fixtures, and compatibility boundaries.
-    link: /en/datasets/
+    details: Pinned ZheyuanWu generation, data contracts, synthetic fixtures, and compatibility boundaries.
+    link: /en/environment/mta-sim-generation
   - title: Attribution models
     details: Markov removal effects, path-level Shapley, governance, and outputs.
     link: /en/attribution/

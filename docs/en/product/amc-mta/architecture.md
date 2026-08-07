@@ -34,8 +34,8 @@ In real use, user events must become anonymous aggregates inside the AMC clean r
 | `src/path_report_builder.py` | event ordering, 14-day contiguous gaps, multiple-purchase segmentation, anonymous aggregation |
 | `src/attribution_contract.py` | input validation, Markov, Shapley, Ads cost aggregation, efficiency measures, atomic CSV writes |
 | `src/attribution_model_comparison.py` | five-segment support, model gaps, three reliability criteria, total variation distance, ranking, governed recommendations |
-| `scripts/` | path building, data generation, attribution, standalone comparison, and alignment validation entry points |
-| `run_pipeline.py` | derive the window from Ads dates, build complete temporary artifacts, and restore previous files if publication fails |
+| `script/` | project-level path building, compatibility generation, attribution, comparison, and validation entry points |
+| `script/run_pipeline.py` | derive the window from Ads dates, build complete temporary artifacts, and restore previous files if publication fails |
 | `tests/` | lock field contracts, boundaries, conservation, strict parsing, and publication rollback |
 
 The module is organized through `sys.path` injection rather than a Python package, dependency manifest, or install entry point. That is adequate for the local demonstration but not a stable service dependency.
@@ -129,7 +129,7 @@ Tests establish conformance with the current contract; they do not independently
 | 14-day path, start boundary, purchase segmentation | `src/path_report_builder.py` | `test_amc_path_builder.py` |
 | Markov/Shapley semantics and conservation | `src/attribution_contract.py` | `test_amc_mta_attribution.py` |
 | gaps, support, reliability, governance | `src/attribution_model_comparison.py` | `test_model_comparison.py` |
-| full reproduction and publication rollback | `run_pipeline.py`, `scripts/` | `test_amc_mta_end_to_end.py` |
+| full reproduction and publication rollback | `script/run_pipeline.py`, `script/` | `test_end_to_end_pipeline.py` |
 
 The migrated source recorded baseline commit `1000bcc` plus its reliability implementation and stated that code, tests, documents, and five outputs were synchronized to the three-criterion contract. Current code and tests supersede that dated statement if they differ.
 

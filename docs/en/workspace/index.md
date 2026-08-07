@@ -54,11 +54,12 @@ Authority order is: runtime code and tests, module data/governance contracts, re
 ├── _bmad-output/      # completed specifications and deferred work
 ├── design-artifacts/  # historical product vision
 ├── docs/              # bilingual knowledge and research originals
-└── modules/           # AMC MTA + Campaign Group Strategy Initializer
+├── external/          # pinned external repositories
+├── script/            # maintained project command-line entry points
+└── modules/           # attribution, standard adapter, and strategy modules
 
 modules/mta_attribution/
 ├── src/       # path keys, path building, attribution, comparison
-├── scripts/   # independent command-line entry points
 ├── tests/     # automated tests
 ├── data/      # one simulated fact source and four derived datasets
 └── outputs/   # five canonical generated CSV files
@@ -67,7 +68,6 @@ modules/mta_strategy_recommendation/
 ├── data/      # strategy_request + candidate_pool inputs
 ├── outputs/   # the canonical initial-budget JSON
 ├── src/       # count/budget generation and cross-module validation
-├── scripts/   # generation and validation command-line interfaces
 └── tests/     # contract, compatibility, and boundary tests
 
 docs/
@@ -96,7 +96,7 @@ See [Source-tree analysis](source-tree-analysis.md) for the annotated structure.
 
 The migrated repository was verified with its locked Python 3.12 environment after the upstream documentation reconciliation:
 
-- 107 attribution tests, 136 standardized-interface tests, and 34 strategy tests passed;
+- 107 attribution tests, 138 standardized-interface tests, and 34 strategy tests passed;
 - the complete attribution pipeline reproduced all five governed outputs;
 - 17 Amazon Marketing Cloud and Amazon Ads touchpoints aligned across the 90-day window, account, marketplace, and currency;
 - the strategy initializer reproduced the canonical `1/1/1/1` Ad Group count and budget seed;
@@ -106,7 +106,7 @@ These checks establish repository reproducibility only. They do not establish ca
 
 ## Current Verification Baseline
 
-The baseline recorded on 2026-07-30 used the unified synthetic user-event source, its four derived datasets, and deterministic output from `python3 modules/mta_attribution/run_pipeline.py`:
+The historical baseline recorded on 2026-07-30 used the unified synthetic user-event source, its four derived datasets, and deterministic output now reproduced through `uv run python -X utf8 -B script/run_pipeline.py`:
 
 - 107 AMC MTA tests passed, with 34 additional Strategy Initializer tests;
 - 17 five-segment touchpoints aligned completely with the Amazon Ads report;

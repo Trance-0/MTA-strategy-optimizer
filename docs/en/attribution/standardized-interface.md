@@ -14,6 +14,7 @@ It is additive. Every existing entry point, output file, and number in `modules/
 
 | Component | File | Objective |
 | --- | --- | --- |
+| Generator adapter | `src/mta_sim_generator_adapter.py` | Run the pinned ZheyuanWu generator, aggregate daily scopes, and load model inputs |
 | Key adapter | `src/touchpoint_adapter.py` | Convert between MTA-SIM's four-segment key and this repository's five-segment key |
 | Dataloader | `src/dataloader.py` | Load `amc_path_report` and `amazon_ads_daily_touchpoint_performance` from any path |
 | Model interface | `src/attribution_model_interface.py` | Define `fit`/`attribute`/`save`/`load` and capability metadata |
@@ -79,6 +80,15 @@ Three configuration failures are rejected rather than guessed:
 `SimulatorConfig.assert_reversible()` additionally proves, for the touchpoints a dataset actually contains, that four → five → four is the identity and that no two four-segment keys expand to the same five-segment key. A dataset that passes can round-trip without losing information.
 
 ## Loading a Dataset <span class="status-label status-verified" aria-label="Verified"></span>
+
+For the maintained generation path, initialize the submodule and run:
+
+```sh
+git submodule update --init --recursive
+uv run python -X utf8 -B script/generate_mta_sim_dataset.py
+```
+
+The generator adapter derives CPC/CPM from the resolved ZheyuanWu configuration rather than from observed delivery metrics. It preserves the original daily-window CSVs, aggregates path rows into the single reporting scope required by the local model interface, and keeps the normalized ground-truth view separate for evaluation. See [Generate MTA-SIM data](../environment/mta-sim-generation.md).
 
 Both loaders take explicit paths and apply no repository-relative default, so a dataset generated anywhere on the filesystem works unchanged:
 

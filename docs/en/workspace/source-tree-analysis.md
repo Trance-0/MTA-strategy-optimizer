@@ -17,6 +17,8 @@ marketing-roi-analysis/
 │   ├── mta_attribution/             # five-segment attribution implementation
 │   ├── mta_standard/                # MTA-SIM interface, adapter, evaluator
 │   └── mta_strategy_recommendation/ # Campaign Group initial-strategy module
+├── external/mta_sim_dataset/         # pinned ZheyuanWu data-generator submodule
+├── script/                            # all maintained project commands
 ├── docs/                             # bilingual knowledge and external research
 ├── design-artifacts/                 # historical product vision
 ├── _bmad-output/                     # completed specifications and deferred work
@@ -32,7 +34,6 @@ marketing-roi-analysis/
 ```text
 modules/mta_attribution/
 ├── config.py                         # windows, thresholds, field constants
-├── run_pipeline.py                   # complete pipeline entry point
 ├── src/
 │   ├── touchpoint_key.py                # five-segment parsing and validation
 │   ├── synthetic_event_pipeline.py      # synthetic users and AMC/Ads/entity derivation
@@ -41,7 +42,6 @@ modules/mta_attribution/
 │   ├── markov_attribution_model.py      # removal-effect model
 │   ├── shapley_attribution_model.py     # path-level Shapley model
 │   └── attribution_model_comparison.py  # gaps, support, reliability, recommendations
-├── scripts/                             # step-specific command-line interfaces
 ├── tests/                               # automated tests
 ├── data/simulated/                      # one source and four derived datasets
 └── outputs/attribution/                 # five canonical generated outputs
@@ -70,7 +70,7 @@ markov_attribution   shapley_attribution
             ↓                ↓
         attribution_model_comparison
                     ↓
-       run_pipeline / scripts / outputs
+       project-level script / outputs
 ```
 
 The Strategy Initializer is:
@@ -82,11 +82,13 @@ modules/mta_strategy_recommendation/
 ├── src/
 │   ├── budget_recommender.py         # counts, MTA bridge, budget generation
 │   └── hierarchy_validator.py        # AMC lineage and result regeneration
-├── scripts/
-│   ├── generate_initial_budget.py
-│   └── validate_simulated_hierarchy.py
 └── tests/                            # contract, compatibility, boundary tests
 ```
+
+The corresponding command entry points are `script/run_pipeline.py`,
+`script/generate_initial_budget.py`, and
+`script/validate_simulated_hierarchy.py`. Reusable code remains in each
+module's `src/` directory; source modules do not import command wrappers.
 
 Strategy descriptions were migrated out of the runtime module and into the project-level `docs/en/strategy/` section. `model-plan.md`, `output-data-contract.md`, `strategy-output-contract.md`, and `current-budget-calculation.md` describe the implemented initializer. `optimization-plan.md` records the future optimization problem and research plan without presenting it as current capability. Preserved Chinese counterparts remain under `docs/zh/strategy/` for future publication.
 

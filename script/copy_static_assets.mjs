@@ -1,9 +1,14 @@
+/**
+ * Copy research attachments, audit files, and Chinese placeholder routes into
+ * the built documentation site after VitePress renders the English pages.
+ */
+
 import { copyFile, mkdir, readdir } from "node:fs/promises";
 import { dirname, extname, relative, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
 const scriptDirectory = dirname(fileURLToPath(import.meta.url));
-const documentationRoot = resolve(scriptDirectory, "..");
+const documentationRoot = resolve(scriptDirectory, "..", "docs");
 const researchRoot = resolve(documentationRoot, "research");
 const chineseSourceRoot = resolve(documentationRoot, "zh");
 const outputRoot = resolve(documentationRoot, ".vitepress", "dist");

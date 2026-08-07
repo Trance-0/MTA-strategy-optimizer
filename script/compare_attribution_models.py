@@ -16,7 +16,8 @@ import sys
 from pathlib import Path
 
 
-AMC_MTA_ROOT = Path(__file__).resolve().parents[1]
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+AMC_MTA_ROOT = PROJECT_ROOT / "modules" / "mta_attribution"
 sys.path.insert(0, str(AMC_MTA_ROOT))
 sys.path.insert(0, str(AMC_MTA_ROOT / "src"))
 
@@ -45,7 +46,7 @@ from attribution_model_comparison import (  # noqa: E402
     compare_attribution_models,
     read_amc_csv_strict,
 )
-from scripts.validate_data_alignment import validate_data_alignment_rows  # noqa: E402
+from validate_data_alignment import validate_data_alignment_rows  # noqa: E402
 
 
 def read_model_csv_strict(path: str | Path) -> list[dict]:

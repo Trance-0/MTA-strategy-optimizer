@@ -1,10 +1,15 @@
+/**
+ * Provide byte-range serving for repository research PDFs during local
+ * VitePress development without exposing files outside docs/research.
+ */
+
 import { createReadStream } from "node:fs";
 import { stat } from "node:fs/promises";
 import { dirname, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const scriptDirectory = dirname(fileURLToPath(import.meta.url));
-const documentationRoot = resolve(scriptDirectory, "..");
+const documentationRoot = resolve(scriptDirectory, "..", "docs");
 const researchRoot = resolve(documentationRoot, "research");
 const researchPrefix = `${researchRoot}${sep}`;
 

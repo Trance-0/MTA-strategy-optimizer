@@ -70,7 +70,7 @@ Codex/BMad workflows
 documentation, design artifacts, workflow output, or source changes
 ```
 
-The tool and business planes meet only when a developer uses a tool to modify or review the project. AMC `run_pipeline.py` does not import `.agents` or `_bmad`.
+The tool and business planes meet only when a developer uses a tool to modify or review the project. `script/run_pipeline.py` does not import `.agents` or `_bmad`.
 
 ## Technology Stack
 

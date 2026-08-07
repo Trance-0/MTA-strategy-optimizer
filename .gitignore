@@ -16,6 +16,7 @@ venv/
 .ruff_cache/
 .coverage
 htmlcov/
+/generated/
 
 # Editors
 .idea/
@@ -30,9 +31,13 @@ htmlcov/
 *.temp
 *.tmp
 
-# Agent helper scripts. See AGENTS.md: agents put their own one-off scripts here
-# and they are never committed or pushed.
-/script/
+# Project command-line entry points are tracked only under /script.
+# Obsolete project-owned script directories must not be recreated.
+/modules/*/scripts/
+/docs/scripts/
+
+# Agent-only scratch files are local and must never be committed or pushed.
+/.agent-scratch/
 
 # Local configuration and secrets
 .env

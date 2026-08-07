@@ -1,10 +1,15 @@
+/**
+ * Start the local Cloudflare Worker and verify the English site, research PDF,
+ * Chinese placeholders, and missing-page behavior as an integration check.
+ */
+
 import { spawn } from "node:child_process";
 import { stat } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const scriptDirectory = dirname(fileURLToPath(import.meta.url));
-const documentationRoot = resolve(scriptDirectory, "..");
+const documentationRoot = resolve(scriptDirectory, "..", "docs");
 const wranglerEntry = resolve(
   documentationRoot,
   "node_modules",

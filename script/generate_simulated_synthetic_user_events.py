@@ -1,8 +1,11 @@
-"""Generate the deterministic synthetic user-event sample.
+"""Generate the legacy deterministic synthetic user-event sample.
 
 First stage of the simulated dataset chain. Produces journey-level events that
 every later sample is derived from, so the whole dataset stays internally
 consistent.
+
+This compatibility command reproduces the committed five-segment fixture. New
+datasets use ``generate_mta_sim_dataset.py``.
 
 Data flow: `synthetic_event_pipeline.generate_synthetic_user_events`
 -> `synthetic_user_events_sample.csv` -> the touchpoint-event and Ads samples.
@@ -14,7 +17,8 @@ import argparse
 import sys
 from pathlib import Path
 
-AMC_MTA_ROOT = Path(__file__).resolve().parents[1]
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+AMC_MTA_ROOT = PROJECT_ROOT / "modules" / "mta_attribution"
 sys.path.insert(0, str(AMC_MTA_ROOT))
 sys.path.insert(0, str(AMC_MTA_ROOT / "src"))
 

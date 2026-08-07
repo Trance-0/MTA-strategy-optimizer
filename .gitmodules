@@ -1,0 +1,4 @@
+[submodule "external/mta_sim_dataset"]
+	path = external/mta_sim_dataset
+	url = https://github.com/Trance-0/MTA-SIM-dataset.git
+	branch = main

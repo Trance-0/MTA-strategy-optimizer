@@ -17,8 +17,8 @@ Some installed-tool tests use `pytest`, but the audited repository had no unifie
 ## Run the Business Pipeline
 
 ```bash
-python3 -B modules/mta_attribution/run_pipeline.py
-python3 modules/mta_attribution/scripts/validate_data_alignment.py
+uv run python -X utf8 -B script/run_pipeline.py
+uv run python -X utf8 script/validate_data_alignment.py
 ```
 
 The pipeline derives its window from the earliest through latest Amazon Ads `reportDate`; adding data should not require changing configured dates. See [AMC MTA execution](../environment/amc-mta-usage.md) for custom input and output arguments.
@@ -42,8 +42,8 @@ The migration-source audit recorded 107 passing tests. Always treat the current 
 ## Validate the Campaign Group Initial-Strategy Sample
 
 ```bash
-python3 -B modules/mta_strategy_recommendation/scripts/generate_initial_budget.py --check-output
-python3 modules/mta_strategy_recommendation/scripts/validate_simulated_hierarchy.py
+uv run python -X utf8 -B script/generate_initial_budget.py --check-output
+uv run python -X utf8 script/validate_simulated_hierarchy.py
 python3 -B -m unittest discover -s modules/mta_strategy_recommendation/tests -p 'test_*.py'
 ```
 

@@ -28,7 +28,7 @@ For background on reconstructing and interpreting customer journeys, read [Mappi
 | Markov attribution | `src/markov_attribution_model.py` | Calculate contribution shares from the change in conversion probability when a touchpoint is removed |
 | Shapley attribution | `src/shapley_attribution_model.py` | Allocate each Outcome fairly among unique touchpoints within each path, then aggregate across paths |
 | Model comparison | `src/attribution_model_comparison.py` | Check calculation validity, data support, and model consistency |
-| Pipeline | `run_pipeline.py` | Run and publish validated artifacts together |
+| Pipeline | `script/run_pipeline.py` | Run and publish validated artifacts together |
 | Standardized interface | `modules/mta_standard/` | Load MTA-SIM data, run any model through one interface, validate and score the results |
 | DNN credit model | `DeepNeuralAttributionModel` | Learn credit from touchpoint segment structure and predict a split for a campaign with no path history |
 

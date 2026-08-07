@@ -10,7 +10,7 @@
     "build": "vitepress build .",
     "preview": "npm run build && vitepress preview .",
     "cloudflare:dev": "wrangler dev",
-    "test:cloudflare": "node scripts/verify-cloudflare.mjs",
+    "test:cloudflare": "node ../script/verify_cloudflare.mjs",
     "deploy": "wrangler deploy",
     "cloudflare:deploy": "wrangler deploy"
   },

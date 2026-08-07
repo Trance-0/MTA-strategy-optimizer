@@ -1,7 +1,10 @@
-"""Generate the simulated touchpoint-event sample.
+"""Generate the legacy simulated touchpoint-event sample.
 
 Projects synthetic user events into the touchpoint-event shape the path builder
 consumes, keeping the same journeys behind both files.
+
+This compatibility command reproduces the committed five-segment fixture. New
+datasets use ``generate_mta_sim_dataset.py``.
 
 Data flow: synthetic user events -> `amc_touchpoint_events_sample.csv`
 -> `build_path_report`.
@@ -14,7 +17,8 @@ import sys
 from pathlib import Path
 from typing import Mapping, Sequence
 
-AMC_MTA_ROOT = Path(__file__).resolve().parents[1]
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+AMC_MTA_ROOT = PROJECT_ROOT / "modules" / "mta_attribution"
 sys.path.insert(0, str(AMC_MTA_ROOT))
 sys.path.insert(0, str(AMC_MTA_ROOT / "src"))
 
