@@ -10,7 +10,7 @@ lang: en-US
 ## Required: Core Package
 
 - `README.md` and `SUBMISSION_MANIFEST.md`;
-- `src/`, `scripts/`, `run_pipeline.py`, and `config.py`;
+- module `src/` and `config.py`, plus the project-level commands under `script/`;
 - `tests/`;
 - `docs/`, including the complete usage guide and canonical output index;
 - `docs/assets/amc-mta-data-flow.png` and its editable SVG source;

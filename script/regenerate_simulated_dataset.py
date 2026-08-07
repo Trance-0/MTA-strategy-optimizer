@@ -1,4 +1,9 @@
-"""Atomically regenerate the complete deterministic AMC MTA sample dataset."""
+"""Atomically reproduce the legacy deterministic five-segment sample dataset.
+
+This compatibility command preserves the committed fixture and its strategy
+entity bridge. New synthetic data generation uses ``generate_mta_sim_dataset``
+and the pinned ZheyuanWu submodule.
+"""
 
 from __future__ import annotations
 
@@ -6,7 +11,8 @@ import sys
 import tempfile
 from pathlib import Path
 
-AMC_MTA_ROOT = Path(__file__).resolve().parents[1]
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+AMC_MTA_ROOT = PROJECT_ROOT / "modules" / "mta_attribution"
 sys.path.insert(0, str(AMC_MTA_ROOT))
 sys.path.insert(0, str(AMC_MTA_ROOT / "src"))
 
@@ -23,8 +29,8 @@ from config import (  # noqa: E402
     REPORT_END_DATE, REPORT_START_DATE, SHAPLEY_OUTPUT_FILE,
     SIMULATED_MAX_USER_EVENT_ROWS, SIMULATED_PRIVACY_MIN_USERS,
 )
-from scripts.build_path_report import build_path_report  # noqa: E402
-from scripts.run_attribution_models import run_attribution_models  # noqa: E402
+from build_path_report import build_path_report  # noqa: E402
+from run_attribution_models import run_attribution_models  # noqa: E402
 from run_pipeline import match_outputs_by_name, publish_with_rollback  # noqa: E402
 from synthetic_event_pipeline import (  # noqa: E402
     ADS_FIELDS,

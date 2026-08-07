@@ -16,8 +16,8 @@ import sys
 from pathlib import Path
 
 
-MODULE_ROOT = Path(__file__).resolve().parents[1]
-PROJECT_ROOT = MODULE_ROOT.parents[1]
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+MODULE_ROOT = PROJECT_ROOT / "modules" / "mta_strategy_recommendation"
 sys.path.insert(0, str(PROJECT_ROOT))
 
 from modules.mta_strategy_recommendation.src.hierarchy_validator import (  # noqa: E402

@@ -40,7 +40,7 @@ Related files:
 | Responsibility | File |
 | --- | --- |
 | Core calculation | `src/budget_recommender.py` |
-| Generation entry point | `scripts/generate_initial_budget.py` |
+| Generation entry point | `script/generate_initial_budget.py` |
 | Strategy input | `data/simulated/strategy_request.json` |
 | Candidate pool | `data/simulated/candidate_pool.json` |
 | Current output | `outputs/initial_budget_recommendation.json` |

@@ -5,7 +5,7 @@ lang: en-US
 
 # Module Inventory
 
-`modules/` contains the currently runnable business implementations. Each module manages its own code, inputs, outputs, tests, and usage documentation.
+`modules/` contains the currently runnable business implementations. Each module owns reusable source code, inputs, outputs, and tests; all maintained commands are centralized under project-level `script/`.
 
 | Module | Purpose | Status | Entry point |
 | --- | --- | --- | --- |
@@ -18,16 +18,14 @@ lang: en-US
 ```text
 modules/<module>/
 ├── data/       # Module-specific inputs and samples
-├── docs/       # Data contracts and usage documentation
 ├── outputs/    # Reproducible runtime results
-├── scripts/    # Command-line scripts
 ├── src/        # Core implementation
 └── tests/      # Automated tests, when present
 ```
 
 For what each file receives and hands to the next, see [module and script data flow](data-flow.md). See the [English documentation home](/en/) for the current architecture, capability assessment, and reading order. External papers and references are stored under `docs/research/` and are not mixed with module runtime inputs.
 
-`MTA Standard` follows the same convention without a `scripts/` directory, because it is a library consumed by contributors rather than a command-line pipeline.
+The project-level `script/` directory contains the data-generation, attribution, strategy, validation, and documentation entry points. `external/mta_sim_dataset/` pins the ZheyuanWu generator used by the MTA Standard adapter.
 
 The boundary between the attribution and strategy modules is: MTA Attribution outputs five-segment touchpoint evidence within Group scope; for four fixed Campaigns under one Campaign Group, the strategy initializer produces only the new Ad Group count and budget `INITIAL_SEED`. It does not assign specific candidates or perform later optimization.
 

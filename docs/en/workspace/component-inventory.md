@@ -14,8 +14,9 @@ lang: en-US
 | Path construction | `modules/mta_attribution/src/path_report_builder.py` | Convert events to AMC-style anonymous aggregate paths |
 | Attribution engine | `modules/mta_attribution/src/attribution_contract.py` | Markov, Shapley, cost, and efficiency metrics |
 | Model governance | `modules/mta_attribution/src/attribution_model_comparison.py` | Five-segment support, gaps, three reliability criteria, overall diagnostics, and recommendation status |
-| Complete AMC entry point | `modules/mta_attribution/run_pipeline.py` | Rebuild derived inputs and the five model/governance outputs |
-| AMC command-line scripts | `modules/mta_attribution/scripts/` | Stepwise generation, attribution, comparison, and validation |
+| Primary data generator | `script/generate_mta_sim_dataset.py` | Run the pinned ZheyuanWu generator and adapt its output |
+| Complete AMC entry point | `script/run_pipeline.py` | Rebuild legacy derived inputs and the five model/governance outputs |
+| Project command-line scripts | `script/` | Data generation, attribution, comparison, strategy, validation, and documentation tooling |
 | AMC tests | `modules/mta_attribution/tests/` | Unit, contract, and end-to-end verification |
 | Ad Group count and budget generator | `modules/mta_strategy_recommendation/src/budget_recommender.py` | Calculate capacity counts, derive Campaign shares from MTA plus the AMC bridge, and divide them among anonymous new groups |
 | Campaign Group budget validator | `modules/mta_strategy_recommendation/src/hierarchy_validator.py` | Read-only AMC hash/scope validation, capacity regeneration, bridge checks, budget conservation, and budget-only schema validation |

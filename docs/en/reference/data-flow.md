@@ -34,6 +34,10 @@ Dependencies run one way. `mta_attribution` knows nothing about the other two; `
 
 ## Layer 0 — Simulated data generation <span class="status-label status-verified" aria-label="Verified"></span>
 
+The primary path runs `script/generate_mta_sim_dataset.py`. It invokes the pinned `external/mta_sim_dataset/ZheyuanWu` generator, keeps its original four-segment tables, aggregates the generated daily path windows into one report scope, and loads the result through `modules/mta_standard/src/mta_sim_generator_adapter.py`. Ground truth remains separate for evaluation.
+
+The following event pipeline is retained only to reproduce the repository's committed historical five-segment fixture and the entity bridge required by the current strategy example.
+
 Everything shipped in `data/simulated/` descends from one synthetic event stream, which is why the path report and the Ads report agree closely enough to pass alignment validation.
 
 ```text
@@ -46,7 +50,7 @@ synthetic_event_pipeline.generate_synthetic_user_events()
                                                         ─► amc_touchpoint_entity_aggregate_sample.csv
 ```
 
-`regenerate_simulated_dataset.py` runs all four as one atomic set.
+`script/regenerate_simulated_dataset.py` retains the legacy behavior and runs all four as one atomic set. New data generation uses `script/generate_mta_sim_dataset.py` and the pinned ZheyuanWu submodule.
 
 > [!IMPORTANT]
 > The four samples are **derived from a common source**, not written independently. Editing one by hand breaks alignment validation, because the Ads report would then describe delivery that the paths never saw. Regenerate the set instead.
@@ -62,7 +66,7 @@ synthetic_event_pipeline.generate_synthetic_user_events()
 
 ## Layer 1 — Path construction <span class="status-label status-verified" aria-label="Verified"></span>
 
-**`src/path_report_builder.py`**, driven by **`scripts/build_path_report.py`**.
+**`src/path_report_builder.py`**, driven by **`script/build_path_report.py`**.
 
 | In | Out |
 | --- | --- |
@@ -180,7 +184,7 @@ Reliability is a fixed three-criterion contract, and all three must pass:
 
 ## Layer 5 — Publication <span class="status-label status-verified" aria-label="Verified"></span>
 
-**`run_pipeline.py`** builds everything in one temporary directory and only then moves it into place.
+**`script/run_pipeline.py`** builds everything in one temporary directory and only then moves it into place.
 
 ```text
 tempfile.TemporaryDirectory()
@@ -192,7 +196,7 @@ tempfile.TemporaryDirectory()
 > [!WARNING]
 > This is the reason a failed run leaves no half-updated report. Writing directly would let a validation error in the comparison stage strand a new path report beside four stale model outputs, and nothing downstream would be able to tell.
 
-`scripts/validate_data_alignment.py` runs first and is also the public preflight command. It enforces one marketplace/account/currency scope per side, identical report windows, a continuous date grid, the same touchpoint set every day, and billing consistency between `cost_type` and `interaction_type`.
+`script/validate_data_alignment.py` runs first and is also the public preflight command. It enforces one marketplace/account/currency scope per side, identical report windows, a continuous date grid, the same touchpoint set every day, and billing consistency between `cost_type` and `interaction_type`.
 
 ---
 
@@ -274,7 +278,7 @@ Every file states its own role and position in its module docstring. This table 
 | File | Role |
 | --- | --- |
 | `config.py` | Default paths, report window, thresholds |
-| `run_pipeline.py` | End-to-end entry point with atomic publication |
+| `script/run_pipeline.py` | End-to-end entry point with atomic publication |
 | `src/touchpoint_key.py` | The canonical five-segment key and its component rules |
 | `src/synthetic_event_pipeline.py` | Synthetic event generation and derivation |
 | `src/simulated_touchpoints.py` | Touchpoint catalogue for simulation |
@@ -283,12 +287,13 @@ Every file states its own role and position in its module docstring. This table 
 | `src/markov_attribution_model.py` | Removal-effect model |
 | `src/shapley_attribution_model.py` | Path-level Shapley model |
 | `src/attribution_model_comparison.py` | Gaps, support, reliability, recommendation |
-| `scripts/build_path_report.py` | Path report CLI |
-| `scripts/run_attribution_models.py` | Attribution and comparison CLI |
-| `scripts/compare_attribution_models.py` | Re-compare two stored model CSVs |
-| `scripts/validate_data_alignment.py` | Preflight alignment check |
-| `scripts/regenerate_simulated_dataset.py` | Regenerate all four samples atomically |
-| `scripts/generate_simulated_*.py` | One sample each |
+| `script/build_path_report.py` | Path report CLI |
+| `script/run_attribution_models.py` | Attribution and comparison CLI |
+| `script/compare_attribution_models.py` | Re-compare two stored model CSVs |
+| `script/validate_data_alignment.py` | Preflight alignment check |
+| `script/regenerate_simulated_dataset.py` | Reproduce the four legacy samples atomically |
+| `script/generate_mta_sim_dataset.py` | Run and adapt the pinned ZheyuanWu generator |
+| `script/generate_simulated_*.py` | One legacy sample each |
 
 ### `modules/mta_standard/`
 
@@ -310,8 +315,8 @@ Every file states its own role and position in its module docstring. This table 
 | --- | --- |
 | `src/hierarchy_validator.py` | Input consistency and evidence lineage |
 | `src/budget_recommender.py` | Ad Group count and budget seed |
-| `scripts/generate_initial_budget.py` | Budget JSON CLI, with `--check-output` |
-| `scripts/validate_simulated_hierarchy.py` | Hierarchy preflight |
+| `script/generate_initial_budget.py` | Budget JSON CLI, with `--check-output` |
+| `script/validate_simulated_hierarchy.py` | Hierarchy preflight |
 
 ## References
 

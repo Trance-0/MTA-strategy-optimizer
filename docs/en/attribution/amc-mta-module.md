@@ -21,7 +21,7 @@ This module performs attribution analysis only. It is not responsible for budget
 
 ## Current Implementation <span class="status-label status-verified" aria-label="Verified"></span>
 
-The current implementation is a six-stage deterministic pipeline. The table follows the actual call order in `modules/mta_attribution/run_pipeline.py`, not merely the order in which the output files are presented.
+The current implementation is a six-stage deterministic pipeline. The table follows the actual call order in `script/run_pipeline.py`, not merely the order in which the output files are presented.
 
 | Stage | Code entry point | Algorithm responsibility | Why it is separated |
 | --- | --- | --- | --- |
@@ -181,8 +181,8 @@ Zero-total Outcomes remain empty because a normalized attribution recommendation
 Run from the repository root:
 
 ```bash
-python3 -B modules/mta_attribution/run_pipeline.py
-python3 -B modules/mta_attribution/scripts/validate_data_alignment.py
+uv run python -X utf8 -B script/run_pipeline.py
+uv run python -X utf8 -B script/validate_data_alignment.py
 ```
 
 Update the events and Amazon Ads input files, then run directly. The canonical pipeline determines its window automatically from the earliest through latest Ads `reportDate`; it supports any duration, cross-year windows, and leap days without changing configuration dates. Aggregated paths and all five model results are published together only after every artifact passes validation. On failure, the previous six derived artifacts remain in place, and raw inputs are not overwritten. See [running the module](../environment/amc-mta-usage.md) for custom file locations and complete validation rules.

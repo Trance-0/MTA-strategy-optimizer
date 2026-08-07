@@ -42,25 +42,26 @@ The path-table column names currently match, but the touchpoint contracts differ
 
 Consequently, “derived from the same source-code concept” does not mean “has the same schema.” Passing four-segment touchpoint paths directly to an implementation that requires five-segment keys breaks the join between path and performance tables and leaves no way to determine `IMPRESSION` versus `CLICK`.
 
-## Recommended Adaptation <span class="status-label status-recommendation" aria-label="Recommendation"></span>
+## Implemented Adaptation <span class="status-label status-verified" aria-label="Verified"></span>
 
-Build an explicit Dataset Adapter:
+The pinned submodule and explicit Dataset Adapter now:
 
 1. Validate the input version and column order.
 2. Generate `INTERACTION_TYPE` from real fields; never guess a default.
 3. Preserve `unitsSold` as an optional diagnostic field instead of forcing a mapping.
-4. Generate the entity Bridge required by this project.
+4. Keep entity-Bridge generation as a separate strategy integration boundary.
 5. Run attribution only after the complete data package passes validation.
 6. Isolate `simulation_ground_truth` in the evaluation workflow.
 
-This lets the two generated tables support prediction and attribution validation while preserving Ground Truth as an independent “answer table.”
+The adapter runs the ZheyuanWu generator, preserves its original four-segment files, aggregates daily path windows into one local model scope, and preserves Ground Truth as an independent answer table. See [Generate MTA-SIM data](../environment/mta-sim-generation.md).
 
 ## Adapter Status <span class="status-label status-verified" aria-label="Verified"></span>
 
-`modules/mta_standard/` implements items 1, 2, 3, 5, and 6 of the recommendation above:
+`modules/mta_standard/` implements the generation boundary and items 1, 2, 3, 5, and 6 above:
 
 | Recommendation | Where it is implemented |
 | --- | --- |
+| Run the reviewed generator source | `mta_sim_generator_adapter` invokes the pinned `external/mta_sim_dataset/ZheyuanWu` pipeline |
 | 1. Validate column order | `dataloader` requires the exact contract header for each table |
 | 2. Never guess `INTERACTION_TYPE` | `SimulatorConfig` supplies it explicitly and rejects missing, ambiguous, or colliding mappings |
 | 3. Preserve `unitsSold` | Kept verbatim on the annotated performance rows as a diagnostic |

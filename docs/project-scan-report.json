@@ -202,5 +202,25 @@
       "docs/.archive/project-scan-report-2026-08-07-upstream-final.json",
       "docs/.archive/workspace-file-inventory-2026-08-07-upstream-final.json"
     ]
+  },
+  "migration_2026_08_07_mta_sim_submodule": {
+    "submodule": {
+      "path": "external/mta_sim_dataset",
+      "url": "https://github.com/Trance-0/MTA-SIM-dataset.git",
+      "commit": "cc698a12a333919418a818e6cc450da9cf454682",
+      "generator": "external/mta_sim_dataset/ZheyuanWu"
+    },
+    "data_generation": "The primary command now invokes the pinned ZheyuanWu baseline or regional generator, preserves its four-segment tables, aggregates daily path windows for the local single-scope model contract, and keeps ground truth evaluation-only.",
+    "script_migration": "All project-owned Python and documentation commands moved to project-level script/. Obsolete modules/*/scripts and docs/scripts locations contain no tracked files. Vendored .agents and _bmad tool internals remain in their required package locations.",
+    "verification": {
+      "attribution_tests": "107 passed",
+      "standardized_interface_tests": "138 passed, including two real submodule adapter tests",
+      "strategy_tests": "34 passed",
+      "local_total": "279 passed",
+      "external_tests": "10 baseline and 6 regional tests passed",
+      "generator_runs": "baseline and regional toy configurations generated and adapted",
+      "legacy_compatibility": "11 relocated Python commands passed --help; ten-artifact regeneration passed",
+      "external_limit": "The pinned external AGENTS.md names scripts/check_public_release.py, but that file is absent at the pinned commit."
+    }
   }
 }

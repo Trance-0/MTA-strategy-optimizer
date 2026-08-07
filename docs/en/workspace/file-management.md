@@ -25,7 +25,7 @@ Research papers and platform originals are not AMC MTA inputs. Historical design
 ## Stable Paths and Entry Points
 
 - The repository entry remains `README.md`; `docs/index.md` redirects to the active English site.
-- AMC MTA runs from `modules/mta_attribution/run_pipeline.py`; module explanations and contracts live in the bilingual Attribution, Datasets, and Environment sections.
+- All maintained commands run from project-level `script/`; reusable module logic stays under the owning `src/` directory. Module explanations and contracts live in the bilingual Attribution, Datasets, and Environment sections.
 - Strategy Initializer documentation lives in the bilingual Strategy section. Its two inputs remain in `modules/mta_strategy_recommendation/data/simulated/`; the single canonical budget result remains `modules/mta_strategy_recommendation/outputs/initial_budget_recommendation.json` and is reused directly by tests.
 - Current strategy contracts and the reproducible calculation belong under `docs/en/strategy/` with preserved Chinese counterparts under `docs/zh/strategy/`. Future research such as `optimization-plan.md` must remain explicitly marked as unimplemented and must not be placed in runtime `outputs/` or presented as current capability.
 - Bilingual multi-page sections use `index.md`. External binary originals are linked from bilingual research indexes.

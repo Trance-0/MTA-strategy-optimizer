@@ -8,13 +8,14 @@
 - Do not delete or overwrite the preserved Chinese sources when updating English documentation.
 - Re-enable the Chinese site only when the user explicitly requests it.
 
-## Agent helper scripts
+## Script placement
 
-- Put every helper script an agent writes for its own use in the project-root `/script` folder. This includes one-off inspection, migration, scratch, and debugging scripts.
-- `/script` is listed in `.gitignore`. Never commit its contents and never push them to the remote.
-- Do not place agent helper scripts anywhere else. In particular, do not add them to `modules/*/scripts/` or `docs/scripts/`, which hold product command-line entry points and documentation build tooling respectively.
-- Do not create a new `script` or `scripts` directory outside `/script` for agent-only work, and do not remove the existing product `scripts/` directories.
-- Delete a helper script once its task is finished. If it turns out to be worth keeping, promote it into the relevant module's `scripts/` directory as a documented product entry point in its own commit, rather than leaving it in `/script`.
+- Keep every maintained project command-line entry point in the project-root `/script` directory. Its contents are tracked product code.
+- Do not create project-owned `scripts/` or `script/` directories below `modules/` or `docs/`; those obsolete locations are ignored.
+- Keep reusable business logic in the owning module's `src/` directory. Root scripts may import that logic but source modules must not import command wrappers.
+- Installed `.agents` and `_bmad` tool bundles retain their internal `scripts/` directories because those paths are part of the vendored tools; do not relocate them as project commands.
+- Put one-off agent inspection, migration, scratch, and debugging files in the ignored project-root `/.agent-scratch/` directory and delete them when finished.
+- Start every maintained Python script with a module docstring that states its command purpose and place in the data flow. Start every maintained JavaScript script with an equivalent file-level documentation comment.
 
 ## Module layout
 

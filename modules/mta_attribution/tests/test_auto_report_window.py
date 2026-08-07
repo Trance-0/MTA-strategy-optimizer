@@ -17,8 +17,9 @@ from unittest.mock import patch
 
 
 ROOT = Path(__file__).resolve().parents[1]
+PROJECT_ROOT = ROOT.parents[1]
 SRC = ROOT / "src"
-SCRIPTS = ROOT / "scripts"
+SCRIPTS = PROJECT_ROOT / "script"
 sys.path[:0] = [str(ROOT), str(SRC), str(SCRIPTS)]
 
 from attribution_contract import read_csv, write_csv  # noqa: E402

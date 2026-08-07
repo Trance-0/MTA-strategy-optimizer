@@ -12,7 +12,7 @@ Run all commands below from the repository root. See the [data contract](../data
 Complete pipeline:
 
 ```bash
-python3 -B modules/mta_attribution/run_pipeline.py
+uv run python -X utf8 -B script/run_pipeline.py
 ```
 
 Replace only the events and Amazon Ads input files, then run the command again. The canonical pipeline automatically uses the earliest through latest Ads `reportDate` as its window; `config.py` does not need to be changed. The path report and all five model outputs are completed and validated in a temporary directory before being published together. If input validation fails, no valid paths exist, or publishing fails, the six existing derived artifacts remain unchanged. The program never overwrites raw inputs.
@@ -20,7 +20,7 @@ Replace only the events and Amazon Ads input files, then run the command again. 
 Use custom input and output locations:
 
 ```bash
-python3 -B modules/mta_attribution/run_pipeline.py \
+uv run python -X utf8 -B script/run_pipeline.py \
   --events-file path/to/amc_touchpoint_events.csv \
   --amazon-ads-report path/to/amazon_ads_report.csv \
   --path-report path/to/amc_path_report.csv \
@@ -30,13 +30,13 @@ python3 -B modules/mta_attribution/run_pipeline.py \
 Build only the aggregated paths:
 
 ```bash
-python3 -B modules/mta_attribution/scripts/build_path_report.py
+uv run python -X utf8 -B script/build_path_report.py
 ```
 
 This command also detects its window from the Ads input by default. Override any file path separately when necessary:
 
 ```bash
-python3 -B modules/mta_attribution/scripts/build_path_report.py \
+uv run python -X utf8 -B script/build_path_report.py \
   --events-file path/to/amc_touchpoint_events.csv \
   --amazon-ads-report path/to/amazon_ads_report.csv \
   --output-file path/to/amc_path_report.csv
@@ -45,21 +45,21 @@ python3 -B modules/mta_attribution/scripts/build_path_report.py \
 Atomically rebuild all ten simulated and attribution artifacts from the same user-event master table:
 
 ```bash
-python3 -B modules/mta_attribution/scripts/regenerate_simulated_dataset.py
+uv run python -X utf8 -B script/regenerate_simulated_dataset.py
 ```
 
-You can run `generate_simulated_synthetic_user_events.py`, `generate_simulated_amc_touchpoint_events.py`, `generate_simulated_amazon_ads_report.py`, or `generate_simulated_touchpoint_entity_aggregate.py` separately to inspect an individual data layer. Canonical samples should be produced with the complete regeneration command so that all layers derive from the same event batch.
+You can run `script/generate_simulated_synthetic_user_events.py`, `script/generate_simulated_amc_touchpoint_events.py`, `script/generate_simulated_amazon_ads_report.py`, or `script/generate_simulated_touchpoint_entity_aggregate.py` separately to inspect an individual legacy data layer. These compatibility commands reproduce the committed five-segment fixture. New synthetic datasets should use the pinned ZheyuanWu command documented in [Generate MTA-SIM data](mta-sim-generation.md).
 
 Run attribution only on an existing aggregated path report:
 
 ```bash
-python3 -B modules/mta_attribution/scripts/run_attribution_models.py
+uv run python -X utf8 -B script/run_attribution_models.py
 ```
 
 Strictly recompute the three comparison artifacts from existing Markov/Shapley files:
 
 ```bash
-python3 -B modules/mta_attribution/scripts/compare_attribution_models.py
+uv run python -X utf8 -B script/compare_attribution_models.py
 ```
 
 This command removes leading and trailing whitespace from field names and values while preserving spaces inside strings. Empty or duplicate headers after cleanup, missing or extra columns, schema mismatches, invalid model names, inconsistent touchpoint sets, non-finite values, negative values, or non-conserving shares/attribution values still raise errors immediately.
@@ -67,7 +67,7 @@ This command removes leading and trailing whitespace from field names and values
 Optional parameters:
 
 ```bash
-python3 -B modules/mta_attribution/scripts/run_attribution_models.py \
+uv run python -X utf8 -B script/run_attribution_models.py \
   --amc-report path/to/report.csv \
   --amazon-ads-report path/to/amazon_ads_report.csv \
   --output-dir path/to/output
@@ -76,7 +76,7 @@ python3 -B modules/mta_attribution/scripts/run_attribution_models.py \
 Validate the window, account, currency, touchpoint set, and daily coverage of five-segment interactions across AMC and Amazon Ads:
 
 ```bash
-python3 -B modules/mta_attribution/scripts/validate_data_alignment.py
+uv run python -X utf8 -B script/validate_data_alignment.py
 ```
 
 ## Default Inputs and Outputs

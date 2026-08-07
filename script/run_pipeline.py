@@ -24,6 +24,11 @@ import sys
 import tempfile
 from pathlib import Path
 
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+AMC_MTA_ROOT = PROJECT_ROOT / "modules" / "mta_attribution"
+sys.path.insert(0, str(AMC_MTA_ROOT))
+sys.path.insert(0, str(AMC_MTA_ROOT / "src"))
+
 from config import (
     AMAZON_ADS_REPORT_FILE,
     AMC_REPORT_FILE,
@@ -38,12 +43,10 @@ from config import (
     SHAPLEY_OUTPUT_FILE,
 )
 
-sys.path.insert(0, str(AMC_MTA_ROOT / "src"))
-
 from attribution_contract import read_csv  # noqa: E402
-from scripts.build_path_report import build_path_report  # noqa: E402
-from scripts.run_attribution_models import run_attribution_models  # noqa: E402
-from scripts.validate_data_alignment import infer_ads_report_window  # noqa: E402
+from build_path_report import build_path_report  # noqa: E402
+from run_attribution_models import run_attribution_models  # noqa: E402
+from validate_data_alignment import infer_ads_report_window  # noqa: E402
 
 
 def publish_with_rollback(

@@ -1,8 +1,11 @@
-"""Generate the touchpoint-to-delivery-entity bridge sample.
+"""Generate the legacy touchpoint-to-delivery-entity bridge sample.
 
 Produces the only file that maps a five-segment touchpoint onto Campaigns and
 historical Ad Groups. Without it, attribution shares cannot be carried into the
 strategy module.
+
+MTA-SIM does not define this project-specific strategy bridge, so the command
+is retained for the current budget fixture.
 
 Data flow: synthetic events -> `amc_touchpoint_entity_aggregate_sample.csv`
 -> `mta_strategy_recommendation`.
@@ -15,7 +18,8 @@ import sys
 from pathlib import Path
 from typing import Mapping, Sequence
 
-AMC_MTA_ROOT = Path(__file__).resolve().parents[1]
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+AMC_MTA_ROOT = PROJECT_ROOT / "modules" / "mta_attribution"
 sys.path.insert(0, str(AMC_MTA_ROOT))
 sys.path.insert(0, str(AMC_MTA_ROOT / "src"))
 

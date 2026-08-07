@@ -264,8 +264,8 @@ Lines 1 and 2 conserve each Campaign allocation across its new groups. Lines 3 a
 ## Run
 
 ```bash
-python3 -B modules/mta_strategy_recommendation/scripts/generate_initial_budget.py --check-output
-python3 -B modules/mta_strategy_recommendation/scripts/validate_simulated_hierarchy.py
+uv run python -X utf8 -B script/generate_initial_budget.py --check-output
+uv run python -X utf8 -B script/validate_simulated_hierarchy.py
 python3 -B -m unittest discover -s modules/mta_strategy_recommendation/tests -p 'test_*.py'
 ```
 

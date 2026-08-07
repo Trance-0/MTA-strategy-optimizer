@@ -1,1 +1,0 @@
-"""AMC MTA command scripts."""

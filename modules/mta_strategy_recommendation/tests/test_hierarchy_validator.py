@@ -150,7 +150,7 @@ class BudgetOnlyStrategyTests(unittest.TestCase):
         command = [
             sys.executable,
             "-B",
-            str(MODULE_ROOT / "scripts" / "generate_initial_budget.py"),
+            str(PROJECT_ROOT / "script" / "generate_initial_budget.py"),
         ]
         for option in ("--check-output", "--check-fixture"):
             with self.subTest(option=option):

@@ -19,8 +19,9 @@ from unittest.mock import patch
 
 
 ROOT = Path(__file__).resolve().parents[1]
+PROJECT_ROOT = ROOT.parents[1]
 SRC = ROOT / "src"
-SCRIPTS = ROOT / "scripts"
+SCRIPTS = PROJECT_ROOT / "script"
 sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(SRC))
 sys.path.insert(0, str(SCRIPTS))
