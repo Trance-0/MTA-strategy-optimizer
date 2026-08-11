@@ -31,9 +31,7 @@ The [data contract](../datasets/amc-data-contract.md) is authoritative for compl
 
 The common join key is:
 
-```text
-AD_PRODUCT:FORMAT:PLACEMENT:CREATIVE:INTERACTION_TYPE
-```
+The common join key is `AD_PRODUCT:FORMAT:PLACEMENT:CREATIVE:INTERACTION_TYPE`.
 
 `INTERACTION_TYPE` may only be `IMPRESSION` or `CLICK`. They are independent touchpoints. CPC cost belongs only to clicks, CPM cost only to impressions, and non-billable interactions have zero cost.
 
@@ -49,12 +47,14 @@ Markov uses path order and transition dependence. Path-level Shapley calculates 
 
 All three attributed values must separately conserve to their AMC totals, and shares must equal 1 for a nonzero Outcome. Outputs also join Amazon Ads performance, cost, and efficiency metrics:
 
-```text
-ROAS = attributed_revenue / cost
-ROI  = (attributed_revenue - cost) / cost
-CPA  = cost / attributed_purchase_count
-cost_per_converted_user = cost / attributed_converted_users
-```
+$$
+\begin{aligned}
+\operatorname{ROAS}&=\frac{\text{attributed revenue}}{\text{cost}},\\
+\operatorname{ROI}&=\frac{\text{attributed revenue}-\text{cost}}{\text{cost}},\\
+\operatorname{CPA}&=\frac{\text{cost}}{\text{attributed purchase count}},\\
+\text{cost per converted user}&=\frac{\text{cost}}{\text{attributed converted users}}.
+\end{aligned}
+$$
 
 When cost is 0, ROAS and ROI are empty. When attributed orders or attributed purchasing users are 0, CPA or `cost_per_converted_user`, respectively, is empty instead of infinite.
 

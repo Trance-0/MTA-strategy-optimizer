@@ -19,13 +19,7 @@ Four models ship in this repository. This page explains how each one is verified
 
 The three layers answer different questions, and none substitutes for another.
 
-```mermaid
-flowchart TD
-  A["1. Unit and contract tests<br/>Is one model internally correct?"]
-  B["2. Governance comparison<br/>Do the two production models agree?"]
-  C["3. Ground-truth evaluation<br/>Does a model recover the known mechanism?"]
-  A --> B --> C
-```
+<DrawioDiagram base="./model-testing-layers" alt="Three layers of model assurance" />
 
 | Layer | Question | Where it runs | Needs ground truth |
 | --- | --- | --- | --- |
@@ -133,12 +127,11 @@ Three artifacts result:
 
 Current shipped sample:
 
-```text
-outcome          touchpoints    tvd     spearman_rho  top_k  reliability
-converted_users      17      0.019451   0.889025305    0.6   RELIABLE
-purchase_count       17      0.019750   0.911097657    0.6   RELIABLE
-revenue              17      0.020585   0.931372549    0.8   RELIABLE
-```
+| Outcome | Touchpoints | Total Variation Distance (TVD) | Spearman's Rho (ρ) | Top-K overlap | Reliability |
+| --- | ---: | ---: | ---: | ---: | --- |
+| `converted_users` | 17 | 0.019451 | 0.889025305 | 0.6 | `RELIABLE` |
+| `purchase_count` | 17 | 0.019750 | 0.911097657 | 0.6 | `RELIABLE` |
+| `revenue` | 17 | 0.020585 | 0.931372549 | 0.8 | `RELIABLE` |
 
 Reliability requires all three criteria:
 
@@ -208,22 +201,21 @@ for report in compare_models(
 
 On the shipped test fixture this produces:
 
-```text
-model_id                       mae      rmse       tvd    rho  top_k
-dnn_credit                0.035294  0.037512  0.052941   1.00   1.00
-markov_removal_effect     0.044444  0.047140  0.066667   1.00   1.00
-path_level_shapley        0.035294  0.037512  0.052941   1.00   1.00
-uniform_credit            0.111111  0.124722  0.166667   None   1.00
-```
+| Model ID | Mean Absolute Error (MAE) | Root Mean Squared Error (RMSE) | Total Variation Distance (TVD) | Spearman's Rho (ρ) | Top-K overlap |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| `dnn_credit` | 0.035294 | 0.037512 | 0.052941 | 1.00 | 1.00 |
+| `markov_removal_effect` | 0.044444 | 0.047140 | 0.066667 | 1.00 | 1.00 |
+| `path_level_shapley` | 0.035294 | 0.037512 | 0.052941 | 1.00 | 1.00 |
+| `uniform_credit` | 0.111111 | 0.124722 | 0.166667 | `None` | 1.00 |
 
 | Metric | Meaning | Better |
 | --- | --- | --- |
-| `credit_share_mae` | Mean absolute error against ground-truth shares | Lower |
-| `credit_share_rmse` | Root mean squared error; penalises large single errors | Lower |
-| `total_variation_distance` | Half the L1 distance between share vectors | Lower |
-| `spearman_rho` | Rank correlation; `None` when undefined | Higher |
-| `top_k_overlap` | Overlap of the leading `k` touchpoints | Higher |
-| `conservation_error` | Deviation of the share sum from its required total | Zero |
+| `credit_share_mae` | [Mean Absolute Error (MAE)](/en/reference/definitions#mae-mean-absolute-error) against ground-truth shares | Lower |
+| `credit_share_rmse` | [Root Mean Squared Error (RMSE)](/en/reference/definitions#rmse-root-mean-squared-error); penalises large single errors | Lower |
+| `total_variation_distance` | [Total Variation Distance (TVD)](/en/reference/definitions#tvd-total-variation-distance) — half the L1 distance between share vectors | Lower |
+| `spearman_rho` | [Spearman's Rho (ρ)](/en/reference/definitions#spearmans-rho-spearman-rank-correlation-ρ) — rank correlation; `None` when undefined | Higher |
+| `top_k_overlap` | [Top-K overlap](/en/reference/definitions#top-k-overlap) — overlap of the leading `k` touchpoints | Higher |
+| `conservation_error` | [Conservation error](/en/reference/definitions#conservation-error) — deviation of the share sum from its required total | Zero |
 | `runtime_seconds` | Wall-clock duration of `attribute` | Lower |
 
 ### Reading that table honestly

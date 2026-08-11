@@ -13,6 +13,4 @@ This section maps each maintained `modules/*/src/*.py` implementation to one pag
 | `mta_standard` | Loading, adapters, registry, execution, output validation, and evaluation | [Standard framework](./mta_standard/) |
 | `mta_strategy_recommendation` | Hierarchy validation and budget initialization | [Strategy implementation](./mta_strategy_recommendation/) |
 
-![Module ownership and execution flow](../../assets/architecture/module-ownership.drawio.svg)
-
-[Edit the Draw.io source](../../assets/architecture/module-ownership.drawio)
+<DrawioDiagram base="./module-ownership" alt="Module ownership and execution flow" />

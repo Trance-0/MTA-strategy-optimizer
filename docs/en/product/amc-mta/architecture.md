@@ -9,11 +9,15 @@ lang: en-US
 
 The current project is a single-process, standard-library-first, CSV-driven AMC MTA batch module. Its value is not a platform shell; it is a reproducible and validated loop connecting anonymous aggregate paths, dual-model attribution, Amazon Ads cost, and governance diagnostics.
 
-![Parallel module ownership and data flow](../../../assets/architecture/module-ownership.drawio.svg)
-
-[Edit the Draw.io source](../../../assets/architecture/module-ownership.drawio)
+<DrawioDiagram base="/en/implementation/module-ownership" alt="Parallel module ownership and data flow" />
 
 In real use, user events must become anonymous aggregates inside the AMC clean room. This repository accepts only aggregates that satisfy privacy thresholds; its user-event source and conceptual events are test fixtures rather than exportable real AMC user detail.
+
+## Current Data Flow
+
+<DrawioDiagram base="./data-flow" alt="Current AMC MTA and standardized model data flow" />
+
+The upper lane is the canonical AMC evidence and governance pipeline. It publishes Markov/Shapley evidence for the Strategy Initializer and does not treat the initial budget seed as an optimized result. The lower lane is the standardized model-development framework: Uniform and DNN participate in contract validation and synthetic ground-truth evaluation, but they do not enter the current five-file AMC governance decision. DNN is a learned Shapley surrogate that can produce relative shares for planned touchpoints; it is not an independent causal model or the official display basis.
 
 ## Component Responsibilities
 
@@ -36,9 +40,7 @@ The canonical entry point does not use simulated dates from configuration. Users
 
 ### Five-Segment Touchpoint
 
-```text
-AD_PRODUCT:FORMAT:PLACEMENT:CREATIVE:INTERACTION_TYPE
-```
+The canonical key is `AD_PRODUCT:FORMAT:PLACEMENT:CREATIVE:INTERACTION_TYPE`.
 
 Advertising components contain uppercase letters, digits, and underscores. Missing placement or creative becomes `UNSPECIFIED` inside the normalized key. The fifth segment is `IMPRESSION` or `CLICK`. AMC paths, Amazon Ads rows, and outputs share the complete key, so exposure, click, and cost remain distinct.
 

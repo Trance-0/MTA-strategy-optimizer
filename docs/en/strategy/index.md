@@ -10,12 +10,12 @@ lang: en-US
 
 The public `generate_budget_recommendation()` function in `modules/mta_strategy_recommendation/src/budget_recommender.py` explicitly returns a deterministic, **unoptimized** Ad Group count and budget starting point.
 
-```text
-Recommended MTA shares + AMC entity Bridge → Campaign Outcome contribution
-Campaign Outcome contribution × Outcome weight → Campaign MTA score
-Candidate count ÷ capacity rule → new Ad Group count
-Campaign budget ÷ new-group count → initial budget per group
-```
+The current strategy proceeds in four steps:
+
+1. combine recommended MTA shares with the AMC entity bridge to derive Campaign Outcome contributions;
+2. weight those contributions to obtain each Campaign MTA score;
+3. apply capacity rules to candidate counts to determine the new Ad Group count; and
+4. divide each Campaign budget by its new-group count to obtain the initial budget per group.
 
 For Campaign (c):
 

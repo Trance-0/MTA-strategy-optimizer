@@ -7,13 +7,11 @@ lang: en-US
 
 All dynamic metrics in this directory derive from one user-event master table used only for local demonstration:
 
-```text
-synthetic_user_events_sample.csv
-├── amc_touchpoint_events_sample.csv
-│   └── amc_mta_path_report_raw_sample.csv
-├── amazon_ads_report_sample.csv
-└── amc_touchpoint_entity_aggregate_sample.csv
-```
+`synthetic_user_events_sample.csv` is the common source for:
+
+- `amc_touchpoint_events_sample.csv`, which then produces `amc_mta_path_report_raw_sample.csv`;
+- `amazon_ads_report_sample.csv`; and
+- `amc_touchpoint_entity_aggregate_sample.csv`.
 
 | File | Purpose |
 | --- | --- |

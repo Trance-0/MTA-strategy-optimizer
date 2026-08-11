@@ -8,26 +8,7 @@ lang: en-US
 
 ## Model Architecture <span class="status-label status-verified" aria-label="Verified"></span>
 
-```mermaid
-flowchart TB
-    subgraph attribution["Attribution layer · historical attribution"]
-      P["AMC aggregated paths"] --> M["WeightedMarkovAttribution"]
-      P --> S["AggregatedShapleyAttribution"]
-      M --> C["Model comparison and recommended shares"]
-      S --> C
-    end
-    subgraph strategy["Strategy layer · new Campaign initialization"]
-      C --> B["Touchpoint-to-Campaign/historical-Ad-Group Bridge"]
-      E["Candidate pool and capacity rules"] --> N["New Ad Group count"]
-      B --> W["Campaign budget shares"]
-      N --> Q["Initial budget split equally within Campaign"]
-      W --> Q
-    end
-    subgraph future["Optimization layer · pending implementation"]
-      Q --> R["Ad Group budget-response model"]
-      R --> O["Constrained optimizer"]
-    end
-```
+<DrawioDiagram base="./project-structure" alt="Project model architecture" />
 
 ## Directory Responsibilities <span class="status-label status-verified" aria-label="Verified"></span>
 

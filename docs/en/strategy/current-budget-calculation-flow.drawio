@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="Electron" agent="Codex" version="31.1.5">
+  <diagram id="budget-calculation-flow" name="Budget calculation flow">
+    <mxGraphModel page="1" pageScale="1" pageWidth="1200" pageHeight="900" grid="1" gridSize="10" arrows="1" connect="1">
+      <root>
+        <mxCell id="0"/><mxCell id="1" parent="0"/>
+        <mxCell id="title" value="Current initial-budget calculation flow" style="text;html=1;align=center;fontSize=26;fontStyle=1;" vertex="1" parent="1"><mxGeometry x="300" y="30" width="600" height="45" as="geometry"/></mxCell>
+        <mxCell id="mta" value="&lt;b&gt;MTA attribution&lt;/b&gt;&lt;br&gt;17 touchpoints × 3 outcomes" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#D5E8D4;strokeColor=#82B366;fontSize=16;" vertex="1" parent="1"><mxGeometry x="50" y="135" width="260" height="100" as="geometry"/></mxCell>
+        <mxCell id="bridge" value="&lt;b&gt;AMC Entity Bridge&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF2CC;strokeColor=#D6B656;fontSize=16;" vertex="1" parent="1"><mxGeometry x="390" y="145" width="230" height="80" as="geometry"/></mxCell>
+        <mxCell id="contribution" value="&lt;b&gt;Campaign outcome contributions&lt;/b&gt;&lt;br&gt;converted users · purchases · revenue" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF2CC;strokeColor=#D6B656;fontSize=16;" vertex="1" parent="1"><mxGeometry x="700" y="135" width="300" height="100" as="geometry"/></mxCell>
+        <mxCell id="score" value="&lt;b&gt;Campaign MTA composite score&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E1D5E7;strokeColor=#9673A6;fontSize=16;" vertex="1" parent="1"><mxGeometry x="700" y="315" width="300" height="90" as="geometry"/></mxCell>
+        <mxCell id="share" value="&lt;b&gt;Campaign budget share&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E1D5E7;strokeColor=#9673A6;fontSize=16;" vertex="1" parent="1"><mxGeometry x="700" y="485" width="300" height="90" as="geometry"/></mxCell>
+        <mxCell id="amount" value="&lt;b&gt;Campaign budget amount&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E1D5E7;strokeColor=#9673A6;fontSize=16;" vertex="1" parent="1"><mxGeometry x="700" y="655" width="300" height="90" as="geometry"/></mxCell>
+        <mxCell id="candidates" value="&lt;b&gt;Candidate counts&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F8CECC;strokeColor=#B85450;fontSize=16;" vertex="1" parent="1"><mxGeometry x="50" y="365" width="240" height="80" as="geometry"/></mxCell>
+        <mxCell id="capacity" value="&lt;b&gt;Capacity rules&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F8CECC;strokeColor=#B85450;fontSize=16;" vertex="1" parent="1"><mxGeometry x="50" y="505" width="240" height="80" as="geometry"/></mxCell>
+        <mxCell id="count" value="&lt;b&gt;Recommended Ad Group count&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F8CECC;strokeColor=#B85450;fontSize=16;" vertex="1" parent="1"><mxGeometry x="380" y="425" width="260" height="95" as="geometry"/></mxCell>
+        <mxCell id="split" value="&lt;b&gt;Equal split within Campaign&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DAE8FC;strokeColor=#6C8EBF;fontSize=16;" vertex="1" parent="1"><mxGeometry x="380" y="655" width="260" height="90" as="geometry"/></mxCell>
+        <mxCell id="budget" value="&lt;b&gt;Initial daily budget&lt;/b&gt;&lt;br&gt;for each new Ad Group" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#D5E8D4;strokeColor=#82B366;fontSize=17;" vertex="1" parent="1"><mxGeometry x="380" y="795" width="620" height="90" as="geometry"/></mxCell>
+        <mxCell id="e1" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;strokeWidth=2;" edge="1" parent="1" source="mta" target="bridge"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e2" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;strokeWidth=2;" edge="1" parent="1" source="bridge" target="contribution"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e3" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;strokeWidth=2;" edge="1" parent="1" source="contribution" target="score"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e4" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;strokeWidth=2;" edge="1" parent="1" source="score" target="share"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e5" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;strokeWidth=2;" edge="1" parent="1" source="share" target="amount"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e6" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;strokeWidth=2;" edge="1" parent="1" source="candidates" target="count"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e7" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;strokeWidth=2;" edge="1" parent="1" source="capacity" target="count"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e8" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;strokeWidth=2;" edge="1" parent="1" source="count" target="split"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e9" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;strokeWidth=2;" edge="1" parent="1" source="amount" target="split"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e10" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;strokeWidth=2;" edge="1" parent="1" source="split" target="budget"><mxGeometry relative="1" as="geometry"/></mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

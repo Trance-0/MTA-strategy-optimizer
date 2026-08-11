@@ -7,11 +7,7 @@ lang: en-US
 
 This module generates only the **count and initial budget** of new Ad Groups. It does not generate Keyword/SKU assignments, Targeting, actions, or strategy roles, and it does not optimize, assess causal incrementality, or activate automatically.
 
-```text
-Candidate counts + product capacity -> new Ad Group count for each Campaign
-MTA Outcomes + AMC entity bridge -> Campaign budget shares
-Campaign share / anonymous new-group count -> initial budget for each Ad Group
-```
+Candidate counts and product capacities determine each Campaign's new Ad Group count. MTA Outcomes and the AMC entity bridge determine Campaign budget shares. Each Campaign share is then divided by its anonymous new-group count to obtain the initial budget for every new Ad Group.
 
 The current Campaign Group always contains four Campaigns, using Sponsored Products (SP), Sponsored Brands (SB), Sponsored Display (SD), and Amazon Demand-Side Platform (DSP) respectively. The actual capacity result for the v4 sample is `1/1/1/1`; it is calculated from the inputs rather than hard-coded.
 
@@ -243,12 +239,14 @@ If a Campaign's score-based budget is below its calculated minimum, the code ret
 
 The final invariant block verifies the following relationships:
 
-```text
-sum(group_shares) == campaign_share                                 # 1
-sum(group_budgets) == campaign_budget                              # 2
-sum(campaign_shares) == 1.0                                        # 3
-sum(campaign_budgets) == budget_seed_total                          # 4
-```
+$$
+\begin{aligned}
+\sum_{g\in c}s_{c,g}&=s_c, &&\text{(1)}\\
+\sum_{g\in c}B_{c,g}&=B_c, &&\text{(2)}\\
+\sum_c s_c&=1, &&\text{(3)}\\
+\sum_c B_c&=B_{\mathrm{seed}}. &&\text{(4)}
+\end{aligned}
+$$
 
 Lines 1 and 2 conserve each Campaign allocation across its new groups. Lines 3 and 4 conserve the complete Campaign Group in proportional and monetary units. The implementation uses `math.fsum()` and explicit absolute tolerances to account for floating-point representation while still rejecting material drift.
 

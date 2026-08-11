@@ -9,9 +9,7 @@ lang: en-US
 
 This repository has three layers—a business-data pipeline, a versioned knowledge base, and an embedded development toolchain. It is not a web service, database application, or deployment platform.
 
-![Parallel module ownership and data flow](../../assets/architecture/module-ownership.drawio.svg)
-
-[Edit the Draw.io source](../../assets/architecture/module-ownership.drawio)
+<DrawioDiagram base="/en/implementation/module-ownership" alt="Parallel module ownership and data flow" />
 
 Historical tool outputs are reference material only. Trance-0 development does not use the BMad workflow unless a future task explicitly requests it, and neither `.agents` nor `_bmad` enters the runtime calculation path.
 
@@ -33,15 +31,7 @@ The Strategy Initializer also uses only the Python standard library. It retains 
 
 The authority order is:
 
-```text
-runtime code and tests
-  > module data/governance contracts
-  > reproducible outputs
-  > current architecture and capability assessments
-  > project introductions
-  > research notes
-  > historical product documents and frozen specifications
-```
+Authority descends from runtime code and tests, through module data and governance contracts, reproducible outputs, current architecture and capability assessments, project introductions, research notes, and finally historical product documents and frozen specifications.
 
 This order resolves cases where an early vision is broader than the implementation or an old specification records superseded fields and grains. [Workspace file-location management](file-management.md) defines file responsibilities, stable entry points, and archival flow.
 

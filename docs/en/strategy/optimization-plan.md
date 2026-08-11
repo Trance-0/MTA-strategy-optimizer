@@ -22,11 +22,7 @@ Here, “strategy” primarily means:
 
 The current business hierarchy is:
 
-```text
-Campaign Group
-└── Campaign
-    └── Ad Group
-```
+The decision hierarchy is Campaign Group → Campaign → Ad Group.
 
 Established business conditions:
 
@@ -43,9 +39,7 @@ This problem concerns the initial budget strategy for the next Campaign Group. W
 
 Current MTA touchpoints are primarily composed of advertising fields:
 
-```text
-AD_PRODUCT:FORMAT:PLACEMENT:CREATIVE:INTERACTION_TYPE
-```
+The source attribution grain is `AD_PRODUCT:FORMAT:PLACEMENT:CREATIVE:INTERACTION_TYPE`.
 
 Each touchpoint can receive attribution results for several Outcomes, such as:
 
@@ -100,10 +94,7 @@ The central issue is not whether IDs can be preserved, but whether historical ev
 
 MTA explains historical outcome credit; it does not directly answer marginal-budget questions:
 
-```text
-After an Ad Group's budget increases, how much will actual Spend increase?
-After Spend increases, how much will conversions, purchases, or revenue increase?
-```
+The response model must answer two separate questions: how much actual Spend changes after an Ad Group budget increase, and how conversions, purchases, or revenue change after Spend increases.
 
 A touchpoint may have a high attribution share because its historical budget was high, it appeared close to conversion, it reached more people, or it genuinely performed better. Attribution share alone cannot distinguish these causes.
 

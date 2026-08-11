@@ -9,24 +9,10 @@ lang: en-US
 
 For multi-touch attribution (MTA), stability is especially important because the attribution model determines the performance measure used to judge an advertising Campaign. Unlike an ordinary predictive-model use case, the primary purpose here is interpretation of contribution rather than prediction alone.
 
-Attribution is the broad category:
+Attribution models fall into two broad families:
 
-```text
-Attribution Model
-│
-├── Single-touch Attribution
-│   ├── First Touch Attribution
-│   └── Last Touch Attribution
-│
-└── Multi-touch Attribution (MTA)
-    ├── Linear Attribution
-    ├── Time Decay Attribution
-    ├── Position-Based Attribution
-    ├── Markov Chain Attribution
-    ├── Shapley Value Attribution
-    ├── Bagged Logistic Regression Attribution
-    └── Probabilistic Attribution Model
-```
+- Single-touch attribution: first-touch and last-touch attribution.
+- Multi-touch attribution (MTA): linear, time-decay, position-based, Markov-chain, Shapley-value, bagged-logistic-regression, and probabilistic models.
 
 Advertising tactics are judged through measures defined by the attribution model. The paper summarized by this note compares two MTA approaches: bagged logistic regression and a simple probabilistic model.
 
@@ -45,9 +31,9 @@ The A-metric represents accuracy: can the model classify users correctly as:
 
 For the two models in the note, the A-metric uses misclassification error rate:
 
-```text
-A = (1 / S) × sum(error_s)
-```
+$$
+A=\frac{1}{S}\sum_{s=1}^{S}\operatorname{error}_s
+$$
 
 `S` is the number of repeated experiments and `error_s` is the classification error on experiment `s`'s test set.
 
@@ -55,9 +41,9 @@ A = (1 / S) × sum(error_s)
 
 The V-metric represents variance or stability. If Google's coefficient is 2.1 in the first training run, 0.8 in the second, and 3.5 in the third, its estimated contribution is unstable. With `p` channels and `S` experiments, the note expresses the metric as:
 
-```text
-V = (1 / p) × sum(SD(x_i))
-```
+$$
+V=\frac{1}{p}\sum_{i=1}^{p}\operatorname{SD}(x_i)
+$$
 
 where `SD(x_i)` is the standard deviation of a channel's coefficient across runs.
 
@@ -65,28 +51,25 @@ where `SD(x_i)` is the standard deviation of a channel's coefficient across runs
 
 Logistic regression is a common classification model used to predict whether an outcome occurs. For example:
 
-```text
-User path: Facebook ad → Google search → Email
-Model output: conversion probability = 0.72
-```
+For a Facebook ad → Google search → Email path, the model might output a conversion probability of 0.72.
 
 Ordinary linear regression is:
 
-```text
-y = β0 + β1x1 + β2x2 + β3x3 + ...
-```
+$$
+y=\beta_0+\beta_1x_1+\beta_2x_2+\beta_3x_3+\cdots
+$$
 
 Its output may be any number, whereas a conversion probability must remain between zero and one. Logistic regression first calculates:
 
-```text
-z = β0 + β1x1 + β2x2 + β3x3 + ...
-```
+$$
+z=\beta_0+\beta_1x_1+\beta_2x_2+\beta_3x_3+\cdots
+$$
 
 and applies the sigmoid function:
 
-```text
-p = 1 / (1 + e^(-z))
-```
+$$
+p=\frac{1}{1+e^{-z}}
+$$
 
 The resulting `p` lies in `[0,1]`; `p = 0.8` means an estimated 80% probability.
 
@@ -105,20 +88,15 @@ Facebook, Google, and Email are independent variables; conversion is the depende
 
 **Step 2: initialize coefficients.** Before learning channel effects, begin with coefficient values such as:
 
-```text
-β0 = 0
-β1 = 0.1
-β2 = 0.1
-β3 = 0.1
-```
+For example, initialization may use $\beta_0=0$ and $\beta_1=\beta_2=\beta_3=0.1$.
 
 **Step 3: calculate predicted probability.** Calculate `z`, then the sigmoid `p`. A predicted `p = 0.75` for User 1 means a 75% predicted conversion probability.
 
 **Step 4: calculate prediction error.** Compare probability `p` with observed result `y`. If `y = 1`, `p = 0.2` is poor and `p = 0.9` is better. Logistic regression commonly uses log loss/cross-entropy:
 
-```text
-Loss = -[y log(p) + (1-y) log(1-p)]
-```
+$$
+\mathcal{L}=-\left[y\log(p)+(1-y)\log(1-p)\right]
+$$
 
 **Step 5: update coefficients.** Adjust the `β` values to reduce loss, commonly with gradient descent: move parameters incrementally in the direction that reduces error fastest.
 
@@ -128,19 +106,7 @@ The final direct output is a probability.
 
 ### Bagged Logistic Regression Model
 
-Bagging means Bootstrap Aggregating:
-
-```text
-original data
-   ↓
-draw many random training samples
-   ↓
-fit one logistic regression per sample
-   ↓
-obtain many fitted models
-   ↓
-average their predictions
-```
+Bagging means Bootstrap Aggregating: draw many random training samples from the original data, fit one logistic regression to each sample, and average the resulting predictions.
 
 Bagged logistic regression predicts conversion probability; a further mathematical decomposition converts that prediction into touchpoint contribution.
 
@@ -160,28 +126,23 @@ The motivation is collinearity among variables, which can make regression coeffi
 
 **Step 1:** calculate empirical probabilities for each principal factor:
 
-```text
-P(y | x_i) = N_positive(x_i) /
-             [N_positive(x_i) + N_negative(x_i)]
-```
+$$
+P(y\mid x_i)=\frac{N_{+}(x_i)}{N_{+}(x_i)+N_{-}(x_i)}
+$$
 
 and pairwise conditional probabilities:
 
-```text
-P(y | x_i, x_j) = N_positive(x_i, x_j) /
-                  [N_positive(x_i, x_j) + N_negative(x_i, x_j)]
-```
+$$
+P(y\mid x_i,x_j)=\frac{N_{+}(x_i,x_j)}{N_{+}(x_i,x_j)+N_{-}(x_i,x_j)}
+$$
 
 `y` is a binary conversion outcome such as purchase or sign-up, and `x_i`, for `i = 1,...,p`, denotes one of `p` advertising channels.
 
 **Step 2:** compute the contribution of channel `i` for each positive user:
 
-```text
-C(x_i) = P(y | x_i)
-       + (1 / (2N)) × sum(
-           P(y | x_i, x_j) - P(y | x_i) - P(y | x_j)
-         )
-```
+$$
+C(x_i)=P(y\mid x_i)+\frac{1}{2N}\sum_j\left[P(y\mid x_i,x_j)-P(y\mid x_i)-P(y\mid x_j)\right]
+$$
 
 The note interprets the first term as `x_i`'s individual contribution. For simultaneous `x_i` and `x_j`, total value is decomposed into `x_i`, `x_j`, and their synergy; synergy is split between the channels and averaged across relevant users/interactions.
 

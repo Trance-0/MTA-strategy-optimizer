@@ -26,7 +26,7 @@ This index covers the complete workspace: current business implementations, proj
 | Complete workspace status | [Workspace overview and current assessment](project-overview.md) |
 | Full file-by-file inventory | [Workspace file inventory](../../workspace-file-inventory.json) |
 | Top-level architecture and partitions | [Workspace architecture](architecture.md) |
-| User-maintained system architecture | [Draw.io source](../../系统架构图-07.drawio) |
+| Current architecture diagrams and editable sources | [Workspace architecture](architecture.md) |
 | File locations and movement rules | [Workspace file-location management](file-management.md) |
 | Runnable modules and commands | [AMC MTA module](../attribution/amc-mta-module.md) |
 | Campaign Group initial strategy | [Strategy Initializer](../strategy/module-overview.md) |
@@ -47,38 +47,20 @@ Authority order is: runtime code and tests, module data/governance contracts, re
 
 ## Workspace Partitions
 
-```text
-.
-├── .agents/           # installed skills
-├── _bmad/             # BMad configuration, manifests, and shared tools
-├── _bmad-output/      # completed specifications and deferred work
-├── design-artifacts/  # historical product vision
-├── docs/              # bilingual knowledge and research originals
-├── external/          # pinned external repositories
-├── script/            # maintained project command-line entry points
-└── modules/           # attribution, standard adapter, and strategy modules
+| Workspace path | Responsibility |
+| --- | --- |
+| `.agents/` | Installed skills |
+| `_bmad/` | Historical/optional BMad configuration, manifests, and shared tools |
+| `_bmad-output/` | Completed specifications and deferred work |
+| `design-artifacts/` | Historical product vision |
+| `docs/` | English documentation, preserved Chinese sources, and research originals; Draw.io sources and renders are co-located with the pages that use them |
+| `external/` | Pinned external repositories |
+| `script/` | Maintained project command-line entry points |
+| `modules/` | Attribution, standard adapter, and strategy modules |
 
-modules/mta_attribution/
-├── src/       # path keys, path building, attribution, comparison
-├── tests/     # automated tests
-├── data/      # one simulated fact source and four derived datasets
-└── outputs/   # five canonical generated CSV files
+`modules/mta_attribution/` contains `src/` for path and attribution logic, `tests/` for automated checks, `data/` for the simulated source and derived datasets, and `outputs/` for canonical generated CSVs. `modules/mta_strategy_recommendation/` uses the same standard layout for its inputs, count/budget implementation, tests, and canonical initial-budget JSON.
 
-modules/mta_strategy_recommendation/
-├── data/      # strategy_request + candidate_pool inputs
-├── outputs/   # the canonical initial-budget JSON
-├── src/       # count/budget generation and cross-module validation
-└── tests/     # contract, compatibility, and boundary tests
-
-docs/
-├── index.md            # redirect to active English documentation
-├── en/                 # complete English documentation
-├── zh/                 # preserved, unpublished Chinese source documentation
-├── en/specifications/  # active project-level English specification catalog
-├── zh/specifications/  # unpublished Chinese specification source backups
-├── assets/             # shared site assets
-└── research/           # external binary research originals, not runtime inputs
-```
+Within `docs/`, `index.md` redirects to the active English site, `en/` contains complete published English documentation, `zh/` preserves unpublished Chinese sources, the two language trees retain their respective specification catalogs, and `research/` holds external binary originals that are not runtime inputs.
 
 See [Source-tree analysis](source-tree-analysis.md) for the annotated structure.
 

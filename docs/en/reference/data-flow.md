@@ -10,9 +10,7 @@ This page follows one report from raw events to a budget seed, naming the file r
 
 ## The Three Modules <span class="status-label status-verified" aria-label="Verified"></span>
 
-![Parallel module ownership and data flow](../../assets/architecture/module-ownership.drawio.svg)
-
-[Edit the Draw.io source](../../assets/architecture/module-ownership.drawio)
+<DrawioDiagram base="/en/implementation/module-ownership" alt="Parallel module ownership and data flow" />
 
 Dependencies are explicit Python package imports. `mta_standard` owns loading and execution, imports the model contract and registered implementations from `mta_attribution`, and validates their returned rows. `mta_strategy_recommendation` consumes published CSV evidence and never imports attribution mathematics.
 
@@ -32,15 +30,7 @@ The following event pipeline is retained only to reproduce the repository's comm
 
 Everything shipped in `data/simulated/` descends from one synthetic event stream, which is why the path report and the Ads report agree closely enough to pass alignment validation.
 
-```text
-synthetic_event_pipeline.generate_synthetic_user_events()
-        │
-        ├─► generate_simulated_synthetic_user_events.py ─► synthetic_user_events_sample.csv
-        ├─► generate_simulated_amc_touchpoint_events.py ─► amc_touchpoint_events_sample.csv
-        ├─► generate_simulated_amazon_ads_report.py     ─► amazon_ads_report_sample.csv
-        └─► generate_simulated_touchpoint_entity_aggregate.py
-                                                        ─► amc_touchpoint_entity_aggregate_sample.csv
-```
+`synthetic_event_pipeline.generate_synthetic_user_events()` feeds four independent command wrappers: `generate_simulated_synthetic_user_events.py`, `generate_simulated_amc_touchpoint_events.py`, `generate_simulated_amazon_ads_report.py`, and `generate_simulated_touchpoint_entity_aggregate.py`. They publish `synthetic_user_events_sample.csv`, `amc_touchpoint_events_sample.csv`, `amazon_ads_report_sample.csv`, and `amc_touchpoint_entity_aggregate_sample.csv`, respectively.
 
 `script/regenerate_simulated_dataset.py` retains the legacy behavior and runs all four as one atomic set. New data generation uses `script/generate_mta_sim_dataset.py` and the pinned ZheyuanWu submodule.
 
@@ -118,15 +108,13 @@ Both take validated path rows and return `list[AttributionResult]` at the five-s
 
 ### `src/markov_attribution_model.py`
 
-```text
-aggregated rows
-  └─ amc_rows_to_markov_rows          split into converting and non-converting mass
-       └─ WeightedMarkovAttribution
-            ├─ transition_matrix()     weighted counts, normalised per state
-            ├─ conversion_probability() fixed-point absorption solve
-            └─ removal_effects()        base probability minus each removal
-                 └─ contribution_shares() normalised to sum 1
-```
+The Markov path is:
+
+1. `amc_rows_to_markov_rows` splits aggregated rows into converting and non-converting mass.
+2. `WeightedMarkovAttribution.transition_matrix()` normalizes weighted transition counts per state.
+3. `conversion_probability()` solves the fixed-point absorption probability.
+4. `removal_effects()` compares the base probability with each touchpoint removal.
+5. `contribution_shares()` normalizes those effects to sum to one.
 
 One independent model runs per outcome. Converted-user attribution models people against non-converters; purchase and revenue attribution model the network traversed by their own outcome mass.
 
@@ -150,13 +138,7 @@ per_touchpoint_credit = outcome / len(touchpoints)
 
 **`src/attribution_model_comparison.py`** receives both models' published rows plus the path report.
 
-```text
-markov rows + shapley rows + path rows
-  └─ _validate_models          identical touchpoint sets, conservation, efficiency
-       └─ per-touchpoint gaps  gap_pp and relative_gap from unrounded Decimals
-            └─ _overall_metrics tvd, spearman_rho, top_k_overlap
-                 └─ three artifacts
-```
+The comparison receives Markov, Shapley, and path rows. `_validate_models` checks identical touchpoint sets, conservation, and efficiency; the next stage calculates per-touchpoint `gap_pp` and `relative_gap` from unrounded decimals; `_overall_metrics` calculates TVD, Spearman rho, and Top-K overlap; and the publisher writes the three governance artifacts.
 
 Reliability is a fixed three-criterion contract, and all three must pass:
 
@@ -178,12 +160,7 @@ Reliability is a fixed three-criterion contract, and all three must pass:
 
 **`script/run_pipeline.py`** builds everything in one temporary directory and only then moves it into place.
 
-```text
-tempfile.TemporaryDirectory()
-  ├─ build_path_report()          → temporary path report
-  ├─ run_attribution_models()     → five temporary CSVs
-  └─ publish_with_rollback()      → six files replaced, or all restored
-```
+Inside `tempfile.TemporaryDirectory()`, `build_path_report()` creates a temporary path report and `run_attribution_models()` creates five temporary CSVs. `publish_with_rollback()` then replaces all six files together or restores all prior files.
 
 > [!WARNING]
 > This is the reason a failed run leaves no half-updated report. Writing directly would let a validation error in the comparison stage strand a new path report beside four stale model outputs, and nothing downstream would be able to tell.
@@ -196,18 +173,13 @@ tempfile.TemporaryDirectory()
 
 **`modules/mta_standard/`** provides the minimal loading, execution, validation, and evaluation framework. Concrete model logic remains in `modules/mta_attribution/`.
 
-```text
-amc_path_report (four-segment)
-  └─ dataloader.load_amc_path_report
-       ├─ header + scope validation
-       ├─ touchpoint_adapter.SimulatorConfig.adapt_path   → five-segment paths
-       └─ attribution_contract.validate_amc_aggregated_row
-            └─ MtaSimDataset.path_rows
-                 └─ model_pipeline.run_registered_models(dataset)
-                      └─ mta_attribution model.fit(dataset).attribute(dataset)
-                      └─ standard_rows_from_attribution_results  → four-segment
-                           └─ output_contract.validate_standard_output
-```
+The standardization sequence is:
+
+1. `dataloader.load_amc_path_report` validates the four-segment report header and scope.
+2. `SimulatorConfig.adapt_path` maps paths to five segments, and `validate_amc_aggregated_row` validates every aggregate.
+3. The validated rows become `MtaSimDataset.path_rows`.
+4. `run_registered_models(dataset)` calls each attribution model's `fit(dataset)` and `attribute(dataset)` methods.
+5. `standard_rows_from_attribution_results` maps the result back to four segments, and `validate_standard_output` enforces the output contract.
 
 The key grain changes twice and only at the edges:
 
@@ -228,11 +200,7 @@ The key grain changes twice and only at the edges:
 
 **`src/evaluation.py`** is the only file that opens `simulation_ground_truth`.
 
-```text
-simulation_ground_truth ─► load_simulation_ground_truth ─► GroundTruth
-model + dataset         ─► fit ─► timed attribute ─► standard rows
-                    both ─► evaluate_standard_output ─► EvaluationReport
-```
+`load_simulation_ground_truth` loads the simulation truth into `GroundTruth`. Separately, the model is fitted to the dataset and its timed attribution is converted into standard rows. Only `evaluate_standard_output` receives both objects and produces `EvaluationReport`.
 
 > [!IMPORTANT]
 > Ground-truth isolation is **structural, not procedural**. `MtaSimDataset` has no field that can hold it, `load_mta_sim_dataset` accepts no ground-truth path, and `fit`/`attribute` take exactly one argument. There is no expressible way to hand a model the answer, so the rule cannot be broken by forgetting it.
@@ -246,13 +214,7 @@ model + dataset         ─► fit ─► timed attribute ─► standard rows
 
 **`modules/mta_strategy_recommendation/`** consumes published CSVs, never Python.
 
-```text
-amc_mta_recommended_attribution.csv + amc_touchpoint_entity_aggregate_sample.csv
-strategy_request.json + candidate_pool.json
-  └─ hierarchy_validator      one consistent Campaign Group, evidence pinned by SHA-256
-       └─ budget_recommender  touchpoint scores → Campaign shares → capacity → equal split
-            └─ initial_budget_recommendation.json
-```
+The strategy module combines `amc_mta_recommended_attribution.csv` and `amc_touchpoint_entity_aggregate_sample.csv` with `strategy_request.json` and `candidate_pool.json`. `hierarchy_validator` enforces one consistent Campaign Group and SHA-256-pinned evidence. `budget_recommender` then converts touchpoint scores into Campaign shares, applies capacity rules, performs the equal split, and writes `initial_budget_recommendation.json`.
 
 > [!NOTE]
 > The split inside a new Ad Group can only be equal, because new Ad Groups within one Campaign have no distinguishable candidate features yet. That is a data limitation, not a modelling preference — it changes when an Ad Group feature table exists.

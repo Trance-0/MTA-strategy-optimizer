@@ -16,16 +16,7 @@ The overall approach has three stages with clearly separated responsibilities:
 2. **Strategy initialization**: for a new Campaign, combine MTA shares, Campaign/Ad Group entity relationships, candidate targeting objects, and budget constraints to produce the Ad Group count and an explainable initial budget.
 3. **Budget optimization**: predict outcomes at different budgets in a separate Ad Group-level model and maximize expected revenue within business constraints. This stage has not yet been implemented.
 
-```mermaid
-flowchart LR
-    A["Aggregated paths and ad performance"] --> B["MTA: Markov + Shapley"]
-    B --> C["Touchpoint × Outcome historical attribution share"]
-    C --> D["Entity Bridge and Campaign score"]
-    E["Candidate objects, budget, and capacity rules"] --> D
-    D --> F["Ad Group count and initial budget"]
-    F --> G["Future: Ad Group response prediction"]
-    G --> H["Future: constrained budget optimization"]
-```
+<DrawioDiagram base="./mta-to-budget-roadmap" alt="MTA evidence to budget strategy roadmap" />
 
 ## Current Delivery Boundary <span class="status-label status-verified" aria-label="Verified"></span>
 

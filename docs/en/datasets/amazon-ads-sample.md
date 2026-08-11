@@ -17,9 +17,7 @@ lang: en-US
 
 `normalizedTouchpoint` must exactly equal the key recomputed by the program from the raw dimensions and `interaction_type`:
 
-```text
-AD_PRODUCT:FORMAT:PLACEMENT:CREATIVE:INTERACTION_TYPE
-```
+`AD_PRODUCT:FORMAT:PLACEMENT:CREATIVE:INTERACTION_TYPE`
 
 `INTERACTION_TYPE` may only be `IMPRESSION` or `CLICK`. Run `uv run python -X utf8 -B script/validate_data_alignment.py` from the repository root to validate the account, currency, window, five-segment touchpoint set, and daily coverage.
 

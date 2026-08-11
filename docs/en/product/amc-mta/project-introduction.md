@@ -18,25 +18,13 @@ Current reading entry points:
 
 ## How the Project Works
 
-```text
-AMC-style anonymous aggregate paths that distinguish impressions and clicks
-        ↓
-Markov and Shapley multi-touch attribution
-        ↓
-Contribution by ad product, format, placement, creative, and interaction type
-        ↓
-Amazon Ads cost joined by the complete five-segment key
-        ↓
-Five-segment ROI, ROAS, CPA, and cost per converted user
-```
+The project processes AMC-style anonymous aggregate paths that distinguish impressions and clicks, runs Markov and Shapley multi-touch attribution, reports contribution by all five touchpoint segments, joins Amazon Ads cost on that complete key, and calculates five-segment ROI, ROAS, CPA, and cost per converted user.
 
 The project neither exports nor processes real AMC user-level behavior. Real use should order events, build paths, and enforce privacy aggregation inside the AMC clean room, supplying this project only anonymous aggregates that satisfy privacy thresholds.
 
 AMC path touchpoints use:
 
-```text
-AD_PRODUCT:FORMAT:PLACEMENT:CREATIVE:INTERACTION_TYPE
-```
+The key is `AD_PRODUCT:FORMAT:PLACEMENT:CREATIVE:INTERACTION_TYPE`.
 
 `INTERACTION_TYPE` is either `IMPRESSION` or `CLICK`, allowing an ad's exposure and click to appear separately in paths and cost results. Amazon Ads uses the same key. Cost per click (CPC) belongs only to `CLICK`; cost per mille (CPM) belongs only to `IMPRESSION`; non-billable interaction rows have zero cost, preventing duplicated spend.
 

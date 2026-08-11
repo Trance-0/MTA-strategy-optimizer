@@ -12,9 +12,7 @@ The attribution layer reads historical aggregated paths and answers: within the 
 
 Its output granularity is:
 
-```text
-touchpoint × outcome → attribution share
-```
+The output grain is **touchpoint × Outcome**, with one attribution share for each combination.
 
 It does not answer “how much incremental revenue will one more dollar of spend generate,” nor does it prove causal incrementality from advertising.
 

@@ -33,5 +33,5 @@ features:
     link: /en/strategy/
   - title: Definitions
     details: Shared terminology and abbreviations for marketing, data, and engineering readers.
-    link: /en/definitions
+    link: /en/reference/definitions
 ---

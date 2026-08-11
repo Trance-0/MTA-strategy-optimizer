@@ -1,8 +1,136 @@
 import { defineConfig, type DefaultTheme } from "vitepress";
+import { generateSidebar } from "vitepress-sidebar";
 import { copyStaticAssets } from "../../script/copy_static_assets.mjs";
 import { researchPdfDevPlugin } from "../../script/static_pdf_dev_plugin.mjs";
 
 const repositoryUrl = "https://github.com/Trance-0/marketing-roi-analysis";
+
+const sidebar = generateSidebar([
+  {
+    documentRootPath: ".",
+    scanStartPath: "en/introduction",
+    resolvePath: "/en/introduction/",
+    useTitleFromFrontmatter: true,
+    useFolderLinkFromIndexFile: true,
+    collapsed: true,
+    collapseFromLevel: 2,
+    rootGroupText: "Introduction",
+    rootGroupLink: "/en/introduction/",
+  },
+  {
+    documentRootPath: ".",
+    scanStartPath: "en/environment",
+    resolvePath: "/en/environment/",
+    useTitleFromFrontmatter: true,
+    useFolderLinkFromIndexFile: true,
+    collapsed: true,
+    collapseFromLevel: 2,
+    rootGroupText: "Environment Setup",
+    rootGroupLink: "/en/environment/",
+  },
+  {
+    documentRootPath: ".",
+    scanStartPath: "en/datasets",
+    resolvePath: "/en/datasets/",
+    useTitleFromFrontmatter: true,
+    useFolderLinkFromIndexFile: true,
+    collapsed: true,
+    collapseFromLevel: 2,
+    rootGroupText: "Datasets",
+    rootGroupLink: "/en/datasets/",
+  },
+  {
+    documentRootPath: ".",
+    scanStartPath: "en/attribution",
+    resolvePath: "/en/attribution/",
+    useTitleFromFrontmatter: true,
+    useFolderLinkFromIndexFile: true,
+    collapsed: true,
+    collapseFromLevel: 2,
+    rootGroupText: "Attribution Models",
+    rootGroupLink: "/en/attribution/",
+    // Frontmatter order controls sort within directories
+    sortMenusByFrontmatterOrder: true,
+    frontmatterOrderDefaultValue: 100,
+  },
+  {
+    documentRootPath: ".",
+    scanStartPath: "en/strategy",
+    resolvePath: "/en/strategy/",
+    useTitleFromFrontmatter: true,
+    useFolderLinkFromIndexFile: true,
+    collapsed: true,
+    collapseFromLevel: 2,
+    rootGroupText: "Strategy Optimization",
+    rootGroupLink: "/en/strategy/",
+  },
+  {
+    documentRootPath: ".",
+    scanStartPath: "en/implementation",
+    resolvePath: "/en/implementation/",
+    useTitleFromFrontmatter: true,
+    useFolderLinkFromIndexFile: true,
+    collapsed: true,
+    collapseFromLevel: 2,
+    rootGroupText: "Implementation Reference",
+    rootGroupLink: "/en/implementation/",
+  },
+  {
+    documentRootPath: ".",
+    scanStartPath: "en/product",
+    resolvePath: "/en/product/",
+    useTitleFromFrontmatter: true,
+    useFolderLinkFromIndexFile: true,
+    collapsed: true,
+    collapseFromLevel: 2,
+    rootGroupText: "Product & Capability",
+    rootGroupLink: "/en/product/",
+  },
+  {
+    documentRootPath: ".",
+    scanStartPath: "en/workspace",
+    resolvePath: "/en/workspace/",
+    useTitleFromFrontmatter: true,
+    useFolderLinkFromIndexFile: true,
+    collapsed: true,
+    collapseFromLevel: 2,
+    rootGroupText: "Workspace",
+    rootGroupLink: "/en/workspace/",
+  },
+  {
+    documentRootPath: ".",
+    scanStartPath: "en/specifications",
+    resolvePath: "/en/specifications/",
+    useTitleFromFrontmatter: true,
+    useFolderLinkFromIndexFile: true,
+    collapsed: true,
+    collapseFromLevel: 2,
+    rootGroupText: "Specifications",
+    rootGroupLink: "/en/specifications/",
+  },
+  {
+    documentRootPath: ".",
+    scanStartPath: "en/research",
+    resolvePath: "/en/research/",
+    useTitleFromFrontmatter: true,
+    useFolderLinkFromIndexFile: true,
+    collapsed: true,
+    collapseFromLevel: 2,
+    rootGroupText: "Research",
+    rootGroupLink: "/en/research/",
+  },
+  {
+    documentRootPath: ".",
+    scanStartPath: "en/reference",
+    resolvePath: "/en/reference/",
+    useTitleFromFrontmatter: true,
+    useFolderLinkFromIndexFile: true,
+    collapsed: true,
+    collapseFromLevel: 2,
+    rootGroupText: "Reference",
+    rootGroupLink: "/en/reference/",
+  },
+]);
 
 const enTheme: DefaultTheme.Config = {
   logoLink: "/en/",
@@ -19,127 +147,35 @@ const enTheme: DefaultTheme.Config = {
     { text: "Specifications", link: "/en/specifications/" },
     { text: "Research", link: "/en/research/" },
   ],
-  sidebar: [
-    {
-      text: "Introduction",
-      items: [
-        { text: "Project overview", link: "/en/introduction/" },
-        { text: "Structure and pipeline", link: "/en/introduction/project-structure" },
-        { text: "Progress and todos", link: "/en/introduction/progress" },
-      ],
-    },
-    {
-      text: "Environment setup",
-      items: [
-        { text: "Local setup and directories", link: "/en/environment/" },
-        { text: "Generate MTA-SIM data", link: "/en/environment/mta-sim-generation" },
-        { text: "Run the AMC MTA module", link: "/en/environment/amc-mta-usage" },
-      ],
-    },
-    {
-      text: "Datasets",
-      items: [
-        { text: "Contracts and compatibility", link: "/en/datasets/" },
-        { text: "AMC input data contract", link: "/en/datasets/amc-data-contract" },
-        { text: "Amazon Ads sample", link: "/en/datasets/amazon-ads-sample" },
-        { text: "AMC simulated data", link: "/en/datasets/amc-simulated-data" },
-        { text: "Strategy simulated data", link: "/en/datasets/strategy-simulated-data" },
-      ],
-    },
-    {
-      text: "Attribution models",
-      items: [
-        { text: "Model overview", link: "/en/attribution/" },
-        { text: "AMC MTA module", link: "/en/attribution/amc-mta-module" },
-        { text: "Complete usage guide", link: "/en/attribution/complete-guide" },
-        { text: "Markov removal effect", link: "/en/attribution/markov" },
-        { text: "Path-level Shapley", link: "/en/attribution/shapley" },
-        { text: "Model testing and comparison", link: "/en/attribution/model-testing" },
-        { text: "Standardized MTA interface", link: "/en/attribution/standardized-interface" },
-        { text: "DNN credit model", link: "/en/attribution/dnn" },
-        { text: "Model comparison governance", link: "/en/attribution/model-governance" },
-        { text: "Touchpoint reliability", link: "/en/attribution/reliability" },
-        { text: "Output file reference", link: "/en/attribution/output-reference" },
-        { text: "Attribution reference index", link: "/en/attribution/reference-index" },
-      ],
-    },
-    {
-      text: "Strategy optimization",
-      items: [
-        { text: "Seed and optimization roadmap", link: "/en/strategy/" },
-        { text: "Strategy module", link: "/en/strategy/module-overview" },
-        { text: "Current budget calculation", link: "/en/strategy/current-budget-calculation" },
-        { text: "Model plan", link: "/en/strategy/model-plan" },
-        { text: "Optimization research plan", link: "/en/strategy/optimization-plan" },
-        { text: "Output data contract", link: "/en/strategy/output-data-contract" },
-        { text: "Strategy output boundary", link: "/en/strategy/strategy-output-contract" },
-      ],
-    },
-    {
-      text: "Implementation reference",
-      items: [
-        { text: "Code-to-document map", link: "/en/implementation/" },
-        { text: "Attribution module", link: "/en/implementation/mta_attribution/" },
-        { text: "Standard framework", link: "/en/implementation/mta_standard/" },
-        { text: "Strategy recommendation", link: "/en/implementation/mta_strategy_recommendation/" },
-      ],
-    },
-    {
-      text: "Product and capability",
-      items: [
-        { text: "Product documentation", link: "/en/product/" },
-        { text: "AMC MTA introduction", link: "/en/product/amc-mta/project-introduction" },
-        { text: "AMC MTA architecture", link: "/en/product/amc-mta/architecture" },
-        { text: "Capability assessment", link: "/en/product/amc-mta/capability-assessment" },
-      ],
-    },
-    {
-      text: "Workspace",
-      items: [
-        { text: "Workspace index", link: "/en/workspace/" },
-        { text: "Current assessment", link: "/en/workspace/project-overview" },
-        { text: "Workspace architecture", link: "/en/workspace/architecture" },
-        { text: "Source-tree analysis", link: "/en/workspace/source-tree-analysis" },
-        { text: "File-location rules", link: "/en/workspace/file-management" },
-        { text: "Component inventory", link: "/en/workspace/component-inventory" },
-        { text: "Development and verification", link: "/en/workspace/development-guide" },
-        { text: "Development history", link: "/en/workspace/development-history" },
-        { text: "Documentation index", link: "/en/workspace/documentation-index" },
-      ],
-    },
-    {
-      text: "Specifications",
-      items: [
-        { text: "Implementation catalog", link: "/en/specifications/" },
-      ],
-    },
-    {
-      text: "Research",
-      items: [
-        { text: "Research index", link: "/en/research/" },
-        { text: "Campaign Group hierarchy", link: "/en/research/campaign-data-hierarchy" },
-        { text: "MTA reading order", link: "/en/research/mta/" },
-        { text: "MTA model study notes", link: "/en/research/mta/data-driven-mta-models-study-note" },
-        { text: "Amazon research", link: "/en/research/amazon/" },
-        { text: "Amazon Marketing Cloud", link: "/en/research/amazon/amc/" },
-        { text: "AMC, MTA, and ROI flow", link: "/en/research/amazon/amc/data-flow" },
-        { text: "Marketing Stream fields", link: "/en/research/amazon/research/amazon-marketing-stream-fields" },
-        { text: "Historical technical research", link: "/en/research/amazon/research/technical-amazon-attribution-mta-2026-07-06" },
-        { text: "A/B testing reading order", link: "/en/research/ab-testing/" },
-      ],
-    },
-    {
-      text: "Reference",
-      items: [
-        { text: "Definitions", link: "/en/definitions" },
-        { text: "Module inventory", link: "/en/reference/module-inventory" },
-        { text: "Module and script data flow", link: "/en/reference/data-flow" },
-        { text: "Submission manifest", link: "/en/reference/submission-manifest" },
-      ],
-    },
-  ],
+  sidebar,
   outline: { level: [2, 3], label: "On this page" },
-  search: { provider: "local" },
+  search: {
+    provider: "local",
+    options: {
+      detailedView: true,
+      miniSearch: {
+        options: {
+          // Index title, heading hierarchy, and body text
+          fields: ["title", "titles", "text"],
+          // Store titles for displaying section context in results
+          storeFields: ["title", "titles", "text"],
+          // Boost matches in titles/headings over body text for accuracy
+          boost: { title: 5, titles: 3, text: 1 },
+          // Tokenize on camelCase and dots for technical terms
+          tokenize: (text: string) =>
+            text
+              .toLowerCase()
+              .split(/[\s,.;:!?()[\]{}"']+/)
+              .filter((t: string) => t.length > 0)
+              .flatMap((token: string) => [
+                token,
+                // Also index sub-words split on uppercase for acronyms like "MAE", "RMSE"
+                ...token.split(/(?<=[a-z])(?=[A-Z])/),
+              ]),
+        },
+      },
+    },
+  },
   socialLinks: [{ icon: "github", link: repositoryUrl }],
   footer: {
     message: "Historical attribution evidence, explainable budget seeds, and constrained optimization.",

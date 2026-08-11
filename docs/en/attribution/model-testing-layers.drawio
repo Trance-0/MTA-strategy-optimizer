@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="Electron" agent="Codex" version="31.1.5">
+  <diagram id="model-testing-layers" name="Model testing layers">
+    <mxGraphModel page="1" pageScale="1" pageWidth="800" pageHeight="760" grid="1" gridSize="10" arrows="1" connect="1">
+      <root>
+        <mxCell id="0"/><mxCell id="1" parent="0"/>
+        <mxCell id="title" value="Three layers of model assurance" style="text;html=1;align=center;fontSize=26;fontStyle=1;" vertex="1" parent="1"><mxGeometry x="170" y="35" width="460" height="45" as="geometry"/></mxCell>
+        <mxCell id="unit" value="&lt;b&gt;1. Unit and contract tests&lt;/b&gt;&lt;br&gt;Is one model internally correct and conserving?" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DAE8FC;strokeColor=#6C8EBF;fontSize=17;spacing=10;" vertex="1" parent="1"><mxGeometry x="150" y="130" width="500" height="115" as="geometry"/></mxCell>
+        <mxCell id="governance" value="&lt;b&gt;2. Governance comparison&lt;/b&gt;&lt;br&gt;Do Markov and Shapley agree enough to publish?" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF2CC;strokeColor=#D6B656;fontSize=17;spacing=10;" vertex="1" parent="1"><mxGeometry x="150" y="325" width="500" height="115" as="geometry"/></mxCell>
+        <mxCell id="truth" value="&lt;b&gt;3. Ground-truth evaluation&lt;/b&gt;&lt;br&gt;Does a model recover the known simulator mechanism?" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#D5E8D4;strokeColor=#82B366;fontSize=17;spacing=10;" vertex="1" parent="1"><mxGeometry x="150" y="520" width="500" height="115" as="geometry"/></mxCell>
+        <mxCell id="e1" value="required on every pipeline run" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;strokeWidth=2;fontSize=13;" edge="1" parent="1" source="unit" target="governance"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e2" value="synthetic data only" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;strokeWidth=2;dashed=1;fontSize=13;" edge="1" parent="1" source="governance" target="truth"><mxGeometry relative="1" as="geometry"/></mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

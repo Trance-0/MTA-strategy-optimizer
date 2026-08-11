@@ -22,12 +22,19 @@ Before comparison, leading and trailing whitespace is removed from field names a
 
 For the same touchpoint and Outcome:
 
-```text
-gap_pp = 100 × |markov_share - shapley_share|
-mean_share = (markov_share + shapley_share) / 2
-relative_gap = 0                         if mean_share = 0
-relative_gap = |markov_share - shapley_share| / mean_share  otherwise
-```
+$$
+\begin{aligned}
+g_{\mathrm{pp}}&=100\lvert m-s\rvert,\\
+\bar{s}&=\frac{m+s}{2},\\
+g_{\mathrm{rel}}&=
+\begin{cases}
+0,&\bar{s}=0,\\
+\dfrac{\lvert m-s\rvert}{\bar{s}},&\bar{s}>0,
+\end{cases}
+\end{aligned}
+$$
+
+Here, $m$ and $s$ are the Markov and Shapley shares for the same touchpoint and Outcome.
 
 Display values may be rounded, but model consistency uses the original decimal shares retained during parsing, without adding epsilon.
 
@@ -55,19 +62,19 @@ For all touchpoints under one Outcome, the summary separately AND-aggregates the
 
 Touchpoint comparison: 14 columns and currently 51 sample rows:
 
-```text
+```csv
 touchpoint,outcome,markov_share,shapley_share,gap_pp,relative_gap,raw_unique_paths,raw_converted_users,raw_purchase_count,calculation_valid,data_support_sufficient,models_consistent,reliability_status,reliability_reason
 ```
 
 Overall summary: 13 columns and currently 3 sample rows:
 
-```text
+```csv
 outcome,report_start_date,report_end_date,max_touchpoint_gap_days,touchpoint_count,tvd,spearman_rho,top_k_overlap_rate,calculation_valid,data_support_sufficient,models_consistent,reliability_status,reliability_reason
 ```
 
 Recommended results: 15 columns and currently 51 sample rows:
 
-```text
+```csv
 touchpoint,interaction_type,outcome,official_model,official_share,recommended_value,benchmark_model,benchmark_share,gap_pp,relative_gap,calculation_valid,data_support_sufficient,models_consistent,reliability_status,reliability_reason
 ```
 

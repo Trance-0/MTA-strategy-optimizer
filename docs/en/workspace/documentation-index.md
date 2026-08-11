@@ -12,7 +12,7 @@ Use the [complete workspace documentation index](index.md) as the single entry p
 - [Complete workspace documentation index](index.md)
 - [Workspace overview and current assessment](project-overview.md)
 - [Workspace architecture](architecture.md)
-- [User-maintained system-architecture Draw.io source](../../系统架构图-07.drawio)
+- [Current workspace architecture and co-located Draw.io source](architecture.md)
 - [Source-tree analysis](source-tree-analysis.md)
 - [Workspace file-location management](file-management.md)
 - [Component and asset inventory](component-inventory.md)

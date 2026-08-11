@@ -58,3 +58,36 @@
   white-space: nowrap;
   font-weight: 650;
 }
+
+.drawio-diagram {
+  margin: 1.5rem 0;
+}
+
+.drawio-diagram__render {
+  display: block;
+}
+
+.drawio-diagram__render img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.drawio-diagram__render--dark {
+  display: none;
+}
+
+.dark .drawio-diagram__render--light {
+  display: none;
+}
+
+.dark .drawio-diagram__render--dark {
+  display: block;
+}
+
+.drawio-diagram figcaption {
+  margin-top: 0.5rem;
+  text-align: center;
+  font-size: 0.875rem;
+  color: var(--vp-c-text-2);
+}

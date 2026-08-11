@@ -188,12 +188,7 @@ Current `modules/mta_attribution` uses two analytical input types:
 
 If Marketing Stream is integrated, add:
 
-```text
-raw_stream_messages
-normalized_stream_performance
-normalized_stream_entities
-normalized_stream_budget
-```
+If Marketing Stream is integrated, add four explicit layers: `raw_stream_messages`, `normalized_stream_performance`, `normalized_stream_entities`, and `normalized_stream_budget`.
 
 Then aggregate `normalized_stream_performance` to the current Amazon Ads input contract. This keeps SQS/Firehose payload details out of the attribution scripts and isolates Amazon payload-version changes from the MTA pipeline.
 

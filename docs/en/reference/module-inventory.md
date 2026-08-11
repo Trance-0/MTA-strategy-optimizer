@@ -15,13 +15,14 @@ lang: en-US
 
 ## Directory Convention
 
-```text
-modules/<module>/
-├── data/       # Module-specific inputs and samples
-├── outputs/    # Reproducible runtime results
-├── src/        # Core implementation
-└── tests/      # Automated tests, when present
-```
+Every `modules/<module>/` directory uses these standard subdirectories:
+
+| Directory | Responsibility |
+| --- | --- |
+| `data/` | Module-specific inputs and samples |
+| `outputs/` | Reproducible runtime results |
+| `src/` | Core implementation |
+| `tests/` | Automated tests, when present |
 
 For what each file receives and hands to the next, see [module and script data flow](data-flow.md). See the [English documentation home](/en/) for the current architecture, capability assessment, and reading order. External papers and references are stored under `docs/research/` and are not mixed with module runtime inputs.
 

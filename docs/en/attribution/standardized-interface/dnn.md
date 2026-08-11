@@ -18,13 +18,7 @@ Implementation: class `DeepNeuralAttributionModel` in `modules/mta_attribution/s
 
 The network is a **listwise** scorer, not a per-touchpoint regressor. It emits one logit per outcome for every touchpoint in a report, then applies a softmax across the touchpoint set, once per outcome.
 
-```text
-encoded touchpoint  ->  tanh(16)  ->  tanh(8)  ->  linear(3 outcomes)
-                                                        |
-                    softmax across the touchpoint set, per outcome
-                                                        |
-                                       attribution_share per touchpoint
-```
+Each encoded touchpoint passes through a 16-unit `tanh` layer, an 8-unit `tanh` layer, and a linear head for the three Outcomes. A separate softmax across the available touchpoints for each Outcome produces one `attribution_share` per touchpoint.
 
 That choice matters for the output contract. A softmax always sums to one, so **share conservation holds by construction** rather than by a post-hoc rescale that could hide a defective model.
 

@@ -8,7 +8,7 @@ lang: en-US
 Only documentation for the currently runnable module is kept here:
 
 - [Complete usage guide](complete-guide.md): one-stop written guidance for submission review, execution, demo, error handling, and limitations.
-- [Data-flow diagram](../../assets/amc-mta/data-flow.png): standalone PNG showing inputs, dual models, reliability, and canonical outputs; use the [SVG source](../../assets/amc-mta/data-flow.svg) for maintenance.
+- [Current data-flow diagram](../product/amc-mta/architecture.md#current-data-flow): theme-aware Draw.io architecture showing canonical governance, standardized models, DNN, and isolated evaluation.
 - [Canonical output index](output-reference.md): reading order, fields, granularity, and interpretation boundaries for the five CSV files.
 - [Data contract](../datasets/amc-data-contract.md): the only complete source of truth for current fields and business rules.
 - [Usage](../environment/amc-mta-usage.md): commands, parameters, and outputs.

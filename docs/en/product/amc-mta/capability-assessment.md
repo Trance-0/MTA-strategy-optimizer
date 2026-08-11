@@ -80,9 +80,7 @@ Approximately two percent of contribution mass would have to move for the two mo
 
 The largest recorded gap across all Outcomes was the revenue record for:
 
-```text
-AMAZON_DSP:DISPLAY:UNSPECIFIED:IMAGE:IMPRESSION
-```
+`AMAZON_DSP:DISPLAY:UNSPECIFIED:IMAGE:IMPRESSION`
 
 Its recorded revenue share was 6.129% under Markov and 6.660% under Shapley: a 0.532 percentage-point gap and approximately 8.32% relative gap. Compact output retains `gap_pp`, `relative_gap`, and `models_consistent` but no longer emits a difference grade or key-disagreement label.
 
@@ -90,12 +88,13 @@ Its recorded revenue share was 6.129% under Markov and 6.660% under Shapley: a 0
 
 The snapshot's 51 touchpoint/Outcome records were:
 
-```text
-calculation_valid = 51 true
-data_support_sufficient = 51 true
-models_consistent = 51 true
-reliability_status = 51 RELIABLE / 0 UNRELIABLE
-```
+| Current sample result | Count |
+| --- | ---: |
+| `calculation_valid=true` | 51 |
+| `data_support_sufficient=true` | 51 |
+| `models_consistent=true` | 51 |
+| `reliability_status=RELIABLE` | 51 |
+| `reliability_status=UNRELIABLE` | 0 |
 
 Each Outcome summary AND-aggregated its touchpoint-level Booleans. Total variation distance, Spearman, and Top-K overlap remained supporting diagnostics and did not change reliability.
 

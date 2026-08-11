@@ -15,25 +15,15 @@ The model does not output specific Keywords, SKUs, Match Types, Targets, Audienc
 
 SP/SB:
 
-```text
-N = max(
-  min_ad_groups,
-  ceil(keyword_units / keyword_capacity),
-  ceil(skus / sku_capacity),
-  ceil(legal_pairs / pair_capacity)
-)
-```
+$$
+N=\max\!\left(N_{\min},\left\lceil\frac{K}{K_{\max}}\right\rceil,\left\lceil\frac{Q}{Q_{\max}}\right\rceil,\left\lceil\frac{P}{P_{\max}}\right\rceil\right)
+$$
 
 SD/DSP:
 
-```text
-N = max(
-  min_ad_groups,
-  ceil(skus / sku_capacity),
-  ceil(targets / target_capacity),
-  ceil(audiences / audience_capacity)
-)
-```
+$$
+N=\max\!\left(N_{\min},\left\lceil\frac{Q}{Q_{\max}}\right\rceil,\left\lceil\frac{T}{T_{\max}}\right\rceil,\left\lceil\frac{A}{A_{\max}}\right\rceil\right)
+$$
 
 Reject the input if `N > max_ad_groups`. Current sample counts after filtering by ad product do not cross capacity boundaries, so all four Campaigns receive one group. Changing any relevant count across a boundary deterministically increases the corresponding count. Inputs use strict v4 fields and JSON numeric types. For SP/SB, valid-Pair count must not exceed the Cartesian-product upper bound of Keyword units and SKUs, and the minimum daily budget per group must be positive.
 
@@ -45,11 +35,15 @@ Both attribution and entity Bridge require non-empty five-segment touchpoint key
 
 A `RELIABLE` row uses `recommended_value` directly. An `UNRELIABLE` row uses the midpoint of the AMC `[low,high]` interval and outputs a warning. This midpoint is only an unoptimized initial point.
 
-```text
-CampaignOutcome = Σ TouchpointMTAValue × EntityBridgeShare
-CampaignScore = Σ OutcomeWeight × CampaignOutcome
-CampaignShare = CampaignScore / Σ CampaignScore
-```
+$$
+\begin{aligned}
+C_{c,o}&=\sum_t a_{t,o}e_{t,c},\\
+S_c&=\sum_o w_oC_{c,o},\\
+s_c&=\frac{S_c}{\sum_j S_j}.
+\end{aligned}
+$$
+
+Here, $a_{t,o}$ is the touchpoint MTA value, $e_{t,c}$ is its entity-bridge share assigned to Campaign $c$, $w_o$ is the Outcome weight, and $s_c$ is the Campaign budget share.
 
 `assisted_*` is only a Bridge weight. It cannot be added across entities and does not represent entity-level attribution or causal effect.
 
@@ -57,10 +51,7 @@ CampaignShare = CampaignScore / Σ CampaignScore
 
 Candidate inputs contain counts only; there is no stable “historical entity/candidate → new-group slot” mapping. New groups inside the same Campaign are therefore indistinguishable. The model explicitly uses:
 
-```text
-AdGroupShare = CampaignShare / N
-allocation_basis = CAMPAIGN_MTA_EQUAL_SPLIT
-```
+The initializer assigns each new group $s_{c,g}=s_c/N_c$ and records `allocation_basis` as `CAMPAIGN_MTA_EQUAL_SPLIT`.
 
 When a Group daily budget is provided, the amount is the share multiplied by total budget; otherwise, only relative shares are output. If a Campaign's amount is below `N × minimum_daily_budget_per_ad_group`, retain N and mark it non-executable instead of silently reducing the group count.
 

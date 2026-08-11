@@ -11,9 +11,7 @@ This document explains how to determine whether attribution for one five-segment
 
 Five-segment touchpoint format:
 
-```text
-AD_PRODUCT:FORMAT:PLACEMENT:CREATIVE:INTERACTION_TYPE
-```
+The five-segment touchpoint format is `AD_PRODUCT:FORMAT:PLACEMENT:CREATIVE:INTERACTION_TYPE`.
 
 `IMPRESSION` and `CLICK` are independent touchpoints and must be assessed separately. The three Outcomes also create separate records: `converted_users`, `purchase_count`, and `revenue`.
 
@@ -27,11 +25,7 @@ All three criteria must pass for `RELIABLE`; any failure produces `UNRELIABLE`. 
 
 ## 1. Is the Calculation Valid?
 
-Field:
-
-```text
-calculation_valid
-```
+The corresponding field is `calculation_valid`.
 
 New results are generated only after the complete pipeline passes these strict validations:
 
@@ -46,19 +40,15 @@ An output record that passed validation is `true`. Any validation failure causes
 
 ## 2. Is Data Support Sufficient?
 
-Field:
-
-```text
-data_support_sufficient
-```
+The corresponding field is `data_support_sufficient`.
 
 The same five-segment touchpoint must simultaneously satisfy:
 
-```text
-raw_purchase_count >= 30
-raw_converted_users >= 20
-raw_unique_paths >= 5
-```
+$$
+\operatorname{raw\ purchase\ count}\ge30,\qquad
+\operatorname{raw\ converted\ users}\ge20,\qquad
+\operatorname{raw\ unique\ paths}\ge5.
+$$
 
 All three conditions produce `true`; any insufficient condition produces `false`. A value exactly equal to a threshold passes.
 
@@ -66,26 +56,21 @@ Support is calculated from raw AMC aggregated paths. If one touchpoint repeats w
 
 ## 3. Are the Two Models Consistent?
 
-Field:
-
-```text
-models_consistent
-```
+The corresponding field is `models_consistent`.
 
 For a nonzero Outcome:
 
-```text
-gap_pp = 100 × |markov_share - shapley_share|
-mean_share = (markov_share + shapley_share) / 2
-relative_gap = |markov_share - shapley_share| / mean_share
-```
+$$
+g_{\mathrm{pp}}=100\lvert m-s\rvert,\qquad
+\bar{s}=\frac{m+s}{2},\qquad
+g_{\mathrm{rel}}=\frac{\lvert m-s\rvert}{\bar{s}}.
+$$
 
 Both conditions must hold for `true`:
 
-```text
-gap_pp <= 1.0
-relative_gap <= 0.20
-```
+$$
+g_{\mathrm{pp}}\le1.0\qquad\text{and}\qquad g_{\mathrm{rel}}\le0.20.
+$$
 
 Exceeding either threshold produces `false`; a value exactly equal to a threshold passes. This test uses numeric values directly and is unaffected by the ordering of `LONG_TAIL`, `SMALL`, `MEDIUM`, or `LARGE` categories. A nonzero long-tail touchpoint may therefore have `models_consistent=true` when both gap thresholds pass. Threshold comparisons use the unrounded original decimal shares retained during parsing. They do not first round to displayed values or add a tolerance; every value strictly greater than `1.0` or `0.20` fails.
 
@@ -93,60 +78,33 @@ When an entire Outcome is legitimately zero, `calculation_valid=true`, but `data
 
 ## Final Status and Reason
 
-Output fields:
-
-```text
-calculation_valid
-data_support_sufficient
-models_consistent
-reliability_status
-reliability_reason
-```
+The output fields are `calculation_valid`, `data_support_sufficient`, `models_consistent`, `reliability_status`, and `reliability_reason`.
 
 Composition rule:
 
-```text
-calculation_valid
-AND data_support_sufficient
-AND models_consistent
-```
+The composition rule is `calculation_valid AND data_support_sufficient AND models_consistent`.
 
 When all three are true:
 
-```text
-reliability_status = RELIABLE
-reliability_reason = ALL_CRITERIA_PASSED
-```
+When all three are true, `reliability_status` is `RELIABLE` and `reliability_reason` is `ALL_CRITERIA_PASSED`.
 
 When any is false:
 
-```text
-reliability_status = UNRELIABLE
-```
+When any criterion is false, `reliability_status` is `UNRELIABLE`.
 
 Failure reasons use only these three codes, joined in this fixed order:
 
-```text
-CALCULATION_INVALID
-INSUFFICIENT_DATA_SUPPORT
-MODELS_INCONSISTENT
-```
+The only failure codes are `CALCULATION_INVALID`, `INSUFFICIENT_DATA_SUPPORT`, and `MODELS_INCONSISTENT`.
 
 For example, insufficient support and inconsistent models produce:
 
-```text
-reliability_reason = INSUFFICIENT_DATA_SUPPORT|MODELS_INCONSISTENT
-```
+For example, insufficient support and inconsistent models produce `reliability_reason=INSUFFICIENT_DATA_SUPPORT|MODELS_INCONSISTENT`.
 
 ## Where to Inspect the Fields
 
 The five fields are written to three dual-model artifacts:
 
-```text
-amc_mta_model_comparison_touchpoints.csv
-amc_mta_model_comparison_summary.csv
-amc_mta_recommended_attribution.csv
-```
+The fields are written to `amc_mta_model_comparison_touchpoints.csv`, `amc_mta_model_comparison_summary.csv`, and `amc_mta_recommended_attribution.csv`.
 
 The same `touchpoint + outcome` in the recommendation and touchpoint-comparison tables must have exactly the same five values. The summary aggregates by Outcome: it separately applies AND to `calculation_valid`, `data_support_sufficient`, and `models_consistent` over all touchpoints under that Outcome, then uses the same three-way AND formula to determine summary reliability.
 

@@ -75,24 +75,13 @@ The legacy demonstration reviewed on 2026-07-06 used the Python standard library
 - Scalable Vector Graphics (SVG) provided reproducible charts;
 - a fixed random seed drove bootstrap stability analysis.
 
-That stack was appropriate for a low-dependency, reproducible demonstration. The research recommended preserving the model interface and adding a data-adaptation layer before integrating real Amazon data:
-
-```text
-Amazon Attribution downloads / API
-                   ├──> normalization ──> aggregate performance analysis
-AMC query aggregates ──┘
-                                      └──> path construction ──> Markov / Shapley
-```
+That stack was appropriate for a low-dependency, reproducible demonstration. The research recommended preserving the model interface and adding a data-adaptation layer before integrating real Amazon data. Amazon Attribution downloads or API data and AMC query aggregates would first be normalized for aggregate performance analysis; only privacy-compliant path aggregates would proceed through path construction to Markov and Shapley.
 
 Current AMC MTA instead uses five-segment interactions, five CSV model/governance outputs, and a governance decision. It has no SVG or bootstrap-stability artifact. See the [current module](../../../attribution/amc-mta-module.md).
 
 ### Data and Storage Technology
 
-The demonstration uses module-local CSV under:
-
-```text
-modules/mta_attribution/data/simulated/
-```
+The demonstration uses module-local CSV under `modules/mta_attribution/data/simulated/`.
 
 The research distinguishes three data types:
 
@@ -117,11 +106,7 @@ Official Amazon material also states that API access requires application and ap
 
 ### Technology Adoption Recommendation
 
-The research recommended no database, microservice, or real-time stream for the demonstration stage:
-
-```text
-Python + CSV snapshots + versioned configuration + reproducible run scripts
-```
+The research recommended Python, CSV snapshots, versioned configuration, and reproducible run scripts for the demonstration stage, without adding a database, microservice, or real-time stream.
 
 After obtaining real Amazon Attribution reports, first build an aggregate-analysis adapter. After obtaining AMC access and privacy-compliant path aggregates, replace synthetic paths. Do not force Campaign Management data into attribution merely to demonstrate an API when that data cannot support MTA paths.
 
@@ -138,15 +123,7 @@ After obtaining real Amazon Attribution reports, first build an aggregate-analys
 
 The basic pattern assigns a unique Attribution tag to every off-Amazon strategy to be measured and adds the tag parameters to the final landing URL. Official material states that each Ad Group receives a unique tag and that reporting can be organized by publisher, channel, Campaign, creative, Keyword, or product.
 
-```text
-TikTok advertisement
-   ↓ click a URL containing an Attribution tag
-Amazon detail page or Store
-   ↓
-detail-page view → add to cart → purchase → product sales
-   ↓
-Amazon Attribution aggregate report
-```
+A user clicks a TikTok advertisement URL containing an Attribution tag and reaches an Amazon detail page or Store. Amazon can then aggregate the resulting detail-page view, add-to-cart, purchase, and product-sales events into an Amazon Attribution report.
 
 Sources:
 
@@ -157,11 +134,7 @@ Sources:
 
 Suppose a TikTok Campaign has two creatives:
 
-```text
-Campaign: Summer Launch
-├── Ad Group: TikTok-video-A → tag_A
-└── Ad Group: TikTok-video-B → tag_B
-```
+For example, the `Summer Launch` Campaign can contain `TikTok-video-A` using `tag_A` and `TikTok-video-B` using `tag_B`.
 
 If both creatives share one tag, reporting can reveal only TikTok's combined purchases. Separate tags permit a comparison between video A and B. Tag design is data-model design: detail lost through coarse tags cannot be reconstructed later.
 
@@ -182,17 +155,7 @@ The four principal report types described were:
 
 Source: [Amazon Attribution reports and measures](https://advertising.amazon.com/zh-cn/library/guides/basics-of-amazon-attribution).
 
-Recommended demonstration adaptation:
-
-```text
-downloaded Excel/CSV
-   ↓
-column mapping and type validation
-   ↓
-amazon_attribution_performance.csv
-   ↓
-funnel, ROAS, Campaign comparison
-```
+The recommended demonstration adapter maps and validates a downloaded Excel/CSV report, writes `amazon_attribution_performance.csv`, and uses that normalized aggregate table for funnel, ROAS, and Campaign comparisons.
 
 This process creates an aggregate performance table and does not automatically generate a user-touchpoint sequence.
 
@@ -207,42 +170,20 @@ Sources:
 
 The correct pattern is therefore to aggregate paths inside AMC rather than export user logs:
 
-```text
-AMC-internal pseudonymous events
-   ↓ SQL / analytical template
-aggregate by path:
-TikTok > Facebook > Google | users=180 | conversions=24
-Google                     | users=420 | conversions=63
-Facebook > Google          | users=250 | conversions=31
-   ↓ export only aggregates satisfying thresholds
-Markov MTA input
-```
+An AMC SQL or analytical template should aggregate internal pseudonymous events by path. Example aggregates might contain `TikTok > Facebook > Google` with 180 users and 24 conversions, `Google` with 420 users and 63 conversions, and `Facebook > Google` with 250 users and 31 conversions. Only aggregates satisfying privacy thresholds should be exported as Markov MTA input.
 
 The TikTok/Facebook/Google example is possible only if the advertiser supplies permitted pseudonymized first-party signals to AMC and those signals can connect to Amazon signals within policy. Amazon Attribution downloads alone cannot reconstruct such paths.
 
 ### MTA Model Adaptation at the Time of Research
 
-The legacy code reviewed by the research expected:
-
-```text
-markov_user_paths.csv
-shapley_user_channel_sets.csv
-channel_spend.csv
-```
+The legacy code reviewed by the research expected `markov_user_paths.csv`, `shapley_user_channel_sets.csv`, and `channel_spend.csv`.
 
 The recommendation was two adapters rather than direct algorithm edits:
 
-```text
-AmazonAttributionAggregateAdapter
-  input: Amazon Attribution aggregate report
-  output: channel/Campaign funnel and ROI analysis
-  limitation: does not create real MTA paths
-
-AmazonPathAggregateAdapter
-  input: AMC aggregate paths or explicitly labeled synthetic paths
-  output: path tables required by Markov/Shapley
-  limitation: record provenance and whether paths are synthetic
-```
+| Adapter | Input | Output | Limitation |
+| --- | --- | --- | --- |
+| `AmazonAttributionAggregateAdapter` | Amazon Attribution aggregate report | Channel/Campaign funnel and ROI analysis | Does not create real MTA paths |
+| `AmazonPathAggregateAdapter` | AMC aggregate paths or explicitly labeled synthetic paths | Path tables required by Markov/Shapley | Must record provenance and whether paths are synthetic |
 
 Those names describe the legacy design. Current code uses the AMC aggregate and Amazon Ads contracts documented elsewhere.
 
@@ -261,14 +202,7 @@ Sources:
 - [Conversion delay and window completeness](https://advertising.amazon.com/help/GX7KDKHMWQYMJ385)
 - [Attribution restatement](https://advertising.amazon.com/help/G22MA5YPN9KKT7TM)
 
-The research therefore required snapshots to contain:
-
-```text
-report_date
-data_as_of
-attribution_window_days
-report_version
-```
+The research therefore required snapshots to contain `report_date`, `data_as_of`, `attribution_window_days`, and `report_version`.
 
 #### Example: Why Same-Day Conclusions Are Unsafe
 

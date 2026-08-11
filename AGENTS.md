@@ -8,6 +8,16 @@
 - Do not delete or overwrite the preserved Chinese sources when updating English documentation.
 - Re-enable the Chinese site only when the user explicitly requests it.
 
+## Documentation abbreviation and definition rules
+
+- For every markdown file under `docs/en/`, the **first occurrence** of an abbreviated term must include its full name in one of these two formats:
+  - Inline expansion: `Multi-Touch Attribution (MTA)`
+  - Linked to definition: `[MTA](/en/definitions#mta-multi-touch-attribution)`
+- Assume the reader has no programming background. Expand terms like `MAE`, `RMSE`, `TVD`, `Rho`, `top_k`, `SKU`, `ASIN`, `CPC`, `CPM`, `DSP`, `DNN`, `ROAS`, `ROI`, `CPA` on first use within each page.
+- When a term is central to a discussion and used many times, expand it on first occurrence in each major section (`##` heading level), not just once per page.
+- Every abbreviated term expanded or linked in documentation must also have a corresponding entry in `docs/en/definitions.md` under the appropriate category.
+- Link to the definitions page anchor when the term's meaning is nuanced in this project's context (e.g., `[AMC](/en/definitions#amc-amazon-marketing-cloud)`). Use inline expansion when the term is common knowledge (`Comma-Separated Values (CSV)`).
+
 ## Script placement
 
 - Keep every maintained project command-line entry point in the project-root `/script` directory. Its contents are tracked product code.
@@ -32,7 +42,7 @@
 - Every maintained implementation file under `modules/*/src/`, except `__init__.py`, must have exactly one English implementation page at `docs/en/implementation/<module>/<python_stem>.md`.
 - The documentation filename must match the Python filename stem exactly. Its frontmatter must contain `source_file` with the repository-relative Python path.
 - Each implementation page must state responsibility, inputs, outputs, dependencies, and the owning test file or verification command. Higher-level guides may link to these pages but must not replace them.
-- Keep editable Draw.io sources and their generated SVG renders together under `docs/assets/architecture/`. Documentation pages embed the SVG and link to the `.drawio` source.
+- Keep each editable Draw.io source and its generated light and dark SVG renders in the same documentation subdirectory as the first or canonical page that embeds it. Embed its basename through `DrawioDiagram` so VitePress selects `.light.drawio.svg` or `.dark.drawio.svg` automatically and links `.drawio` as the editable source. Reuse a diagram from other pages through a site-absolute `/en/...` basename; do not duplicate its source, create a shared diagram-assets directory, or make pages traverse parent directories for diagrams.
 
 ## Development workflow
 

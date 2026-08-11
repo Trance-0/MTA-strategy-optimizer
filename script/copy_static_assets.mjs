@@ -11,7 +11,7 @@ const scriptDirectory = dirname(fileURLToPath(import.meta.url));
 const documentationRoot = resolve(scriptDirectory, "..", "docs");
 const researchRoot = resolve(documentationRoot, "research");
 const chineseSourceRoot = resolve(documentationRoot, "zh");
-const architectureAssetRoot = resolve(documentationRoot, "assets", "architecture");
+const publishedDocumentationRoot = resolve(documentationRoot, "en");
 const outputRoot = resolve(documentationRoot, ".vitepress", "dist");
 const copiedResearchExtensions = new Set([".pdf", ".docx", ".json", ".txt"]);
 
@@ -62,8 +62,8 @@ async function findFilesByExtension(directory, extensions) {
 
 export async function copyStaticAssets() {
   const attachmentFiles = await findResearchAttachments(researchRoot);
-  const architectureFiles = await findFilesByExtension(
-    architectureAssetRoot,
+  const diagramFiles = await findFilesByExtension(
+    publishedDocumentationRoot,
     new Set([".drawio", ".svg"]),
   );
   const rootAttachments = [
@@ -73,7 +73,7 @@ export async function copyStaticAssets() {
   ].map((name) => resolve(documentationRoot, name));
   const staticFiles = [
     ...attachmentFiles,
-    ...architectureFiles,
+    ...diagramFiles,
     ...rootAttachments,
   ];
 

@@ -15,11 +15,7 @@ The current implementation can be stated precisely as follows:
 
 The current model therefore does not predict the performance of individual new Ad Groups or calculate different performance scores for new groups in the same Campaign. Its output is a deterministic initial-budget starting point:
 
-```text
-recommendation_type = INITIAL_SEED
-is_optimized = false
-allocation_basis = CAMPAIGN_MTA_EQUAL_SPLIT
-```
+The output records `recommendation_type` as `INITIAL_SEED`, `is_optimized` as `false`, and `allocation_basis` as `CAMPAIGN_MTA_EQUAL_SPLIT`.
 
 ## 2. Data Used by the Current Calculation
 
@@ -44,28 +40,17 @@ The current sample Campaign Group has a daily budget of 1,000 USD and contains f
 
 ## 3. Overall Calculation Flow
 
-```mermaid
-flowchart LR
-    A[MTA touchpoint attribution<br/>17 touchpoints × 3 Outcomes] --> B[AMC entity Bridge]
-    B --> C[Three Campaign Outcome contributions]
-    C --> D[Campaign MTA composite score]
-    D --> E[Campaign budget share]
-    F[Candidate counts] --> G[Ad Group count]
-    H[Capacity rules] --> G
-    E --> I[Campaign budget amount]
-    G --> J[Equal split within Campaign]
-    I --> J
-    J --> K[Initial daily budget of each new Ad Group]
-```
+<DrawioDiagram base="./current-budget-calculation-flow" alt="Current initial-budget calculation flow" />
 
 The entire process can be summarized in one final formula:
 
-```text
-Initial daily budget of a new Ad Group
-= Campaign Group total daily budget
-  × Campaign MTA score / sum of all Campaign MTA scores
-  ÷ recommended Ad Group count for that Campaign
-```
+$$
+B_{c,g}=B_{\mathrm{group}}
+\times \frac{S_c}{\sum_j S_j}
+\times \frac{1}{N_c}
+$$
+
+Here, $B_{c,g}$ is the initial daily budget of a new Ad Group in Campaign $c$, $B_{\mathrm{group}}$ is the Campaign Group total daily budget, $S_c$ is the Campaign MTA score, and $N_c$ is the recommended Ad Group count.
 
 The following sections explain where every term in this formula comes from.
 
@@ -73,15 +58,11 @@ The following sections explain where every term in this formula comes from.
 
 The MTA file's granularity is:
 
-```text
-touchpoint × outcome
-```
+Each MTA row has the grain **touchpoint × Outcome**.
 
 The current touchpoint is a five-segment combination of advertising attributes:
 
-```text
-AD_PRODUCT:FORMAT:PLACEMENT:CREATIVE:INTERACTION_TYPE
-```
+The five-segment touchpoint key is `AD_PRODUCT:FORMAT:PLACEMENT:CREATIVE:INTERACTION_TYPE`.
 
 Three Outcomes are currently used:
 
@@ -97,9 +78,9 @@ Each row uses the MTA output's `recommended_value`:
 
 For each Outcome, numeric `recommended_value` values over every available touchpoint must satisfy this condition within a `1e-9` tolerance:
 
-```text
-Σ TouchpointRecommendedValue = 1
-```
+$$
+\sum_t \operatorname{RecommendedValue}_{t,o}=1
+$$
 
 Thus, `recommended_value` represents the Outcome's attribution share across all MTA touchpoints. For an `UNRELIABLE` row, the value included in the sum is the midpoint of `[low,high]`, not the original string.
 
@@ -115,10 +96,7 @@ MTA touchpoints contain advertising attributes such as Ad Product, Format, Place
 
 For touchpoint `t` and Outcome `o`, the code first finds AMC entity rows satisfying both conditions:
 
-```text
-entity.touchpoint = t
-entity.campaign_id = Campaign corresponding to the Ad Product
-```
+An entity row matches when `entity.touchpoint` equals $t$ and its `campaign_id` identifies the Campaign corresponding to the Ad Product.
 
 It then chooses an allocation metric by Outcome:
 
@@ -130,23 +108,23 @@ It then chooses an allocation metric by Outcome:
 
 If the sum of the corresponding `assisted_*` metric is zero, weighting falls back in this order:
 
-```text
-clicks → impressions → unique_users → equal
-```
+The fallback order is `clicks`, then `impressions`, then `unique_users`, and finally an equal split.
 
 The touchpoint credit received by one historical entity row is:
 
-```text
-EntityCredit(t,o,e)
-= MTARecommendedValue(t,o)
-  × EntityMetric(e) / Σ MatchingEntityMetric
-```
+$$
+\operatorname{EntityCredit}(t,o,e)
+=\operatorname{MTARecommendedValue}(t,o)
+\times \frac{\operatorname{EntityMetric}(e)}
+{\sum_{e'\in E_{t,o}}\operatorname{EntityMetric}(e')}
+$$
 
 The code first aggregates entity-row credit to historical Ad Group and checks that the touchpoint credit conserves completely:
 
-```text
-Σ HistoricalAdGroupCredit(t,o) = MTARecommendedValue(t,o)
-```
+$$
+\sum_g \operatorname{HistoricalAdGroupCredit}(t,o,g)
+=\operatorname{MTARecommendedValue}(t,o)
+$$
 
 It then aggregates historical Ad Group credit to Campaign.
 
@@ -166,10 +144,10 @@ Historical Ad Group weights in the Bridge are not passed directly to future new 
 
 For Campaign `c` and Outcome `o`:
 
-```text
-CampaignOutcomeContribution(c,o)
-= Σ bridged touchpoint credit belonging to Campaign c
-```
+$$
+\operatorname{CampaignOutcomeContribution}(c,o)
+=\sum_{e:\,\operatorname{campaign}(e)=c}\operatorname{EntityCredit}(t,o,e)
+$$
 
 The current canonical results are:
 
@@ -189,31 +167,26 @@ It does not mean 0.242017 real users, nor is it a prediction of incremental conv
 
 Current input weights are:
 
-```text
-converted_users = 0.4
-purchase_count  = 0.3
-revenue         = 0.3
-```
+The current weights are 0.4 for `converted_users`, 0.3 for `purchase_count`, and 0.3 for `revenue`.
 
 Weights must sum to 1. The Campaign composite score is:
 
-```text
-CampaignMTAScore
-= 0.4 × ConvertedUsersContribution
-+ 0.3 × PurchaseCountContribution
-+ 0.3 × RevenueContribution
-```
+$$
+S_c=0.4C_{c,\mathrm{converted\ users}}
++0.3C_{c,\mathrm{purchase\ count}}
++0.3C_{c,\mathrm{revenue}}
+$$
 
 For SP:
 
-```text
-SP Campaign MTA Score
-= 0.4 × 0.242017
-+ 0.3 × 0.241830
-+ 0.3 × 0.234920
-= 0.0968068 + 0.0725490 + 0.0704760
-= 0.2398318
-```
+$$
+\begin{aligned}
+S_{\mathrm{SP}}
+&=0.4(0.242017)+0.3(0.241830)+0.3(0.234920)\\
+&=0.0968068+0.0725490+0.0704760\\
+&=0.2398318
+\end{aligned}
+$$
 
 The four Campaign results are:
 
@@ -231,10 +204,9 @@ Because Campaign contributions sum to 1 for each Outcome and Outcome weights als
 
 The Campaign budget share is:
 
-```text
-CampaignBudgetShare
-= CampaignMTAScore / Σ AllCampaignMTAScore
-```
+$$
+\operatorname{CampaignBudgetShare}_c=\frac{S_c}{\sum_j S_j}
+$$
 
 The current total score equals 1 exactly, so each Campaign's budget share is numerically equal to its MTA composite score:
 
@@ -248,9 +220,10 @@ The current total score equals 1 exactly, so each Campaign's budget share is num
 
 The Campaign Group total daily budget is 1,000 USD, so:
 
-```text
-CampaignBudget = CampaignBudgetShare × 1,000
-```
+$$
+\operatorname{CampaignBudget}_c
+=\operatorname{CampaignBudgetShare}_c\times 1000
+$$
 
 This produces:
 
@@ -270,62 +243,59 @@ MTA scores do not determine the Ad Group count; candidate counts and capacity ru
 
 Search ad products use:
 
-```text
-N = max(
-  min_ad_groups,
-  ceil(eligible_keyword_unit_count / max_keyword_units_per_ad_group),
-  ceil(eligible_sku_count / max_skus_per_ad_group),
-  ceil(eligible_legal_pair_count / max_legal_pairs_per_ad_group)
-)
-```
+$$
+N=\max\!\left(
+N_{\min},
+\left\lceil\frac{K}{K_{\max}}\right\rceil,
+\left\lceil\frac{Q}{Q_{\max}}\right\rceil,
+\left\lceil\frac{P}{P_{\max}}\right\rceil
+\right)
+$$
+
+Here, $K$, $Q$, and $P$ are the eligible Keyword-unit, SKU, and legal-Pair counts; the corresponding subscripted maximums are their per-group capacities.
 
 Current SP:
 
-```text
-N = max(1, ceil(3/50), ceil(3/20), ceil(3/100))
-  = max(1, 1, 1, 1)
-  = 1
-```
+$$
+N_{\mathrm{SP}}=\max\!\left(1,\left\lceil\frac{3}{50}\right\rceil,\left\lceil\frac{3}{20}\right\rceil,\left\lceil\frac{3}{100}\right\rceil\right)=1
+$$
 
 Current SB:
 
-```text
-N = max(1, ceil(4/50), ceil(4/20), ceil(4/100))
-  = 1
-```
+$$
+N_{\mathrm{SB}}=\max\!\left(1,\left\lceil\frac{4}{50}\right\rceil,\left\lceil\frac{4}{20}\right\rceil,\left\lceil\frac{4}{100}\right\rceil\right)=1
+$$
 
 ### 9.2 SD and DSP
 
 Display ad products use:
 
-```text
-N = max(
-  min_ad_groups,
-  ceil(eligible_sku_count / max_skus_per_ad_group),
-  ceil(eligible_target_count / max_targets_per_ad_group),
-  ceil(eligible_audience_count / max_audiences_per_ad_group)
-)
-```
+$$
+N=\max\!\left(
+N_{\min},
+\left\lceil\frac{Q}{Q_{\max}}\right\rceil,
+\left\lceil\frac{T}{T_{\max}}\right\rceil,
+\left\lceil\frac{A}{A_{\max}}\right\rceil
+\right)
+$$
+
+Here, $Q$, $T$, and $A$ are the eligible SKU, Target, and Audience counts.
 
 Current SD:
 
-```text
-N = max(1, ceil(4/20), ceil(4/50), ceil(2/50))
-  = 1
-```
+$$
+N_{\mathrm{SD}}=\max\!\left(1,\left\lceil\frac{4}{20}\right\rceil,\left\lceil\frac{4}{50}\right\rceil,\left\lceil\frac{2}{50}\right\rceil\right)=1
+$$
 
 Current DSP:
 
-```text
-N = max(1, ceil(4/20), ceil(8/50), ceil(2/50))
-  = 1
-```
+$$
+N_{\mathrm{DSP}}=\max\!\left(1,\left\lceil\frac{4}{20}\right\rceil,\left\lceil\frac{8}{50}\right\rceil,\left\lceil\frac{2}{50}\right\rceil\right)=1
+$$
 
 The current output is therefore:
 
-```text
-SP / SB / SD / DSP = 1 / 1 / 1 / 1 new Ad Groups
-```
+The resulting new Ad Group counts are SP = 1, SB = 1, SD = 1, and DSP = 1.
 
 This is the capacity lower bound and initial count recommendation derived from aggregate candidate counts. There are currently no specific candidate entities or new-group assignments, so this count does not prove that all valid Pairs will necessarily fit into these groups under real grouping constraints.
 
@@ -337,19 +307,21 @@ The current candidate pool contains only counts of Keywords, SKUs, Targets, Audi
 
 New groups in the same Campaign therefore have no features that the current model can use to distinguish their budgets. The code uses a strict equal split:
 
-```text
-AdGroupBudgetShare = CampaignBudgetShare / RecommendedAdGroupCount
-
-AdGroupInitialDailyBudget
-= AdGroupBudgetShare × CampaignGroupTotalDailyBudget
-```
+$$
+\begin{aligned}
+\operatorname{AdGroupBudgetShare}_{c,g}
+&=\frac{\operatorname{CampaignBudgetShare}_c}{N_c},\\
+\operatorname{AdGroupInitialDailyBudget}_{c,g}
+&=\operatorname{AdGroupBudgetShare}_{c,g}\times B_{\mathrm{group}}.
+\end{aligned}
+$$
 
 Equivalently:
 
-```text
-AdGroupInitialDailyBudget
-= CampaignBudget / RecommendedAdGroupCount
-```
+$$
+\operatorname{AdGroupInitialDailyBudget}_{c,g}
+=\frac{\operatorname{CampaignBudget}_c}{N_c}
+$$
 
 All four current Campaigns have one new group, so each new-group budget equals its Campaign budget:
 
@@ -364,10 +336,7 @@ All four current Campaigns have one new group, so each new-group budget equals i
 
 Suppose SP candidate counts cross a capacity boundary and the recommendation becomes two groups while its MTA score and the Campaign Group total budget remain unchanged:
 
-```text
-SP Campaign budget = 239.8318 USD
-Budget per new SP Ad Group = 239.8318 / 2 = 119.9159 USD
-```
+For example, if the SP Campaign budget is 239.8318 USD and $N_{\mathrm{SP}}=2$, each new SP Ad Group receives $239.8318/2=119.9159$ USD.
 
 Both new groups receive the same budget. The model does not fabricate a budget difference merely because an anonymous number is `NEW_AG_01` versus `NEW_AG_02`.
 
@@ -377,16 +346,14 @@ The current `minimum_daily_budget_per_ad_group` is 25 USD for every Ad Product.
 
 The Campaign's minimum executable budget is:
 
-```text
-MinimumRequiredCampaignBudget
-= RecommendedAdGroupCount × MinimumDailyBudgetPerAdGroup
-```
+$$
+\operatorname{MinimumRequiredCampaignBudget}_c
+=N_c\times\operatorname{MinimumDailyBudgetPerAdGroup}_c
+$$
 
 Each current Campaign has one group, so its minimum executable daily budget is 25 USD. All four Campaign allocations exceed 25 USD, so every status is:
 
-```text
-execution_status = EXECUTABLE
-```
+All four current allocations therefore have `execution_status` set to `EXECUTABLE`.
 
 The minimum budget currently checks execution status only. If a Campaign's allocation is insufficient, the model:
 
@@ -412,29 +379,28 @@ It does not output:
 
 It also adds:
 
-```text
-NO_BUDGET_BASELINE_RELATIVE_SHARES_ONLY
-```
+It also adds the warning `NO_BUDGET_BASELINE_RELATIVE_SHARES_ONLY`.
 
 ## 13. Budget Conservation Relationships
 
 The current generator and validator check:
 
-```text
-Σ touchpoint MTA attribution shares for each Outcome = 1
-Σ Campaign budget shares = 1
-Σ Ad Group budget shares within Campaign = Campaign budget share
-Σ all Ad Group budget shares = 1
-Σ Campaign budget amounts = Campaign Group total budget
-Σ Ad Group budget amounts within Campaign = Campaign budget amount
-```
+$$
+\begin{aligned}
+\sum_t a_{t,o}&=1 &&\text{for every Outcome }o,\\
+\sum_c s_c&=1,\\
+\sum_{g\in c}s_{c,g}&=s_c,\\
+\sum_c\sum_{g\in c}s_{c,g}&=1,\\
+\sum_c B_c&=B_{\mathrm{group}},\\
+\sum_{g\in c}B_{c,g}&=B_c.
+\end{aligned}
+$$
 
 Budget amounts of the four new groups in the current output sum to:
 
-```text
-239.8318 + 297.3985 + 234.1669 + 228.6028
-= 1,000.0000 USD
-```
+$$
+239.8318+297.3985+234.1669+228.6028=1000.0000\ \mathrm{USD}
+$$
 
 JSON stores the original Python floating-point values, so a field may appear as `234.16689999999994`. This is a floating-point representation effect; the current version does not round to the currency's smallest unit or redistribute remainders.
 
@@ -473,11 +439,7 @@ To avoid misinterpretation, the current budget boundaries are explicit:
 
 The real source of each current Ad Group budget is therefore:
 
-```text
-MTA determines relative budgets among Campaigns
-+ candidate counts determine the new-group count in each Campaign
-+ the budget is split equally within each Campaign
-```
+In short, MTA determines relative budgets among Campaigns, candidate counts determine each Campaign's new-group count, and the Campaign budget is split equally among those groups.
 
 This is the full meaning of the output field `CAMPAIGN_MTA_EQUAL_SPLIT`.
 

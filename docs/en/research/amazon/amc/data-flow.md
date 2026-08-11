@@ -7,24 +7,7 @@ lang: en-US
 
 ## Two Input Types
 
-```text
-AMC anonymous aggregate path report
-  five-segment path + users + converted_users + purchase_count + revenue
-                    │
-                    ▼
-            Markov / Shapley
-                    │
-                    ▼
-five-segment interaction attribution
-                    │
-                    ├── join the same five-segment touchpoint
-                    │
-Amazon Ads performance and spend report
-  impressions + clicks + cost + reported sales
-                    │
-                    ▼
-               ROAS / ROI / CPA
-```
+The calculation uses two inputs. An AMC anonymous aggregate path report supplies the five-segment path, users, converted users, purchase count, and revenue to Markov and Shapley. The resulting five-segment interaction attribution is joined on the same touchpoint key to an Amazon Ads performance and spend report containing impressions, clicks, cost, and reported sales. That joined result supports ROAS, ROI, CPA, and cost-per-converted-user calculations.
 
 AMC paths answer which combinations of touchpoints participated in conversion. Amazon Ads reporting answers how much was spent on each touchpoint. Cost does not naturally belong to a user path, so attribution is calculated first and cost is joined afterward at the same touchpoint grain.
 
@@ -38,11 +21,13 @@ AMC paths answer which combinations of touchpoints participated in conversion. A
 
 ## Metrics
 
-```text
-ROAS = attributed_revenue / cost
-ROI  = (attributed_revenue - cost) / cost
-CPA  = cost / attributed_purchase_count
-cost_per_converted_user = cost / attributed_converted_users
-```
+$$
+\begin{aligned}
+\operatorname{ROAS}&=\frac{\text{attributed revenue}}{\text{cost}},\\
+\operatorname{ROI}&=\frac{\text{attributed revenue}-\text{cost}}{\text{cost}},\\
+\operatorname{CPA}&=\frac{\text{cost}}{\text{attributed purchase count}},\\
+\text{cost per converted user}&=\frac{\text{cost}}{\text{attributed converted users}}.
+\end{aligned}
+$$
 
 The program rejects inputs mixing multiple accounts, marketplaces, or currencies. Such data must be partitioned by scope before execution and joining.

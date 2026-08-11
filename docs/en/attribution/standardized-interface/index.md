@@ -46,10 +46,10 @@ A model cannot read the answer because there is no expressible way to hand it ov
 
 MTA-SIM normalizes a touchpoint into four segments; this repository adds `INTERACTION_TYPE` as a fifth. The two are not interchangeable, and `IMPRESSION` versus `CLICK` cannot be recovered from the four-segment data. Adaptation therefore happens only at the loading and output boundary, driven by an explicit simulator configuration.
 
-```text
-AD_PRODUCT:FORMAT:PLACEMENT:CREATIVE                    (MTA-SIM, four segments)
-AD_PRODUCT:FORMAT:PLACEMENT:CREATIVE:INTERACTION_TYPE   (this repository, five)
-```
+| Representation | Key |
+| --- | --- |
+| MTA-SIM, four segments | `AD_PRODUCT:FORMAT:PLACEMENT:CREATIVE` |
+| This repository, five segments | `AD_PRODUCT:FORMAT:PLACEMENT:CREATIVE:INTERACTION_TYPE` |
 
 The configuration maps a billing cost type onto the missing segment:
 
@@ -138,6 +138,25 @@ class MtaAttributionModel(ABC):
 | `path_level_shapley` | 1.0.0 | No | Yes | Wraps `run_shapley_attribution` |
 | `uniform_credit` | 1.0.0 | Yes | No | Equal split; reference baseline |
 | `dnn_credit` | 1.0.0 | Yes | Yes | Learned network; see [DNN credit model](./dnn.md) |
+
+## Choosing a Model <span class="status-label status-verified" aria-label="Verified"></span>
+
+Start with the question you need to answer, not with the algorithm:
+
+::: tip Model selection guide
+- **Which touchpoints contributed most to conversions?** → [Markov removal effect](./markov.md)
+- **How sensitive is the result to the model choice?** → Run both [Markov](./markov.md) and [Shapley](./shapley.md), then compare
+- **What share would a new campaign likely receive?** → [DNN credit model](./dnn.md) (the only model that predicts without path history)
+- **Is any of the above meaningful at all?** → Compare against the [uniform credit baseline](./uniform.md)
+:::
+
+| Task | Recommended model | Fallback |
+| --- | --- | --- |
+| Official display and reporting | [Markov](./markov.md) | [Shapley](./shapley.md) interval |
+| Sensitivity analysis | [Shapley](./shapley.md) | Compare with [Markov](./markov.md) |
+| New campaign without path data | [DNN](./dnn.md) | [Uniform](./uniform.md) baseline |
+| Baseline / null hypothesis | [Uniform](./uniform.md) | N/A — it is the floor |
+| Understanding model internals | [Markov](./markov.md) (transition network) | [Shapley](./shapley.md) (coalition game) |
 
 The two wrappers perform no arithmetic of their own. They forward the five-segment path rows to the existing estimators and relabel the results, so removal effects, convergence thresholds, and Shapley coalition values are bit-identical to a direct call. A regression test asserts exactly that, and pins the fixture's expected values so a change to the underlying mathematics fails loudly.
 

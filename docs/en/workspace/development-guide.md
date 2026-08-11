@@ -25,9 +25,7 @@ The pipeline derives its window from the earliest through latest Amazon Ads `rep
 
 Canonical attribution output is stored in:
 
-```text
-modules/mta_attribution/outputs/attribution/
-```
+Attribution outputs are written under `modules/mta_attribution/outputs/attribution/`.
 
 Five CSV files are retained as the canonical model/governance outputs. Other generated output is excluded by `.gitignore`.
 
@@ -55,13 +53,11 @@ The initializer reads AMC recommended attribution and touchpoint-entity aggregat
 
 The full-workspace audit used these read-only check categories:
 
-```text
-Python: ast.parse every .py file
-JavaScript: node --check every .js file
-Bash: bash -n story-automator
-Markdown: existence of local links in project-authored documentation
-JSON/TOML: parse real configuration and data files
-```
+- Python: parse every `.py` file with `ast.parse`.
+- JavaScript: run `node --check` for every `.js` file.
+- Bash: run `bash -n` for the story automator.
+- Markdown: verify local links in project-authored documentation exist.
+- JSON/TOML: parse actual configuration and data files.
 
 Historical tool-layer checks are not run or counted with product verification. Future development uses the module tests, maintained root scripts, and documentation build described on this page.
 

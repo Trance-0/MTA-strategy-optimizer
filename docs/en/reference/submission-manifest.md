@@ -13,7 +13,7 @@ lang: en-US
 - module `src/` and `config.py`, plus the project-level commands under `script/`;
 - `tests/`;
 - `docs/`, including the complete usage guide and canonical output index;
-- `docs/assets/amc-mta-data-flow.png` and its editable SVG source;
+- `docs/en/product/amc-mta/data-flow.drawio` and its generated light/dark SVG renders;
 - demonstration inputs and descriptions under `data/simulated/`;
 - the five canonical display results under `outputs/attribution/`.
 

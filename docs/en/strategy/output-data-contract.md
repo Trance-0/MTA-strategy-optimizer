@@ -81,12 +81,14 @@ A new group is only an anonymous budget-recipient slot. Output must not contain 
 
 ## 5. Conservation and Defaults
 
-```text
-Σ Ad Group share = Campaign share
-Σ Campaign share = 1
-Σ recommended_value for each MTA Outcome = 1
-Σ Ad Group budget = Campaign budget
-Σ Campaign budget = Group budget
-```
+$$
+\begin{aligned}
+\sum_{g\in c}s_{c,g}&=s_c,\\
+\sum_c s_c&=1,\\
+\sum_t a_{t,o}&=1 &&\text{for each MTA Outcome }o,\\
+\sum_{g\in c}B_{c,g}&=B_c,\\
+\sum_c B_c&=B_{\mathrm{group}}.
+\end{aligned}
+$$
 
 Without `total_daily_budget`, omit every absolute amount, retain shares, and output `NO_BUDGET_BASELINE_RELATIVE_SHARES_ONLY`. When the budget is insufficient, output `INSUFFICIENT_BUDGET_FOR_MINIMUMS` without changing the count required by capacity.

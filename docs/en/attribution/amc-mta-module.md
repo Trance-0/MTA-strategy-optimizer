@@ -14,7 +14,7 @@ This module performs attribution analysis only. It is not responsible for budget
 ## Start Here
 
 - [Complete usage guide](complete-guide.md): scope, inputs, paths, models, metrics, reliability, execution, troubleshooting, and demo.
-- [Data-flow diagram](../../assets/amc-mta/data-flow.png): standalone PNG; the editable source is [SVG](../../assets/amc-mta/data-flow.svg).
+- [Current data-flow diagram](../product/amc-mta/architecture.md#current-data-flow): theme-aware Draw.io architecture covering the canonical AMC pipeline and standardized Markov, Shapley, Uniform, and DNN evaluation lane.
 - [Canonical output index](output-reference.md): reading order, granularity, fields, and interpretation boundaries for the five CSV files.
 - [Submission manifest](../reference/submission-manifest.md): required, optional, and excluded content plus acceptance status.
 - [Current documentation index](reference-index.md): module sources of truth and topic-specific explanations.
@@ -189,13 +189,11 @@ Update the events and Amazon Ads input files, then run directly. The canonical p
 
 Default canonical outputs:
 
-```text
-modules/mta_attribution/outputs/attribution/amc_markov_attribution_results.csv
-modules/mta_attribution/outputs/attribution/amc_shapley_attribution_results.csv
-modules/mta_attribution/outputs/attribution/amc_mta_model_comparison_touchpoints.csv
-modules/mta_attribution/outputs/attribution/amc_mta_model_comparison_summary.csv
-modules/mta_attribution/outputs/attribution/amc_mta_recommended_attribution.csv
-```
+- `modules/mta_attribution/outputs/attribution/amc_markov_attribution_results.csv`
+- `modules/mta_attribution/outputs/attribution/amc_shapley_attribution_results.csv`
+- `modules/mta_attribution/outputs/attribution/amc_mta_model_comparison_touchpoints.csv`
+- `modules/mta_attribution/outputs/attribution/amc_mta_model_comparison_summary.csv`
+- `modules/mta_attribution/outputs/attribution/amc_mta_recommended_attribution.csv`
 
 The first two are each model's primary five-segment result. The final three provide diagnostics for “touchpoint count × 3 Outcomes,” an overall summary for three Outcomes, and recommendation records for the same “touchpoint count × 3” shape. The current 90-day sample has 17 touchpoints, so diagnostics and recommendations contain 51 rows each. All three dual-model artifacts directly expose the three Booleans “calculation valid,” “data support sufficient,” and “models consistent,” plus a binary reliability result. All three must be true for `RELIABLE`. For each Outcome, the summary AND-aggregates the three Booleans over every touchpoint; the overall comparison status and other difference metrics are diagnostic only. The current sample has `51 RELIABLE / 0 UNRELIABLE`.
 

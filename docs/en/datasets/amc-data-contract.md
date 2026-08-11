@@ -31,10 +31,7 @@ The master table also stores historical Campaign/Ad Group values, applicable Key
 
 A conceptual `TOUCHPOINT` event must provide `journey_id`, `event_time`, `ad_product`, `format`, and `interaction_type`; empty `placement` and `creative` values are normalized to `UNSPECIFIED`. `interaction_type` may only be:
 
-```text
-IMPRESSION
-CLICK
-```
+`interaction_type` may only be `IMPRESSION` or `CLICK`.
 
 A missing, empty, or other value terminates path construction. This interaction type comes from the AMC event-normalization layer; the program does not reconstruct user paths from aggregate `impressions` and `clicks` values in the Amazon Ads report.
 
@@ -51,12 +48,15 @@ The AMC aggregated path table used for attribution retains only these four metri
 
 Count fields must be finite non-negative integers, revenue must be a finite non-negative number, and the following constraints must hold:
 
-```text
-0 <= converted_users <= users
-purchase_count >= converted_users
-new_to_brand_purchases <= purchase_count
-converted_users > 0 when purchase_count or revenue is positive
-```
+$$
+\begin{aligned}
+0&\le \text{converted users}\le \text{users},\\
+\text{purchase count}&\ge \text{converted users},\\
+\text{new-to-brand purchases}&\le \text{purchase count}.
+\end{aligned}
+$$
+
+In addition, `converted_users` must be positive whenever `purchase_count` or `revenue` is positive.
 
 The legacy AMC field `purchases` is no longer accepted, preventing confusion between purchasing-user count and order count. The native Amazon Ads `purchases` field is retained and renamed `reported_purchases` in outputs.
 
@@ -64,9 +64,7 @@ The legacy AMC field `purchases` is no longer accepted, preventing confusion bet
 
 AMC paths and attribution models use a five-segment interaction key:
 
-```text
-AD_PRODUCT:FORMAT:PLACEMENT:CREATIVE:INTERACTION_TYPE
-```
+The key is `AD_PRODUCT:FORMAT:PLACEMENT:CREATIVE:INTERACTION_TYPE`.
 
 The preceding advertising-attribute segments are uppercased and may contain only letters, digits, and underscores. `INTERACTION_TYPE` may only be `IMPRESSION` or `CLICK`. If the same ad is first viewed and then clicked, both events are retained as ordered, distinct five-segment touchpoints in the path.
 
@@ -110,11 +108,15 @@ Shapley computes a unanimity game over the unique touchpoint set of each path an
 
 Both models output three sets of shares and attribution values at five-segment interaction granularity. Each result conserves separately:
 
-```text
-attributed_converted_users = total converted_users
-attributed_purchase_count  = total purchase_count
-attributed_revenue         = total revenue
-```
+$$
+\begin{aligned}
+\sum_t \widehat{U}_t&=U,\\
+\sum_t \widehat{P}_t&=P,\\
+\sum_t \widehat{R}_t&=R,
+\end{aligned}
+$$
+
+where the hatted values are attributed converted users, purchases, and revenue by touchpoint, and $U$, $P$, and $R$ are the corresponding input totals.
 
 Each model outputs one five-segment primary result containing `touchpoint`, `interaction_type`, three sets of attribution metrics, Amazon Ads performance and cost, and efficiency metrics. The Markov and Shapley model files remain separate. The pipeline generates three additional governance artifacts: a complete 51-row five-segment comparison, a five-segment overall summary for the three Outcomes, and 51 management recommendation records. Model attribution, support, gap diagnostics, and recommendations all use the full five-segment key.
 
@@ -126,9 +128,11 @@ ROAS, ROI, CPA, and cost per converted user are empty on zero-cost rows.
 
 Efficiency metrics:
 
-```text
-ROAS = attributed_revenue / cost
-ROI  = (attributed_revenue - cost) / cost
-CPA  = cost / attributed_purchase_count
-cost_per_converted_user = cost / attributed_converted_users
-```
+$$
+\begin{aligned}
+\operatorname{ROAS}&=\frac{\text{attributed revenue}}{\text{cost}},\\
+\operatorname{ROI}&=\frac{\text{attributed revenue}-\text{cost}}{\text{cost}},\\
+\operatorname{CPA}&=\frac{\text{cost}}{\text{attributed purchase count}},\\
+\text{cost per converted user}&=\frac{\text{cost}}{\text{attributed converted users}}.
+\end{aligned}
+$$

@@ -12,14 +12,13 @@ The primary synthetic data source is the [Trance-0/MTA-SIM-dataset](https://gith
 
 The integration uses the public generator under `ZheyuanWu/`. The external generator owns simulation, validation, and CSV storage. This repository owns only the explicit contract adapter and model processing that follow generation.
 
-```text
-external/mta_sim_dataset/ZheyuanWu configuration
-  -> ZheyuanWu baseline or regional generator
-  -> original four-segment path, performance, and ground-truth tables
-  -> mta_sim_generator_adapter
-  -> single-scope model path report + explicit CPC/CPM interaction mapping
-  -> MtaSimDataset for local registered models
-```
+The adapter flow is:
+
+1. read the `external/mta_sim_dataset/ZheyuanWu` configuration;
+2. run the ZheyuanWu baseline or regional generator;
+3. receive the original four-segment path, performance, and ground-truth tables;
+4. adapt them through `mta_sim_generator_adapter` into a single-scope path report with explicit CPC/CPM interaction mapping; and
+5. load the result as `MtaSimDataset` for the locally registered models.
 
 Simulation ground truth remains evaluation-only. It is normalized into a compatible reporting scope but is never attached to `MtaSimDataset` or passed to `fit()` or `attribute()`.
 

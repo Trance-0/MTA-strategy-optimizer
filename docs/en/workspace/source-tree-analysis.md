@@ -7,45 +7,25 @@ lang: en-US
 
 ## Overall Structure
 
-```text
-marketing-roi-analysis/
-├── README.md                         # workspace and business entry point
-├── log.md                            # protected human work record
-├── .gitignore                        # cache, secret, and generated-output rules
-├── .markdownlint.json                # Markdown lint exceptions
-├── modules/
-│   ├── mta_attribution/             # model interface and concrete attribution implementations
-│   ├── mta_standard/                # MTA-SIM framework, adapter, execution, evaluator
-│   └── mta_strategy_recommendation/ # Campaign Group initial-strategy module
-├── external/mta_sim_dataset/         # pinned ZheyuanWu data-generator submodule
-├── script/                            # all maintained project commands
-├── docs/                             # bilingual knowledge and external research
-├── design-artifacts/                 # historical product vision
-├── _bmad-output/                     # completed specifications and deferred work
-├── .agents/
-│   └── skills/                       # installed skills
-└── _bmad/                            # installation metadata, configuration, shared tools
-```
+| Path | Responsibility |
+| --- | --- |
+| `README.md` | Workspace and business entry point |
+| `log.md` | Protected human work record |
+| `.gitignore`, `.markdownlint.json` | Ignore and Markdown-lint rules |
+| `modules/mta_attribution/` | Model interface and concrete attribution implementations |
+| `modules/mta_standard/` | MTA-SIM framework, adapter, execution, and evaluation |
+| `modules/mta_strategy_recommendation/` | Campaign Group initial-strategy module |
+| `external/mta_sim_dataset/` | Pinned ZheyuanWu data-generator submodule |
+| `script/` | All maintained project commands |
+| `docs/` | Published English knowledge, preserved Chinese sources, and external research |
+| `design-artifacts/`, `_bmad-output/` | Historical product vision, completed specifications, and deferred work |
+| `.agents/skills/`, `_bmad/` | Installed or historical/optional development tooling |
 
 `.git/` is inspected only for repository health; its object database is not evaluated file by file as project content.
 
 ## Current Business Area
 
-```text
-modules/mta_attribution/
-├── config.py                         # windows, thresholds, field constants
-├── src/
-│   ├── touchpoint_key.py                # five-segment parsing and validation
-│   ├── synthetic_event_pipeline.py      # synthetic users and AMC/Ads/entity derivation
-│   ├── path_report_builder.py           # conceptual events to anonymous paths
-│   ├── attribution_contract.py          # CSV IO, row validation, result shaping
-│   ├── markov_attribution_model.py      # removal-effect model
-│   ├── shapley_attribution_model.py     # path-level Shapley model
-│   └── attribution_model_comparison.py  # gaps, support, reliability, recommendations
-├── tests/                               # automated tests
-├── data/simulated/                      # one source and four derived datasets
-└── outputs/attribution/                 # five canonical generated outputs
-```
+The `mta_attribution` module contains `config.py` for windows, thresholds, and field constants; `src/` for touchpoint validation, simulation, path construction, shared contracts, concrete models, and comparison; `tests/` for automation; `data/simulated/` for the source and derived datasets; and `outputs/attribution/` for the five canonical outputs.
 
 One file per model is deliberate. `attribution_contract.py` owns everything both
 models share — the CSV boundary, row validation, and result shaping — so each
@@ -54,36 +34,11 @@ replaced on its own.
 
 Dependency direction is:
 
-```text
-config + touchpoint_key + simulated_touchpoints
-          ↓
-synthetic_event_pipeline (simulation only)
-          ├─ Ads / touchpoint-entity aggregates
-          └─ anonymous conceptual events
-                    ↓
-            path_report_builder
-                    ↓
-           attribution_contract
-            ↓                ↓
-markov_attribution   shapley_attribution
-     _model               _model
-            ↓                ↓
-        attribution_model_comparison
-                    ↓
-       project-level script / outputs
-```
+The dependency direction starts with configuration, touchpoint validation, and simulated touchpoints. The simulation-only event pipeline derives Ads/entity aggregates and anonymous conceptual events. `path_report_builder` converts those events into paths, `attribution_contract` provides the shared validated representation, Markov and Shapley run independently, and `attribution_model_comparison` combines only their outputs before project-level scripts publish the artifacts.
 
 The Strategy Initializer is:
 
-```text
-modules/mta_strategy_recommendation/
-├── data/simulated/                   # strategy request and candidate pool
-├── outputs/initial_budget_recommendation.json
-├── src/
-│   ├── budget_recommender.py         # counts, MTA bridge, budget generation
-│   └── hierarchy_validator.py        # AMC lineage and result regeneration
-└── tests/                            # contract, compatibility, boundary tests
-```
+The Strategy Initializer contains `data/simulated/` for its request and candidate pool, `src/budget_recommender.py` for counts, the MTA bridge, and budget generation, `src/hierarchy_validator.py` for AMC lineage and deterministic regeneration, `tests/` for contract and boundary checks, and `outputs/initial_budget_recommendation.json` as its canonical result.
 
 The corresponding command entry points are `script/run_pipeline.py`,
 `script/generate_initial_budget.py`, and
@@ -94,22 +49,7 @@ Strategy descriptions were migrated out of the runtime module and into the proje
 
 ## Knowledge and Traceability Area
 
-```text
-docs/
-├── index.md                          # redirect to the active English site
-├── en/                               # complete active English documentation
-├── zh/                               # complete preserved Chinese source documentation
-├── assets/                           # shared diagrams and images
-├── research/                         # external PDF/DOCX/JSON/TXT originals only
-├── workspace-file-inventory.json     # machine-generated inventory
-└── project-scan-report.json          # scan state
-
-design-artifacts/
-└── amc_mta/A-Product-Brief/          # early vision, PRD, explanations, decisions
-
-_bmad-output/
-└── implementation-artifacts/         # completed remediation and deferred work
-```
+The knowledge area consists of `docs/index.md` for the active-language redirect, `docs/en/` for published English pages, `docs/zh/` for preserved Chinese sources, and `docs/research/` for external PDF/DOCX/JSON/TXT originals. Editable Draw.io files and their light/dark SVG renders live beside the English pages that embed them. `workspace-file-inventory.json` and `project-scan-report.json` hold machine-generated inventory state. Historical vision remains under `design-artifacts/amc_mta/A-Product-Brief/`, while completed remediation records and deferred work remain under `_bmad-output/implementation-artifacts/`.
 
 ## Installed Tool Area
 

@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="Electron" agent="Codex" version="31.1.5">
+  <diagram id="project-structure" name="Project structure">
+    <mxGraphModel page="1" pageScale="1" pageWidth="1200" pageHeight="900" grid="1" gridSize="10" arrows="1" connect="1">
+      <root>
+        <mxCell id="0"/><mxCell id="1" parent="0"/>
+        <mxCell id="title" value="Project model architecture" style="text;html=1;align=center;verticalAlign=middle;fontSize=26;fontStyle=1;" vertex="1" parent="1"><mxGeometry x="390" y="30" width="420" height="45" as="geometry"/></mxCell>
+        <mxCell id="attr-label" value="Attribution layer · historical evidence" style="text;html=1;align=left;fontSize=17;fontStyle=1;fontColor=#2D6A4F;" vertex="1" parent="1"><mxGeometry x="60" y="105" width="360" height="30" as="geometry"/></mxCell>
+        <mxCell id="paths" value="&lt;b&gt;AMC aggregated paths&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DAE8FC;strokeColor=#6C8EBF;fontSize=16;" vertex="1" parent="1"><mxGeometry x="60" y="155" width="230" height="90" as="geometry"/></mxCell>
+        <mxCell id="markov" value="&lt;b&gt;Weighted Markov&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#D5E8D4;strokeColor=#82B366;fontSize=16;" vertex="1" parent="1"><mxGeometry x="390" y="125" width="220" height="80" as="geometry"/></mxCell>
+        <mxCell id="shapley" value="&lt;b&gt;Path-level Shapley&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#D5E8D4;strokeColor=#82B366;fontSize=16;" vertex="1" parent="1"><mxGeometry x="390" y="225" width="220" height="80" as="geometry"/></mxCell>
+        <mxCell id="comparison" value="&lt;b&gt;Model comparison&lt;/b&gt;&lt;br&gt;governed recommended shares" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF2CC;strokeColor=#D6B656;fontSize=16;" vertex="1" parent="1"><mxGeometry x="720" y="165" width="270" height="100" as="geometry"/></mxCell>
+        <mxCell id="strategy-label" value="Strategy layer · new Campaign initialization" style="text;html=1;align=left;fontSize=17;fontStyle=1;fontColor=#6B4C7A;" vertex="1" parent="1"><mxGeometry x="60" y="355" width="390" height="30" as="geometry"/></mxCell>
+        <mxCell id="bridge" value="&lt;b&gt;Entity Bridge&lt;/b&gt;&lt;br&gt;touchpoint → Campaign" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF2CC;strokeColor=#D6B656;fontSize=16;" vertex="1" parent="1"><mxGeometry x="60" y="415" width="240" height="90" as="geometry"/></mxCell>
+        <mxCell id="campaign-share" value="&lt;b&gt;Campaign budget shares&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E1D5E7;strokeColor=#9673A6;fontSize=16;" vertex="1" parent="1"><mxGeometry x="390" y="415" width="230" height="90" as="geometry"/></mxCell>
+        <mxCell id="candidates" value="&lt;b&gt;Candidate pool&lt;/b&gt;&lt;br&gt;capacity rules" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F8CECC;strokeColor=#B85450;fontSize=16;" vertex="1" parent="1"><mxGeometry x="60" y="535" width="240" height="90" as="geometry"/></mxCell>
+        <mxCell id="count" value="&lt;b&gt;New Ad Group count&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F8CECC;strokeColor=#B85450;fontSize=16;" vertex="1" parent="1"><mxGeometry x="390" y="535" width="230" height="90" as="geometry"/></mxCell>
+        <mxCell id="split" value="&lt;b&gt;Initial budget&lt;/b&gt;&lt;br&gt;equal split within Campaign" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E1D5E7;strokeColor=#9673A6;fontSize=16;" vertex="1" parent="1"><mxGeometry x="760" y="475" width="270" height="100" as="geometry"/></mxCell>
+        <mxCell id="future-label" value="Optimization layer · pending" style="text;html=1;align=left;fontSize=17;fontStyle=1;fontColor=#666666;" vertex="1" parent="1"><mxGeometry x="390" y="690" width="300" height="30" as="geometry"/></mxCell>
+        <mxCell id="response" value="&lt;b&gt;Future&lt;/b&gt;&lt;br&gt;Ad Group budget-response model" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F5F5F5;strokeColor=#666666;dashed=1;fontSize=16;" vertex="1" parent="1"><mxGeometry x="390" y="745" width="260" height="90" as="geometry"/></mxCell>
+        <mxCell id="optimizer" value="&lt;b&gt;Future&lt;/b&gt;&lt;br&gt;constrained optimizer" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F5F5F5;strokeColor=#666666;dashed=1;fontSize=16;" vertex="1" parent="1"><mxGeometry x="760" y="745" width="270" height="90" as="geometry"/></mxCell>
+        <mxCell id="e1" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;strokeWidth=2;" edge="1" parent="1" source="paths" target="markov"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e2" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;strokeWidth=2;" edge="1" parent="1" source="paths" target="shapley"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e3" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;strokeWidth=2;" edge="1" parent="1" source="markov" target="comparison"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e4" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;strokeWidth=2;" edge="1" parent="1" source="shapley" target="comparison"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e5" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;strokeWidth=2;" edge="1" parent="1" source="comparison" target="bridge"><mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="855" y="340"/><mxPoint x="180" y="340"/></Array></mxGeometry></mxCell>
+        <mxCell id="e6" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;strokeWidth=2;" edge="1" parent="1" source="bridge" target="campaign-share"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e7" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;strokeWidth=2;" edge="1" parent="1" source="candidates" target="count"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e8" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;strokeWidth=2;" edge="1" parent="1" source="campaign-share" target="split"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e9" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;strokeWidth=2;" edge="1" parent="1" source="count" target="split"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e10" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;strokeWidth=2;dashed=1;" edge="1" parent="1" source="split" target="response"><mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="895" y="665"/><mxPoint x="520" y="665"/></Array></mxGeometry></mxCell>
+        <mxCell id="e11" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;strokeWidth=2;dashed=1;" edge="1" parent="1" source="response" target="optimizer"><mxGeometry relative="1" as="geometry"/></mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

@@ -62,3 +62,6 @@ modules/mta_attribution/outputs/attribution/*
 !modules/mta_strategy_recommendation/outputs/
 modules/mta_strategy_recommendation/outputs/*
 !modules/mta_strategy_recommendation/outputs/initial_budget_recommendation.json
+
+# draw.io
+*.bkp
