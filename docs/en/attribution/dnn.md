@@ -12,7 +12,7 @@ Markov and Shapley both score a touchpoint by its **identity**: a touchpoint tha
 
 The DNN credit model scores a touchpoint by its **structure** instead. It consumes the four contract segments — `AD_PRODUCT`, `FORMAT`, `PLACEMENT`, `CREATIVE` — plus features derived from how similar touchpoints behaved in observed paths. Because those inputs exist for a touchpoint with no history, the trained network can rank a planned campaign's touchpoints before that campaign has produced a single path.
 
-Implementation: class `DeepNeuralAttributionModel` in `modules/mta_standard/src/dnn_attribution_model.py`.
+Implementation: class `DeepNeuralAttributionModel` in `modules/mta_attribution/src/dnn_attribution_model.py`.
 
 ## Architecture <span class="status-label status-verified" aria-label="Verified"></span>
 

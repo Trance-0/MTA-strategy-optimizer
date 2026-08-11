@@ -19,12 +19,8 @@ from dataclasses import dataclass
 from types import MappingProxyType
 from typing import Iterable, Mapping
 
-from attribution_src_path import ensure_attribution_src_on_path
-
-ensure_attribution_src_on_path()
-
-from attribution_contract import NULL  # noqa: E402
-from touchpoint_key import (  # noqa: E402
+from modules.mta_attribution.src.attribution_contract import NULL
+from modules.mta_attribution.src.touchpoint_key import (
     canonical_touchpoint_key,
     canonicalize_touchpoint_key,
     touchpoint_key_from_ads_row,

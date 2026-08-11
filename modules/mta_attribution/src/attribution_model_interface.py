@@ -29,19 +29,16 @@ from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import ClassVar, Sequence
 
-from attribution_src_path import ensure_attribution_src_on_path
-from dataloader import MtaSimDataset
-from output_contract import (
+from modules.mta_standard.src.dataloader import MtaSimDataset
+from modules.mta_standard.src.output_contract import (
     SUPPORTED_OUTCOMES,
     ZERO_OUTCOME_WARNING,
     StandardAttributionRow,
 )
-from touchpoint_adapter import to_four_segment
+from modules.mta_standard.src.touchpoint_adapter import to_four_segment
 
-ensure_attribution_src_on_path()
-
-from attribution_contract import AttributionResult  # noqa: E402
-from attribution_model_comparison import OUTCOME_FIELDS  # noqa: E402
+from .attribution_contract import AttributionResult
+from .attribution_model_comparison import OUTCOME_FIELDS
 
 
 @dataclass(frozen=True)
@@ -291,4 +288,3 @@ def standard_rows_from_attribution_results(
                 )
             )
     return rows
-

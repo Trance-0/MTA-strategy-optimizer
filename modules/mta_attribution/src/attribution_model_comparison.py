@@ -26,7 +26,7 @@ from decimal import Decimal, InvalidOperation
 from pathlib import Path
 from typing import Mapping, Sequence
 
-from attribution_contract import (
+from .attribution_contract import (
     NULL,
     PATH_FIELD_DESCRIPTIONS,
     read_csv_normalized,
@@ -34,7 +34,7 @@ from attribution_contract import (
     safe_int,
     validate_amc_aggregated_row,
 )
-from touchpoint_key import canonicalize_amc_touchpoint_key
+from .touchpoint_key import canonicalize_amc_touchpoint_key
 
 
 OUTCOME_FIELDS = {

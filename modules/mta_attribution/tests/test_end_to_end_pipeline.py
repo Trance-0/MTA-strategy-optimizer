@@ -8,7 +8,6 @@ back, and that attributed outcomes conserve against the path report totals.
 from __future__ import annotations
 
 import csv
-import sys
 import tempfile
 import unittest
 from dataclasses import replace
@@ -18,22 +17,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 
-ROOT = Path(__file__).resolve().parents[1]
-PROJECT_ROOT = ROOT.parents[1]
-SRC = ROOT / "src"
-SCRIPTS = PROJECT_ROOT / "script"
-sys.path.insert(0, str(ROOT))
-sys.path.insert(0, str(SRC))
-sys.path.insert(0, str(SCRIPTS))
-
-from path_report_builder import PATH_REPORT_FIELDS, build_aggregated_path_rows  # noqa: E402
-from attribution_contract import (  # noqa: E402
-    PATH_FIELD_DESCRIPTIONS,
-    read_csv,
-    write_csv  # noqa: E402,
-)
-from build_path_report import build_path_report  # noqa: E402
-from config import (  # noqa: E402
+from modules.mta_attribution.config import (
     AMAZON_ADS_REPORT_FILE,
     AMC_REPORT_FILE,
     AMC_TOUCHPOINT_ENTITY_AGGREGATE_FILE,
@@ -49,26 +33,27 @@ from config import (  # noqa: E402
     SHAPLEY_OUTPUT_FILE,
     SYNTHETIC_USER_EVENTS_FILE,
 )
-from generate_simulated_amazon_ads_report import FIELDS, generate_file, generate_rows  # noqa: E402
-from generate_simulated_amc_touchpoint_events import generate_rows as generate_event_rows  # noqa: E402
-from regenerate_simulated_dataset import regenerate  # noqa: E402
-from run_attribution_models import run_attribution_models  # noqa: E402
-from compare_attribution_models import compare_model_files  # noqa: E402
-from run_pipeline import match_outputs_by_name, publish_with_rollback  # noqa: E402
-from validate_data_alignment import validate_data_alignment_rows  # noqa: E402
-from attribution_model_comparison import (  # noqa: E402
+from modules.mta_attribution.src.attribution_contract import (
+    PATH_FIELD_DESCRIPTIONS,
+    read_csv,
+    write_csv  # noqa: E402,
+)
+from modules.mta_attribution.src.attribution_model_comparison import (
     RECOMMENDED_FIELDS,
     SUMMARY_FIELDS,
     TOUCHPOINT_COMPARISON_FIELDS,
 )
-from touchpoint_key import canonicalize_amc_touchpoint_key  # noqa: E402
-from simulated_touchpoints import (  # noqa: E402
+from modules.mta_attribution.src.path_report_builder import (
+    PATH_REPORT_FIELDS,
+    build_aggregated_path_rows,
+)
+from modules.mta_attribution.src.simulated_touchpoints import (
     TOUCHPOINT_CATALOG,
     TOUCHPOINT_KEYS,
     validate_touchpoint_catalog,
 )
-import synthetic_event_pipeline as synthetic_pipeline  # noqa: E402
-from synthetic_event_pipeline import (  # noqa: E402
+from modules.mta_attribution.src import synthetic_event_pipeline as synthetic_pipeline
+from modules.mta_attribution.src.synthetic_event_pipeline import (
     AMC_EVENT_FIELDS,
     ENTITY_AGGREGATE_FIELDS,
     SYNTHETIC_EVENT_FIELDS,
@@ -79,6 +64,20 @@ from synthetic_event_pipeline import (  # noqa: E402
     validate_derivations,
     validate_synthetic_user_events,
 )
+from modules.mta_attribution.src.touchpoint_key import canonicalize_amc_touchpoint_key
+from script.build_path_report import build_path_report
+from script.compare_attribution_models import compare_model_files
+from script.generate_simulated_amazon_ads_report import FIELDS, generate_file, generate_rows
+from script.generate_simulated_amc_touchpoint_events import (
+    generate_rows as generate_event_rows,
+)
+from script.regenerate_simulated_dataset import regenerate
+from script.run_attribution_models import run_attribution_models
+from script.run_pipeline import match_outputs_by_name, publish_with_rollback
+from script.validate_data_alignment import validate_data_alignment_rows
+
+
+ROOT = Path(__file__).resolve().parents[1]
 
 
 RELIABILITY_FIELDS = {
@@ -839,7 +838,9 @@ class EndToEndSampleTests(unittest.TestCase):
                     raise OSError("simulated publication failure")
                 real_replace(source, destination)
 
-            with patch("run_pipeline.os.replace", side_effect=fail_on_second_replace):
+            with patch(
+                "script.run_pipeline.os.replace", side_effect=fail_on_second_replace
+            ):
                 with self.assertRaisesRegex(OSError, "simulated publication failure"):
                     publish_with_rollback(
                         [
@@ -890,7 +891,9 @@ class EndToEndSampleTests(unittest.TestCase):
                     raise OSError("simulated fifth publication failure")
                 real_replace(source, destination)
 
-            with patch("run_pipeline.os.replace", side_effect=fail_on_fifth_replace):
+            with patch(
+                "script.run_pipeline.os.replace", side_effect=fail_on_fifth_replace
+            ):
                 with self.assertRaisesRegex(OSError, "fifth publication failure"):
                     regenerate(destinations)
             self.assertEqual(old, {path: path.read_bytes() for path in destinations})

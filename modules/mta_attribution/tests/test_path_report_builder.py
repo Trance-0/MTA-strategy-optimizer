@@ -7,16 +7,10 @@ a prior purchase splits a journey into non-reusable segments.
 
 from __future__ import annotations
 
-import sys
 import unittest
-from pathlib import Path
 
-
-SRC = Path(__file__).resolve().parents[1] / "src"
-sys.path.insert(0, str(SRC))
-
-from path_report_builder import build_aggregated_path_rows  # noqa: E402
-from touchpoint_key import canonical_amc_touchpoint_key  # noqa: E402
+from modules.mta_attribution.src.path_report_builder import build_aggregated_path_rows
+from modules.mta_attribution.src.touchpoint_key import canonical_amc_touchpoint_key
 
 
 def key(name: str, interaction_type: str = "IMPRESSION") -> str:

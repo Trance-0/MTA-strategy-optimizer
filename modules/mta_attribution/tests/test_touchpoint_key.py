@@ -7,22 +7,17 @@ coverage, and billing consistency.
 
 from __future__ import annotations
 
-import sys
 import unittest
-from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[1]
-sys.path[:0] = [str(ROOT / "src"), str(ROOT / "scripts")]
-
-from attribution_contract import (  # noqa: E402
-    aggregate_spend_by_touchpoint  # noqa: E402,
+from modules.mta_attribution.src.attribution_contract import (
+    aggregate_spend_by_touchpoint,
 )
-from touchpoint_key import (  # noqa: E402
+from modules.mta_attribution.src.touchpoint_key import (
     canonical_touchpoint_key,
     canonicalize_touchpoint_key,
     touchpoint_key_from_ads_row,
 )
-from validate_data_alignment import (  # noqa: E402
+from script.validate_data_alignment import (
     touchpoints_from_amc_path,
     validate_data_alignment_rows,
 )

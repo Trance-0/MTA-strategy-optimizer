@@ -32,7 +32,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, List, Mapping, Sequence, Tuple
 
-from touchpoint_key import (
+from .touchpoint_key import (
     canonicalize_amc_touchpoint_key,
     touchpoint_key_from_ads_row,
 )
@@ -109,7 +109,7 @@ def _is_field_description_row(row: Mapping[object, object]) -> bool:
 def read_csv_normalized(path: str | Path) -> Tuple[List[str], List[dict]]:
     """Read CSV structure after stripping only field and value edge whitespace."""
     path = Path(path)
-    with path.open(newline="") as f:
+    with path.open(encoding="utf-8", newline="") as f:
         reader = csv.reader(f, strict=True)
         try:
             raw_fieldnames = next(reader)
@@ -170,7 +170,7 @@ def read_csv(path: str | Path) -> List[dict]:
 def write_csv(path: str | Path, rows: Sequence[Mapping], fieldnames: Sequence[str]) -> None:
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
-    with path.open("w", newline="") as f:
+    with path.open("w", encoding="utf-8", newline="") as f:
         writer = csv.DictWriter(f, fieldnames=fieldnames, lineterminator="\n")
         writer.writeheader()
         writer.writerows(rows)

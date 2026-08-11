@@ -26,10 +26,9 @@ from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 AMC_MTA_ROOT = PROJECT_ROOT / "modules" / "mta_attribution"
-sys.path.insert(0, str(AMC_MTA_ROOT))
-sys.path.insert(0, str(AMC_MTA_ROOT / "src"))
+sys.path.insert(0, str(PROJECT_ROOT))
 
-from config import (
+from modules.mta_attribution.config import (  # noqa: E402
     AMAZON_ADS_REPORT_FILE,
     AMC_REPORT_FILE,
     AMC_MTA_ROOT,
@@ -43,10 +42,10 @@ from config import (
     SHAPLEY_OUTPUT_FILE,
 )
 
-from attribution_contract import read_csv  # noqa: E402
-from build_path_report import build_path_report  # noqa: E402
-from run_attribution_models import run_attribution_models  # noqa: E402
-from validate_data_alignment import infer_ads_report_window  # noqa: E402
+from modules.mta_attribution.src.attribution_contract import read_csv  # noqa: E402
+from script.build_path_report import build_path_report  # noqa: E402
+from script.run_attribution_models import run_attribution_models  # noqa: E402
+from script.validate_data_alignment import infer_ads_report_window  # noqa: E402
 
 
 def publish_with_rollback(

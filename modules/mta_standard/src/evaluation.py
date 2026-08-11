@@ -26,20 +26,17 @@ from pathlib import Path
 from types import MappingProxyType
 from typing import Mapping, Sequence
 
-from dataloader import MtaSimDataset, ReportScope, parse_iso_date, required_text
-from attribution_src_path import ensure_attribution_src_on_path
-from attribution_model_interface import MtaAttributionModel
-from output_contract import (
+from modules.mta_attribution.src.attribution_contract import read_csv_normalized
+from modules.mta_attribution.src.attribution_model_comparison import spearman_rho
+from modules.mta_attribution.src.attribution_model_interface import MtaAttributionModel
+
+from .dataloader import MtaSimDataset, ReportScope, parse_iso_date, required_text
+from .output_contract import (
     SUPPORTED_OUTCOMES,
     StandardAttributionRow,
     validate_standard_output,
 )
-from touchpoint_adapter import canonicalize_four_segment_key
-
-ensure_attribution_src_on_path()
-
-from attribution_contract import read_csv_normalized  # noqa: E402
-from attribution_model_comparison import spearman_rho  # noqa: E402
+from .touchpoint_adapter import canonicalize_four_segment_key
 
 
 MTA_SIM_GROUND_TRUTH_FIELDS: tuple[str, ...] = (

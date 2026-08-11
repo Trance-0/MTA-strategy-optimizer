@@ -18,6 +18,7 @@ Data flow:
 from __future__ import annotations
 
 import importlib
+import importlib.util
 import csv
 import sys
 from dataclasses import dataclass
@@ -26,8 +27,8 @@ from pathlib import Path
 from types import ModuleType
 from typing import Any
 
-from dataloader import MtaSimDataset, load_mta_sim_dataset
-from touchpoint_adapter import SimulatorConfig
+from .dataloader import MtaSimDataset, load_mta_sim_dataset
+from .touchpoint_adapter import SimulatorConfig
 
 
 SUPPORTED_VARIANTS = ("baseline", "regional")
@@ -109,7 +110,7 @@ def _import_generator_modules(
         raise ValueError(
             f"generator variant must be one of {SUPPORTED_VARIANTS}; got {variant!r}"
         )
-    location = str(zheyuanwu_root)
+    package_root = zheyuanwu_root / "simulations"
     loaded = sys.modules.get("simulations")
     if loaded is not None:
         loaded_file = getattr(loaded, "__file__", None)
@@ -118,8 +119,21 @@ def _import_generator_modules(
                 "a different simulations package is already imported; start a clean "
                 "Python process before invoking the pinned MTA-SIM generator"
             )
-    if location not in sys.path:
-        sys.path.insert(0, location)
+    if loaded is None:
+        specification = importlib.util.spec_from_file_location(
+            "simulations",
+            package_root / "__init__.py",
+            submodule_search_locations=[str(package_root)],
+        )
+        if specification is None or specification.loader is None:
+            raise ImportError(f"cannot load external simulations package: {package_root}")
+        loaded = importlib.util.module_from_spec(specification)
+        sys.modules["simulations"] = loaded
+        try:
+            specification.loader.exec_module(loaded)
+        except Exception:
+            sys.modules.pop("simulations", None)
+            raise
     package = importlib.import_module(f"simulations.{variant}.mta_dataset")
     configuration = importlib.import_module(
         f"simulations.{variant}.mta_dataset.configuration"

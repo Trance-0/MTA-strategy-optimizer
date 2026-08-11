@@ -13,15 +13,9 @@ from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 AMC_MTA_ROOT = PROJECT_ROOT / "modules" / "mta_attribution"
-sys.path.insert(0, str(AMC_MTA_ROOT))
-sys.path.insert(0, str(AMC_MTA_ROOT / "src"))
+sys.path.insert(0, str(PROJECT_ROOT))
 
-from attribution_contract import (  # noqa: E402
-    ADS_FIELD_DESCRIPTIONS,
-    read_csv,
-    write_csv_atomic,
-)
-from config import (  # noqa: E402
+from modules.mta_attribution.config import (  # noqa: E402
     AMAZON_ADS_REPORT_FILE, AMC_REPORT_FILE, AMC_TOUCHPOINT_ENTITY_AGGREGATE_FILE,
     AMC_TOUCHPOINT_EVENTS_FILE, SYNTHETIC_USER_EVENTS_FILE,
     ATTRIBUTION_OUTPUT_DIR, MARKOV_OUTPUT_FILE, MODEL_COMPARISON_SUMMARY_FILE,
@@ -29,10 +23,12 @@ from config import (  # noqa: E402
     REPORT_END_DATE, REPORT_START_DATE, SHAPLEY_OUTPUT_FILE,
     SIMULATED_MAX_USER_EVENT_ROWS, SIMULATED_PRIVACY_MIN_USERS,
 )
-from build_path_report import build_path_report  # noqa: E402
-from run_attribution_models import run_attribution_models  # noqa: E402
-from run_pipeline import match_outputs_by_name, publish_with_rollback  # noqa: E402
-from synthetic_event_pipeline import (  # noqa: E402
+from modules.mta_attribution.src.attribution_contract import (  # noqa: E402
+    ADS_FIELD_DESCRIPTIONS,
+    read_csv,
+    write_csv_atomic,
+)
+from modules.mta_attribution.src.synthetic_event_pipeline import (  # noqa: E402
     ADS_FIELDS,
     AMC_EVENT_FIELDS,
     ENTITY_AGGREGATE_FIELDS,
@@ -44,6 +40,9 @@ from synthetic_event_pipeline import (  # noqa: E402
     validate_derivations,
     validate_no_user_identifiers,
 )
+from script.build_path_report import build_path_report  # noqa: E402
+from script.run_attribution_models import run_attribution_models  # noqa: E402
+from script.run_pipeline import match_outputs_by_name, publish_with_rollback  # noqa: E402
 
 
 def default_destinations() -> list[Path]:

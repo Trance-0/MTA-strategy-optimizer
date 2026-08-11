@@ -10,13 +10,15 @@ importing each estimator directly.
 
 from __future__ import annotations
 
-from dnn_attribution_model import DeepNeuralAttributionModel
-from attribution_model_interface import MtaAttributionModel
-from wrapped_attribution_models import (
+from modules.mta_attribution.src.attribution_model_interface import MtaAttributionModel
+from modules.mta_attribution.src.dnn_attribution_model import DeepNeuralAttributionModel
+from modules.mta_attribution.src.markov_standard_attribution_model import (
     MarkovRemovalEffectModel,
-    PathLevelShapleyModel,
-    UniformCreditModel,
 )
+from modules.mta_attribution.src.shapley_standard_attribution_model import (
+    PathLevelShapleyModel,
+)
+from modules.mta_attribution.src.uniform_attribution_model import UniformCreditModel
 
 
 # Registry of the models shipped with the standardized interface. Contributors

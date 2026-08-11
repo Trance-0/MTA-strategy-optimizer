@@ -98,7 +98,8 @@ def main() -> int:
         expected_output = (
             json.dumps(generated, ensure_ascii=False, indent=2, sort_keys=False) + "\n"
         ).encode("utf-8")
-        if committed_output != expected_output:
+        normalized_committed_output = committed_output.replace(b"\r\n", b"\n")
+        if normalized_committed_output != expected_output:
             print("INVALID: formal output does not match generated budget seed", file=sys.stderr)
             return 1
         print(

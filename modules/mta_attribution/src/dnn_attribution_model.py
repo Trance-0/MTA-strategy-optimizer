@@ -36,21 +36,21 @@ from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import ClassVar, Mapping, Sequence
 
-from dataloader import MtaSimDataset
-from attribution_src_path import ensure_attribution_src_on_path
-from attribution_model_interface import ModelCapabilities, MtaAttributionModel
-from output_contract import (
+from modules.mta_standard.src.dataloader import MtaSimDataset
+from modules.mta_standard.src.output_contract import (
     SUPPORTED_OUTCOMES,
     ZERO_OUTCOME_WARNING,
     StandardAttributionRow,
 )
-from touchpoint_adapter import canonicalize_four_segment_key, to_four_segment
+from modules.mta_standard.src.touchpoint_adapter import (
+    canonicalize_four_segment_key,
+    to_four_segment,
+)
 
-ensure_attribution_src_on_path()
-
-from attribution_contract import NULL, safe_float  # noqa: E402
-from shapley_attribution_model import run_shapley_attribution  # noqa: E402
-from attribution_model_comparison import OUTCOME_FIELDS  # noqa: E402
+from .attribution_contract import NULL, safe_float
+from .attribution_model_interface import ModelCapabilities, MtaAttributionModel
+from .attribution_model_comparison import OUTCOME_FIELDS
+from .shapley_attribution_model import run_shapley_attribution
 
 
 SEGMENT_NAMES: tuple[str, ...] = ("ad_product", "format", "placement", "creative")

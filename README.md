@@ -4,7 +4,7 @@
 
 Marketing ROI Analysis is a validation-oriented Python workspace for historical Multi-Touch Attribution (MTA), standardized model evaluation, and explainable advertising budget initialization. It builds five-segment Amazon Marketing Cloud-style paths, compares Markov and path-level Shapley attribution, adapts four-segment MTA-SIM data to a shared model contract, and produces a deterministic Ad Group budget seed from governed attribution evidence.
 
-The workspace contains three business modules, local Agent and BMad development tools, research sources, and historical implementation records. Development tools and historical artifacts are retained for traceability but do not participate in the model runtime.
+The workspace contains three business modules, preserved local Agent/BMad artifacts, research sources, and historical implementation records. The preserved workflow tools are reference material only and are not the Trance-0 development process or part of the model runtime.
 
 ## Project status
 
@@ -12,7 +12,7 @@ The workspace contains three business modules, local Agent and BMad development 
 
 - The attribution pipeline, standardized model interface, deterministic budget initializer, validators, and test suites are implemented and runnable.
 - Markov is the official displayed attribution method; Shapley provides model-sensitivity evidence.
-- The Deep Neural Network (DNN) model in `mta_standard` is a learned surrogate of path-level Shapley shares, not an independent causal estimator.
+- The Deep Neural Network (DNN) model in `mta_attribution` is a learned surrogate of path-level Shapley shares, not an independent causal estimator.
 - The strategy module produces an explainable initial budget with `is_optimized=false`; it does not predict marginal returns or optimize future spend.
 - Current inputs and canonical outputs are synthetic demonstration data.
 - Production Amazon Marketing Cloud privacy execution, rolling-window stability analysis, causal incrementality validation, automated activation, and online experimentation have not been completed.
@@ -89,8 +89,8 @@ The budget result contains no targeting plan, activation instructions, or claim 
 ```text
 marketing-roi-analysis/
 ├── modules/
-│   ├── mta_attribution/              # Path building, Markov/Shapley attribution, comparison, and outputs
-│   ├── mta_standard/                 # MTA-SIM adapter, model interface, DNN model, contracts, and evaluation
+│   ├── mta_attribution/              # Model interface, concrete attribution models, paths, comparison, and outputs
+│   ├── mta_standard/                 # MTA-SIM adapter, registry, execution, contracts, and evaluation
 │   └── mta_strategy_recommendation/  # Campaign Group and Ad Group count/budget initializer
 ├── external/
 │   └── mta_sim_dataset/              # Pinned MTA-SIM-dataset Git submodule and ZheyuanWu generator

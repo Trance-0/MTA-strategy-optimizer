@@ -19,24 +19,27 @@ from pathlib import Path
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
-AMC_MTA_ROOT = PROJECT_ROOT / "modules" / "mta_attribution"
-sys.path.insert(0, str(AMC_MTA_ROOT))
-sys.path.insert(0, str(AMC_MTA_ROOT / "src"))
+sys.path.insert(0, str(PROJECT_ROOT))
 
-from path_report_builder import PATH_REPORT_FIELDS, build_aggregated_path_rows  # noqa: E402
-from attribution_contract import (  # noqa: E402
-    PATH_FIELD_DESCRIPTIONS,
-    read_csv,
-    write_csv_atomic,
-)
-from config import (  # noqa: E402
+from modules.mta_attribution.config import (  # noqa: E402
     AMAZON_ADS_REPORT_FILE,
     AMC_REPORT_FILE,
     AMC_TOUCHPOINT_EVENTS_FILE,
     MAX_TOUCHPOINT_GAP_DAYS,
 )
-from validate_data_alignment import infer_ads_report_window  # noqa: E402
-from validate_data_alignment import validate_data_alignment_rows  # noqa: E402
+from modules.mta_attribution.src.attribution_contract import (  # noqa: E402
+    PATH_FIELD_DESCRIPTIONS,
+    read_csv,
+    write_csv_atomic,
+)
+from modules.mta_attribution.src.path_report_builder import (  # noqa: E402
+    PATH_REPORT_FIELDS,
+    build_aggregated_path_rows,
+)
+from script.validate_data_alignment import (  # noqa: E402
+    infer_ads_report_window,
+    validate_data_alignment_rows,
+)
 
 
 def build_path_report(

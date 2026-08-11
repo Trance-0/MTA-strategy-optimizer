@@ -10,23 +10,15 @@ This page follows one report from raw events to a budget seed, naming the file r
 
 ## The Three Modules <span class="status-label status-verified" aria-label="Verified"></span>
 
-```mermaid
-flowchart TD
-  A["modules/mta_attribution<br/>paths, Markov, Shapley, comparison"]
-  B["modules/mta_standard<br/>MTA-SIM loader, model interface, evaluator"]
-  C["modules/mta_strategy_recommendation<br/>Ad Group count and budget seed"]
-  A -->|"recommended attribution CSV<br/>+ entity bridge CSV"| C
-  A -->|"imported estimators<br/>(wrapped, never modified)"| B
-```
+![Parallel module ownership and data flow](../../assets/architecture/module-ownership.drawio.svg)
 
-Dependencies run one way. `mta_attribution` knows nothing about the other two; `mta_standard` imports it; `mta_strategy_recommendation` consumes its published CSVs but never its Python.
+[Edit the Draw.io source](../../assets/architecture/module-ownership.drawio)
 
-> [!NOTE]
-> `mta_standard` depends on `mta_attribution` by **module name**, not package path, because `mta_attribution` uses flat imports. `attribution_src_path.py` holds that single layout assumption so it appears in exactly one file instead of being repeated in nine.
+Dependencies are explicit Python package imports. `mta_standard` owns loading and execution, imports the model contract and registered implementations from `mta_attribution`, and validates their returned rows. `mta_strategy_recommendation` consumes published CSV evidence and never imports attribution mathematics.
 
 | Module | Receives | Produces | Consumer |
 | --- | --- | --- | --- |
-| `mta_attribution` | Touchpoint events, Amazon Ads report | Path report, two model CSVs, three comparison CSVs | Strategy module, documentation |
+| `mta_attribution` | Five-segment paths or a standard dataset | Concrete model outputs, path report, comparison CSVs | Standard framework, strategy module, documentation |
 | `mta_standard` | MTA-SIM tables from any path | `StandardAttributionRow` list, `EvaluationReport` | Contributors comparing models |
 | `mta_strategy_recommendation` | Recommended attribution, entity bridge, request, candidate pool | `initial_budget_recommendation.json` | Downstream planning |
 
@@ -202,7 +194,7 @@ tempfile.TemporaryDirectory()
 
 ## Layer 6 — Standardization <span class="status-label status-verified" aria-label="Verified"></span>
 
-**`modules/mta_standard/`** wraps the layers above so any model can be run and scored the same way.
+**`modules/mta_standard/`** provides the minimal loading, execution, validation, and evaluation framework. Concrete model logic remains in `modules/mta_attribution/`.
 
 ```text
 amc_path_report (four-segment)
@@ -211,7 +203,8 @@ amc_path_report (four-segment)
        ├─ touchpoint_adapter.SimulatorConfig.adapt_path   → five-segment paths
        └─ attribution_contract.validate_amc_aggregated_row
             └─ MtaSimDataset.path_rows
-                 └─ model.fit(dataset).attribute(dataset)
+                 └─ model_pipeline.run_registered_models(dataset)
+                      └─ mta_attribution model.fit(dataset).attribute(dataset)
                       └─ standard_rows_from_attribution_results  → four-segment
                            └─ output_contract.validate_standard_output
 ```
@@ -284,8 +277,13 @@ Every file states its own role and position in its module docstring. This table 
 | `src/simulated_touchpoints.py` | Touchpoint catalogue for simulation |
 | `src/path_report_builder.py` | Events → aggregated paths |
 | `src/attribution_contract.py` | CSV IO, validation, result shaping |
+| `src/attribution_model_interface.py` | Shared `fit`/`attribute`/`save`/`load` contract |
 | `src/markov_attribution_model.py` | Removal-effect model |
+| `src/markov_standard_attribution_model.py` | Standard-output adapter for Markov |
 | `src/shapley_attribution_model.py` | Path-level Shapley model |
+| `src/shapley_standard_attribution_model.py` | Standard-output adapter for Shapley |
+| `src/uniform_attribution_model.py` | Equal-credit reference baseline |
+| `src/dnn_attribution_model.py` | Learned model and new-campaign prediction |
 | `src/attribution_model_comparison.py` | Gaps, support, reliability, recommendation |
 | `script/build_path_report.py` | Path report CLI |
 | `script/run_attribution_models.py` | Attribution and comparison CLI |
@@ -299,13 +297,10 @@ Every file states its own role and position in its module docstring. This table 
 
 | File | Role |
 | --- | --- |
-| `src/attribution_src_path.py` | Locate `mta_attribution/src` for cross-module imports |
 | `src/touchpoint_adapter.py` | Four ↔ five segment adaptation and `SimulatorConfig` |
 | `src/dataloader.py` | MTA-SIM table loading into `MtaSimDataset` |
-| `src/attribution_model_interface.py` | The `fit`/`attribute`/`save`/`load` contract |
-| `src/wrapped_attribution_models.py` | Markov, Shapley, and uniform-credit models |
-| `src/dnn_attribution_model.py` | Learned model and new-campaign prediction |
 | `src/model_registry.py` | Identifier → model class map |
+| `src/model_pipeline.py` | Registry-driven model execution and result validation |
 | `src/output_contract.py` | Standard row and its four invariants |
 | `src/evaluation.py` | Ground-truth loading and metrics |
 

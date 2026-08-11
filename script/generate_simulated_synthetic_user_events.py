@@ -18,13 +18,15 @@ import sys
 from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
-AMC_MTA_ROOT = PROJECT_ROOT / "modules" / "mta_attribution"
-sys.path.insert(0, str(AMC_MTA_ROOT))
-sys.path.insert(0, str(AMC_MTA_ROOT / "src"))
+sys.path.insert(0, str(PROJECT_ROOT))
 
-from attribution_contract import write_csv_atomic  # noqa: E402
-from config import REPORT_END_DATE, REPORT_START_DATE, SYNTHETIC_USER_EVENTS_FILE  # noqa: E402
-from synthetic_event_pipeline import (  # noqa: E402
+from modules.mta_attribution.config import (  # noqa: E402
+    REPORT_END_DATE,
+    REPORT_START_DATE,
+    SYNTHETIC_USER_EVENTS_FILE,
+)
+from modules.mta_attribution.src.attribution_contract import write_csv_atomic  # noqa: E402
+from modules.mta_attribution.src.synthetic_event_pipeline import (  # noqa: E402
     SYNTHETIC_EVENT_FIELDS,
     generate_synthetic_user_events,
 )

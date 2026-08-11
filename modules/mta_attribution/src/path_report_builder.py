@@ -19,7 +19,7 @@ from collections import defaultdict
 from datetime import date, datetime, timedelta, timezone
 from typing import Mapping, Sequence
 
-from touchpoint_key import canonical_amc_touchpoint_key
+from .touchpoint_key import canonical_amc_touchpoint_key
 
 
 REQUIRED_FIELDS = {"journey_id", "event_type", "event_time"}

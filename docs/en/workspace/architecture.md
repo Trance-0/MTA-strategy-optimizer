@@ -9,22 +9,11 @@ lang: en-US
 
 This repository has three layers—a business-data pipeline, a versioned knowledge base, and an embedded development toolchain. It is not a web service, database application, or deployment platform.
 
-```text
-External research and historical intent
-docs/research + design-artifacts + _bmad-output
-                     │
-                     ▼
-Current knowledge and governance
-docs/en + docs/zh + shared research assets
-                     │
-                     ▼
-Business execution and initialization
-modules/mta_attribution -> five-segment attribution evidence
-                        ↓
-modules/mta_strategy_recommendation -> INITIAL_SEED
+![Parallel module ownership and data flow](../../assets/architecture/module-ownership.drawio.svg)
 
-.agents + _bmad form the development plane and do not enter attribution calculations
-```
+[Edit the Draw.io source](../../assets/architecture/module-ownership.drawio)
+
+Historical tool outputs are reference material only. Trance-0 development does not use the BMad workflow unless a future task explicitly requests it, and neither `.agents` nor `_bmad` enters the runtime calculation path.
 
 ## Business Execution Architecture
 
@@ -56,31 +45,18 @@ runtime code and tests
 
 This order resolves cases where an early vision is broader than the implementation or an old specification records superseded fields and grains. [Workspace file-location management](file-management.md) defines file responsibilities, stable entry points, and archival flow.
 
-## Tool Architecture
+## Development Boundary
 
-```text
-_bmad/config*.toml + module configuration
-                 ↓
-_bmad/_config manifests
-                 ↓ installation/registration
-.agents/skills/<skill>/SKILL.md + resources/scripts
-                 ↓
-Codex/BMad workflows
-                 ↓
-documentation, design artifacts, workflow output, or source changes
-```
-
-The tool and business planes meet only when a developer uses a tool to modify or review the project. `script/run_pipeline.py` does not import `.agents` or `_bmad`.
+Trance-0 development uses the repository's root commands, package imports, unit tests, and documentation build. `_bmad`, `_bmad-output`, and `.agents` are preserved for historical traceability only; their workflow scripts are not used for future development unless a task explicitly opts in. Runtime code does not import any of them.
 
 ## Technology Stack
 
 | Area | Technology | Purpose |
 | --- | --- | --- |
 | AMC MTA | Python 3.10+ standard library | CSV data pipeline, algorithms, and tests |
-| BMad configuration | TOML, YAML, CSV, Markdown | installation and workflow metadata |
-| BMad scripts | Python and Bash | configuration parsing, skill generation, automation |
-| WDS helpers | Node.js JavaScript | documentation and design-asset scripts |
-| Documentation | CommonMark, JSON, PDF, DOCX | project knowledge and research |
+| Preserved historical tools | TOML, YAML, CSV, Markdown, scripts | reference only; not a development dependency |
+| Documentation helpers | Node.js JavaScript, Draw.io | site build and editable architecture assets |
+| Documentation | CommonMark, SVG, JSON, PDF, DOCX | project knowledge and research |
 | Version control | Git | the audited state had no continuous integration/deployment configuration |
 
 ## Data and Security Boundaries

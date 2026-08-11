@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass
 
-from touchpoint_key import canonical_amc_touchpoint_key
+from .touchpoint_key import canonical_amc_touchpoint_key
 
 
 MARKETPLACE = "US"

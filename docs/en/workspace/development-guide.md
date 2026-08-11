@@ -8,11 +8,11 @@ lang: en-US
 ## Environment
 
 - Python 3.10 or newer;
-- Node.js only for checking or running `_bmad/wds/scripts/` and the documentation site;
+- Node.js only for the documentation site and its maintained root `script/` helpers;
 - Git;
 - no third-party Python package is required by AMC MTA itself.
 
-Some installed-tool tests use `pytest`, but the audited repository had no unified Python dependency file. Installing it is unnecessary unless those `.agents` tool tests are being maintained.
+Preserved `.agents` and `_bmad` files are historical tool assets. Their scripts and tests are not part of the Trance-0 development or verification workflow.
 
 ## Run the Business Pipeline
 
@@ -34,7 +34,9 @@ Five CSV files are retained as the canonical model/governance outputs. Other gen
 ## Run Business Tests
 
 ```bash
-python3 -m unittest discover -s modules/mta_attribution/tests -p 'test*.py'
+python -X utf8 -B -m unittest discover -s modules/mta_attribution/tests -t . -p 'test_*.py'
+python -X utf8 -B -m unittest discover -s modules/mta_standard/tests -t . -p 'test_*.py'
+python -X utf8 -B -m unittest discover -s modules/mta_strategy_recommendation/tests -t . -p 'test_*.py'
 ```
 
 The migration-source audit recorded 107 passing tests. Always treat the current test run, rather than that historical count, as ground truth.
@@ -49,14 +51,6 @@ python3 -B -m unittest discover -s modules/mta_strategy_recommendation/tests -p 
 
 The initializer reads AMC recommended attribution and touchpoint-entity aggregates without modifying them. It uses the request's hashes, window, and scope to block drift. Validation covers one Campaign Group, four Campaigns, capacity-derived new-group counts, every touchpoint bridge, budget conservation, and the missing-budget-baseline behavior. It neither validates nor generates specific Keyword/SKU allocations. The migration-source audit recorded 34 passing tests.
 
-## Validate BMad Configuration
-
-```bash
-python3 -m unittest discover -s _bmad/scripts/tests -p 'test*.py'
-```
-
-The source audit recorded one passing configuration test. `_bmad/config.toml` and `_bmad/config.user.toml` are installer-managed; persistent overrides belong under `_bmad/custom/`.
-
 ## Tool-Code Checks
 
 The full-workspace audit used these read-only check categories:
@@ -69,12 +63,7 @@ Markdown: existence of local links in project-authored documentation
 JSON/TOML: parse real configuration and data files
 ```
 
-Recorded tool-layer limitations were:
-
-- one plugin-naming assertion failure in `.agents/skills/bmad-module-builder/scripts/tests/test-scaffold-standalone-module.py`;
-- an undeclared `pytest` dependency in `.agents/skills/bmad-workflow-builder/scripts/tests/test_memlog.py`.
-
-These belong to installed-tool maintenance and should not be merged into AMC MTA regression results.
+Historical tool-layer checks are not run or counted with product verification. Future development uses the module tests, maintained root scripts, and documentation build described on this page.
 
 ## Change Principles
 
@@ -83,7 +72,7 @@ These belong to installed-tool maintenance and should not be merged into AMC MTA
 - When input fields, the five-segment key, or output columns change, update code, samples, tests, and module contracts together.
 - External originals in `docs/research` are not runtime inputs.
 - Preserve `design-artifacts` and completed specifications as historical records; add status explanations instead of rewriting earlier intent.
-- Treat `.agents` and `_bmad` as installed tool assets; determine whether a problem belongs to project customization or an upstream package before editing them.
+- Treat `.agents`, `_bmad`, and `_bmad-output` as preserved reference assets. Do not use their workflows or scripts for Trance-0 development unless a task explicitly requests BMad.
 - Do not restore the removed legacy `modules/mta` directory.
 
 ## Engineering Processes Not Present

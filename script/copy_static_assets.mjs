@@ -11,6 +11,7 @@ const scriptDirectory = dirname(fileURLToPath(import.meta.url));
 const documentationRoot = resolve(scriptDirectory, "..", "docs");
 const researchRoot = resolve(documentationRoot, "research");
 const chineseSourceRoot = resolve(documentationRoot, "zh");
+const architectureAssetRoot = resolve(documentationRoot, "assets", "architecture");
 const outputRoot = resolve(documentationRoot, ".vitepress", "dist");
 const copiedResearchExtensions = new Set([".pdf", ".docx", ".json", ".txt"]);
 
@@ -45,14 +46,36 @@ async function findMarkdownFiles(directory) {
   return files;
 }
 
+async function findFilesByExtension(directory, extensions) {
+  const entries = await readdir(directory, { withFileTypes: true });
+  const files = [];
+  for (const entry of entries) {
+    const entryPath = resolve(directory, entry.name);
+    if (entry.isDirectory()) {
+      files.push(...(await findFilesByExtension(entryPath, extensions)));
+    } else if (entry.isFile() && extensions.has(extname(entry.name).toLowerCase())) {
+      files.push(entryPath);
+    }
+  }
+  return files;
+}
+
 export async function copyStaticAssets() {
   const attachmentFiles = await findResearchAttachments(researchRoot);
+  const architectureFiles = await findFilesByExtension(
+    architectureAssetRoot,
+    new Set([".drawio", ".svg"]),
+  );
   const rootAttachments = [
     "project-scan-report.json",
     "workspace-file-inventory.json",
     "系统架构图-07.drawio",
   ].map((name) => resolve(documentationRoot, name));
-  const staticFiles = [...attachmentFiles, ...rootAttachments];
+  const staticFiles = [
+    ...attachmentFiles,
+    ...architectureFiles,
+    ...rootAttachments,
+  ];
 
   for (const sourcePath of staticFiles) {
     const destinationPath = resolve(outputRoot, relative(documentationRoot, sourcePath));

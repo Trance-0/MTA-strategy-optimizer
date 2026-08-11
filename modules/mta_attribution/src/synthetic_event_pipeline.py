@@ -9,7 +9,7 @@ import math
 import re
 from typing import Iterable, Mapping, Sequence
 
-from simulated_touchpoints import (
+from .simulated_touchpoints import (
     ADVERTISER_ID,
     CAMPAIGN_BY_AD_PRODUCT,
     CAMPAIGN_GROUP_ID,
@@ -21,7 +21,7 @@ from simulated_touchpoints import (
     historical_entity_for_touchpoint,
     validate_touchpoint_catalog,
 )
-from touchpoint_key import canonical_amc_touchpoint_key
+from .touchpoint_key import canonical_amc_touchpoint_key
 
 
 SYNTHETIC_EVENT_FIELDS = [

@@ -1,6 +1,6 @@
 ---
 title: Standardized MTA Interface
-description: The mta_standard dataloader, key adapter, model interface, output contract, and evaluator
+description: The framework boundary between mta_standard and the concrete models in mta_attribution
 lang: en-US
 ---
 
@@ -8,22 +8,27 @@ lang: en-US
 
 ## What This Layer Solves <span class="status-label status-verified" aria-label="Verified"></span>
 
-Before this layer existed, running an attribution model against MTA-SIM data meant hand-editing paths, guessing an interaction type, and comparing results that had no common schema. `modules/mta_standard/` closes that gap so contributors can load the same synthetic dataset, run any algorithm through one interface, and compare results consistently.
+Before this layer existed, running an attribution model against MTA-SIM data meant hand-editing paths, guessing an interaction type, and comparing results that had no common schema. The framework in `modules/mta_standard/` closes that gap, while the model interface and every concrete attribution implementation remain in their owning `modules/mta_attribution/` package.
 
-It is additive. Every existing entry point, output file, and number in `modules/mta_attribution/` is unchanged; the standardized layer wraps them.
+This split lets contributors work on loading, execution, individual models, evaluation, and strategy recommendation independently. Package imports express the dependency directly; reusable modules do not edit `sys.path`.
 
 | Component | File | Objective |
 | --- | --- | --- |
 | Generator adapter | `src/mta_sim_generator_adapter.py` | Run the pinned ZheyuanWu generator, aggregate daily scopes, and load model inputs |
 | Key adapter | `src/touchpoint_adapter.py` | Convert between MTA-SIM's four-segment key and this repository's five-segment key |
 | Dataloader | `src/dataloader.py` | Load `amc_path_report` and `amazon_ads_daily_touchpoint_performance` from any path |
-| Model interface | `src/attribution_model_interface.py` | Define `fit`/`attribute`/`save`/`load` and capability metadata |
-| Wrapped models | `src/wrapped_attribution_models.py` | Markov, Shapley, and uniform-credit implementations |
-| DNN model | `src/dnn_attribution_model.py` | The learned model and new-campaign prediction |
-| Path bootstrap | `src/attribution_src_path.py` | Make `mta_attribution` importable from this module |
-| Model registry | `src/model_registry.py` | Expose every shipped model under one identifier map |
-| Output contract | `src/output_contract.py` | Define the standard row and validate its four invariants |
-| Evaluator | `src/evaluation.py` | Load ground truth and score models against it |
+| Model interface | `modules/mta_attribution/src/attribution_model_interface.py` | Define `fit`/`attribute`/`save`/`load` and capability metadata |
+| Markov standard model | `modules/mta_attribution/src/markov_standard_attribution_model.py` | Adapt the existing Markov estimator to the shared contract |
+| Shapley standard model | `modules/mta_attribution/src/shapley_standard_attribution_model.py` | Adapt the existing Shapley estimator to the shared contract |
+| Uniform model | `modules/mta_attribution/src/uniform_attribution_model.py` | Provide the equal-credit reference baseline |
+| DNN model | `modules/mta_attribution/src/dnn_attribution_model.py` | Provide the learned model and new-campaign prediction |
+| Generator adapter | `modules/mta_standard/src/mta_sim_generator_adapter.py` | Run the pinned generator and load its outputs |
+| Key adapter | `modules/mta_standard/src/touchpoint_adapter.py` | Resolve the four-to-five segment boundary |
+| Dataloader | `modules/mta_standard/src/dataloader.py` | Load MTA-SIM tables from explicit paths |
+| Model registry | `modules/mta_standard/src/model_registry.py` | Expose shipped models without implementing them |
+| Model pipeline | `modules/mta_standard/src/model_pipeline.py` | Execute registered models and validate their outputs |
+| Output contract | `modules/mta_standard/src/output_contract.py` | Define the standard row and validate its four invariants |
+| Evaluator | `modules/mta_standard/src/evaluation.py` | Load ground truth and score models against it |
 
 ## Ground-Truth Isolation Is Structural <span class="status-label status-verified" aria-label="Verified"></span>
 
@@ -139,7 +144,7 @@ The two wrappers perform no arithmetic of their own. They forward the five-segme
 Instantiate by identifier:
 
 ```python
-from model_registry import MODEL_REGISTRY, build_model
+from modules.mta_standard.src.model_registry import MODEL_REGISTRY, build_model
 
 for model_id in MODEL_REGISTRY:
     rows = build_model(model_id).fit(dataset).attribute(dataset)
@@ -202,7 +207,7 @@ Model and ground-truth touchpoints are aligned on their **union**, with an absen
 ## Running the Tests <span class="status-label status-verified" aria-label="Verified"></span>
 
 ```bash
-python3 -B -m unittest discover -s modules/mta_standard/tests -p 'test_*.py'
+python -X utf8 -B -m unittest discover -s modules/mta_standard/tests -t . -p 'test_*.py'
 ```
 
 The suite is deterministic and writes every fixture to a temporary directory outside the repository, which is how it proves the loaders do not depend on repository location.

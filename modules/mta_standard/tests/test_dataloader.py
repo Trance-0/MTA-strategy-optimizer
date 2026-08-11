@@ -10,16 +10,11 @@ from __future__ import annotations
 import csv
 import dataclasses
 import inspect
-import sys
 import tempfile
 import unittest
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[1]
-sys.path[:0] = [str(ROOT / "src"), str(ROOT / "tests")]
-
-import mta_sim_fixtures as fixtures  # noqa: E402
-from dataloader import (  # noqa: E402
+from modules.mta_standard.src.dataloader import (
     GROUND_TRUTH_ONLY_FIELDS,
     MTA_SIM_ADS_FIELDS,
     MtaSimDataset,
@@ -28,7 +23,11 @@ from dataloader import (  # noqa: E402
     load_amc_path_report,
     load_mta_sim_dataset,
 )
-from touchpoint_adapter import SimulatorConfig  # noqa: E402
+from modules.mta_standard.src.touchpoint_adapter import SimulatorConfig
+from modules.mta_standard.tests import mta_sim_fixtures as fixtures
+
+
+ROOT = Path(__file__).resolve().parents[1]
 
 
 class DataloaderTestCase(unittest.TestCase):

@@ -7,26 +7,20 @@ the Markov and Shapley row adapters that read the aggregated path contract.
 
 from __future__ import annotations
 
-import sys
 import unittest
-from pathlib import Path
 
-
-SRC = Path(__file__).resolve().parents[1] / "src"
-sys.path.insert(0, str(SRC))
-
-from attribution_contract import (  # noqa: E402
+from modules.mta_attribution.src.attribution_contract import (
     AttributionResult,
     TouchpointSpend,
     result_rows,
 )
-from markov_attribution_model import (  # noqa: E402
+from modules.mta_attribution.src.markov_attribution_model import (
     WeightedMarkovAttribution,
     amc_path_to_markov_path,
     amc_rows_to_markov_rows,
     run_markov_attribution,
 )
-from shapley_attribution_model import (  # noqa: E402
+from modules.mta_attribution.src.shapley_attribution_model import (
     AggregatedShapleyAttribution,
     amc_rows_to_shapley_rows,
     run_shapley_attribution,

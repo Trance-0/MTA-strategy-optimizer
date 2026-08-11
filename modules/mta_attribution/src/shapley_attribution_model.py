@@ -17,7 +17,7 @@ from __future__ import annotations
 
 from typing import Dict, List, Mapping, Sequence
 
-from attribution_contract import (
+from .attribution_contract import (
     AttributionResult,
     parse_channels,
     safe_float,

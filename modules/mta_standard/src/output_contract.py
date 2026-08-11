@@ -21,12 +21,9 @@ import math
 from dataclasses import dataclass, field
 from typing import Mapping, Sequence
 
-from attribution_src_path import ensure_attribution_src_on_path
-from touchpoint_adapter import canonicalize_four_segment_key
+from modules.mta_attribution.src.attribution_model_comparison import OUTCOME_FIELDS
 
-ensure_attribution_src_on_path()
-
-from attribution_model_comparison import OUTCOME_FIELDS  # noqa: E402
+from .touchpoint_adapter import canonicalize_four_segment_key
 
 
 # The standardized contract reports the same three outcomes the existing

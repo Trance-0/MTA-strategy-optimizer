@@ -73,7 +73,8 @@ On Windows, you can also run `run-doc-site.bat dev`; on macOS/Linux, run `sh run
 | Directory | When to use it |
 | --- | --- |
 | `modules/mta_attribution/src/` | Modify attribution algorithms and aggregation logic |
-| `modules/mta_standard/src/` | Modify the submodule adapter, shared model interface, or evaluation logic |
+| `modules/mta_standard/src/` | Modify loading, adaptation, registry, execution, output validation, or evaluation logic |
+| `modules/mta_attribution/src/` | Modify the model interface or an individual attribution implementation |
 | `external/mta_sim_dataset/` | Inspect the pinned external generator source; update only through Git submodule workflows |
 | `script/` | Run every maintained project data, attribution, strategy, or documentation command |
 | `modules/mta_attribution/data/simulated/` | Inspect this repository's synthetic demonstration inputs |

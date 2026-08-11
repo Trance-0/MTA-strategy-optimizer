@@ -10,10 +10,10 @@ Four models ship in this repository. This page explains how each one is verified
 
 | `model_id` | Implementation | Compared in production | Scored against ground truth |
 | --- | --- | --- | --- |
-| `markov_removal_effect` | `src/markov_attribution_model.py` | Yes — official basis | Yes |
-| `path_level_shapley` | `src/shapley_attribution_model.py` | Yes — sensitivity reference | Yes |
-| `uniform_credit` | `src/wrapped_attribution_models.py` | No | Yes — baseline |
-| `dnn_credit` | `src/dnn_attribution_model.py` | No | Yes |
+| `markov_removal_effect` | `mta_attribution/src/markov_standard_attribution_model.py` | Yes — official basis | Yes |
+| `path_level_shapley` | `mta_attribution/src/shapley_standard_attribution_model.py` | Yes — sensitivity reference | Yes |
+| `uniform_credit` | `mta_attribution/src/uniform_attribution_model.py` | No | Yes — baseline |
+| `dnn_credit` | `mta_attribution/src/dnn_attribution_model.py` | No | Yes |
 
 ## Three Layers of Assurance <span class="status-label status-verified" aria-label="Verified"></span>
 
@@ -40,7 +40,7 @@ flowchart TD
 
 ## Layer 1 — Unit and Contract Tests <span class="status-label status-verified" aria-label="Verified"></span>
 
-279 deterministic tests, no third-party runner, and no runtime network access after the submodule is initialized.
+284 deterministic tests, no third-party runner, and no runtime network access after the submodule is initialized.
 
 | Suite | Tests | Focus |
 | --- | --- | --- |
@@ -52,31 +52,35 @@ flowchart TD
 | `mta_attribution/tests/test_end_to_end_pipeline.py` | 22 | Byte-reproducible dataset, six-artifact atomicity, outcome conservation |
 | `mta_standard/tests/test_touchpoint_adapter.py` | 23 | Four ↔ five segment reversibility, rejected mappings |
 | `mta_standard/tests/test_dataloader.py` | 21 | External paths, header validation, ground-truth isolation |
-| `mta_standard/tests/test_attribution_model_interface.py` | 17 | Interface conformance and the wrapper regression guarantee |
+| `mta_attribution/tests/test_attribution_model_interface.py` | 17 | Interface conformance and the standard-model regression guarantee |
+| `mta_attribution/tests/test_markov_standard_attribution_model.py` | 1 | Markov adapter ownership and standard output |
+| `mta_attribution/tests/test_shapley_standard_attribution_model.py` | 1 | Shapley adapter ownership and standard output |
+| `mta_attribution/tests/test_uniform_attribution_model.py` | 1 | Uniform baseline ownership and standard output |
 | `mta_standard/tests/test_output_contract.py` | 22 | The four output invariants and the zero-outcome rule |
 | `mta_standard/tests/test_evaluation.py` | 20 | Ground-truth grains, metric bounds, determinism |
-| `mta_standard/tests/test_dnn_attribution_model.py` | 33 | Features, unknown bucket, convergence, persistence |
+| `mta_attribution/tests/test_dnn_attribution_model.py` | 33 | Features, unknown bucket, convergence, persistence |
+| `mta_standard/tests/test_model_pipeline.py` | 2 | Registry-driven execution and immutable run collection |
 | `mta_strategy_recommendation/tests/test_hierarchy_validator.py` | 34 | Lineage, capacity, budget split, output boundary |
 
 Run them:
 
 ```bash
-python3 -B -m unittest discover -s modules/mta_attribution/tests -p 'test_*.py'
-python3 -B -m unittest discover -s modules/mta_standard/tests -p 'test_*.py'
-python3 -B -m unittest discover -s modules/mta_strategy_recommendation/tests -p 'test_*.py'
+python -X utf8 -B -m unittest discover -s modules/mta_attribution/tests -t . -p 'test_*.py'
+python -X utf8 -B -m unittest discover -s modules/mta_standard/tests -t . -p 'test_*.py'
+python -X utf8 -B -m unittest discover -s modules/mta_strategy_recommendation/tests -t . -p 'test_*.py'
 ```
 
 One file at a time:
 
 ```bash
-python3 -B -m unittest discover \
-  -s modules/mta_standard/tests \
+python -X utf8 -B -m unittest discover \
+  -s modules/mta_attribution/tests \
   -p 'test_dnn_attribution_model.py' \
-  -t modules/mta_standard/tests
+  -t .
 ```
 
 > [!TIP]
-> Every test file bootstraps its own `sys.path` and is runnable on its own. Pass `-t` with the tests directory when running a single file, so `unittest` treats it as the top-level directory.
+> Use `-t .` so `unittest` imports tests and runtime code through their repository package paths.
 
 ### The wrapper regression guarantee
 
@@ -167,13 +171,10 @@ uv run python -X utf8 -B script/compare_attribution_models.py \
 `evaluation.py` scores any registered model against MTA-SIM's `simulation_ground_truth`, under identical conditions.
 
 ```python
-import sys
-sys.path[:0] = ["modules/mta_standard/src"]
-
-from dataloader import load_mta_sim_dataset
-from evaluation import compare_models, load_simulation_ground_truth
-from model_registry import MODEL_REGISTRY, build_model
-from touchpoint_adapter import SimulatorConfig
+from modules.mta_standard.src.dataloader import load_mta_sim_dataset
+from modules.mta_standard.src.evaluation import compare_models, load_simulation_ground_truth
+from modules.mta_standard.src.model_registry import MODEL_REGISTRY, build_model
+from modules.mta_standard.src.touchpoint_adapter import SimulatorConfig
 
 config = SimulatorConfig.from_mapping({
     "AMAZON_DSP:OTT:UNSPECIFIED:VIDEO": "CPM",

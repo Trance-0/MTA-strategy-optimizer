@@ -14,8 +14,8 @@ marketing-roi-analysis/
 ├── .gitignore                        # cache, secret, and generated-output rules
 ├── .markdownlint.json                # Markdown lint exceptions
 ├── modules/
-│   ├── mta_attribution/             # five-segment attribution implementation
-│   ├── mta_standard/                # MTA-SIM interface, adapter, evaluator
+│   ├── mta_attribution/             # model interface and concrete attribution implementations
+│   ├── mta_standard/                # MTA-SIM framework, adapter, execution, evaluator
 │   └── mta_strategy_recommendation/ # Campaign Group initial-strategy module
 ├── external/mta_sim_dataset/         # pinned ZheyuanWu data-generator submodule
 ├── script/                            # all maintained project commands

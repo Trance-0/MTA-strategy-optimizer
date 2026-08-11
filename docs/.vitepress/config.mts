@@ -13,6 +13,7 @@ const enTheme: DefaultTheme.Config = {
     { text: "Datasets", link: "/en/datasets/" },
     { text: "Attribution", link: "/en/attribution/" },
     { text: "Strategy", link: "/en/strategy/" },
+    { text: "Implementation", link: "/en/implementation/" },
     { text: "Product", link: "/en/product/" },
     { text: "Workspace", link: "/en/workspace/" },
     { text: "Specifications", link: "/en/specifications/" },
@@ -72,6 +73,15 @@ const enTheme: DefaultTheme.Config = {
         { text: "Optimization research plan", link: "/en/strategy/optimization-plan" },
         { text: "Output data contract", link: "/en/strategy/output-data-contract" },
         { text: "Strategy output boundary", link: "/en/strategy/strategy-output-contract" },
+      ],
+    },
+    {
+      text: "Implementation reference",
+      items: [
+        { text: "Code-to-document map", link: "/en/implementation/" },
+        { text: "Attribution module", link: "/en/implementation/mta_attribution/" },
+        { text: "Standard framework", link: "/en/implementation/mta_standard/" },
+        { text: "Strategy recommendation", link: "/en/implementation/mta_strategy_recommendation/" },
       ],
     },
     {

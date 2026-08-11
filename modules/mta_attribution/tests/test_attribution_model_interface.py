@@ -7,32 +7,31 @@ pinned fixture values catch a change in the mathematics itself.
 
 from __future__ import annotations
 
-import sys
 import tempfile
 import unittest
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[1]
-sys.path[:0] = [str(ROOT / "src"), str(ROOT / "tests")]
-
-from attribution_src_path import ensure_attribution_src_on_path  # noqa: E402
-
-ensure_attribution_src_on_path()
-
-import mta_sim_fixtures as fixtures  # noqa: E402
-from attribution_model_comparison import OUTCOME_FIELDS  # noqa: E402
-from attribution_model_interface import MtaAttributionModel  # noqa: E402
-from dataloader import load_mta_sim_dataset  # noqa: E402
-from markov_attribution_model import run_markov_attribution  # noqa: E402
-from model_registry import MODEL_REGISTRY, build_model  # noqa: E402
-from output_contract import SUPPORTED_OUTCOMES, validate_standard_output  # noqa: E402
-from shapley_attribution_model import run_shapley_attribution  # noqa: E402
-from touchpoint_adapter import SimulatorConfig, to_four_segment  # noqa: E402
-from wrapped_attribution_models import (  # noqa: E402
+from modules.mta_attribution.src.attribution_model_comparison import OUTCOME_FIELDS
+from modules.mta_attribution.src.attribution_model_interface import MtaAttributionModel
+from modules.mta_attribution.src.markov_attribution_model import run_markov_attribution
+from modules.mta_attribution.src.markov_standard_attribution_model import (
     MarkovRemovalEffectModel,
-    PathLevelShapleyModel,
-    UniformCreditModel,
 )
+from modules.mta_attribution.src.shapley_attribution_model import (
+    run_shapley_attribution,
+)
+from modules.mta_attribution.src.shapley_standard_attribution_model import (
+    PathLevelShapleyModel,
+)
+from modules.mta_attribution.src.uniform_attribution_model import UniformCreditModel
+from modules.mta_standard.src.dataloader import load_mta_sim_dataset
+from modules.mta_standard.src.model_registry import MODEL_REGISTRY, build_model
+from modules.mta_standard.src.output_contract import (
+    SUPPORTED_OUTCOMES,
+    validate_standard_output,
+)
+from modules.mta_standard.src.touchpoint_adapter import SimulatorConfig, to_four_segment
+from modules.mta_standard.tests import mta_sim_fixtures as fixtures
 
 
 # Pinned expected shares. These are the values the existing five-segment

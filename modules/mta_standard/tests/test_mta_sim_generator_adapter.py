@@ -2,21 +2,18 @@
 
 from __future__ import annotations
 
-import sys
 import tempfile
 import unittest
 from pathlib import Path
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[3]
-STANDARD_SRC = PROJECT_ROOT / "modules" / "mta_standard" / "src"
 SUBMODULE_ROOT = PROJECT_ROOT / "external" / "mta_sim_dataset"
-sys.path.insert(0, str(STANDARD_SRC))
 
-from mta_sim_generator_adapter import (  # noqa: E402
+from modules.mta_standard.src.evaluation import load_simulation_ground_truth
+from modules.mta_standard.src.mta_sim_generator_adapter import (
     generate_and_load_mta_sim_dataset,
 )
-from evaluation import load_simulation_ground_truth  # noqa: E402
 
 
 class MtaSimGeneratorAdapterTests(unittest.TestCase):

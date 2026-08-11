@@ -16,25 +16,19 @@ from pathlib import Path
 from unittest.mock import patch
 
 
-ROOT = Path(__file__).resolve().parents[1]
-PROJECT_ROOT = ROOT.parents[1]
-SRC = ROOT / "src"
-SCRIPTS = PROJECT_ROOT / "script"
-sys.path[:0] = [str(ROOT), str(SRC), str(SCRIPTS)]
-
-from attribution_contract import read_csv, write_csv  # noqa: E402
-from config import (  # noqa: E402
+from modules.mta_attribution.config import (
     MARKOV_OUTPUT_FILE,
     MODEL_COMPARISON_SUMMARY_FILE,
     MODEL_COMPARISON_TOUCHPOINTS_FILE,
     RECOMMENDED_ATTRIBUTION_FILE,
     SHAPLEY_OUTPUT_FILE,
 )
-from generate_simulated_amazon_ads_report import FIELDS as ADS_FIELDS  # noqa: E402
-from generate_simulated_amc_touchpoint_events import FIELDS as EVENT_FIELDS  # noqa: E402
-from build_path_report import build_path_report  # noqa: E402
-from run_pipeline import parse_args, run_pipeline  # noqa: E402
-from validate_data_alignment import infer_ads_report_window  # noqa: E402
+from modules.mta_attribution.src.attribution_contract import read_csv, write_csv
+from script.build_path_report import build_path_report
+from script.generate_simulated_amazon_ads_report import FIELDS as ADS_FIELDS
+from script.generate_simulated_amc_touchpoint_events import FIELDS as EVENT_FIELDS
+from script.run_pipeline import parse_args, run_pipeline
+from script.validate_data_alignment import infer_ads_report_window
 
 
 TOUCHPOINT = "SPONSORED_PRODUCTS:PRODUCT_AD:TOP_OF_SEARCH:UNSPECIFIED:CLICK"
@@ -169,8 +163,10 @@ class AutoReportWindowTests(unittest.TestCase):
             expected_events = events.read_bytes()
             expected_ads = ads.read_bytes()
 
-            with patch("config.REPORT_START_DATE", "1900-01-01"), patch(
-                "config.REPORT_END_DATE", "1900-01-02"
+            with patch(
+                "modules.mta_attribution.config.REPORT_START_DATE", "1900-01-01"
+            ), patch(
+                "modules.mta_attribution.config.REPORT_END_DATE", "1900-01-02"
             ):
                 outputs = run_pipeline(events, ads, path_report, output_dir)
 

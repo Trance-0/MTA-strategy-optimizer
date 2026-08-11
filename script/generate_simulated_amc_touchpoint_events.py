@@ -18,13 +18,15 @@ from pathlib import Path
 from typing import Mapping, Sequence
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
-AMC_MTA_ROOT = PROJECT_ROOT / "modules" / "mta_attribution"
-sys.path.insert(0, str(AMC_MTA_ROOT))
-sys.path.insert(0, str(AMC_MTA_ROOT / "src"))
+sys.path.insert(0, str(PROJECT_ROOT))
 
-from attribution_contract import write_csv_atomic  # noqa: E402
-from config import AMC_TOUCHPOINT_EVENTS_FILE, REPORT_END_DATE, REPORT_START_DATE  # noqa: E402
-from synthetic_event_pipeline import (  # noqa: E402
+from modules.mta_attribution.config import (  # noqa: E402
+    AMC_TOUCHPOINT_EVENTS_FILE,
+    REPORT_END_DATE,
+    REPORT_START_DATE,
+)
+from modules.mta_attribution.src.attribution_contract import write_csv_atomic  # noqa: E402
+from modules.mta_attribution.src.synthetic_event_pipeline import (  # noqa: E402
     AMC_EVENT_FIELDS,
     derive_amc_touchpoint_events,
     generate_synthetic_user_events,

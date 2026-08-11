@@ -25,11 +25,9 @@ from pathlib import Path
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
-AMC_MTA_ROOT = PROJECT_ROOT / "modules" / "mta_attribution"
-sys.path.insert(0, str(AMC_MTA_ROOT))
-sys.path.insert(0, str(AMC_MTA_ROOT / "src"))
+sys.path.insert(0, str(PROJECT_ROOT))
 
-from config import (  # noqa: E402
+from modules.mta_attribution.config import (  # noqa: E402
     AMAZON_ADS_REPORT_FILE,
     AMC_REPORT_FILE,
     ATTRIBUTION_OUTPUT_DIR,
@@ -40,16 +38,13 @@ from config import (  # noqa: E402
     RECOMMENDED_ATTRIBUTION_FILE,
     SHAPLEY_OUTPUT_FILE,
 )
-from attribution_contract import (  # noqa: E402
+from modules.mta_attribution.src.attribution_contract import (  # noqa: E402
     aggregate_spend_by_touchpoint,
     read_csv,
     result_rows,
     write_csv_set_atomic,
 )
-from markov_attribution_model import run_markov_attribution  # noqa: E402
-from shapley_attribution_model import run_shapley_attribution  # noqa: E402
-from validate_data_alignment import validate_data_alignment_rows  # noqa: E402
-from attribution_model_comparison import (  # noqa: E402
+from modules.mta_attribution.src.attribution_model_comparison import (  # noqa: E402
     MODEL_OUTPUT_FIELDS,
     RECOMMENDED_FIELDS,
     SUMMARY_FIELDS,
@@ -57,6 +52,13 @@ from attribution_model_comparison import (  # noqa: E402
     compare_attribution_models,
     read_amc_csv_strict,
 )
+from modules.mta_attribution.src.markov_attribution_model import (  # noqa: E402
+    run_markov_attribution,
+)
+from modules.mta_attribution.src.shapley_attribution_model import (  # noqa: E402
+    run_shapley_attribution,
+)
+from script.validate_data_alignment import validate_data_alignment_rows  # noqa: E402
 
 
 def parse_args() -> argparse.Namespace:

@@ -1,0 +1,13 @@
+# Keep deterministic source, documentation, data, and generated baselines stable
+# across Windows and Unix worktrees.
+*.py text eol=lf
+*.md text eol=lf
+*.json text eol=lf
+*.csv text eol=lf
+*.mjs text eol=lf
+*.mts text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+*.toml text eol=lf
+*.drawio text eol=lf
+*.svg text eol=lf

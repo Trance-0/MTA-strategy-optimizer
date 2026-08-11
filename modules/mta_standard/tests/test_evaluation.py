@@ -10,17 +10,12 @@ from __future__ import annotations
 import csv
 import dataclasses
 import inspect
-import sys
 import tempfile
 import unittest
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[1]
-sys.path[:0] = [str(ROOT / "src"), str(ROOT / "tests")]
-
-import mta_sim_fixtures as fixtures  # noqa: E402
-from dataloader import load_mta_sim_dataset  # noqa: E402
-from evaluation import (  # noqa: E402
+from modules.mta_standard.src.dataloader import load_mta_sim_dataset
+from modules.mta_standard.src.evaluation import (
     MTA_SIM_GROUND_TRUTH_FIELDS,
     GroundTruth,
     compare_models,
@@ -28,12 +23,13 @@ from evaluation import (  # noqa: E402
     evaluate_standard_output,
     load_simulation_ground_truth,
 )
-from model_registry import MODEL_REGISTRY, build_model  # noqa: E402
-from output_contract import (  # noqa: E402
+from modules.mta_standard.src.model_registry import MODEL_REGISTRY, build_model
+from modules.mta_standard.src.output_contract import (
     SUPPORTED_OUTCOMES,
     StandardAttributionRow,
 )
-from touchpoint_adapter import SimulatorConfig  # noqa: E402
+from modules.mta_standard.src.touchpoint_adapter import SimulatorConfig
+from modules.mta_standard.tests import mta_sim_fixtures as fixtures
 
 
 class EvaluationTestCase(unittest.TestCase):
@@ -106,7 +102,7 @@ class GroundTruthIsolationTest(EvaluationTestCase):
     """Ground truth must be reachable only through the evaluation API."""
 
     def test_evaluation_owns_the_only_ground_truth_loader(self) -> None:
-        import dataloader
+        from modules.mta_standard.src import dataloader
 
         loaders = [
             name

@@ -7,15 +7,9 @@ missing, ambiguous, and colliding cost-type mappings.
 
 from __future__ import annotations
 
-import sys
 import unittest
-from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[1]
-sys.path[:0] = [str(ROOT / "src"), str(ROOT / "tests")]
-
-import mta_sim_fixtures as fixtures  # noqa: E402
-from touchpoint_adapter import (  # noqa: E402
+from modules.mta_standard.src.touchpoint_adapter import (
     COST_TYPE_TO_INTERACTION,
     SimulatorConfig,
     canonical_four_segment_key,
@@ -23,6 +17,7 @@ from touchpoint_adapter import (  # noqa: E402
     four_segment_key_from_ads_row,
     to_four_segment,
 )
+from modules.mta_standard.tests import mta_sim_fixtures as fixtures
 
 
 class CanonicalFourSegmentKeyTest(unittest.TestCase):

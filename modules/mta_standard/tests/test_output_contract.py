@@ -8,18 +8,13 @@ rejected with a specific message.
 from __future__ import annotations
 
 import dataclasses
-import sys
 import tempfile
 import unittest
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[1]
-sys.path[:0] = [str(ROOT / "src"), str(ROOT / "tests")]
-
-import mta_sim_fixtures as fixtures  # noqa: E402
-from dataloader import load_mta_sim_dataset  # noqa: E402
-from model_registry import MODEL_REGISTRY, build_model  # noqa: E402
-from output_contract import (  # noqa: E402
+from modules.mta_standard.src.dataloader import load_mta_sim_dataset
+from modules.mta_standard.src.model_registry import MODEL_REGISTRY, build_model
+from modules.mta_standard.src.output_contract import (
     STANDARD_OUTPUT_FIELDS,
     SUPPORTED_OUTCOMES,
     ZERO_OUTCOME_WARNING,
@@ -27,7 +22,8 @@ from output_contract import (  # noqa: E402
     standard_rows_to_dicts,
     validate_standard_output,
 )
-from touchpoint_adapter import SimulatorConfig  # noqa: E402
+from modules.mta_standard.src.touchpoint_adapter import SimulatorConfig
+from modules.mta_standard.tests import mta_sim_fixtures as fixtures
 
 
 ZERO_OUTCOME_PATHS = (

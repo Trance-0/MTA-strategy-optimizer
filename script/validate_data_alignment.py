@@ -21,17 +21,15 @@ from pathlib import Path
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
-AMC_MTA_ROOT = PROJECT_ROOT / "modules" / "mta_attribution"
-sys.path.insert(0, str(AMC_MTA_ROOT))
-sys.path.insert(0, str(AMC_MTA_ROOT / "src"))
+sys.path.insert(0, str(PROJECT_ROOT))
 
-from config import AMC_REPORT_FILE, DATA_DIR  # noqa: E402
-from attribution_contract import (  # noqa: E402
+from modules.mta_attribution.config import AMC_REPORT_FILE, DATA_DIR  # noqa: E402
+from modules.mta_attribution.src.attribution_contract import (  # noqa: E402
     aggregate_spend_by_touchpoint,
     read_csv,
     validate_amc_aggregated_row,
 )
-from touchpoint_key import (  # noqa: E402
+from modules.mta_attribution.src.touchpoint_key import (  # noqa: E402
     canonicalize_amc_touchpoint_key,
     touchpoint_key_from_ads_row,
 )

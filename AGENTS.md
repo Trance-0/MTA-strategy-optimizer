@@ -19,9 +19,22 @@
 
 ## Module layout
 
-- `modules/mta_attribution/` — path building, the Markov and Shapley attribution models, and model comparison.
-- `modules/mta_standard/` — the MTA-SIM dataloader, four-to-five segment adapter, model interface, output contract, and evaluator.
+- `modules/mta_attribution/` — path building, every concrete attribution model, the shared attribution-model interface, and model comparison.
+- `modules/mta_standard/` — framework-only MTA-SIM loading, four-to-five segment adaptation, model registration, execution, output validation, and evaluation. Do not place concrete attribution mathematics here.
 - `modules/mta_strategy_recommendation/` — the Campaign Group Ad Group count and budget initializer.
 - Use `snake_case` for every directory and Python file. Hyphens are not valid in Python module names, and `modules.mta_strategy_recommendation.src` is imported as a real package path.
 - Name a file after what it contains: one attribution model per `*_attribution_model.py` file, shared contracts in `*_contract.py`.
 - Start every Python file with a module docstring stating what the file does and where it sits in the data flow.
+- Use package-native relative or fully qualified imports inside `modules/`. Do not mutate `sys.path` from reusable module code.
+
+## Implementation documentation
+
+- Every maintained implementation file under `modules/*/src/`, except `__init__.py`, must have exactly one English implementation page at `docs/en/implementation/<module>/<python_stem>.md`.
+- The documentation filename must match the Python filename stem exactly. Its frontmatter must contain `source_file` with the repository-relative Python path.
+- Each implementation page must state responsibility, inputs, outputs, dependencies, and the owning test file or verification command. Higher-level guides may link to these pages but must not replace them.
+- Keep editable Draw.io sources and their generated SVG renders together under `docs/assets/architecture/`. Documentation pages embed the SVG and link to the `.drawio` source.
+
+## Development workflow
+
+- Treat `_bmad/`, `_bmad-output/`, and installed `.agents/` bundles as historical or optional tooling only. Do not use their workflow scripts as the project development process unless the user explicitly requests BMad.
+- Use the repository's documented Git, Python, test, and documentation commands for normal development and verification.

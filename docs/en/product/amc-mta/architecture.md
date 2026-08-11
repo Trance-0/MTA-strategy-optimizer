@@ -9,19 +9,9 @@ lang: en-US
 
 The current project is a single-process, standard-library-first, CSV-driven AMC MTA batch module. Its value is not a platform shell; it is a reproducible and validated loop connecting anonymous aggregate paths, dual-model attribution, Amazon Ads cost, and governance diagnostics.
 
-```text
-Synthetic user-event source (simulation only)
-  ├─ anonymous conceptual events ─ amc_path_builder ─ aggregate five-segment paths
-  │                                                   ├─ Weighted Markov
-  │                                                   └─ Path-level Shapley ─┐
-  ├─ Amazon Ads daily report ────────────────────────────────────────────────┤
-  └─ touchpoint-entity aggregate ─ evidence for Strategy Initializer        │
-                                                                              ▼
-                                                               two attribution results
-                                                                              │
-                                                                              ▼
-                         touchpoint comparison + Outcome summary + recommendation
-```
+![Parallel module ownership and data flow](../../../assets/architecture/module-ownership.drawio.svg)
+
+[Edit the Draw.io source](../../../assets/architecture/module-ownership.drawio)
 
 In real use, user events must become anonymous aggregates inside the AMC clean room. This repository accepts only aggregates that satisfy privacy thresholds; its user-event source and conceptual events are test fixtures rather than exportable real AMC user detail.
 
@@ -38,7 +28,7 @@ In real use, user events must become anonymous aggregates inside the AMC clean r
 | `script/run_pipeline.py` | derive the window from Ads dates, build complete temporary artifacts, and restore previous files if publication fails |
 | `tests/` | lock field contracts, boundaries, conservation, strict parsing, and publication rollback |
 
-The module is organized through `sys.path` injection rather than a Python package, dependency manifest, or install entry point. That is adequate for the local demonstration but not a stable service dependency.
+The runtime modules are regular Python packages. Maintained command wrappers add only the project root when invoked directly; reusable model and framework modules use explicit package-relative imports.
 
 The canonical entry point does not use simulated dates from configuration. Users may replace the default event and Ads files or pass custom inputs, path output, and attribution output directories. The program publishes the path report and five model/governance files without modifying the two source inputs. Ads rows must form a contiguous daily grid with the same touchpoint set every day. Input or model failure occurs before the six derived artifacts are published as a set.
 

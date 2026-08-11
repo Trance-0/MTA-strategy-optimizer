@@ -16,10 +16,9 @@ from pathlib import Path
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
-STANDARD_SRC = PROJECT_ROOT / "modules" / "mta_standard" / "src"
-sys.path.insert(0, str(STANDARD_SRC))
+sys.path.insert(0, str(PROJECT_ROOT))
 
-from mta_sim_generator_adapter import (  # noqa: E402
+from modules.mta_standard.src.mta_sim_generator_adapter import (  # noqa: E402
     SUPPORTED_VARIANTS,
     generate_and_load_mta_sim_dataset,
 )

@@ -9,7 +9,6 @@ from __future__ import annotations
 
 import csv
 import math
-import sys
 import tempfile
 import unittest
 from decimal import Decimal
@@ -17,20 +16,11 @@ from pathlib import Path
 from unittest.mock import patch
 
 
-ROOT = Path(__file__).resolve().parents[1]
-PROJECT_ROOT = ROOT.parents[1]
-SRC = ROOT / "src"
-SCRIPTS = PROJECT_ROOT / "script"
-sys.path.insert(0, str(ROOT))
-sys.path.insert(0, str(SRC))
-sys.path.insert(0, str(SCRIPTS))
-
-from compare_attribution_models import read_model_csv_strict  # noqa: E402
-from attribution_contract import (  # noqa: E402
+from modules.mta_attribution.src.attribution_contract import (
     read_csv_normalized,
     write_csv_set_atomic  # noqa: E402,
 )
-from attribution_model_comparison import (  # noqa: E402
+from modules.mta_attribution.src.attribution_model_comparison import (
     MODEL_OUTPUT_FIELDS,
     RECOMMENDED_FIELDS,
     SUMMARY_FIELDS,
@@ -43,6 +33,7 @@ from attribution_model_comparison import (  # noqa: E402
     reliability_fields,
     spearman_rho,
 )
+from script.compare_attribution_models import read_model_csv_strict
 
 
 A_IMPRESSION = "PRODUCT_A:FORMAT:PLACEMENT:CREATIVE:IMPRESSION"
@@ -744,7 +735,9 @@ class StrictCsvTests(unittest.TestCase):
                 read_model_csv_strict(path)
 
     def test_strict_amc_reader_normalizes_edges_and_rejects_extra_columns(self) -> None:
-        from attribution_contract import PATH_FIELD_DESCRIPTIONS
+        from modules.mta_attribution.src.attribution_contract import (
+            PATH_FIELD_DESCRIPTIONS,
+        )
 
         with tempfile.TemporaryDirectory() as tmp:
             path = Path(tmp) / "amc.csv"
@@ -783,7 +776,10 @@ class AtomicCsvSetTests(unittest.TestCase):
                     raise OSError("publish failed")
                 real_replace(source, destination)
 
-            with patch("attribution_contract.os.replace", side_effect=fail_second):
+            with patch(
+                "modules.mta_attribution.src.attribution_contract.os.replace",
+                side_effect=fail_second,
+            ):
                 with self.assertRaisesRegex(OSError, "publish failed"):
                     write_csv_set_atomic(
                         [

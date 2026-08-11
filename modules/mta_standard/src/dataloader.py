@@ -26,17 +26,14 @@ from pathlib import Path
 from types import MappingProxyType
 from typing import Mapping, Sequence
 
-from attribution_src_path import ensure_attribution_src_on_path
-from touchpoint_adapter import (
+from .touchpoint_adapter import (
     SimulatorConfig,
     canonicalize_four_segment_key,
     four_segment_key_from_ads_row,
     to_four_segment,
 )
 
-ensure_attribution_src_on_path()
-
-from attribution_contract import (  # noqa: E402
+from modules.mta_attribution.src.attribution_contract import (
     NULL,
     PATH_FIELD_DESCRIPTIONS,
     read_csv_normalized,
@@ -44,7 +41,7 @@ from attribution_contract import (  # noqa: E402
     safe_int,
     validate_amc_aggregated_row,
 )
-from attribution_model_comparison import read_amc_csv_strict  # noqa: E402
+from modules.mta_attribution.src.attribution_model_comparison import read_amc_csv_strict
 
 
 # MTA-SIM's amc_path_report columns are identical to this repository's path

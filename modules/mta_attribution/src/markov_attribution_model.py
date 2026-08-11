@@ -18,7 +18,7 @@ from __future__ import annotations
 from collections import defaultdict
 from typing import Dict, List, Mapping, Sequence
 
-from attribution_contract import (
+from .attribution_contract import (
     CONVERSION,
     NULL,
     START,
@@ -30,7 +30,7 @@ from attribution_contract import (
     unique_touchpoints,
     validate_amc_aggregated_row,
 )
-from touchpoint_key import canonicalize_amc_touchpoint_key
+from .touchpoint_key import canonicalize_amc_touchpoint_key
 
 
 def amc_path_to_markov_path(path: str, converted_users: object) -> str:
