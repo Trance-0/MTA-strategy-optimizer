@@ -22,7 +22,7 @@ Specifications record the intent, boundary, acceptance criteria, and verificatio
 | Specification | Recorded purpose | Current interpretation | Source backup |
 | --- | --- | --- | --- |
 | Unified synthetic user-event pipeline | Derive Amazon Marketing Cloud events, Amazon Ads performance, entity relationships, and strategy evidence from one synthetic behavioral source. | Implemented data-lineage foundation. | `docs/zh/specifications/source/spec-unified-synthetic-user-event-pipeline.md` |
-| Campaign Group hierarchy migration | Standardize the hierarchy as `Campaign Group → Campaign → Ad Group → Keyword/SKU` and introduce candidate-pool examples. | Implemented hierarchy foundation. | `docs/zh/specifications/source/spec-campaign-group-hierarchy-migration.md` |
+| Campaign Group hierarchy migration | Standardize the hierarchy as `Campaign Group → Campaign → Ad Group → Keyword/Stock Keeping Unit (SKU)` and introduce candidate-pool examples. | Implemented hierarchy foundation. | `docs/zh/specifications/source/spec-campaign-group-hierarchy-migration.md` |
 | Align strategy data with Amazon Marketing Cloud evidence | Replace handwritten or incorrectly mapped strategy values with evidence-aligned entities, targeting, attribution values, and budgets. | Implemented evidence alignment. | `docs/zh/specifications/source/spec-align-strategy-data-with-amc.md` |
 | Simplify strategy simulated data | Replace seven small tables and a handwritten output with explicit request, candidate-pool, evidence, and deterministic-output responsibilities. | Superseded by the current budget-only v4 contract, but retained as evolution history. | `docs/zh/specifications/source/spec-simplify-strategy-simulated-data.md` |
 

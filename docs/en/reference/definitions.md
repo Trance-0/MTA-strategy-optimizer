@@ -18,6 +18,10 @@ Amazon Marketing Cloud is a privacy-safe analytics environment. AMC-style paths 
 
 A method for allocating Outcome credit among multiple historical marketing touchpoints. This project runs Markov and path-level Shapley.
 
+### MTA-SIM (Multi-Touch Attribution Simulator)
+
+The external synthetic-data generator used to create controlled attribution datasets and simulation ground truth for framework evaluation.
+
 ### Touchpoint
 
 One classifiable advertising interaction. This project uses a five-segment normalized key:

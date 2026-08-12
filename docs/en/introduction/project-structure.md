@@ -20,7 +20,7 @@ lang: en-US
 | `external/mta_sim_dataset/` | Pin the external MTA-SIM-dataset repository and its ZheyuanWu generator | Git submodule |
 | `script/` | Hold all maintained project command-line entry points | `generate_mta_sim_dataset.py`, `run_pipeline.py` |
 | `docs/` | Current VitePress documentation, GitHub Pages build input, and research attachments | This site |
-| `docs/en/specifications/` | Project-level English catalog of implementation intent and historical verification records | [Specification catalog](../specifications/) |
+| `docs/en/introduction/specifications.md` | Project-level English catalog of implementation intent and historical verification records | [Specification catalog](./specifications.md) |
 | `docs/zh/specifications/` | Preserved Chinese specification sources for future translation; excluded from the current build | Unpublished source backup |
 | `docs/research/` | External research PDFs, reports, and indexes; referenced only by relevant pages and not used when models run | Research attachments |
 | `design-artifacts/` | Historical Product Briefs, product requirements documents, and decision records | Traceability material |

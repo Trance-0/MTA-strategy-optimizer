@@ -15,7 +15,7 @@ This index covers the complete workspace: current business implementations, proj
 4. [Workspace architecture](architecture.md): the business, knowledge, and tool layers.
 5. [Component and asset inventory](component-inventory.md): code, data, research, and skill assets.
 6. [Development and verification guide](development-guide.md): run the project and reproduce verification.
-7. [Implementation specification catalog](../specifications/): categorized implementation intent and historical verification records.
+7. [Implementation specification catalog](../introduction/specifications.md): categorized implementation intent and historical verification records.
 8. [Development history](development-history.md): English translation of the complete preserved work log.
 9. [AMC MTA capability assessment](../product/amc-mta/capability-assessment.md): detailed assessment of attribution capabilities.
 
@@ -38,7 +38,7 @@ This index covers the complete workspace: current business implementations, proj
 | Individual-touchpoint reliability | [Touchpoint reliability guide](../attribution/reliability.md) |
 | Code structure and data flow | [AMC MTA architecture](../product/amc-mta/architecture.md) |
 | Project maturity and priorities | [AMC MTA capability assessment](../product/amc-mta/capability-assessment.md) |
-| Implementation specifications | [Project-level specification catalog](../specifications/) |
+| Implementation specifications | [Project-level specification catalog](../introduction/specifications.md) |
 | Historical work log | [Development history](development-history.md) |
 | Campaign Group data hierarchy | [Campaign Group hierarchy and finest performance grain](../research/campaign-data-hierarchy.md) |
 | Deferred AMC MTA technical work | `_bmad-output/implementation-artifacts/amc_mta/deferred/deferred-work.md` |

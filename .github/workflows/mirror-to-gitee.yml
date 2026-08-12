@@ -77,6 +77,32 @@ jobs:
         run: |
           set -euo pipefail
 
+          progress() {
+            local percent="$1"
+            local label="$2"
+            local width=20
+            local filled=$((percent * width / 100))
+            local empty=$((width - filled))
+            local filled_bar empty_bar
+            printf -v filled_bar '%*s' "$filled" ''
+            printf -v empty_bar '%*s' "$empty" ''
+            filled_bar="${filled_bar// /#}"
+            empty_bar="${empty_bar// /-}"
+            printf '[%s%s] %3d%% %s\n' "$filled_bar" "$empty_bar" "$percent" "$label"
+            printf '| `%3d%%` | %s |\n' "$percent" "$label" >> "$GITHUB_STEP_SUMMARY"
+          }
+
+          cat >> "$GITHUB_STEP_SUMMARY" <<'EOF'
+          ### GitHub-to-Gitee mirror
+
+          GitHub is the source of truth. Gitee branches and tags are force-updated to the GitHub refs. Gitee's protected `master` branch is retained as an exact alias of GitHub `main` when GitHub has no `master` branch.
+
+          | Progress | Status |
+          | ---: | --- |
+          EOF
+
+          progress 5 "Preparing credential helper"
+
           askpass="$RUNNER_TEMP/gitee-askpass.sh"
           printf '%s\n' \
             '#!/usr/bin/env bash' \
@@ -90,9 +116,55 @@ jobs:
           export GIT_ASKPASS="$askpass"
           export GIT_TERMINAL_PROMPT=0
 
+          progress 15 "Cloning the authoritative GitHub repository"
           git clone --bare --filter=blob:none "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY.git" source.git
+          progress 30 "Refreshing every GitHub branch and tag"
           git -C source.git fetch origin "+refs/heads/*:refs/heads/*" "+refs/tags/*:refs/tags/*" --prune --force
           git -C source.git remote add gitee "https://gitee.com/${GITEE_REPOSITORY_PATH}.git"
-          git -C source.git push gitee --prune --force "refs/heads/*:refs/heads/*" "refs/tags/*:refs/tags/*"
+
+          progress 45 "Force-updating Gitee branches from GitHub"
+          while IFS= read -r branch; do
+            git -C source.git push gitee --force "refs/heads/${branch}:refs/heads/${branch}"
+          done < <(git -C source.git for-each-ref --format='%(refname:strip=2)' refs/heads)
+
+          if git -C source.git show-ref --verify --quiet refs/heads/main &&
+             ! git -C source.git show-ref --verify --quiet refs/heads/master; then
+            progress 55 "Aligning protected Gitee master with GitHub main"
+            git -C source.git push gitee --force "refs/heads/main:refs/heads/master"
+          fi
+
+          progress 65 "Pruning Gitee-only branches except protected master"
+          while IFS= read -r remote_ref; do
+            branch="${remote_ref#refs/heads/}"
+            if test "$branch" = "master"; then
+              continue
+            fi
+            if ! git -C source.git show-ref --verify --quiet "refs/heads/${branch}"; then
+              git -C source.git push gitee --delete "$branch"
+            fi
+          done < <(git -C source.git ls-remote --refs --heads gitee | awk '{print $2}')
+
+          progress 75 "Force-updating and pruning Gitee tags"
+          git -C source.git push gitee --force --prune "refs/tags/*:refs/tags/*"
+
+          progress 85 "Verifying branch and tag refs"
+          expected_refs="$RUNNER_TEMP/expected-refs.txt"
+          actual_refs="$RUNNER_TEMP/actual-refs.txt"
+          git -C source.git for-each-ref --format='%(objectname) refs/heads/%(refname:strip=2)' refs/heads > "$expected_refs"
+          if git -C source.git show-ref --verify --quiet refs/heads/main &&
+             ! git -C source.git show-ref --verify --quiet refs/heads/master; then
+            printf '%s refs/heads/master\n' "$(git -C source.git rev-parse refs/heads/main)" >> "$expected_refs"
+          fi
+          git -C source.git for-each-ref --format='%(objectname) refs/tags/%(refname:strip=2)' refs/tags >> "$expected_refs"
+          git -C source.git ls-remote --refs gitee 'refs/heads/*' 'refs/tags/*' |
+            awk '{print $1 " " $2}' > "$actual_refs"
+          sort -o "$expected_refs" "$expected_refs"
+          sort -o "$actual_refs" "$actual_refs"
+          if ! diff --unified=3 "$expected_refs" "$actual_refs"; then
+            echo "Gitee refs do not exactly match the authoritative GitHub refs."
+            exit 1
+          fi
+
+          progress 100 "Sync complete; Gitee refs match GitHub"
 
           rm -f "$askpass"
