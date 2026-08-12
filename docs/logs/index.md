@@ -10,6 +10,7 @@ The project version is recorded in the repository-root `VERSION` file. Each vers
 
 | Version | Date | Summary |
 | --- | --- | --- |
+| [0.9](0.9.md) | 2026-08-12 | GitHub Pages activation follow-up and current Pages action runtime |
 | [0.8](0.8.md) | 2026-08-12 | Public GitHub release, Pages documentation, data-model translations, and Gitee mirroring |
 | [0.7](0.7.md) | 2026-08-11 | Parallel module separation and implementation documentation migration |
 | [0.6](0.6.md) | 2026-08-07 | MTA-SIM integration and maintained script centralization |
