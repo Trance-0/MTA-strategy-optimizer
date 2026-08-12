@@ -25,7 +25,7 @@ Strict entry points such as AMC paths and model results still require field orde
 
 `synthetic_user_id` from the master table must not enter any of the latter four data types. Entity aggregation currently uses a local demonstration threshold of at least five synthetic users; this value is not an official Amazon privacy threshold. A real application should sort events, construct paths, and perform privacy aggregation inside the AMC clean room, exporting only aggregates that satisfy platform privacy rules.
 
-The master table also stores historical Campaign/Ad Group values, applicable Keyword/Match Type/Target values, SKU/ASIN values, per-event costs, and journey results. These are historically observed facts. They do not replace the candidate pool, budget, Campaign count, capacity, or platform policy supplied at strategy runtime.
+The master table also stores historical Campaign/Ad Group values, applicable Keyword/Match Type/Target values, [Stock Keeping Unit (SKU)](/en/reference/definitions#sku-stock-keeping-unit)/[Amazon Standard Identification Number (ASIN)](/en/reference/definitions#asin-amazon-standard-identification-number) values, per-event costs, and journey results. These are historically observed facts. They do not replace the candidate pool, budget, Campaign count, capacity, or platform policy supplied at strategy runtime.
 
 ## Field Definitions
 
@@ -70,7 +70,7 @@ The preceding advertising-attribute segments are uppercased and may contain only
 
 The Amazon Ads report must use the same five-segment key and provide `interaction_type`, `cost_type`, and an exactly matching `normalizedTouchpoint`. For DSP, `FORMAT` comes from `inventoryType`; for Sponsored Ads, it comes from `adType`.
 
-`cost_type` may only be `CPC` or `CPM`: a CPC-billed row must be `CLICK`, and a CPM-billed row must be `IMPRESSION`. A non-billable interaction for the same ad may participate in alignment and attribution as its own five-segment row, but its cost must be 0. Platform `purchases` and `sales` are assigned only to `CLICK` rows. The program does not copy costs, allocate costs backward from attribution, or infer AMC user paths from aggregate Ads metrics.
+`cost_type` may only be [Cost Per Click (CPC)](/en/reference/definitions#cpc-cost-per-click) or [Cost Per Mille (CPM)](/en/reference/definitions#cpm-cost-per-mille--cost-per-thousand-impressions): a CPC-billed row must be `CLICK`, and a CPM-billed row must be `IMPRESSION`. A non-billable interaction for the same ad may participate in alignment and attribution as its own five-segment row, but its cost must be 0. Platform `purchases` and `sales` are assigned only to `CLICK` rows. The program does not copy costs, allocate costs backward from attribution, or infer AMC user paths from aggregate Ads metrics.
 
 ## Path Rules
 

@@ -265,7 +265,7 @@ for model_id in MODEL_REGISTRY:
 
 ## References
 
-- [Standardized MTA interface](./standardized-interface.md)
+- [Standardized MTA interface](./standardized-interface/)
 - [Model comparison governance](./model-governance.md)
 - [Touchpoint reliability](./reliability.md)
 - [Module and script data flow](../reference/data-flow.md)

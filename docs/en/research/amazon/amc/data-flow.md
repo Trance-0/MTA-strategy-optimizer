@@ -7,7 +7,7 @@ lang: en-US
 
 ## Two Input Types
 
-The calculation uses two inputs. An AMC anonymous aggregate path report supplies the five-segment path, users, converted users, purchase count, and revenue to Markov and Shapley. The resulting five-segment interaction attribution is joined on the same touchpoint key to an Amazon Ads performance and spend report containing impressions, clicks, cost, and reported sales. That joined result supports ROAS, ROI, CPA, and cost-per-converted-user calculations.
+The calculation uses two inputs. An AMC anonymous aggregate path report supplies the five-segment path, users, converted users, purchase count, and revenue to Markov and Shapley. The resulting five-segment interaction attribution is joined on the same touchpoint key to an Amazon Ads performance and spend report containing impressions, clicks, cost, and reported sales. That joined result supports [Return on Ad Spend (ROAS)](/en/reference/definitions#roas-return-on-ad-spend), [Return on Investment (ROI)](/en/reference/definitions#roi-return-on-investment), [Cost Per Acquisition (CPA)](/en/reference/definitions#cpa-cost-per-acquisition--cost-per-action), and cost-per-converted-user calculations.
 
 AMC paths answer which combinations of touchpoints participated in conversion. Amazon Ads reporting answers how much was spent on each touchpoint. Cost does not naturally belong to a user path, so attribution is calculated first and cost is joined afterward at the same touchpoint grain.
 

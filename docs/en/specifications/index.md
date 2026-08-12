@@ -66,4 +66,4 @@ Source backup: `docs/zh/specifications/source/amc_mta/deferred/deferred-work.md`
 
 The current repository no longer places business descriptions inside module-local documentation folders. Runtime modules contain code, data, outputs, scripts, and tests. Project documentation lives under `docs/en/`, while `modules/mta_standard/` provides the explicit adapter between MTA-SIM's four-segment contract and this project's five-segment interaction-aware models.
 
-See the [standardized interface](../attribution/standardized-interface.md), [module data flow](../reference/data-flow.md), and [current progress](../introduction/progress.md) for the implemented state after these historical specifications.
+See the [standardized interface](../attribution/standardized-interface/), [module data flow](../reference/data-flow.md), and [current progress](../introduction/progress.md) for the implemented state after these historical specifications.

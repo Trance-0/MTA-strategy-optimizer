@@ -277,6 +277,6 @@ Every file states its own role and position in its module docstring. This table 
 
 ## References
 
-- [Standardized MTA interface](../attribution/standardized-interface.md)
+- [Standardized MTA interface](../attribution/standardized-interface/)
 - [Model testing and comparison](../attribution/model-testing.md)
 - [Workspace source-tree analysis](../workspace/source-tree-analysis.md)

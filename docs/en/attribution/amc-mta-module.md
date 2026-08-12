@@ -14,7 +14,7 @@ This module performs attribution analysis only. It is not responsible for budget
 ## Start Here
 
 - [Complete usage guide](complete-guide.md): scope, inputs, paths, models, metrics, reliability, execution, troubleshooting, and demo.
-- [Current data-flow diagram](../product/amc-mta/architecture.md#current-data-flow): theme-aware Draw.io architecture covering the canonical AMC pipeline and standardized Markov, Shapley, Uniform, and DNN evaluation lane.
+- [Current data-flow diagram](../product/amc-mta/architecture.md#current-data-flow): theme-aware Draw.io architecture covering the canonical AMC pipeline and standardized Markov, Shapley, Uniform, and [Deep Neural Network (DNN)](/en/reference/definitions#dnn-deep-neural-network) evaluation lane.
 - [Canonical output index](output-reference.md): reading order, granularity, fields, and interpretation boundaries for the five CSV files.
 - [Submission manifest](../reference/submission-manifest.md): required, optional, and excluded content plus acceptance status.
 - [Current documentation index](reference-index.md): module sources of truth and topic-specific explanations.
@@ -52,7 +52,7 @@ return ":".join((                                                      # 4
 | Line | Detailed step | Mapping to the data algorithm | Why it is implemented this way |
 | --- | --- | --- | --- |
 | 1 | Trim, uppercase, and validate the interaction text through `_component()` | Normalizes the fifth key segment before any comparison | Case or surrounding whitespace must not create a second identity for the same interaction |
-| 2 | Restrict the segment to `IMPRESSION` or `CLICK` | Preserves the billing and path semantics used later | CPC and CPM assignment depends on this distinction; accepting arbitrary values would make cost validation ambiguous |
+| 2 | Restrict the segment to `IMPRESSION` or `CLICK` | Preserves the billing and path semantics used later | [Cost Per Click (CPC)](/en/reference/definitions#cpc-cost-per-click) and [Cost Per Mille (CPM)](/en/reference/definitions#cpm-cost-per-mille--cost-per-thousand-impressions) assignment depends on this distinction; accepting arbitrary values would make cost validation ambiguous |
 | 3 | Fail before a malformed key enters a path or output | Enforces the contract at ingestion | Silent repair would hide upstream schema errors |
 | 4 | Join exactly five components with `:` | Creates the canonical attribution grain | A fixed shape makes equality checks and joins deterministic |
 | 5-6 | Require ad product and format | Identifies the advertising product and inventory/ad type | These dimensions are never structurally nullable in the model |
@@ -132,7 +132,7 @@ The models deliberately receive different representations of the same validated 
 | Purchase and revenue Markov paths | Only positive-Outcome paths, ending in `CONVERSION` and weighted by the selected Outcome | Applies the same removal-effect network independently to order and revenue mass |
 | Shapley coalition row | Ordered path converted to its first-occurrence unique touchpoint set | Defines the members of the path-level unanimity game; position and repetition intentionally do not change the split |
 
-See [Markov removal effect](markov.md) and [Shapley path attribution](shapley.md) for the line-by-line model internals.
+See [Markov removal effect](standardized-interface/markov.md) and [Shapley path attribution](standardized-interface/shapley.md) for the line-by-line model internals.
 
 ### 5. Join Cost and Preserve Output Totals
 

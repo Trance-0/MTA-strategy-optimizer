@@ -49,7 +49,7 @@ Markov is the current official display basis, and Shapley is the sensitivity ref
 - when unreliable, it uses the ascending closed interval formed by both model shares;
 - if the strategy module receives an interval, it currently uses only its midpoint and emits a Warning.
 
-Continue with [Markov removal effect](./markov.md) and [Shapley path attribution](./shapley.md).
+Continue with [Markov removal effect](./standardized-interface/markov.md) and [Shapley path attribution](./standardized-interface/shapley.md).
 
 ## Running Models Through One Interface <span class="status-label status-verified" aria-label="Verified"></span>
 
@@ -57,7 +57,7 @@ Continue with [Markov removal effect](./markov.md) and [Shapley path attribution
 
 The same interface admits models the original two cannot express. `dnn_credit` learns credit from touchpoint segment structure, which lets it predict a split for a campaign that has produced no paths yet.
 
-Continue with [the standardized interface](./standardized-interface.md) and [the DNN credit model](./dnn.md). For how the four models are verified and scored against each other, see [model testing and comparison](./model-testing.md).
+Continue with [the standardized interface](./standardized-interface/) and [the DNN credit model](./standardized-interface/dnn.md). For how the four models are verified and scored against each other, see [model testing and comparison](./model-testing.md).
 
 ## References
 

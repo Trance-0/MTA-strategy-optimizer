@@ -1,0 +1,76 @@
+name: Mirror GitHub to Gitee
+
+on:
+  push:
+    branches:
+      - "**"
+    tags:
+      - "**"
+  delete:
+  workflow_dispatch:
+  schedule:
+    - cron: "23 3 * * *"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: mirror-to-gitee
+  cancel-in-progress: false
+
+jobs:
+  mirror:
+    if: github.event_name != 'delete' || github.event.ref_type == 'branch' || github.event.ref_type == 'tag'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check mirror configuration
+        id: configuration
+        shell: bash
+        env:
+          GITEE_USERNAME: ${{ secrets.GITEE_USERNAME }}
+          GITEE_PASSWORD: ${{ secrets.GITEE_PASSWORD }}
+          GITEE_REPOSITORY: ${{ secrets.GITEE_REPOSITORY }}
+        run: |
+          set -euo pipefail
+          if test -z "$GITEE_USERNAME" || test -z "$GITEE_PASSWORD" || test -z "$GITEE_REPOSITORY"; then
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::Gitee mirror is not configured. Add GITEE_USERNAME, GITEE_PASSWORD, and GITEE_REPOSITORY as repository secrets, then run this workflow manually."
+            exit 0
+          fi
+          case "$GITEE_REPOSITORY" in
+            https://gitee.com/*|http://gitee.com/*)
+              echo "GITEE_REPOSITORY must not contain a protocol or credentials; use owner/repository.git."
+              exit 1
+              ;;
+          esac
+          echo "ready=true" >> "$GITHUB_OUTPUT"
+
+      - name: Mirror branches and tags
+        if: steps.configuration.outputs.ready == 'true'
+        shell: bash
+        env:
+          GITEE_USERNAME: ${{ secrets.GITEE_USERNAME }}
+          GITEE_PASSWORD: ${{ secrets.GITEE_PASSWORD }}
+          GITEE_REPOSITORY: ${{ secrets.GITEE_REPOSITORY }}
+        run: |
+          set -euo pipefail
+
+          askpass="$RUNNER_TEMP/gitee-askpass.sh"
+          printf '%s\n' \
+            '#!/usr/bin/env bash' \
+            'case "$1" in' \
+            '  *Username*) printf '\''%s\n'\'' "$GITEE_USERNAME" ;;' \
+            '  *Password*) printf '\''%s\n'\'' "$GITEE_PASSWORD" ;;' \
+            '  *) exit 1 ;;' \
+            'esac' > "$askpass"
+          chmod 700 "$askpass"
+
+          export GIT_ASKPASS="$askpass"
+          export GIT_TERMINAL_PROMPT=0
+
+          git clone --bare --filter=blob:none "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY.git" source.git
+          git -C source.git fetch origin "+refs/heads/*:refs/heads/*" "+refs/tags/*:refs/tags/*" --prune --force
+          git -C source.git remote add gitee "https://gitee.com/${GITEE_REPOSITORY%.git}.git"
+          git -C source.git push gitee --prune --force "refs/heads/*:refs/heads/*" "refs/tags/*:refs/tags/*"
+
+          rm -f "$askpass"

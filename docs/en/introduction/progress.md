@@ -28,7 +28,7 @@ lang: en-US
 
 ## Next-Stage Todos <span class="status-label status-recommendation" aria-label="Recommendation"></span>
 
-1. ~~**Build a data adapter layer**~~ — delivered in `modules/mta_standard/`: `SimulatorConfig` maps each four-segment key onto `CPC`/`CPM` and therefore onto `CLICK`/`IMPRESSION`, rejecting missing, ambiguous, and colliding mappings instead of guessing `INTERACTION_TYPE`. See [the standardized MTA interface](../attribution/standardized-interface.md).
+1. ~~**Build a data adapter layer**~~ — delivered in `modules/mta_standard/`: `SimulatorConfig` maps each four-segment key onto `CPC`/`CPM` and therefore onto `CLICK`/`IMPRESSION`, rejecting missing, ambiguous, and colliding mappings instead of guessing `INTERACTION_TYPE`. See [the standardized MTA interface](../attribution/standardized-interface/).
 2. **Create an Ad Group feature table**: add candidate Keyword, SKU, Target, Audience, price, margin, inventory, historical Spend, and budget-limited status.
 3. **Define one response model**: predict `expected_revenue(ad_group, budget)`. Start with one supervised model as an auditable baseline; do not introduce a multi-model agent workflow.
 4. **Implement a constrained optimizer**: maximize expected revenue subject to total-budget, minimum-budget, capacity, and business-eligibility constraints.

@@ -93,7 +93,7 @@ git submodule update --init --recursive
 uv run python -X utf8 -B script/generate_mta_sim_dataset.py
 ```
 
-The generator adapter derives CPC/CPM from the resolved ZheyuanWu configuration rather than from observed delivery metrics. It preserves the original daily-window CSVs, aggregates path rows into the single reporting scope required by the local model interface, and keeps the normalized ground-truth view separate for evaluation. See [Generate MTA-SIM data](../environment/mta-sim-generation.md).
+The generator adapter derives CPC/CPM from the resolved ZheyuanWu configuration rather than from observed delivery metrics. It preserves the original daily-window CSVs, aggregates path rows into the single reporting scope required by the local model interface, and keeps the normalized ground-truth view separate for evaluation. See [Generate MTA-SIM data](../../environment/mta-sim-generation.md).
 
 Both loaders take explicit paths and apply no repository-relative default, so a dataset generated anywhere on the filesystem works unchanged:
 
@@ -235,11 +235,11 @@ The suite is deterministic and writes every fixture to a temporary directory out
 
 - The standardized layer changes no attribution mathematics; it changes how a model is loaded, called, validated, and scored.
 - Ground-truth agreement measures whether a method recovers a known synthetic mechanism. It is not evidence about real-world advertising causality.
-- The performance table is a diagnostic input here. Cost, ROAS, and reliability governance remain the responsibility of the existing [model comparison governance](./model-governance.md).
+- The performance table is a diagnostic input here. Cost, ROAS, and reliability governance remain the responsibility of the existing [model comparison governance](../model-governance.md).
 
 ## References
 
-- [Datasets and the MTA-SIM contract](../datasets/index.md)
+- [Datasets and the MTA-SIM contract](../../datasets/index.md)
 - [Markov removal effect](./markov.md)
 - [Path-level Shapley](./shapley.md)
 - [DNN credit model](./dnn.md)

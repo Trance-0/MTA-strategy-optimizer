@@ -7,7 +7,7 @@ lang: en-US
 
 This section indexes external papers, platform research, and background material in the current research set. Explicitly retired material is not part of that set. Research does not equal current implementation and is not runtime input to `modules/mta_attribution`.
 
-The current internal business hierarchy is defined in [Campaign Group hierarchy and finest performance grain](campaign-data-hierarchy.md): `Campaign Group -> Campaign -> Ad Group -> Keyword/SKU`; `ad_product` is a Campaign field rather than a hierarchy level.
+The current internal business hierarchy is defined in [Campaign Group hierarchy and finest performance grain](campaign-data-hierarchy.md): `Campaign Group -> Campaign -> Ad Group -> Keyword/[Stock Keeping Unit (SKU)](/en/reference/definitions#sku-stock-keeping-unit)`; `ad_product` is a Campaign field rather than a hierarchy level.
 
 ## Relevance to AMC MTA
 

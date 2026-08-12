@@ -70,4 +70,4 @@ The adapter runs the ZheyuanWu generator, preserves its original four-segment fi
 
 Item 4, the Campaign and Ad Group entity Bridge, remains the responsibility of the strategy module and is unchanged.
 
-See [the standardized MTA interface](../attribution/standardized-interface.md) for the adapter's contract, failure modes, and evaluation metrics.
+See [the standardized MTA interface](../attribution/standardized-interface/) for the adapter's contract, failure modes, and evaluation metrics.

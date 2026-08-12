@@ -92,7 +92,7 @@ Read `predict_new_campaign()` as a **relative split of one planned campaign**, a
 - Because the model is trained on Shapley shares, it inherits Shapley's assumptions. It is a learned surrogate of an observational attribution method, not an independent causal estimate.
 - Deep networks are the most flexible model in this repository and therefore the easiest to overfit at report scale. Treat its agreement with `path_level_shapley` as a sanity check, not as corroboration from an independent method.
 
-The model is a **sample** third algorithm demonstrating that the standardized interface admits a learned, persistent, generalizing model. It is not proposed as the official display basis; [model comparison governance](./model-governance.md) still names Markov for that role.
+The model is a **sample** third algorithm demonstrating that the standardized interface admits a learned, persistent, generalizing model. It is not proposed as the official display basis; [model comparison governance](../model-governance.md) still names Markov for that role.
 
 ## Persistence <span class="status-label status-verified" aria-label="Verified"></span>
 
@@ -120,6 +120,6 @@ $$
 
 ## References
 
-- [Standardized MTA interface](./standardized-interface.md)
+- [Standardized MTA interface](./index.md)
 - [Path-level Shapley](./shapley.md)
-- [Model comparison governance](./model-governance.md)
+- [Model comparison governance](../model-governance.md)
