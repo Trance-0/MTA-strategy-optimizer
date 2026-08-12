@@ -1,5 +1,6 @@
 ---
 title: AMC MTA Single-Touchpoint Attribution Reliability
+compact: "How to judge one touchpoint plus outcome row: calculation_valid, data_support_sufficient (30 purchases, 20 converted users, 5 unique paths), models_consistent (gap_pp 1.0, relative_gap 0.20), reliability_status, and the reliability_reason codes. Read before interpreting RELIABLE."
 lang: en-US
 ---
 

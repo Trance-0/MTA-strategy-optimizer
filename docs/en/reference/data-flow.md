@@ -1,6 +1,7 @@
 ---
 title: Module and Script Data Flow
 description: What each layer receives, what it hands to the next, and why it is split that way
+compact: "Traces one report end to end, naming the responsible file at each step across `mta_attribution`, `mta_standard`, and `mta_strategy_recommendation`. Read to find where a value originates or why a module boundary exists."
 lang: en-US
 ---
 
@@ -279,4 +280,4 @@ Every file states its own role and position in its module docstring. This table 
 
 - [Standardized MTA interface](../attribution/standardized-interface/)
 - [Model testing and comparison](../attribution/model-testing.md)
-- [Workspace source-tree analysis](../workspace/source-tree-analysis.md)
+- [Project structure and data flow](../introduction/project-structure.md)

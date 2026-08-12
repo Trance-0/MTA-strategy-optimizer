@@ -1,5 +1,6 @@
 ---
 title: Amazon Research Originals Index
+compact: "Catalogue of six external Amazon source artifacts with their boundaries: the AmazonAdsAPIALLMerged OpenAPI JSON, Amazon Attribution report DOCX, ad data-format examples, Marketing Stream field research, and the 2026-07-06 snapshot. Use to locate an original; never a runtime input."
 lang: en-US
 ---
 

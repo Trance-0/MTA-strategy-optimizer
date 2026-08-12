@@ -1,6 +1,7 @@
 ---
 title: Datasets
 description: The MTA-SIM contract, this project's inputs, and compatibility boundaries
+compact: "Routing hub contrasting upstream MTA-SIM tables `amc_path_report`, `amazon_ads_daily_touchpoint_performance`, `simulation_ground_truth` with local inputs including `strategy_request.json` and `candidate_pool.json`. Explains four-segment versus five-segment incompatibility and what `modules/mta_standard/` adapter implements. Read to pick the right dataset page."
 lang: en-US
 ---
 

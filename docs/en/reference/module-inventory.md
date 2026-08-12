@@ -1,5 +1,6 @@
 ---
 title: Module Inventory
+compact: "One-table summary of the three runnable modules, their status and entry points, plus the standard `data/`, `outputs/`, `src/`, `tests/` subdirectory convention. Read for orientation; per-file specification lives under implementation."
 lang: en-US
 ---
 

@@ -1,6 +1,7 @@
 ---
 title: Redirecting to English documentation
 description: Open the English Marketing ROI Analysis documentation.
+compact: "Redirect stub that forwards to the English site root. No content; never needs to be read for a task."
 head:
   - - meta
     - http-equiv: refresh

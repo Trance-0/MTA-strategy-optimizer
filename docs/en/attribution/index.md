@@ -1,6 +1,7 @@
 ---
 title: Attribution Model Overview
 description: MTA components, objectives, files, and output relationships
+compact: "Orientation map of the attribution layer: which source file owns what, from `attribution_contract.py` and `markov_attribution_model.py` to `modules/mta_standard/`. Names the three Outcomes and the Markov-official / Shapley-reference rule. Read first; skip once you know the layout."
 lang: en-US
 ---
 

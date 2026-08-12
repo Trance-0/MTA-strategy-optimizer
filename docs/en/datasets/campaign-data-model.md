@@ -1,6 +1,7 @@
 ---
 title: Campaign Data Model
 description: Campaign, Ad Group, rules, metrics, and operational schema reference
+compact: "Relational schema of the external Campaign service: tables `campaign`, `ad_group`, `ad_group_keyword`, `ad_group_sku`, `campaign_group*`, `campaign_rule_*`, `campaign_audit`, partitioned `paid_search_traffic`/`paid_search_conversion`/`campaign_spend`, and `vw_*` views. Read for operational database work; not needed for MTA attribution or simulated CSVs."
 order: 50
 ---
 

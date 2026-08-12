@@ -1,5 +1,6 @@
 ---
 title: AMC MTA Dual-Model Comparison and Reliability Specification
+compact: "Source of truth for exact column order of the 14-column touchpoint comparison, 13-column summary, and 15-column recommendation CSVs. Defines gap_pp, relative_gap, tvd, spearman_rho, top_k_overlap_rate, and the `[low,high]` recommended_value union type."
 lang: en-US
 ---
 
@@ -84,7 +85,7 @@ Recommended results fix `official_model=MARKOV` and `benchmark_model=PATH_LEVEL_
 
 ## Current Sample
 
-The current 17 five-segment touchpoints × 3 Outcomes produce 51 records. All have valid calculations, sufficient support, and consistent models, yielding `51 RELIABLE / 0 UNRELIABLE`; all three summaries are also `RELIABLE`. TVD for the three Outcomes is 1.4066%, 1.3891%, and 1.4266%; Spearman is 0.7407, 0.7762, and 0.7966; Top-5 overlap is 40%, 60%, and 40%.
+The current 17 five-segment touchpoints × 3 Outcomes produce 51 records. All have valid calculations, sufficient support, and consistent models, yielding `51 RELIABLE / 0 UNRELIABLE`; all three summaries are also `RELIABLE`. For `converted_users`, `purchase_count`, and `revenue` respectively, TVD is 1.9451%, 1.9750%, and 2.0585%; Spearman is 0.8890, 0.9111, and 0.9314; Top-5 overlap is 60%, 60%, and 80%. These values reproduce `amc_mta_model_comparison_summary.csv` over the 2026-01-01 through 2026-03-31 window.
 
 These results support only model comparison in the current window. They do not prove causal incrementality, long-term stability, or fitness for automatic budgeting.
 

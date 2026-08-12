@@ -1,5 +1,6 @@
 ---
 title: MTA-Driven Ad Group Budget Initializer
+compact: "Code-level map of the IMPLEMENTED module: `budget_recommender.py` functions `load_aligned_strategy_inputs`, `_recommended_point`, `_bridge_campaign_scores`, `recommend_ad_group_count`, plus `hierarchy_validator.py`, SHA-256 lineage checks, and the `uv run` generate and validate commands. Read before editing module code."
 lang: en-US
 ---
 

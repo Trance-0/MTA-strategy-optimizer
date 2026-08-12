@@ -1,5 +1,6 @@
 ---
 title: AMC MTA Canonical Output Index
+compact: "Reading order and field groups for the five CSVs in `modules/mta_attribution/outputs/attribution/`, including the 18 single-model columns such as converted_user_share, attributed_revenue, roas, cpa, cost_per_converted_user, plus row counts and interpretation limits."
 lang: en-US
 ---
 

@@ -1,6 +1,7 @@
 ---
 title: Product Data Model
 description: Product, stock-item, keyword, search-volume, and market-share schema reference
+compact: "Relational schema of the external `msproduct` service: dimensions `retailer`/`market`/`category`/`brand`/`segment`, `product.gtin`, `sku` uniqueness on retailer plus market plus value, `sku_attributes`, `keyword_sku_mapping`, `keyword_categorization`, `keyword_sku_eiroas`, `market_share`, write-order rules. Not needed for attribution work."
 order: 40
 ---
 

@@ -1,6 +1,7 @@
 ---
 title: Strategy Loader Specification
 description: JSON configuration, registry, validation, and instantiation-by-identifier for the strategy evaluation layer
+compact: "PROPOSED, unbuilt design for `strategy_registry.py`, `strategy_loader.py`, `strategy_validator.py`, declaration JSON such as `budget_seed_v4.json`, `build_strategy()` and `list_strategies()`, three-stage validation, determinism test. Read when implementing the registry; none of it exists yet."
 lang: en-US
 ---
 

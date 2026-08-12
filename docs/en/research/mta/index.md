@@ -1,5 +1,6 @@
 ---
 title: MTA Research Reading Order
+compact: "Ordered pointer list for external attribution-methodology PDFs: Data-driven Multi-touch Attribution Models, Mapping the Customer Journey on graph and higher-order Markov, and Shapley Value Methods for Attribution Modeling. Theory background; implemented formulas live in the attribution reference index."
 lang: en-US
 ---
 

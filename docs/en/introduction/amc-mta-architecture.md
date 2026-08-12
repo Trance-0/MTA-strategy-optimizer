@@ -1,5 +1,6 @@
 ---
 title: AMC MTA Architecture
+compact: "Architecture specification for the attribution pipeline: per-file component responsibilities, five-segment key rules, path construction with the 14-day gap, Markov and path-level Shapley semantics, and the five canonical output CSVs."
 lang: en-US
 ---
 

@@ -1,5 +1,6 @@
 ---
 title: Amazon Research Material
+compact: "Navigation hub for Amazon background research only: routes to the AMC subsection, the data-flow page, and the research-originals index covering Amazon Ads API schema, Marketing Stream fields, and the 2026-07-06 snapshot. Nothing here is a model input."
 lang: en-US
 ---
 
@@ -12,7 +13,7 @@ This section contains Amazon background research and external references only; t
 - [AMC](amc/): concise background, platform boundaries, and the MTA/ROI data flow.
 - [Research-original index](research/): Amazon Ads API schema, Marketing Stream fields, historical technical research, and original research material.
 
-Runnable AMC MTA code, CSV files, and output are under `modules/mta_attribution/`. See [AMC MTA module documentation](../../attribution/amc-mta-module.md) and the [project introduction](../../product/amc-mta/project-introduction.md).
+Runnable AMC MTA code, CSV files, and output are under `modules/mta_attribution/`. See [AMC MTA module documentation](../../attribution/amc-mta-module.md) and the [project introduction](../../introduction/amc-mta-introduction.md).
 
 Recommended order:
 

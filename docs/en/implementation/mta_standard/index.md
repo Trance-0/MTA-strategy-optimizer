@@ -1,5 +1,6 @@
 ---
 title: Standard Framework Implementation
+compact: "Index of the seven framework-only files in `modules/mta_standard/src`: `dataloader.py`, `touchpoint_adapter.py`, `output_contract.py`, `model_registry.py`, `model_pipeline.py`, `evaluation.py`, `mta_sim_generator_adapter.py`. No model mathematics lives here. Read to pick the right framework page."
 description: File-level reference for modules/mta_standard/src
 ---
 

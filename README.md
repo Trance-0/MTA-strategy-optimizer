@@ -23,7 +23,7 @@ The current results are appropriate for reproducible development, contract testi
 
 | Goal | Documentation |
 | --- | --- |
-| Review the workspace assessment and risks | [Workspace overview](docs/en/workspace/project-overview.md) |
+| Review the workspace assessment and risks | [Workspace assessment](docs/en/introduction/assessment.md) |
 | Understand the project objective and delivery boundary | [Project overview](docs/en/introduction/index.md) |
 | Follow the directory and data flow | [Project structure](docs/en/introduction/project-structure.md) |
 | Set up and run the project | [Environment setup](docs/en/environment/index.md) |
@@ -38,7 +38,7 @@ The current results are appropriate for reproducible development, contract testi
 | Interpret touchpoint reliability | [Reliability guide](docs/en/attribution/reliability.md) |
 | Review maturity and planned work | [Progress and todos](docs/en/introduction/progress.md) |
 | Review implementation specifications | [Specification catalog](docs/en/specifications/index.md) |
-| Review the translated project work log | [Development history](docs/en/workspace/development-history.md) |
+| Review the translated project work log | [Development history](docs/en/introduction/development-history.md) |
 | Review all maintained commands | [Project command directory](script/README.md) |
 | Inspect historical product decisions | [Design artifacts](design-artifacts/README.md) |
 | Inspect specifications and implementation records | [BMad output index](_bmad-output/README.md) |

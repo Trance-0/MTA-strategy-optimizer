@@ -1,5 +1,6 @@
 ---
 title: Ad Group Initial-Budget Output Data Contract
+compact: "Field-by-field v4 schema of the IMPLEMENTED `outputs/initial_budget_recommendation.json`: `schema_version`, `mta_source_snapshot`, `budget_derivation`, `count_rationale`, `campaign_mta_score`, `budget_seed_share`, `ad_group_slot_id`, `execution_status`, warning codes, conservation identities. Read when parsing or asserting on that JSON."
 lang: en-US
 ---
 
@@ -37,17 +38,25 @@ The budget normalization scope is fixed to `ALL_AVAILABLE_MTA_TOUCHPOINTS`; six 
 
 ## 3. Campaign Output
 
+Every key below is always emitted for every Campaign.
+
 ```json
 {
   "campaign_id": "C_DEMO_SP",
   "recommended_ad_group_count": 1,
   "count_rationale": {
+    "count_formula_version": "CANDIDATE_CAPACITY_MAX_V1",
     "eligible_keyword_unit_count": 3,
     "eligible_sku_count": 3,
     "eligible_legal_pair_count": 3,
+    "eligible_target_count": 0,
+    "eligible_audience_count": 0,
     "keyword_capacity_count": 1,
     "sku_capacity_count": 1,
     "legal_pair_capacity_count": 1,
+    "target_capacity_count": 0,
+    "audience_capacity_count": 0,
+    "capacity_required_count": 1,
     "final_recommended_count": 1
   },
   "outcome_contributions": {
@@ -55,12 +64,34 @@ The budget normalization scope is fixed to `ALL_AVAILABLE_MTA_TOUCHPOINTS`; six 
     "purchase_count": 0.24183,
     "revenue": 0.23492
   },
-  "campaign_mta_score": 0.2398318,
-  "budget_seed_share": 0.2398318,
+  "campaign_mta_score": 0.23983179999999998,
+  "bridge_summary": {
+    "historical_ad_group_count": 2,
+    "touchpoint_count": 4,
+    "touchpoint_outcome_count": 12,
+    "method_counts": {
+      "ASSISTED_CONVERTED_USERS": 4,
+      "ASSISTED_PURCHASE_COUNT": 4,
+      "ASSISTED_REVENUE": 4
+    },
+    "fallback_used": false
+  },
+  "budget_seed_share": 0.23983179999999998,
+  "minimum_required_daily_budget": 25.0,
   "campaign_budget_seed": 239.8318,
-  "execution_status": "EXECUTABLE"
+  "execution_status": "EXECUTABLE",
+  "recommended_ad_groups": [
+    {
+      "ad_group_slot_id": "C_DEMO_SP_NEW_AG_01",
+      "allocation_basis": "CAMPAIGN_MTA_EQUAL_SPLIT",
+      "budget_seed_share": 0.23983179999999998,
+      "initial_daily_budget": 239.8318
+    }
+  ]
 }
 ```
+
+Scores and shares are stored at full float precision, so `campaign_mta_score` serializes as `0.23983179999999998` rather than a rounded `0.2398318`. Only the money fields are rounded.
 
 `bridge_summary.historical_ad_group_count` discloses only the number of historical groups participating in the Bridge, not their IDs. `method_counts` discloses the `assisted_*` or fallback weight used for each touchpoint/Outcome.
 

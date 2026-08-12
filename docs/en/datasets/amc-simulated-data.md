@@ -1,5 +1,6 @@
 ---
 title: AMC MTA Simulated Data
+compact: "Maps the five simulated CSVs derived from `synthetic_user_events_sample.csv`: `amc_touchpoint_events_sample.csv`, `amc_mta_path_report_raw_sample.csv`, `amazon_ads_report_sample.csv`, `amc_touchpoint_entity_aggregate_sample.csv`. Gives row counts 11,147 events, 2,400 users, 153 paths, 1,530 Ads rows, 34 entity aggregates, plus regenerate and validate commands."
 lang: en-US
 ---
 

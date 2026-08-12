@@ -1,5 +1,6 @@
 ---
 title: AMC, MTA, and ROI Data Flow
+compact: "Conceptual background on joining AMC anonymous aggregate paths with Amazon Ads spend: the five-segment key AD_PRODUCT:FORMAT:PLACEMENT:CREATIVE:INTERACTION_TYPE, converted_users versus purchase_count, and ROAS, ROI, CPA formulas. Orientation reading; the AMC data contract is authoritative."
 lang: en-US
 ---
 

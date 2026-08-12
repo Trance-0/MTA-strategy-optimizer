@@ -1,5 +1,6 @@
 ---
 title: Amazon Marketing Stream Field Research
+compact: "External research on Amazon Marketing Stream: the 19 StreamDatasetId subscriptions such as sp-traffic, sb-clickstream, budget-usage, adsp-campaigns, SQS and Firehose delivery, plus proposed-only normalized performance, entity, and budget tables. Design proposal, not implemented schema."
 lang: en-US
 ---
 

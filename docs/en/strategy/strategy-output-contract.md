@@ -1,5 +1,6 @@
 ---
 title: Budget Strategy Output Contract
+compact: "Scope boundary for the IMPLEMENTED initializer: the five questions output must answer, the forbidden ones such as Keyword/SKU/Target assignment, ROI, and causal incrementality, plus `count_rationale` and `allocation_basis=CAMPAIGN_MTA_EQUAL_SPLIT` rules. Read when judging whether a proposed field belongs."
 lang: en-US
 ---
 

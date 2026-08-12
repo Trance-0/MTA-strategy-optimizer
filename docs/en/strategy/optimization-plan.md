@@ -1,5 +1,6 @@
 ---
 title: From MTA Attribution to an Ad Group Budget Strategy
+compact: "UNIMPLEMENTED research plan, no algorithm or code: problem framing on granularity breaks between touchpoints and new Ad Groups, attribution versus incrementality, missing product/SKU data, conflicting Outcome objectives. Read for open questions; never cite as current behavior."
 lang: en-US
 ---
 

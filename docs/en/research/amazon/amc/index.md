@@ -1,5 +1,6 @@
 ---
 title: Amazon Marketing Cloud
+compact: "External platform background on the AMC clean room and how it differs from Amazon Ads reporting, Amazon Marketing Stream, and Amazon Attribution with its 14-day last-touch rule. Read when reasoning about data-source boundaries; not a build contract."
 lang: en-US
 ---
 
@@ -19,7 +20,7 @@ The project simulates AMC-style aggregate paths and joins cost from a separate A
 
 - [AMC, MTA, and ROI data flow](data-flow.md)
 - [Current data contract](../../../datasets/amc-data-contract.md)
-- [AMC MTA project introduction](../../../product/amc-mta/project-introduction.md)
+- [AMC MTA project introduction](../../../introduction/amc-mta-introduction.md)
 - [Historical technical research from 2026-07-06](../research/technical-amazon-attribution-mta-2026-07-06.md)
 
 ## Reference Sources

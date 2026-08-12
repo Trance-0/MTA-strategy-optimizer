@@ -1,4 +1,5 @@
 ---
+compact: "Frozen 2026-07-06 research snapshot summarizing two DOCX reports against official Amazon material: Attribution tags and 14-day last touch, AMC aggregation thresholds, Ads API OAuth scope, and legacy adapter names. Historical background only; superseded by current module contracts."
 stepsCompleted: [1, 2]
 inputDocuments:
   - docs/research/amazon/research/amazon调研.docx

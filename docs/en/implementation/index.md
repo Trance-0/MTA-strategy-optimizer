@@ -1,5 +1,6 @@
 ---
 title: Implementation Reference
+compact: "Routing table from each maintained `modules/*/src/*.py` to its one-page spec across `mta_attribution`, `mta_standard`, and `mta_strategy_recommendation`, plus the module-ownership diagram. Read to find which file-level page owns a given Python file."
 description: One-to-one documentation index for maintained Python implementation files
 ---
 

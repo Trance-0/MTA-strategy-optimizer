@@ -4,6 +4,7 @@ title: Marketing ROI Analysis
 titleTemplate: false
 lang: en-US
 description: English documentation for attribution evidence and Ad Group budget strategy
+compact: "VitePress home page with hero and feature tiles only. Contains no specification content; start from the project overview instead."
 hero:
   name: Marketing ROI Analysis
   text: From historical attribution evidence to Ad Group budget decisions

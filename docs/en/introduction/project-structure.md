@@ -1,6 +1,7 @@
 ---
 title: Project Structure and Data Flow
 description: Model architecture, data pipeline, and corresponding source code
+compact: "Directory responsibilities and entry-point files per module, plus the stage-by-stage data pipeline from synthetic generation through attribution, governance, and strategy initialization. Read when locating which module owns a stage."
 lang: en-US
 ---
 
@@ -20,8 +21,8 @@ lang: en-US
 | `external/mta_sim_dataset/` | Pin the external MTA-SIM-dataset repository and its ZheyuanWu generator | Git submodule |
 | `script/` | Hold all maintained project command-line entry points | `generate_mta_sim_dataset.py`, `run_pipeline.py` |
 | `docs/` | Current VitePress documentation, GitHub Pages build input, and research attachments | This site |
-| `docs/en/introduction/specifications.md` | Project-level English catalog of implementation intent and historical verification records | [Specification catalog](./specifications.md) |
-| `docs/zh/specifications/` | Preserved Chinese specification sources for future translation; excluded from the current build | Unpublished source backup |
+| `docs/en/implementation/` | Code-level specification, one page per maintained Python file | [Implementation reference](../implementation/) |
+| `docs/zh/specifications/` | Preserved Chinese specification sources recording historical intent; excluded from the current build | Unpublished source backup |
 | `docs/research/` | External research PDFs, reports, and indexes; referenced only by relevant pages and not used when models run | Research attachments |
 | `design-artifacts/` | Historical Product Briefs, product requirements documents, and decision records | Traceability material |
 | `_bmad-output/` | Completed or deferred specifications and implementation records | Traceability material |

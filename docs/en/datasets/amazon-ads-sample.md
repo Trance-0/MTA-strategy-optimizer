@@ -1,5 +1,6 @@
 ---
 title: Amazon Ads Five-Segment Cost Sample
+compact: "Governs `amazon_ads_report_sample.csv`, 1,530 daily rows over 90 days. Fields `reportDate`, `marketplace`, `accountId`, `adProduct`, `adType`, `inventoryType`, `placement`, `interaction_type`, `cost_type`, `normalizedTouchpoint`, `impressions`, `clicks`, `cost`, `purchases`, `sales`; CPC cost only on CLICK, CPM only on IMPRESSION. Not a Campaign hierarchy sample."
 lang: en-US
 ---
 

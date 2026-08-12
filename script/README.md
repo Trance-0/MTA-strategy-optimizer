@@ -35,5 +35,6 @@ These commands preserve the behavior of the repository-specific generator that c
 | --- | --- |
 | `copy_static_assets.mjs` | Copy research attachments, audit files, and Chinese placeholder routes after the documentation build |
 | `static_pdf_dev_plugin.mjs` | Serve research PDFs with byte-range support during local VitePress development |
+| `export_drawio_diagrams.mjs` | Render each `.drawio` source to its light and dark SVG pair; run through `npm run diagrams` in `docs/` |
 
 The `.agents` and `_bmad` directories are installed development-tool bundles. Their internal `scripts/` folders are vendored implementation details and are not project command locations.

@@ -1,5 +1,6 @@
 ---
 title: Attribution Implementation
+compact: "Routes the 13 file-pages under modules/mta_attribution/src: touchpoint_key and attribution_contract foundations, path_report_builder, the Markov/Shapley/uniform/DNN models and their standard adapters, attribution_model_comparison, plus simulated_touchpoints and synthetic_event_pipeline sample generation. Read first to locate a file."
 description: File-level reference for modules/mta_attribution/src
 ---
 

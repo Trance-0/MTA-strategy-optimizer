@@ -1,5 +1,6 @@
 ---
 title: Development and Verification Guide
+compact: "Runnable commands for the pipeline, the three module test suites, and strategy validation, plus environment requirements and change principles. Read when you need to execute or verify the project."
 lang: en-US
 ---
 

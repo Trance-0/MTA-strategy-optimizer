@@ -1,6 +1,7 @@
 ---
 title: Markov Removal Effect
 description: Algorithm, formulas, and code mapping for WeightedMarkovAttribution
+compact: "Line-by-line internals of `WeightedMarkovAttribution` in `attribution_contract.py`: START/CONVERSION/NULL states, `amc_rows_to_markov_rows`, weighted `transition_matrix`, `conversion_probability` fixed-point iteration capped at 1000 steps and 1e-12, removal-effect normalization, `run_markov_attribution` output."
 lang: en-US
 ---
 

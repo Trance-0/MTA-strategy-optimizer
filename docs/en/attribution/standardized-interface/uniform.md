@@ -1,6 +1,7 @@
 ---
 title: Uniform Credit Baseline
 description: Equal-split reference model for baseline comparison
+compact: "Full source of `UniformCreditModel` in `uniform_attribution_model.py`: model_id `uniform_credit`, requires_fit true, supports_persistence false, share 1.0/count, zero-outcome share 0.0, spearman_rho None by design. Read as the MAE floor; no path logic here."
 lang: en-US
 order: 200
 ---

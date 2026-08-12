@@ -1,6 +1,7 @@
 ---
 title: attribution_contract.py
 source_file: modules/mta_attribution/src/attribution_contract.py
+compact: "Specifies AttributionResult, TouchpointSpend, read_csv, read_csv_normalized, write_csv_atomic, write_csv_set_atomic, validate_amc_aggregated_row, aggregate_spend_by_touchpoint, result_rows, and the START/CONVERSION/NULL states; result_rows emits the 18-column output with roas, roi, cpa. Read when changing path or Ads schemas."
 ---
 
 # `attribution_contract.py`

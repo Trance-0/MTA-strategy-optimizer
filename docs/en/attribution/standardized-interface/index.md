@@ -1,6 +1,7 @@
 ---
 title: Standardized MTA Interface
 description: The framework boundary between mta_standard and the concrete models in mta_attribution
+compact: "Contract layer: `MtaAttributionModel` fit/attribute/save/load, ModelCapabilities, `touchpoint_adapter.py` four-to-five segment CPC/CPM mapping, `dataloader.py`, `output_contract.py` four invariants, StandardAttributionRow fields, ground-truth isolation. Read before adding or calling a registered model."
 lang: en-US
 ---
 

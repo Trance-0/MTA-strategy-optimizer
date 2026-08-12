@@ -1,6 +1,7 @@
 ---
 title: Progress and Todos
 description: Implemented capabilities, known limitations, and next-stage priorities
+compact: "Authoritative status list: implemented capabilities, known limitations such as `is_optimized=false` and equal within-Campaign splits, and the next-stage todos toward a response model and constrained optimizer."
 lang: en-US
 ---
 

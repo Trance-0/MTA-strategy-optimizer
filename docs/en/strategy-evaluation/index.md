@@ -1,10 +1,15 @@
 ---
 title: Strategy Evaluation Framework
 description: Standardized strategy structure, loading, and evaluation — the strategy counterpart to the MTA evaluation layer
+compact: "Entry point for the PROPOSED, unbuilt `modules/mta_strategy_evaluation/` layer mirroring `mta_standard`: three assurance layers, relationship to `mta_strategy_recommendation`, links to strategy-structure and strategy-loader. Read for design intent; no code exists yet."
 lang: en-US
 ---
 
 # Strategy Evaluation Framework
+
+::: warning Specification ahead of implementation
+This section specifies a layer that has not been built. `modules/mta_strategy_evaluation/` exists as an empty placeholder directory, and `script/evaluate_strategies.py` does not exist yet. Every path, identifier, and command named in this section is a target to build against, not a description of current code. Build to this specification rather than inferring the design from the absent implementation.
+:::
 
 ## What This Layer Solves <span class="status-label status-recommendation" aria-label="Recommendation"></span>
 

@@ -1,5 +1,6 @@
 ---
 title: Current Ad Group Initial-Budget Calculation
+compact: "Step-by-step walkthrough of the IMPLEMENTED deterministic initializer with worked numbers: MTA `recommended_value`, AMC entity bridge with `assisted_*` and clicks/impressions/unique_users fallback, capacity ceiling formula, `CAMPAIGN_MTA_EQUAL_SPLIT`. Read to trace or reproduce an exact budget figure."
 lang: en-US
 ---
 
@@ -25,7 +26,7 @@ Strategy-model paths in the following table are relative to the `modules/mta_str
 | --- | --- | --- |
 | Strategy request | `data/simulated/strategy_request.json` | Campaign Group daily budget, four Campaigns, Outcome weights, capacity rules, and minimum daily budget per group |
 | Candidate pool | `data/simulated/candidate_pool.json` | Eligible Keyword-unit, SKU, valid-Pair, Target, and Audience counts for each Campaign |
-| MTA attribution | `../amc_mta/outputs/attribution/amc_mta_recommended_attribution.csv` | `recommended_value` and reliability status for every touchpoint and Outcome |
+| MTA attribution | `../mta_attribution/outputs/attribution/amc_mta_recommended_attribution.csv` | `recommended_value` and reliability status for every touchpoint and Outcome |
 | AMC entity aggregate | `../mta_attribution/data/simulated/amc_touchpoint_entity_aggregate_sample.csv` | Relationships between touchpoints and historical Campaigns/Ad Groups, plus supporting metrics for the Bridge |
 | Canonical result | `outputs/initial_budget_recommendation.json` | Score, count, and budget of four Campaigns, plus each anonymous new group's budget |
 

@@ -1,5 +1,6 @@
 ---
 title: AMC MTA Module
+compact: "Six-stage call order of `script/run_pipeline.py` with code walkthroughs of `infer_ads_report_window`, `canonical_amc_touchpoint_key`, `build_aggregated_path_rows`, `compare_attribution_models`, `publish_with_rollback`. Read for pipeline internals and the five-segment key; not for CSV column schemas."
 lang: en-US
 ---
 
@@ -14,7 +15,7 @@ This module performs attribution analysis only. It is not responsible for budget
 ## Start Here
 
 - [Complete usage guide](complete-guide.md): scope, inputs, paths, models, metrics, reliability, execution, troubleshooting, and demo.
-- [Current data-flow diagram](../product/amc-mta/architecture.md#current-data-flow): theme-aware Draw.io architecture covering the canonical AMC pipeline and standardized Markov, Shapley, Uniform, and [Deep Neural Network (DNN)](/en/reference/definitions#dnn-deep-neural-network) evaluation lane.
+- [Current data-flow diagram](../introduction/amc-mta-architecture.md#current-data-flow): theme-aware Draw.io architecture covering the canonical AMC pipeline and standardized Markov, Shapley, Uniform, and [Deep Neural Network (DNN)](/en/reference/definitions#dnn-deep-neural-network) evaluation lane.
 - [Canonical output index](output-reference.md): reading order, granularity, fields, and interpretation boundaries for the five CSV files.
 - [Submission manifest](../reference/submission-manifest.md): required, optional, and excluded content plus acceptance status.
 - [Current documentation index](reference-index.md): module sources of truth and topic-specific explanations.
@@ -210,6 +211,6 @@ For a first review, read “this page → [complete usage guide](complete-guide.
 - [Single-touchpoint attribution reliability](reliability.md): judge a result using calculation validity, sufficient data support, and model consistency.
 - [Amazon Ads sample](../datasets/amazon-ads-sample.md): cost table and join key.
 - [Simulated data](../datasets/amc-simulated-data.md): roles of the user-event master table and four derived artifacts.
-- AMC platform background research and project-management material are external to the original project. They are neither runtime dependencies nor included with the standalone `amc_mta/` submission.
+- AMC platform background research and project-management material are external to the original project. They are neither runtime dependencies nor included with the standalone `mta_attribution/` submission.
 
 AMC paths, Amazon Ads inputs, and attribution outputs all use `AD_PRODUCT:FORMAT:PLACEMENT:CREATIVE:INTERACTION_TYPE`, where `INTERACTION_TYPE` may only be `IMPRESSION` or `CLICK`. CPC cost is assigned only to CLICK, CPM cost only to IMPRESSION, and non-billable interactions have zero cost. AMC input explicitly distinguishes `converted_users` (unique purchasing users) from `purchase_count` (order count). The [data contract](../datasets/amc-data-contract.md) defines the complete constraints.

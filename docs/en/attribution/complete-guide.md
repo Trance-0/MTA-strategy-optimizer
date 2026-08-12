@@ -1,5 +1,6 @@
 ---
 title: Complete AMC MTA Usage Guide
+compact: "One-stop review path: inputs under `modules/mta_attribution/data/simulated/`, 14-day path gap rule, ROAS/ROI/CPA/cost_per_converted_user formulas, 30/20/5 support and 1.0 pp / 0.20 gap thresholds, run commands, error table, demo script."
 lang: en-US
 ---
 

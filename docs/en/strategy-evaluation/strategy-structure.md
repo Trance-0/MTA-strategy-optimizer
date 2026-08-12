@@ -1,6 +1,7 @@
 ---
 title: Recommended Strategy Structure
 description: The shared interface every strategy must satisfy — identity, capabilities, inputs, outputs, and conservation contract
+compact: "PROPOSED, unimplemented `Strategy` abstract base with `allocate`/`save`/`load`, plus `StrategyCapabilities`, `StrategyScope`, `StrategyEvidence`, `StrategyConstraints`, `StrategyAllocation` dataclass fields and conservation tolerances. Read when defining the interface; not a description of shipped code."
 lang: en-US
 ---
 

@@ -1,5 +1,6 @@
 ---
 title: AMC MTA Usage
+compact: "Command reference for `script/run_pipeline.py`, `build_path_report.py`, `run_attribution_models.py`, `compare_attribution_models.py`, `regenerate_simulated_dataset.py`, `validate_data_alignment.py` with their flags, plus the five output CSVs under `modules/mta_attribution/outputs/attribution/`, 14/13/15-column schemas, 51 rows, `recommended_value` semantics."
 lang: en-US
 ---
 

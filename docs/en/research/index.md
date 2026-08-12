@@ -1,5 +1,6 @@
 ---
 title: Research Material Index
+compact: "Top-level router for all background research, classifying each item as core method (MTA, Markov, Shapley papers), core platform (AMC, Amazon Ads), future validation (A/B testing), or background (ontology, cross-industry proposal). Start here to find research; none of it is runtime input."
 lang: en-US
 ---
 

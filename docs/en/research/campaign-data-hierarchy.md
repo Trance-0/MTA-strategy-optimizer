@@ -1,5 +1,6 @@
 ---
 title: Campaign Group Hierarchy and Finest Performance Grain
+compact: "Domain-vocabulary background behind the Strategy Initializer: Campaign Group to Campaign to Ad Group with parallel Keyword and SKU, ad_product as a Campaign field, EXISTING VALIDATED EXPLORATION BLOCKED provenance, and the Date by Campaign by Ad Group by Keyword by SKU grain. Conceptual, not the module contract."
 lang: en-US
 ---
 

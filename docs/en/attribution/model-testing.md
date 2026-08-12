@@ -1,6 +1,7 @@
 ---
 title: Model Testing and Comparison
 description: How each attribution model is tested, and how the four are compared against each other
+compact: "Three assurance layers: 284 unittest cases per suite file under `modules/*/tests/`, per-run Markov vs Shapley governance, and `evaluation.py` scoring against `simulation_ground_truth`. Read when adding a model to MODEL_REGISTRY or running tests."
 lang: en-US
 ---
 
@@ -54,6 +55,7 @@ The three layers answer different questions, and none substitutes for another.
 | `mta_standard/tests/test_evaluation.py` | 20 | Ground-truth grains, metric bounds, determinism |
 | `mta_attribution/tests/test_dnn_attribution_model.py` | 33 | Features, unknown bucket, convergence, persistence |
 | `mta_standard/tests/test_model_pipeline.py` | 2 | Registry-driven execution and immutable run collection |
+| `mta_standard/tests/test_mta_sim_generator_adapter.py` | 2 | Pinned generator invocation and adapted output |
 | `mta_strategy_recommendation/tests/test_hierarchy_validator.py` | 34 | Lineage, capacity, budget split, output boundary |
 
 Run them:

@@ -1,5 +1,6 @@
 ---
 title: AMC MTA Capability Assessment
+compact: "Maturity assessment by dimension, recorded sample results including TVD, Spearman, and reliability counts, ranked risks, and a four-phase implementation order. Read for scope and risk judgment, not for field contracts."
 lang: en-US
 ---
 

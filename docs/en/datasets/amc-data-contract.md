@@ -1,5 +1,6 @@
 ---
 title: AMC MTA Data Contract
+compact: "Source of truth for attribution inputs, path rules, and definitions: five-segment key `AD_PRODUCT:FORMAT:PLACEMENT:CREATIVE:INTERACTION_TYPE`, `users`/`converted_users`/`purchase_count`/`revenue` constraints, 14-day lookback, AMC-Ads alignment, 14/13/15-column dual-model artifacts, RELIABLE thresholds 30/20/5, ROAS/ROI/CPA formulas. Read before changing any schema."
 lang: en-US
 ---
 

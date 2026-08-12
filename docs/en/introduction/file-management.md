@@ -1,5 +1,6 @@
 ---
 title: Workspace File-Location Management
+compact: "Rules for where files may live, stable paths, naming and archival, the move process, `log.md` protection, and derived-inventory scope. Read before adding, moving, or archiving any file."
 lang: en-US
 ---
 

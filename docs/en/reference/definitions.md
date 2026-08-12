@@ -1,6 +1,7 @@
 ---
 title: Terms and Abbreviations
 description: Attribution, advertising hierarchy, data, and optimization terminology
+compact: "Canonical glossary for AMC, MTA, MTA-SIM, touchpoint, Outcome, Campaign Group hierarchy, ROAS, CPA, TVD, and similar terms. Every abbreviation used anywhere in the docs must have an entry here."
 lang: en-US
 ---
 

@@ -1,5 +1,6 @@
 ---
 title: MTA-Driven Ad Group Count and Budget Model
+compact: "Condensed spec of the IMPLEMENTED initializer: objective, boundary, SP/SB and SD/DSP count formulas, `max_ad_groups` rejection, MTA plus AMC bridge equations, `CAMPAIGN_MTA_EQUAL_SPLIT`, `INITIAL_SEED`, `is_optimized=false`. Read for the rules; use current-budget-calculation.md for worked numbers."
 lang: en-US
 ---
 

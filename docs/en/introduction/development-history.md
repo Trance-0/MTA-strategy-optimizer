@@ -1,6 +1,7 @@
 ---
 title: Development History
 description: English translation of the preserved project work log
+compact: "Dated project work log translated to English, recording decisions and intentions as written at the time. Historical evidence only; superseded by current specifications and code."
 lang: en-US
 ---
 
@@ -8,7 +9,7 @@ lang: en-US
 
 This page translates the complete project work log into English. The original Chinese record remains at the repository root in `log.md` and is mirrored under `docs/zh/workspace/development-history.md` as an unpublished source backup.
 
-The entries record decisions and intentions at the time they were written. They are historical evidence, not a replacement for current source code, tests, contracts, or the [current project status](../introduction/progress.md).
+The entries record decisions and intentions at the time they were written. They are historical evidence, not a replacement for current source code, tests, contracts, or the [current project status](./progress.md).
 
 ## 2026-07-30
 

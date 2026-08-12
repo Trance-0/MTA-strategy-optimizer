@@ -1,6 +1,7 @@
 ---
 title: Strategy Optimization Model
 description: Current budget initializer and future Ad Group revenue-optimization model
+compact: "Landing page for the strategy module: short summary of the IMPLEMENTED `generate_budget_recommendation()` in `src/budget_recommender.py` plus PROPOSED, unimplemented Ad Group response model, constrained optimizer, and validation baselines. Read for orientation, not for field-level detail."
 lang: en-US
 ---
 

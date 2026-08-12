@@ -1,5 +1,20 @@
 # Repository Instructions
 
+## Specification-oriented programming
+
+- Documentation under `docs/en/` is the ground truth of this project. Code is an implementation of the specification, not the definition of it. When documentation and code disagree, the documentation states the intent and the code is the defect, unless the user explicitly says the documentation is out of date.
+- Write or update the specification page first, then change the code to match it. Do not treat a code change as complete until the owning page describes the new behavior.
+- Never "correct" a documentation page by copying current code behavior into it. If the code has drifted, report the drift and ask which side is authoritative before editing.
+- The documentation set must be sufficient on its own: a reader with no access to this repository's source should be able to rebuild an equivalent implementation from `docs/en/` alone. Treat it as the project's development memory.
+
+## Documentation frontmatter
+
+- Every markdown file under `docs/en/` and `docs/logs/` must carry a `compact` frontmatter field.
+- `compact` is a single-paragraph, self-contained summary of what the page specifies, written so that an agent can read only the `compact` fields across the documentation set and decide which full pages a given task requires.
+- Write `compact` for the routing decision, not as marketing copy. Name the concrete modules, files, contracts, fields, and commands the page governs, so keyword matching against a task description succeeds.
+- Keep `compact` to roughly 40 words or fewer, on one line. Do not restate the `title`, and do not duplicate the `description` field verbatim.
+- Update `compact` in the same edit that changes what a page specifies.
+
 ## Documentation language preference
 
 - Keep English as the active and default published documentation language.
@@ -32,6 +47,7 @@
 - `modules/mta_attribution/` — path building, every concrete attribution model, the shared attribution-model interface, and model comparison.
 - `modules/mta_standard/` — framework-only MTA-SIM loading, four-to-five segment adaptation, model registration, execution, output validation, and evaluation. Do not place concrete attribution mathematics here.
 - `modules/mta_strategy_recommendation/` — the Campaign Group Ad Group count and budget initializer.
+- `modules/mta_strategy_evaluation/` — specified in `docs/en/strategy-evaluation/` but not yet implemented. The directory is an empty placeholder; build it to the documented specification rather than treating the absent code as the current design.
 - Use `snake_case` for every directory and Python file. Hyphens are not valid in Python module names, and `modules.mta_strategy_recommendation.src` is imported as a real package path.
 - Name a file after what it contains: one attribution model per `*_attribution_model.py` file, shared contracts in `*_contract.py`.
 - Start every Python file with a module docstring stating what the file does and where it sits in the data flow.
@@ -42,6 +58,8 @@
 - Every maintained implementation file under `modules/*/src/`, except `__init__.py`, must have exactly one English implementation page at `docs/en/implementation/<module>/<python_stem>.md`.
 - The documentation filename must match the Python filename stem exactly. Its frontmatter must contain `source_file` with the repository-relative Python path.
 - Each implementation page must state responsibility, inputs, outputs, dependencies, and the owning test file or verification command. Higher-level guides may link to these pages but must not replace them.
+- The implementation page is the code-level specification for its one or two Python files. It carries the behavior contract those files must satisfy: public entry points and their signatures, required field and column names, ordering and rounding rules, error and edge-case handling, and determinism guarantees. Do not collect code-level specification in a separate project-wide catalog page.
+- A specification that spans several files belongs on the owning module's `index.md` under `docs/en/implementation/<module>/`, with each file's page linking to it.
 - Keep each editable Draw.io source and its generated light and dark SVG renders in the same documentation subdirectory as the first or canonical page that embeds it. Embed its basename through `DrawioDiagram` so VitePress selects `.light.drawio.svg` or `.dark.drawio.svg` automatically and links `.drawio` as the editable source. Reuse a diagram from other pages through a site-absolute `/en/...` basename; do not duplicate its source, create a shared diagram-assets directory, or make pages traverse parent directories for diagrams.
 
 ## Development workflow

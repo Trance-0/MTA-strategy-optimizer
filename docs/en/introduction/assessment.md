@@ -1,5 +1,6 @@
 ---
 title: Workspace Overview and Current Assessment
+compact: "Dated audit of workspace health, scale, and per-partition assessment with recorded test and verification counts. Historical evidence of a point-in-time state; do not treat its counts as current."
 lang: en-US
 ---
 
@@ -42,7 +43,7 @@ The file-by-file paths, sizes, permissions, and SHA-256 digests are recorded in 
 
 This is an AMC anonymous-aggregate-path, five-segment multi-touch-attribution diagnostic demonstration. Its strengths are an explicit contract, complete outputs, distinct Markov and path-level Shapley governance, and strong test coverage. Its principal limits are synthetic data, no rolling-window or resampling stability evidence, no real AMC privacy-execution validation, and no causal-incrementality or automatic-budget capability.
 
-See [AMC MTA capability assessment](../product/amc-mta/capability-assessment.md).
+See [AMC MTA capability assessment](./amc-mta-capability.md).
 
 ### Strategy Initialization: `modules/mta_strategy_recommendation`
 

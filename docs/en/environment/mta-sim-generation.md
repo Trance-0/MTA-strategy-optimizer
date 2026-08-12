@@ -1,6 +1,7 @@
 ---
 title: Generate MTA-SIM Data
 description: Run the pinned ZheyuanWu generator and adapt its output for local models
+compact: "Governs `script/generate_mta_sim_dataset.py` with `--variant baseline|regional`, `--config`, `--output`, the `external/mta_sim_dataset` submodule, and the files written to `generated/mta_sim/`: `amc_path_report.csv`, `dataset_manifest.json`, `validation_report.json`, `model_input_amc_path_report.csv`, `model_evaluation_ground_truth.csv`. Read when generating new synthetic data."
 lang: en-US
 ---
 

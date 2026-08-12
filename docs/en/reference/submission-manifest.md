@@ -1,5 +1,6 @@
 ---
 title: AMC MTA Submission Manifest
+compact: "Defines what is included in and excluded from the standalone `mta_attribution` submission package. Read only when assembling or reviewing an archival submission; it changes no runtime path or CSV contract."
 lang: en-US
 ---
 
@@ -13,7 +14,7 @@ lang: en-US
 - module `src/` and `config.py`, plus the project-level commands under `script/`;
 - `tests/`;
 - `docs/`, including the complete usage guide and canonical output index;
-- `docs/en/product/amc-mta/data-flow.drawio` and its generated light/dark SVG renders;
+- `docs/en/introduction/data-flow.drawio` and its generated light/dark SVG renders;
 - demonstration inputs and descriptions under `data/simulated/`;
 - the five canonical display results under `outputs/attribution/`.
 

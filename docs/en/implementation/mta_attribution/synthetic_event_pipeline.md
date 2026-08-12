@@ -1,6 +1,7 @@
 ---
 title: synthetic_event_pipeline.py
 source_file: modules/mta_attribution/src/synthetic_event_pipeline.py
+compact: "Specifies generate_synthetic_user_events(), validate_synthetic_user_events(), derive_amc_touchpoint_events(), derive_amazon_ads_rows(), derive_touchpoint_entity_aggregate(), validate_derivations(), validate_no_user_identifiers(), the SYNTHETIC_EVENT_FIELDS, AMC_EVENT_FIELDS, ADS_FIELDS, ENTITY_AGGREGATE_FIELDS schemas, and STANDARD_COHORT_COUNT 136. Read when regenerating the committed sample CSVs under data/."
 ---
 
 # `synthetic_event_pipeline.py`

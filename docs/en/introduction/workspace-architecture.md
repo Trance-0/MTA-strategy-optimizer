@@ -1,5 +1,6 @@
 ---
 title: Workspace Architecture
+compact: "Three-layer workspace model covering the business pipeline, knowledge base, and non-runtime tooling, plus the technology stack, data and security boundaries, and known architecture gaps."
 lang: en-US
 ---
 
@@ -23,7 +24,7 @@ AMC MTA is a Python-standard-library data pipeline:
 4. attribution joins the aligned five-segment Amazon Ads cost and platform metrics;
 5. the pipeline produces touchpoint comparisons, overall summaries, and governed recommendations, while the entity aggregate remains available to the Strategy Initializer.
 
-The module has no network requests, database, API endpoint, authentication, background job, or user interface. See [AMC MTA architecture](../product/amc-mta/architecture.md) for detailed algorithms and data flow.
+The module has no network requests, database, API endpoint, authentication, background job, or user interface. See [AMC MTA architecture](./amc-mta-architecture.md) for detailed algorithms and data flow.
 
 The Strategy Initializer also uses only the Python standard library. It retains the MTA five-segment key, treats Campaign Group as the top level, reads a strategy request and candidate-count JSON, calculates new Ad Group counts for four fixed Campaigns, rolls all MTA touchpoints through the AMC entity bridge into Campaign budgets, and divides each Campaign's share equally among anonymous new groups. The generator produces the result deterministically. Each Campaign carries one `ad_product`; the output does not allocate specific Keywords, SKUs, or Targeting.
 

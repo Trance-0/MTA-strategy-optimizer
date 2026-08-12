@@ -1,5 +1,6 @@
 ---
 title: Data-Driven MTA Models Study Notes
+compact: "Personal reading notes on the Data-driven Multi-touch Attribution Models paper: bagged logistic regression versus a simple probabilistic model, the A-metric and V-metric stability measures, sigmoid and log loss derivations. Neither model is implemented here; not a source of code facts."
 lang: en-US
 ---
 

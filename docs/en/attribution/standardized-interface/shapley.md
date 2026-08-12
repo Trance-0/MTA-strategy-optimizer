@@ -1,6 +1,7 @@
 ---
 title: Shapley Path Attribution
 description: Algorithm, formulas, and code mapping for AggregatedShapleyAttribution
+compact: "Line-by-line internals of `AggregatedShapleyAttribution` in `attribution_contract.py`: `amc_rows_to_shapley_rows`, the `channels` coalition field, path-unanimity `coalition_value`, closed-form equal split over unique touchpoints in `_scores`, share normalization. Explains why order and repeats do not change credit."
 lang: en-US
 ---
 

@@ -1,6 +1,7 @@
 ---
 title: Environment Setup
 description: Local execution, documentation development, and directory responsibilities
+compact: "Setup and toolchain: uv with Python 3.12, Node 20, `git submodule update --init --recursive`, `uv sync --locked`, PYTHONUTF8 on Windows, unittest discovery per module, `npm run dev`/`build`/`preview` in `docs/`, deploy-pages.yml, and a directory map of `modules/`, `script/`, `external/`, `docs/`."
 lang: en-US
 ---
 
@@ -63,7 +64,10 @@ Other commands:
 ```bash
 npm run build          # Build the static site and copy research attachments
 npm run preview        # Preview the production build
+npm run diagrams       # Re-render every .drawio source to its light and dark SVG pair
 ```
+
+Three maintained helpers back these commands. `script/export_drawio_diagrams.mjs` renders each editable `.drawio` source into the `.light.drawio.svg` and `.dark.drawio.svg` pair that `DrawioDiagram` selects between; run it after editing any diagram source. `script/copy_static_assets.mjs` runs at `buildEnd` to copy research attachments and map preserved Chinese routes to the construction placeholder. `script/static_pdf_dev_plugin.mjs` serves research PDFs with byte-range support during local development.
 
 On Windows, you can also run `run-doc-site.bat dev`; on macOS/Linux, run `sh run-doc-site.sh dev`.
 

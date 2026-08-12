@@ -1,5 +1,6 @@
 ---
 title: Simulated Inputs for Ad Group Count and Budget
+compact: "Governs the two v4 strategy inputs `strategy_request.json` and `candidate_pool.json`, Ad Group capacity counting for SP/SB from Keyword/SKU/Pair and SD/DSP from SKU/Target/Audience, `candidate_usage_policy=USE_ALL_ELIGIBLE`, and the canonical `initial_budget_recommendation.json`. Read for budget initialization inputs."
 lang: en-US
 ---
 

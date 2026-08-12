@@ -1,6 +1,7 @@
 ---
 title: DNN Credit Model
 description: Architecture, features, training, and new-campaign prediction for DeepNeuralAttributionModel
+compact: "Internals of model_id `dnn_credit` in `dnn_attribution_model.py`: 16/8 tanh listwise softmax scorer, hidden_sizes, epochs 400, learning_rate 0.5, seed 20260803, `build_touchpoint_features` (appearance_ratio, mean_relative_position, user_share), Shapley-share targets, `predict_new_campaign`, JSON persistence."
 lang: en-US
 ---
 
