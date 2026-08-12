@@ -8,7 +8,6 @@ if errorlevel 1 exit /b 1
 set "RUN_MODE=dev"
 if /i "%~1"=="build" set "RUN_MODE=build"
 if /i "%~1"=="preview" set "RUN_MODE=preview"
-if /i "%~1"=="cloudflare" set "RUN_MODE=cloudflare:dev"
 if /i "%~1"=="--help" goto :help
 if /i "%~1"=="-h" goto :help
 
@@ -44,6 +43,6 @@ popd
 exit /b %EXIT_STATUS%
 
 :help
-echo Usage: run-doc-site.bat [dev^|build^|preview^|cloudflare]
+echo Usage: run-doc-site.bat [dev^|build^|preview]
 popd
 exit /b 0

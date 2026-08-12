@@ -15,7 +15,7 @@ lang: en-US
 - An entity Bridge from touchpoint attribution to Campaign.
 - New Ad Group count calculation based on candidate capacity.
 - An initial budget based on Campaign MTA scores and split equally within each Campaign.
-- English VitePress navigation, Cloudflare builds, and local PDF serving; Chinese source pages are preserved but currently excluded from publishing.
+- English VitePress navigation, GitHub Pages builds, and local PDF serving; Chinese source pages are preserved but currently excluded from publishing.
 
 ## Known Limitations <span class="status-label status-verified" aria-label="Verified"></span>
 

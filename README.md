@@ -1,6 +1,6 @@
 # Marketing ROI Analysis
 
-[English documentation](docs/en/index.md) · [Project overview](docs/en/introduction/index.md) · [Environment setup](docs/en/environment/index.md) · [Module inventory](docs/en/reference/module-inventory.md)
+[Published documentation](https://trance-0.github.io/MTA-strategy-optimizer/en/) · [Project overview](docs/en/introduction/index.md) · [Environment setup](docs/en/environment/index.md) · [Module inventory](docs/en/reference/module-inventory.md) · [Version log](docs/logs/index.md)
 
 Marketing ROI Analysis is a validation-oriented Python workspace for historical Multi-Touch Attribution (MTA), standardized model evaluation, and explainable advertising budget initialization. It builds five-segment Amazon Marketing Cloud-style paths, compares Markov and path-level Shapley attribution, adapts four-segment MTA-SIM data to a shared model contract, and produces a deterministic Ad Group budget seed from governed attribution evidence.
 
@@ -28,7 +28,7 @@ The current results are appropriate for reproducible development, contract testi
 | Follow the directory and data flow | [Project structure](docs/en/introduction/project-structure.md) |
 | Set up and run the project | [Environment setup](docs/en/environment/index.md) |
 | Run Amazon Marketing Cloud MTA attribution | [AMC MTA usage](docs/en/environment/amc-mta-usage.md) |
-| Understand the standardized model interface | [Standardized MTA interface](docs/en/attribution/standardized-interface.md) |
+| Understand the standardized model interface | [Standardized MTA interface](docs/en/attribution/standardized-interface/index.md) |
 | Generate and validate an initial Ad Group budget | [Strategy initializer](docs/en/strategy/module-overview.md) |
 | Reproduce the current budget step by step | [Current Ad Group budget calculation](docs/en/strategy/current-budget-calculation.md) |
 | Plan the research path from MTA to budget optimization | [Budget optimization problem and research plan](docs/en/strategy/optimization-plan.md) |
@@ -45,29 +45,9 @@ The current results are appropriate for reproducible development, contract testi
 
 ## Current capabilities
 
-```text
-Synthetic user-event source
-          ↓
-Anonymous events + Amazon Ads daily report + touchpoint/entity aggregate
-          ↓
-Amazon Marketing Cloud-style anonymous five-segment aggregate paths
-          ↓
-Markov + path-level Shapley attribution
-          ↓
-Five-segment model results + Amazon Ads cost
-          ↓
-Dual-model differences, support, reliability, and recommendations
+[![Marketing ROI Analysis architecture](MTA-roi-analysis.svg)](MTA-roi-analysis.drawio)
 
-Independent budget initializer: Campaign Group
-          ↓
-Campaign → capacity-derived new Ad Group count → MTA-informed initial budget
-
-MTA-SIM four-segment tables
-          ↓
-Explicit interaction-type adapter
-          ↓
-Shared model interface, output contract, DNN credit model, and evaluator
-```
+The SVG above is the English render of the editable [Draw.io architecture source](MTA-roi-analysis.drawio).
 
 The maintained implementation currently provides:
 

@@ -63,10 +63,11 @@ Other commands:
 ```bash
 npm run build          # Build the static site and copy research attachments
 npm run preview        # Preview the production build
-npm run cloudflare:dev # Test the Cloudflare Worker with Wrangler
 ```
 
 On Windows, you can also run `run-doc-site.bat dev`; on macOS/Linux, run `sh run-doc-site.sh dev`.
+
+The public site is built and deployed by `.github/workflows/deploy-pages.yml` after a push to `main`. The workflow obtains the repository-specific base path from GitHub Pages, runs `npm ci` and `npm run build`, uploads `docs/.vitepress/dist`, and deploys through the protected `github-pages` environment.
 
 ## Directory Quick Reference <span class="status-label status-verified" aria-label="Verified"></span>
 

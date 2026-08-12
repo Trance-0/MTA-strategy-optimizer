@@ -3,9 +3,24 @@ import { generateSidebar } from "vitepress-sidebar";
 import { copyStaticAssets } from "../../script/copy_static_assets.mjs";
 import { researchPdfDevPlugin } from "../../script/static_pdf_dev_plugin.mjs";
 
-const repositoryUrl = "https://github.com/Trance-0/marketing-roi-analysis";
+const repositoryUrl = "https://github.com/Trance-0/MTA-strategy-optimizer";
+const configuredBase = process.env.DOCS_BASE_PATH ?? "/";
+const siteBase = configuredBase.endsWith("/") ? configuredBase : `${configuredBase}/`;
 
 const sidebar = generateSidebar([
+  {
+    documentRootPath: ".",
+    scanStartPath: "logs",
+    resolvePath: "/logs/",
+    useTitleFromFrontmatter: true,
+    useFolderLinkFromIndexFile: true,
+    collapsed: true,
+    collapseFromLevel: 2,
+    rootGroupText: "Version Log",
+    rootGroupLink: "/logs/",
+    sortMenusByFrontmatterOrder: true,
+    frontmatterOrderDefaultValue: 100,
+  },
   {
     documentRootPath: ".",
     scanStartPath: "en/introduction",
@@ -146,6 +161,7 @@ const enTheme: DefaultTheme.Config = {
     { text: "Workspace", link: "/en/workspace/" },
     { text: "Specifications", link: "/en/specifications/" },
     { text: "Research", link: "/en/research/" },
+    { text: "Versions", link: "/logs/" },
   ],
   sidebar,
   outline: { level: [2, 3], label: "On this page" },
@@ -184,6 +200,7 @@ const enTheme: DefaultTheme.Config = {
 };
 
 export default defineConfig({
+  base: siteBase,
   title: "Marketing ROI Analysis",
   description:
     "Multi-Touch Attribution evidence and Ad Group budget strategy documentation",

@@ -48,3 +48,12 @@
 
 - Treat `_bmad/`, `_bmad-output/`, and installed `.agents/` bundles as historical or optional tooling only. Do not use their workflow scripts as the project development process unless the user explicitly requests BMad.
 - Use the repository's documented Git, Python, test, and documentation commands for normal development and verification.
+
+## Version and change log
+
+- Keep the current project version in the repository-root `VERSION` file.
+- Every project commit must advance the version and document its material changes in `docs/logs/<version>.md` within the same commit. Use the scope of the change to select the increment; while the project remains pre-1.0, the default increment is the next minor milestone (for example, `0.8` to `0.9`).
+- Update `docs/logs/index.md` whenever adding a version page. Base historical summaries on Git evidence and maintained work logs; do not invent changes or retroactive Git tags.
+- Keep at most ten version pages under `docs/logs/`, excluding `index.md`. Before adding an eleventh, consolidate the oldest adjacent versions into one archived summary and update the index.
+- Commit messages should summarize the same change set recorded on the version page. Do not create an undocumented commit, including documentation-only and workflow-only commits.
+- GitHub Pages, built by `.github/workflows/deploy-pages.yml`, is the only maintained documentation deployment target. Do not add Cloudflare Pages or Wrangler deployment commands unless the user explicitly changes this policy.

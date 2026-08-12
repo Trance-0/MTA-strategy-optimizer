@@ -8,11 +8,8 @@ RUN_MODE=${1:-dev}
 case "$RUN_MODE" in
   dev|build|preview)
     ;;
-  cloudflare)
-    RUN_MODE=cloudflare:dev
-    ;;
   --help|-h)
-    echo "Usage: sh run-doc-site.sh [dev|build|preview|cloudflare]"
+    echo "Usage: sh run-doc-site.sh [dev|build|preview]"
     exit 0
     ;;
   *)

@@ -8,6 +8,8 @@ lang: en-US
 
 This page adopts the documentation categories of the [Trance-0/MTA-SIM-dataset data contract](https://github.com/Trance-0/MTA-SIM-dataset/blob/main/ZheyuanWu/docs/DATA_CONTRACT.md) and [generation flow](https://github.com/Trance-0/MTA-SIM-dataset/blob/main/ZheyuanWu/docs/dataset-creation/generation-flow.md), and explains how they differ from this repository's current inputs.
 
+For the translated operational schema references, see the [Product data model](product-data-model.md) and [Campaign data model](campaign-data-model.md). Each page includes editable, theme-aware Draw.io diagrams.
+
 ## MTA-SIM's Three Logical Tables <span class="status-label status-external" aria-label="External"></span>
 
 | Table | Purpose | Training boundary |

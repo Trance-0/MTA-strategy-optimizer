@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed } from "vue";
+import { withBase } from "vitepress";
 
 const props = withDefaults(
   defineProps<{
@@ -10,9 +11,14 @@ const props = withDefaults(
   { sourceLabel: "Edit the Draw.io source" },
 );
 
-const lightSvg = computed(() => `${props.base}.light.drawio.svg`);
-const darkSvg = computed(() => `${props.base}.dark.drawio.svg`);
-const drawioSource = computed(() => `${props.base}.drawio`);
+const assetPath = (suffix: string) => {
+  const path = `${props.base}${suffix}`;
+  return props.base.startsWith("/") ? withBase(path) : path;
+};
+
+const lightSvg = computed(() => assetPath(".light.drawio.svg"));
+const darkSvg = computed(() => assetPath(".dark.drawio.svg"));
+const drawioSource = computed(() => assetPath(".drawio"));
 </script>
 
 <template>
