@@ -10,6 +10,7 @@ The project version is recorded in the repository-root `VERSION` file. Each vers
 
 | Version | Date | Summary |
 | --- | --- | --- |
+| [0.9.2](0.9.2.md) | 2026-08-12 | Exact English translation of the original three-page architecture diagram |
 | [0.9.1](0.9.1.md) | 2026-08-12 | Base-aware Pages redirect, HTTPS Gitee target support, and version-governance clarification |
 | [0.9](0.9.md) | 2026-08-12 | GitHub Pages activation follow-up and current Pages action runtime |
 | [0.8](0.8.md) | 2026-08-12 | Public GitHub release, Pages documentation, data-model translations, and Gitee mirroring |
@@ -18,7 +19,6 @@ The project version is recorded in the repository-root `VERSION` file. Each vers
 | [0.5](0.5.md) | 2026-08-03 | Strategy initializer and expanded synthetic data |
 | [0.4](0.4.md) | 2026-07-30 | Unified event generation and MTA-informed Ad Group budgeting |
 | [0.3](0.3.md) | 2026-07-28 | Initial campaign strategy recommendation workflow |
-| [0.2](0.2.md) | 2026-07-22 | Attribution reliability governance and submission documentation |
-| [0.1](0.1.md) | 2026-07-16 | Cleaned workspace and initial AMC attribution baseline |
+| [0.1–0.2](0.1-0.2.md) | 2026-07-16 to 2026-07-22 | Initial AMC attribution baseline, reliability governance, and submission documentation |
 
 These versions were reconstructed from first-parent Git history and the preserved project work log. They are documentation milestones, not retroactively created Git tags.
