@@ -52,7 +52,8 @@
 ## Version and change log
 
 - Keep the current project version in the repository-root `VERSION` file.
-- Every project commit must advance the version and document its material changes in `docs/logs/<version>.md` within the same commit. Use the scope of the change to select the increment; while the project remains pre-1.0, the default increment is the next minor milestone (for example, `0.8` to `0.9`).
+- Every project commit must advance the version and document its material changes in `docs/logs/<version>.md` within the same commit.
+- Use three-level semantic versions in the form `major.minor.patch`. The project manager controls major-version changes (for example, `1.x.x` to `2.x.x`), and human developers control minor-version changes (for example, `x.1.x` to `x.2.x`). Unless the user explicitly directs otherwise, an agent must preserve the current major and minor numbers and increment only the patch number (for example, `0.9.0` to `0.9.1`). Existing two-level historical versions such as `0.9` are treated as having an implicit patch value of zero.
 - Update `docs/logs/index.md` whenever adding a version page. Base historical summaries on Git evidence and maintained work logs; do not invent changes or retroactive Git tags.
 - Keep at most ten version pages under `docs/logs/`, excluding `index.md`. Before adding an eleventh, consolidate the oldest adjacent versions into one archived summary and update the index.
 - Commit messages should summarize the same change set recorded on the version page. Do not create an undocumented commit, including documentation-only and workflow-only commits.

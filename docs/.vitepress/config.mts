@@ -148,7 +148,8 @@ const sidebar = generateSidebar([
 ]);
 
 const enTheme: DefaultTheme.Config = {
-  logoLink: "/en/",
+  // Unlike normal VitePress navigation links, logoLink is not prefixed with base.
+  logoLink: `${siteBase}en/`,
   nav: [
     { text: "Home", link: "/en/" },
     { text: "Overview", link: "/en/introduction/" },

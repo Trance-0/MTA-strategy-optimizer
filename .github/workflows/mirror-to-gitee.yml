@@ -38,12 +38,34 @@ jobs:
             exit 0
           fi
           case "$GITEE_REPOSITORY" in
-            https://gitee.com/*|http://gitee.com/*)
-              echo "GITEE_REPOSITORY must not contain a protocol or credentials; use owner/repository.git."
+            https://gitee.com/*)
+              repository_path="${GITEE_REPOSITORY#https://gitee.com/}"
+              ;;
+            http://*|*://*|*@*)
+              echo "GITEE_REPOSITORY must be an HTTPS gitee.com URL or owner/repository.git without credentials."
+              exit 1
+              ;;
+            *)
+              repository_path="$GITEE_REPOSITORY"
+              ;;
+          esac
+          repository_path="${repository_path%/}"
+          repository_path="${repository_path%.git}"
+          IFS=/ read -r repository_owner repository_name extra_path <<EOF
+          $repository_path
+          EOF
+          if test -z "$repository_owner" || test -z "$repository_name" || test -n "${extra_path:-}"; then
+            echo "GITEE_REPOSITORY must identify exactly one owner and repository."
+            exit 1
+          fi
+          case "$repository_path" in
+            *[!A-Za-z0-9._/-]*)
+              echo "GITEE_REPOSITORY contains unsupported characters."
               exit 1
               ;;
           esac
           echo "ready=true" >> "$GITHUB_OUTPUT"
+          echo "repository_path=$repository_path" >> "$GITHUB_OUTPUT"
 
       - name: Mirror branches and tags
         if: steps.configuration.outputs.ready == 'true'
@@ -51,7 +73,7 @@ jobs:
         env:
           GITEE_USERNAME: ${{ secrets.GITEE_USERNAME }}
           GITEE_PASSWORD: ${{ secrets.GITEE_PASSWORD }}
-          GITEE_REPOSITORY: ${{ secrets.GITEE_REPOSITORY }}
+          GITEE_REPOSITORY_PATH: ${{ steps.configuration.outputs.repository_path }}
         run: |
           set -euo pipefail
 
@@ -70,7 +92,7 @@ jobs:
 
           git clone --bare --filter=blob:none "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY.git" source.git
           git -C source.git fetch origin "+refs/heads/*:refs/heads/*" "+refs/tags/*:refs/tags/*" --prune --force
-          git -C source.git remote add gitee "https://gitee.com/${GITEE_REPOSITORY%.git}.git"
+          git -C source.git remote add gitee "https://gitee.com/${GITEE_REPOSITORY_PATH}.git"
           git -C source.git push gitee --prune --force "refs/heads/*:refs/heads/*" "refs/tags/*:refs/tags/*"
 
           rm -f "$askpass"
