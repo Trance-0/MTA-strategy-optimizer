@@ -9,7 +9,7 @@
 
 ## Documentation frontmatter
 
-- Every markdown file under `docs/en/` and `docs/logs/` must carry a `compact` frontmatter field.
+- Every markdown file under `docs/en/`, `docs/version/`, and `docs/worklog/` must carry a `compact` frontmatter field.
 - `compact` is a single-paragraph, self-contained summary of what the page specifies, written so that an agent can read only the `compact` fields across the documentation set and decide which full pages a given task requires.
 - Write `compact` for the routing decision, not as marketing copy. Name the concrete modules, files, contracts, fields, and commands the page governs, so keyword matching against a task description succeeds.
 - Keep `compact` to roughly 40 words or fewer, on one line. Do not restate the `title`, and do not duplicate the `description` field verbatim.
@@ -70,9 +70,17 @@
 ## Version and change log
 
 - Keep the current project version in the repository-root `VERSION` file.
-- Every project commit must advance the version and document its material changes in `docs/logs/<version>.md` within the same commit.
+- Every project commit must advance the version and document its material changes in `docs/version/<version>.md` within the same commit. Each page is one small patch description covering a coherent change set.
 - Use three-level semantic versions in the form `major.minor.patch`. The project manager controls major-version changes (for example, `1.x.x` to `2.x.x`), and human developers control minor-version changes (for example, `x.1.x` to `x.2.x`). Unless the user explicitly directs otherwise, an agent must preserve the current major and minor numbers and increment only the patch number (for example, `0.9.0` to `0.9.1`). Existing two-level historical versions such as `0.9` are treated as having an implicit patch value of zero.
-- Update `docs/logs/index.md` whenever adding a version page. Base historical summaries on Git evidence and maintained work logs; do not invent changes or retroactive Git tags.
-- Keep at most ten version pages under `docs/logs/`, excluding `index.md`. Before adding an eleventh, consolidate the oldest adjacent versions into one archived summary and update the index.
+- Update `docs/version/index.md` whenever adding a version page. Base historical summaries on Git evidence and maintained work logs; do not invent changes or retroactive Git tags.
+- Keep at most ten version pages under `docs/version/`, excluding `index.md`. Before adding an eleventh, consolidate the oldest adjacent versions into one archived summary and update the index.
 - Commit messages should summarize the same change set recorded on the version page. Do not create an undocumented commit, including documentation-only and workflow-only commits.
+
+## Work log
+
+- `docs/version/` records what changed in the repository. `docs/worklog/` records who did the work and when. Keep the two separate: a version page describes a patch, a work-log page describes a person's days.
+- Each contributor owns one page at `docs/worklog/<GivenNameFamilyName>.md`, named in PascalCase after the person, for example `ZheyuanWu.md`. `docs/worklog/index.md` is the roster of everyone involved and their area of responsibility.
+- Follow the established scheme: reverse-chronological `## YYYY-MM-DD` sections, each with a `### Completed` list and an optional `### Next` list. Record **at most three bullet points per section**; merge related work into one bullet rather than adding a fourth.
+- A work-log page belongs to its owner. Do not edit another person's page, restructure their past entries, or translate a page whose author wrote it in another language.
+- **Before creating a commit, an agent must ask its owner whether to compact the current change set into today's working-log entry.** Propose the exact entry text and wait for explicit confirmation before writing it. Do not add a work-log entry silently, and do not add one on behalf of a person who is not the agent's owner. If the owner declines, commit without touching the work log.
 - GitHub Pages, built by `.github/workflows/deploy-pages.yml`, is the only maintained documentation deployment target. Do not add Cloudflare Pages or Wrangler deployment commands unless the user explicitly changes this policy.

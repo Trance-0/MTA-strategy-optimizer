@@ -1,6 +1,6 @@
 ---
 title: Workspace File-Location Management
-compact: "Rules for where files may live, stable paths, naming and archival, the move process, `log.md` protection, and derived-inventory scope. Read before adding, moving, or archiving any file."
+compact: "Rules for where files may live, stable paths, naming and archival, the move process, work-log ownership protection, and derived-inventory scope. Read before adding, moving, or archiving any file."
 lang: en-US
 ---
 
@@ -12,7 +12,7 @@ This page defines each workspace partition's sole responsibility, stable paths, 
 
 | Partition | Sole responsibility | Allowed content |
 | --- | --- | --- |
-| repository root | workspace entry and a small set of global configuration | `README.md`, ignore/format rules, and protected human-maintained `log.md` |
+| repository root | workspace entry and a small set of global configuration | `README.md`, `VERSION`, and ignore/format rules |
 | `modules/mta_attribution/` | five-segment touchpoint attribution | source, scripts, tests, module input, and five canonical outputs; no Markdown documentation |
 | `modules/mta_strategy_recommendation/` | Campaign Group count and budget initialization | synthetic run-condition data, generator, canonical budget output, validator, and tests; no Markdown documentation |
 | `docs/en/` and `docs/zh/` | current project knowledge | mirrored language documentation for contracts, architecture, assessments, management rules, product introductions, and research explanations |
@@ -52,9 +52,9 @@ Research papers and platform originals are not AMC MTA inputs. Historical design
 7. Refresh `docs/project-scan-report.json` and `docs/workspace-file-inventory.json` when those generated audits are intentionally maintained, then run tests and diff checks.
 8. Deleting content, changing business semantics, or moving stable runtime paths requires separate authorization.
 
-## `log.md` Protection Rule
+## Work-Log Protection Rule
 
-`log.md` is a human work record. Automated organization, formatting, movement, content inspection, and summary calculation exclude it. Inventories and scans must omit its contents and hash unless the user later authorizes that path explicitly.
+Each page under `docs/worklog/` is a human work record owned by one person. Automated organization, formatting, restructuring, and translation exclude them. An agent may append an entry only to its own owner's page, only after proposing the text and receiving explicit confirmation. The former repository-root `log.md` now lives at `docs/worklog/JiahaoYao.md` and retains its original Chinese text.
 
 ## Derived-Inventory Rules
 
@@ -63,7 +63,7 @@ Research papers and platform originals are not AMC MTA inputs. Historical design
 - `.git/` internals;
 - the inventory file itself;
 - ignored `_bmad/custom/*.user.toml` personal overrides;
-- protected `log.md`;
+- protected `docs/worklog/` pages;
 - `docs/系统架构图-07.drawio` when a task explicitly protects it.
 
 The inventory is path-sorted and should reconcile both ways with disk. `docs/project-scan-report.json` records scan scope, final counts, verification, and exclusions. Both are derived state and do not replace runtime source or contracts.

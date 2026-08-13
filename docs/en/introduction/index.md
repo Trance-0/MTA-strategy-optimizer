@@ -40,7 +40,7 @@ Current outputs should be understood as **historical evidence and a budget start
 7. [Development and verification guide](./development-guide.md): run the project and reproduce verification.
 8. [Workspace file-location management](./file-management.md): adding, moving, and archiving files.
 9. [Workspace assessment](./assessment.md): audited health, scale, and risks.
-10. [Development history](./development-history.md): the preserved work log in English.
+10. [Work log roster](../../worklog/index.md): who is involved, their area, and their day-by-day record.
 
 ## Entry Points by Topic
 

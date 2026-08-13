@@ -1,6 +1,6 @@
 # Marketing ROI Analysis
 
-[Published documentation](https://trance-0.github.io/MTA-strategy-optimizer/en/) · [Project overview](docs/en/introduction/index.md) · [Environment setup](docs/en/environment/index.md) · [Module inventory](docs/en/reference/module-inventory.md) · [Version log](docs/logs/index.md)
+[Published documentation](https://trance-0.github.io/MTA-strategy-optimizer/en/) · [Project overview](docs/en/introduction/index.md) · [Environment setup](docs/en/environment/index.md) · [Module inventory](docs/en/reference/module-inventory.md) · [Version log](docs/version/index.md) · [Work log](docs/worklog/index.md)
 
 Marketing ROI Analysis is a validation-oriented Python workspace for historical Multi-Touch Attribution (MTA), standardized model evaluation, and explainable advertising budget initialization. It builds five-segment Amazon Marketing Cloud-style paths, compares Markov and path-level Shapley attribution, adapts four-segment MTA-SIM data to a shared model contract, and produces a deterministic Ad Group budget seed from governed attribution evidence.
 
@@ -38,7 +38,7 @@ The current results are appropriate for reproducible development, contract testi
 | Interpret touchpoint reliability | [Reliability guide](docs/en/attribution/reliability.md) |
 | Review maturity and planned work | [Progress and todos](docs/en/introduction/progress.md) |
 | Review implementation specifications | [Specification catalog](docs/en/specifications/index.md) |
-| Review the translated project work log | [Development history](docs/en/introduction/development-history.md) |
+| Review who did what and when | [Work log roster](docs/worklog/index.md) |
 | Review all maintained commands | [Project command directory](script/README.md) |
 | Inspect historical product decisions | [Design artifacts](design-artifacts/README.md) |
 | Inspect specifications and implementation records | [BMad output index](_bmad-output/README.md) |

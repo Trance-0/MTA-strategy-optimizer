@@ -1,7 +1,18 @@
+---
+title: Jiahao Yao (yao-LLL)
+description: Original project work log, preserved in the author's own words
+compact: "Work log of yao-LLL (Jiahao Yao), 2026-06-15 to 2026-08-07, in the original Chinese: MTA study, AMC and Amazon Ads data simulation, five-segment granularity, reliability simplification to three criteria, and the first Ad Group budget generation. Historical record."
+order: 20
+lang: zh-CN
+---
+
 # 工作日志
 
 > 项目：Marketing ROI Analysis
+> 作者：Jiahao Yao (`yao-LLL`)
 > 最后更新：2026-08-07
+>
+> 本页为原始工作日志，保留作者原文，不作翻译。
 
 ---
 
