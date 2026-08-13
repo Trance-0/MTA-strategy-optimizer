@@ -25,12 +25,12 @@
 - 根入口固定为 `README.md`，项目知识主入口固定为 `docs/index.md`。
 - AMC MTA 运行入口固定为 `modules/amc_mta/run_pipeline.py`，模块说明与契约固定在
   `docs/en/` 和 `docs/zh/` 的 Attribution、Datasets、Environment 栏目。
-- 策略初始化器说明固定在 `docs/en/strategy/` 和 `docs/zh/strategy/`，两个独立输入
+- 策略初始化器说明固定在 `docs/en/strategy_recommendation/` 和 `docs/zh/strategy_recommendation/`，两个独立输入
   固定在 `modules/mta_strategy_recommender/data/simulated/`，唯一正式预算结果固定在
   `modules/mta_strategy_recommender/outputs/initial_budget_recommendation.json`；测试直接复用
   该结果，不另存 fixture。
 - 策略模块的当前实现契约、结果复算说明和后续研究计划统一放在项目级
-  `docs/en/strategy/`；中文源文件保存在 `docs/zh/strategy/`。研究计划必须明确标记为
+  `docs/en/strategy_recommendation/`；中文源文件保存在 `docs/zh/strategy_recommendation/`。研究计划必须明确标记为
   “未实现”，不能放入 `outputs/` 或写成当前能力。
 - 双语多文件栏目统一用 `index.md` 作为入口；单份外部背景原件由
   双语研究索引直接链接。Amazon 原件索引固定在两个语言树的

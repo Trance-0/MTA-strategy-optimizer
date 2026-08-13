@@ -21,9 +21,9 @@ Entries are reconstructed from Git history. They record the change set behind ea
 
 ### Completed
 
-- Separated the two logs: renamed `docs/logs/` to `docs/version/` for per-patch descriptions, and added `docs/worklog/` for per-person progress, each with its own navigation entry.
-- Added the contributor roster recording all five people, their handles, areas, and active periods, and moved the original root `log.md` to `docs/worklog/JiahaoYao.md` with its Chinese text preserved.
-- Recorded the work-log rules in the repository instructions, including the three-bullet-per-day limit, page ownership, and the requirement that an agent confirm today's entry with its owner before committing.
+- Separated the two logs into `docs/version/` for per-patch descriptions and `docs/worklog/` for per-person progress, added the contributor roster, and recorded the work-log ownership rules in the repository instructions.
+- Built the Streamlit dashboard: six views over the pipeline's own artifacts, a `DATABASE=true/false` dual-source contract verified by `script/verify_source_parity.py`, and the PostgreSQL import into an eighteen-table schema.
+- Rebuilt the sidebar as the reference design's navigation rail with a settings module for database credentials and streaming logs, and restructured the documentation to match: implementation pages merged into their owning sections and the dashboard data model documented.
 
 ### Next
 

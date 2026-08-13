@@ -3,6 +3,7 @@ title: DNN Credit Model
 description: Architecture, features, training, and new-campaign prediction for DeepNeuralAttributionModel
 compact: "Internals of model_id `dnn_credit` in `dnn_attribution_model.py`: 16/8 tanh listwise softmax scorer, hidden_sizes, epochs 400, learning_rate 0.5, seed 20260803, `build_touchpoint_features` (appearance_ratio, mean_relative_position, user_share), Shapley-share targets, `predict_new_campaign`, JSON persistence."
 lang: en-US
+source_files: modules/mta_attribution/src/dnn_attribution_model.py
 ---
 
 # DNN Credit Model
@@ -118,6 +119,20 @@ whose logit gradient reduces to:
 $$
 \frac{\partial \mathcal{L}}{\partial z_o(t)} = \text{share}_o(t) - \hat{s}_o(t)
 $$
+
+## Source Files <span class="status-label status-verified" aria-label="Verified"></span>
+
+The code-level specification for the Python files this page describes. Each entry states responsibility, inputs, outputs, dependencies, and the test that verifies it.
+
+### `dnn_attribution_model.py`
+
+Source: `modules/mta_attribution/src/dnn_attribution_model.py`
+
+- Responsibility: Learn segment-based attribution shares from path-level Shapley targets and score unseen campaign touchpoints.
+- Inputs: Four-segment dataset features; simulation ground truth is excluded.
+- Outputs: Standard attribution rows and optional persisted network state.
+- Dependencies: Attribution interface, Shapley implementation, and `mta_standard` contracts, plus `NULL` and `safe_float` from `attribution_contract.py` and `OUTCOME_FIELDS` from `attribution_model_comparison.py`.
+- Verification: `modules/mta_attribution/tests/test_dnn_attribution_model.py`.
 
 ## References
 

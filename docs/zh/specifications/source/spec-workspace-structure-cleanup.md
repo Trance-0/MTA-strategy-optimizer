@@ -87,7 +87,7 @@ context:
   [`README.md:1`](../../README.md#L1)
 
 - 模块说明统一正式结果、运行命令与兼容边界。
-  [`mta_strategy_recommender/README.md:15`](../../docs/zh/strategy/module-overview.md#L15)
+  [`mta_strategy_recommender/README.md:15`](../../docs/zh/strategy_recommendation/module-overview.md#L15)
 
 - 唯一正式 JSON 同时承担确定性测试基准。
   [`initial_budget_recommendation.json:1`](../../modules/mta_strategy_recommender/outputs/initial_budget_recommendation.json#L1)

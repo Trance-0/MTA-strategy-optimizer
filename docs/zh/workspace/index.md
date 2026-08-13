@@ -3,7 +3,7 @@
 本索引覆盖整个工作区：当前业务实现、项目知识、研究原件、历史产物以及本地
 Agent/BMad 工具链。当前业务链路由
 [`modules/amc_mta`](../attribution/amc-mta-module.md) 和
-[`modules/mta_strategy_recommender`](../strategy/module-overview.md)
+[`modules/mta_strategy_recommender`](../strategy_recommendation/module-overview.md)
 组成；`.agents` 和 `_bmad` 是开发工具，不是营销产品功能。
 
 ## 推荐阅读顺序
@@ -26,10 +26,10 @@ Agent/BMad 工具链。当前业务链路由
 | 用户维护的系统架构图 | [Draw.io 源文件](../../系统架构图-07.drawio) |
 | 文件位置与移动规则 | [工作区文件位置管理](file-management.md) |
 | 可运行模块与命令 | [AMC MTA 模块说明](../attribution/amc-mta-module.md) |
-| Campaign Group 初始策略 | [策略初始化器](../strategy/module-overview.md) |
-| 初始策略计划与契约 | [整体模型计划](../strategy/model-plan.md) |
-| 当前预算逐步复算 | [Ad Group 初始预算计算详解](../strategy/current-budget-calculation.md) |
-| 后续预算优化研究 | [问题定义与研究计划](../strategy/optimization-plan.md) |
+| Campaign Group 初始策略 | [策略初始化器](../strategy_recommendation/module-overview.md) |
+| 初始策略计划与契约 | [整体模型计划](../strategy_recommendation/model-plan.md) |
+| 当前预算逐步复算 | [Ad Group 初始预算计算详解](../strategy_recommendation/current-budget-calculation.md) |
+| 后续预算优化研究 | [问题定义与研究计划](../strategy_recommendation/optimization-plan.md) |
 | 输入字段、路径和成本规则 | [AMC MTA 数据契约](../datasets/amc-data-contract.md) |
 | Markov/Shapley 差距与决策状态 | [模型比较治理规范](../attribution/model-governance.md) |
 | 单触点结果可靠性 | [触点可靠性指南](../attribution/reliability.md) |

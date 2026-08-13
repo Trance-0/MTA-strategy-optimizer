@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="Electron" agent="Codex" version="24.7.17">
+  <diagram id="module-ownership" name="Module ownership">
+    <mxGraphModel dx="1422" dy="794" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="900" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="title" value="Parallel module ownership and data flow" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;fontSize=24;fontStyle=1;fontColor=#1F2937;" vertex="1" parent="1">
+          <mxGeometry x="470" y="30" width="570" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="generator" value="&lt;b&gt;External MTA-SIM generator&lt;/b&gt;&lt;br&gt;four-segment paths + ground truth" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF2CC;strokeColor=#D6B656;fontSize=15;" vertex="1" parent="1">
+          <mxGeometry x="60" y="175" width="250" height="90" as="geometry"/>
+        </mxCell>
+        <mxCell id="standard" value="&lt;b&gt;modules/mta_standard&lt;/b&gt;&lt;br&gt;&lt;font color=&quot;#334155&quot;&gt;framework owner&lt;/font&gt;&lt;br&gt;dataloader · 4↔5 adapter · registry&lt;br&gt;model pipeline · output contract · evaluator" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DAE8FC;strokeColor=#6C8EBF;fontSize=15;spacing=8;" vertex="1" parent="1">
+          <mxGeometry x="390" y="145" width="320" height="150" as="geometry"/>
+        </mxCell>
+        <mxCell id="attribution" value="&lt;b&gt;modules/mta_attribution&lt;/b&gt;&lt;br&gt;&lt;font color=&quot;#334155&quot;&gt;model owner&lt;/font&gt;&lt;br&gt;model interface · Markov · Shapley&lt;br&gt;uniform · DNN · paths · comparison" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#D5E8D4;strokeColor=#82B366;fontSize=15;spacing=8;" vertex="1" parent="1">
+          <mxGeometry x="800" y="145" width="320" height="150" as="geometry"/>
+        </mxCell>
+        <mxCell id="strategy" value="&lt;b&gt;modules/mta_strategy_recommendation&lt;/b&gt;&lt;br&gt;&lt;font color=&quot;#334155&quot;&gt;strategy owner&lt;/font&gt;&lt;br&gt;hierarchy validation · Campaign/Ad Group&lt;br&gt;count and initial budget recommendation" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E1D5E7;strokeColor=#9673A6;fontSize=15;spacing=8;" vertex="1" parent="1">
+          <mxGeometry x="1210" y="145" width="320" height="150" as="geometry"/>
+        </mxCell>
+        <mxCell id="flow1" value="dataset" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;fontSize=13;exitX=1;exitY=0.35;exitDx=0;exitDy=0;entryX=0;entryY=0.35;entryDx=0;entryDy=0;" edge="1" parent="1" source="generator" target="standard">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="flow2" value="construct" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;fontSize=13;exitX=1;exitY=0.3;exitDx=0;exitDy=0;entryX=0;entryY=0.3;entryDx=0;entryDy=0;" edge="1" parent="1" source="standard" target="attribution">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="flow3" value="rows" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;fontSize=13;exitX=0;exitY=0.72;exitDx=0;exitDy=0;entryX=1;entryY=0.72;entryDx=0;entryDy=0;" edge="1" parent="1" source="attribution" target="standard">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="flow4" value="published evidence" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;fontSize=13;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="attribution" target="strategy">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="parallel" value="&lt;b&gt;Parallel contribution rule&lt;/b&gt;&lt;br&gt;Each detailed algorithm changes only in its owning module. The framework depends on the model contract; strategy consumes published evidence, not model internals." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F8FAFC;strokeColor=#64748B;dashed=1;fontSize=15;spacing=10;" vertex="1" parent="1">
+          <mxGeometry x="390" y="390" width="740" height="105" as="geometry"/>
+        </mxCell>
+        <mxCell id="docs" value="&lt;b&gt;Implementation documentation&lt;/b&gt;&lt;br&gt;docs/en/&amp;lt;section&amp;gt;/implementation/&amp;lt;python_stem&amp;gt;.md&lt;br&gt;one page per maintained source file" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F5F5F5;strokeColor=#666666;fontSize=15;spacing=8;" vertex="1" parent="1">
+          <mxGeometry x="510" y="590" width="500" height="110" as="geometry"/>
+        </mxCell>
+        <mxCell id="doc1" value="source_file traceability" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=open;endFill=0;dashed=1;fontSize=12;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="parallel" target="docs">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

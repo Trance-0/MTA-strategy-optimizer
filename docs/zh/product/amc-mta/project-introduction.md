@@ -1,6 +1,6 @@
 # AMC MTA 项目介绍
 
-AMC MTA 是本仓库可运行的归因实现：一个面向 Amazon 广告场景的可复现多触点归因与双模型诊断 Demo。它从 AMC 风格匿名聚合路径估算广告曝光与点击对购买用户、订单次数和收入的贡献，并在相同五段互动粒度关联 Amazon Ads 成本和计算效率指标。其输出可作为 [MTA Strategy Initializer](../../strategy/module-overview.md) 的上游证据。
+AMC MTA 是本仓库可运行的归因实现：一个面向 Amazon 广告场景的可复现多触点归因与双模型诊断 Demo。它从 AMC 风格匿名聚合路径估算广告曝光与点击对购买用户、订单次数和收入的贡献，并在相同五段互动粒度关联 Amazon Ads 成本和计算效率指标。其输出可作为 [MTA Strategy Initializer](../../strategy_recommendation/module-overview.md) 的上游证据。
 
 模型结果表示特定归因方法下的贡献分配，不等同于广告的因果增量效果。
 

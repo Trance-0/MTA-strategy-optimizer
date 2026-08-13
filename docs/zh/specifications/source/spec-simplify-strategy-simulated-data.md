@@ -103,7 +103,7 @@ context:
 **模型边界与验收证据**
 
 - 计划明确当前校验器与未来策略生成器的职责差异。
-  [`model-plan.md:77`](../../docs/zh/strategy/model-plan.md#L77)
+  [`model-plan.md:77`](../../docs/zh/strategy_recommendation/model-plan.md#L77)
 
 - 十九项测试覆盖文件隔离、候选、探索、触点与预算反例。
   [`test_hierarchy_validator.py:45`](../../modules/mta_strategy_recommender/tests/test_hierarchy_validator.py#L45)

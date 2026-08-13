@@ -10,7 +10,7 @@ lang: en-US
 
 The current project is a single-process, standard-library-first, CSV-driven AMC MTA batch module. Its value is not a platform shell; it is a reproducible and validated loop connecting anonymous aggregate paths, dual-model attribution, Amazon Ads cost, and governance diagnostics.
 
-<DrawioDiagram base="/en/implementation/module-ownership" alt="Parallel module ownership and data flow" />
+<DrawioDiagram base="/en/reference/module-ownership" alt="Parallel module ownership and data flow" />
 
 In real use, user events must become anonymous aggregates inside the AMC clean room. This repository accepts only aggregates that satisfy privacy thresholds; its user-event source and conceptual events are test fixtures rather than exportable real AMC user detail.
 

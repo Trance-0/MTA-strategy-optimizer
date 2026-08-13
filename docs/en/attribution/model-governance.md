@@ -2,6 +2,7 @@
 title: AMC MTA Dual-Model Comparison and Reliability Specification
 compact: "Source of truth for exact column order of the 14-column touchpoint comparison, 13-column summary, and 15-column recommendation CSVs. Defines gap_pp, relative_gap, tvd, spearman_rho, top_k_overlap_rate, and the `[low,high]` recommended_value union type."
 lang: en-US
+source_files: modules/mta_attribution/src/attribution_model_comparison.py
 ---
 
 # AMC MTA Dual-Model Comparison and Reliability Specification
@@ -92,3 +93,18 @@ These results support only model comparison in the current window. They do not p
 ## Future Research
 
 Rolling windows, resampling, and 3/7/14-day sensitivity may be future research, but they are neither current reliability conditions nor current CSV fields. If decision approval or automated governance is needed later, design a separate artifact instead of widening the existing 14/13/15 contracts.
+
+## Source Files <span class="status-label status-verified" aria-label="Verified"></span>
+
+The code-level specification for the Python files this page describes. Each entry states responsibility, inputs, outputs, dependencies, and the test that verifies it.
+
+### `attribution_model_comparison.py`
+
+Source: `modules/mta_attribution/src/attribution_model_comparison.py`
+
+- Responsibility: Compare Markov and Shapley outputs, calculate reliability, and build recommendation artifacts.
+- Inputs: Two model result sets and the governed path report.
+- Outputs: Touchpoint comparison, summary, and recommended-attribution rows.
+- Dependencies: `attribution_contract.py` and `touchpoint_key.py`.
+- Verification: `modules/mta_attribution/tests/test_attribution_model_comparison.py`.
+

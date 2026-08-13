@@ -4,6 +4,7 @@ description: Equal-split reference model for baseline comparison
 compact: "Full source of `UniformCreditModel` in `uniform_attribution_model.py`: model_id `uniform_credit`, requires_fit true, supports_persistence false, share 1.0/count, zero-outcome share 0.0, spearman_rho None by design. Read as the MAE floor; no path logic here."
 lang: en-US
 order: 200
+source_files: modules/mta_attribution/src/uniform_attribution_model.py
 ---
 
 # Uniform Credit Baseline
@@ -84,6 +85,20 @@ Because every share is identical, Spearman's rho (rank correlation) is `None` â€
 | Can predict new campaigns | No | No | No | Yes |
 | Deterministic | Yes | Yes | Yes | Yes |
 | Best use | Baseline floor | Official display | Sensitivity reference | New-campaign ranking |
+
+## Source Files <span class="status-label status-verified" aria-label="Verified"></span>
+
+The code-level specification for the Python files this page describes. Each entry states responsibility, inputs, outputs, dependencies, and the test that verifies it.
+
+### `uniform_attribution_model.py`
+
+Source: `modules/mta_attribution/src/uniform_attribution_model.py`
+
+- Responsibility: Provide a deterministic equal-credit reference baseline.
+- Inputs: A fitted `MtaSimDataset` scope.
+- Outputs: Conservation-preserving four-segment standard rows.
+- Dependencies: Attribution interface and `mta_standard` output contract.
+- Verification: `modules/mta_attribution/tests/test_uniform_attribution_model.py`.
 
 ## References
 

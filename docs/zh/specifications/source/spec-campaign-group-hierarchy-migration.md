@@ -78,7 +78,7 @@ MTA 五段键是归因观察维度，不是业务实体树。新层级样例独�
 **业务契约与边界**
 
 - 先看模型职责、初始条件、触点证据和预算种子的完整设计。
-  [`model-plan.md:3`](../../docs/zh/strategy/model-plan.md#L3)
+  [`model-plan.md:3`](../../docs/zh/strategy_recommendation/model-plan.md#L3)
 
 - 确认 Group 顶层、Campaign 单值属性和物理 N:N 关系。
   [`campaign-data-hierarchy.md:1`](../../docs/research/campaign-data-hierarchy.md#L1)

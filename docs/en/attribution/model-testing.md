@@ -3,6 +3,7 @@ title: Model Testing and Comparison
 description: How each attribution model is tested, and how the four are compared against each other
 compact: "Three assurance layers: 284 unittest cases per suite file under `modules/*/tests/`, per-run Markov vs Shapley governance, and `evaluation.py` scoring against `simulation_ground_truth`. Read when adding a model to MODEL_REGISTRY or running tests."
 lang: en-US
+source_files: modules/mta_standard/src/evaluation.py, modules/mta_standard/src/mta_sim_generator_adapter.py
 ---
 
 # Model Testing and Comparison
@@ -264,6 +265,30 @@ for model_id in MODEL_REGISTRY:
 
 > [!TIP]
 > Registry-driven tests are why `dnn_credit` required no new conformance tests when it was added. Write tests for what is unique about a model; the shared contract is already enforced for everything registered.
+
+## Source Files <span class="status-label status-verified" aria-label="Verified"></span>
+
+The code-level specification for the Python files this page describes. Each entry states responsibility, inputs, outputs, dependencies, and the test that verifies it.
+
+### `evaluation.py`
+
+Source: `modules/mta_standard/src/evaluation.py`
+
+- Responsibility: Load simulation ground truth separately and score standard model output.
+- Inputs: Standard rows and evaluation-only ground truth.
+- Outputs: Error, rank, overlap, conservation, and runtime metrics.
+- Dependencies: Dataloader scope, output contract, and attribution Spearman calculation. Also `read_csv_normalized` from `attribution_contract.py`, `MtaAttributionModel` from `attribution_model_interface.py`, which `evaluate_model()` and `compare_models()` are typed against, and `canonicalize_four_segment_key` from `touchpoint_adapter.py`.
+- Verification: `modules/mta_standard/tests/test_evaluation.py`.
+
+### `mta_sim_generator_adapter.py`
+
+Source: `modules/mta_standard/src/mta_sim_generator_adapter.py`
+
+- Responsibility: Invoke the pinned ZheyuanWu generator and prepare framework-compatible model/evaluation views.
+- Inputs: Submodule path, configuration, output directory, and generator variant.
+- Outputs: Generated manifest, model dataset, and evaluation-only ground truth path.
+- Dependencies: External generator, dataloader, and touchpoint adapter.
+- Verification: `modules/mta_standard/tests/test_mta_sim_generator_adapter.py`.
 
 ## References
 

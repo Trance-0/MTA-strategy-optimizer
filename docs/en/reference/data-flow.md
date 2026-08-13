@@ -11,7 +11,7 @@ This page follows one report from raw events to a budget seed, naming the file r
 
 ## The Three Modules <span class="status-label status-verified" aria-label="Verified"></span>
 
-<DrawioDiagram base="/en/implementation/module-ownership" alt="Parallel module ownership and data flow" />
+<DrawioDiagram base="/en/reference/module-ownership" alt="Parallel module ownership and data flow" />
 
 Dependencies are explicit Python package imports. `mta_standard` owns loading and execution, imports the model contract and registered implementations from `mta_attribution`, and validates their returned rows. `mta_strategy_recommendation` consumes published CSV evidence and never imports attribution mathematics.
 

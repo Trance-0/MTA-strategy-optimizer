@@ -3,6 +3,7 @@ title: Markov Removal Effect
 description: Algorithm, formulas, and code mapping for WeightedMarkovAttribution
 compact: "Line-by-line internals of `WeightedMarkovAttribution` in `attribution_contract.py`: START/CONVERSION/NULL states, `amc_rows_to_markov_rows`, weighted `transition_matrix`, `conversion_probability` fixed-point iteration capped at 1000 steps and 1e-12, removal-effect normalization, `run_markov_attribution` output."
 lang: en-US
+source_files: modules/mta_attribution/src/markov_attribution_model.py, modules/mta_attribution/src/markov_standard_attribution_model.py
 ---
 
 # Markov Removal Effect
@@ -194,6 +195,30 @@ A higher share means that removing the touchpoint causes a larger model-estimate
 ## Code Output <span class="status-label status-verified" aria-label="Verified"></span>
 
 `run_markov_attribution()` builds separate weighted Markov models for converted users, purchase count, and revenue, then writes `amc_markov_attribution_results.csv`. Cost is aggregated from the Amazon Ads-style daily report through the normalized touchpoint key and does not enter Markov transition-probability training.
+
+## Source Files <span class="status-label status-verified" aria-label="Verified"></span>
+
+The code-level specification for the Python files this page describes. Each entry states responsibility, inputs, outputs, dependencies, and the test that verifies it.
+
+### `markov_attribution_model.py`
+
+Source: `modules/mta_attribution/src/markov_attribution_model.py`
+
+- Responsibility: Implement weighted first-order Markov removal-effect attribution.
+- Inputs: Validated five-segment aggregated paths.
+- Outputs: Native `AttributionResult` records for converted users, purchases, and revenue.
+- Dependencies: `attribution_contract.py` and `touchpoint_key.py`.
+- Verification: `modules/mta_attribution/tests/test_attribution_contract.py`. There is no model-specific suite; the shared contract tests exercise `run_markov_attribution` and `WeightedMarkovAttribution` directly.
+
+### `markov_standard_attribution_model.py`
+
+Source: `modules/mta_attribution/src/markov_standard_attribution_model.py`
+
+- Responsibility: Adapt the native Markov implementation to the common model interface without changing its mathematics.
+- Inputs: `MtaSimDataset` with model-facing path rows.
+- Outputs: Four-segment `StandardAttributionRow` records.
+- Dependencies: Native Markov model plus `mta_standard` framework contracts.
+- Verification: `modules/mta_attribution/tests/test_markov_standard_attribution_model.py`.
 
 ## References
 

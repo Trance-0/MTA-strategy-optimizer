@@ -1,0 +1,21 @@
+# Streamlit configuration for the dashboard.
+#
+# The theme is pinned rather than inherited. The reference design in
+# `external/UI_design` is a light theme with a navy sidebar, and Streamlit
+# otherwise follows the viewer's OS setting -- which would render dark text
+# tokens against the light surfaces `dashboard/theme.py` paints, leaving parts
+# of the page unreadable on a machine set to dark mode.
+
+[theme]
+base = "light"
+primaryColor = "#2456a6"
+backgroundColor = "#f5f6f8"
+secondaryBackgroundColor = "#ffffff"
+textColor = "#161a22"
+font = "sans serif"
+
+[server]
+headless = true
+
+[browser]
+gatherUsageStats = false

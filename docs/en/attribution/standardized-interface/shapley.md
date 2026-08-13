@@ -3,6 +3,7 @@ title: Shapley Path Attribution
 description: Algorithm, formulas, and code mapping for AggregatedShapleyAttribution
 compact: "Line-by-line internals of `AggregatedShapleyAttribution` in `attribution_contract.py`: `amc_rows_to_shapley_rows`, the `channels` coalition field, path-unanimity `coalition_value`, closed-form equal split over unique touchpoints in `_scores`, share normalization. Explains why order and repeats do not change credit."
 lang: en-US
+source_files: modules/mta_attribution/src/shapley_attribution_model.py, modules/mta_attribution/src/shapley_standard_attribution_model.py
 ---
 
 # Shapley Path Attribution
@@ -160,6 +161,30 @@ The current code does not train a predictive model and then enumerate every feat
 Shapley results provide a sensitivity reference that is symmetric with respect to touchpoint co-occurrence on paths. They do not automatically identify causal order, budget saturation, or genuine interaction effects among touchpoints.
 
 The canonical output is `amc_shapley_attribution_results.csv`, which enters model comparison together with Markov results.
+
+## Source Files <span class="status-label status-verified" aria-label="Verified"></span>
+
+The code-level specification for the Python files this page describes. Each entry states responsibility, inputs, outputs, dependencies, and the test that verifies it.
+
+### `shapley_attribution_model.py`
+
+Source: `modules/mta_attribution/src/shapley_attribution_model.py`
+
+- Responsibility: Implement exact path-level Shapley attribution as a sum of unanimity games.
+- Inputs: Validated five-segment aggregated paths.
+- Outputs: Native `AttributionResult` records.
+- Dependencies: `attribution_contract.py`.
+- Verification: `modules/mta_attribution/tests/test_attribution_contract.py`. There is no model-specific suite; the shared contract tests exercise `run_shapley_attribution` and `AggregatedShapleyAttribution` directly.
+
+### `shapley_standard_attribution_model.py`
+
+Source: `modules/mta_attribution/src/shapley_standard_attribution_model.py`
+
+- Responsibility: Adapt the native path-level Shapley model to the common interface.
+- Inputs: `MtaSimDataset` with model-facing path rows.
+- Outputs: Four-segment `StandardAttributionRow` records.
+- Dependencies: Native Shapley model plus `mta_standard` framework contracts.
+- Verification: `modules/mta_attribution/tests/test_shapley_standard_attribution_model.py`.
 
 ## References
 

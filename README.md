@@ -29,9 +29,9 @@ The current results are appropriate for reproducible development, contract testi
 | Set up and run the project | [Environment setup](docs/en/environment/index.md) |
 | Run Amazon Marketing Cloud MTA attribution | [AMC MTA usage](docs/en/environment/amc-mta-usage.md) |
 | Understand the standardized model interface | [Standardized MTA interface](docs/en/attribution/standardized-interface/index.md) |
-| Generate and validate an initial Ad Group budget | [Strategy initializer](docs/en/strategy/module-overview.md) |
-| Reproduce the current budget step by step | [Current Ad Group budget calculation](docs/en/strategy/current-budget-calculation.md) |
-| Plan the research path from MTA to budget optimization | [Budget optimization problem and research plan](docs/en/strategy/optimization-plan.md) |
+| Generate and validate an initial Ad Group budget | [Strategy initializer](docs/en/strategy_recommendation/module-overview.md) |
+| Reproduce the current budget step by step | [Current Ad Group budget calculation](docs/en/strategy_recommendation/current-budget-calculation.md) |
+| Plan the research path from MTA to budget optimization | [Budget optimization problem and research plan](docs/en/strategy_recommendation/optimization-plan.md) |
 | Review the current module boundaries | [Module inventory](docs/en/reference/module-inventory.md) |
 | Review input, path, and metric contracts | [AMC data contract](docs/en/datasets/amc-data-contract.md) |
 | Review dual-model governance | [Model governance](docs/en/attribution/model-governance.md) |

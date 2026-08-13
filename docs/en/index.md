@@ -31,7 +31,7 @@ features:
     link: /en/attribution/
   - title: Strategy optimization
     details: The current budget seed and the roadmap toward constrained optimization.
-    link: /en/strategy/
+    link: /en/strategy_recommendation/
   - title: Definitions
     details: Shared terminology and abbreviations for marketing, data, and engineering readers.
     link: /en/reference/definitions

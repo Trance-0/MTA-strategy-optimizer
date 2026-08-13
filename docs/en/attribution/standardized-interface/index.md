@@ -3,6 +3,7 @@ title: Standardized MTA Interface
 description: The framework boundary between mta_standard and the concrete models in mta_attribution
 compact: "Contract layer: `MtaAttributionModel` fit/attribute/save/load, ModelCapabilities, `touchpoint_adapter.py` four-to-five segment CPC/CPM mapping, `dataloader.py`, `output_contract.py` four invariants, StandardAttributionRow fields, ground-truth isolation. Read before adding or calling a registered model."
 lang: en-US
+source_files: modules/mta_attribution/src/attribution_model_interface.py, modules/mta_standard/src/dataloader.py, modules/mta_standard/src/touchpoint_adapter.py, modules/mta_standard/src/output_contract.py, modules/mta_standard/src/model_registry.py, modules/mta_standard/src/model_pipeline.py
 ---
 
 # Standardized MTA Interface
@@ -237,6 +238,70 @@ The suite is deterministic and writes every fixture to a temporary directory out
 - The standardized layer changes no attribution mathematics; it changes how a model is loaded, called, validated, and scored.
 - Ground-truth agreement measures whether a method recovers a known synthetic mechanism. It is not evidence about real-world advertising causality.
 - The performance table is a diagnostic input here. Cost, ROAS, and reliability governance remain the responsibility of the existing [model comparison governance](../model-governance.md).
+
+## Source Files <span class="status-label status-verified" aria-label="Verified"></span>
+
+The code-level specification for the Python files this page describes. Each entry states responsibility, inputs, outputs, dependencies, and the test that verifies it.
+
+### `attribution_model_interface.py`
+
+Source: `modules/mta_attribution/src/attribution_model_interface.py`
+
+- Responsibility: Define the common `fit`, `attribute`, `save`, and `load` contract implemented by every concrete attribution model.
+- Inputs: Framework `MtaSimDataset` objects.
+- Outputs: Lists of standard attribution rows and persisted model state where supported.
+- Dependencies: `mta_standard` dataset, output contract, and touchpoint adapter, plus `AttributionResult` from `attribution_contract.py` and `OUTCOME_FIELDS` from `attribution_model_comparison.py`. Also exposes the public helper `standard_rows_from_attribution_results`, which both standard adapters call.
+- Verification: `modules/mta_attribution/tests/test_attribution_model_interface.py`.
+
+### `dataloader.py`
+
+Source: `modules/mta_standard/src/dataloader.py`
+
+- Responsibility: Load MTA-SIM path and performance tables into a model-facing dataset.
+- Inputs: External CSV paths and an explicit simulator configuration.
+- Outputs: `MtaSimDataset` with ground truth structurally excluded.
+- Dependencies: Attribution path contract, `touchpoint_adapter.py`, and `read_amc_csv_strict` from `attribution_model_comparison.py`.
+- Verification: `modules/mta_standard/tests/test_dataloader.py`.
+
+### `touchpoint_adapter.py`
+
+Source: `modules/mta_standard/src/touchpoint_adapter.py`
+
+- Responsibility: Validate four-segment MTA-SIM keys and bridge them to native five-segment keys.
+- Inputs: Four-segment keys and explicit CPC/CPM configuration.
+- Outputs: Reversible key/path adaptations for the observed simulator dataset.
+- Dependencies: Native attribution touchpoint-key contract.
+- Verification: `modules/mta_standard/tests/test_touchpoint_adapter.py`.
+
+### `output_contract.py`
+
+Source: `modules/mta_standard/src/output_contract.py`
+
+- Responsibility: Define standard attribution rows and enforce four invariants: non-negativity, row uniqueness, share conservation, and outcome conservation. Share and outcome conservation are checked separately, at 1e-6 absolute tolerance and a 1e-9 relative allowance respectively.
+- Inputs: Model-produced standard rows and observed outcome totals.
+- Outputs: Validated output summaries or precise contract errors.
+- Dependencies: Four-segment touchpoint adapter and governed outcome vocabulary.
+- Verification: `modules/mta_standard/tests/test_output_contract.py`.
+
+### `model_registry.py`
+
+Source: `modules/mta_standard/src/model_registry.py`
+
+- Responsibility: Map stable model identifiers to independently owned model classes.
+- Inputs: A model identifier.
+- Outputs: A new unfitted model implementing the shared interface.
+- Dependencies: Concrete classes from `mta_attribution`; contains no model mathematics.
+- Verification: no dedicated suite. Registry assertions live in `modules/mta_standard/tests/test_evaluation.py`, `modules/mta_standard/tests/test_output_contract.py`, `modules/mta_attribution/tests/test_attribution_model_interface.py`, and `modules/mta_attribution/tests/test_dnn_attribution_model.py`.
+
+### `model_pipeline.py`
+
+Source: `modules/mta_standard/src/model_pipeline.py`
+
+- Responsibility: Build, fit, execute, and validate selected registered models.
+- Inputs: `MtaSimDataset` and distinct model identifiers.
+- Outputs: Immutable `ModelRun` mappings.
+- Dependencies: Dataloader, model registry, and output contract only.
+- Verification: `modules/mta_standard/tests/test_model_pipeline.py`.
 
 ## References
 

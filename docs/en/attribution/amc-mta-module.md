@@ -2,6 +2,7 @@
 title: AMC MTA Module
 compact: "Six-stage call order of `script/run_pipeline.py` with code walkthroughs of `infer_ads_report_window`, `canonical_amc_touchpoint_key`, `build_aggregated_path_rows`, `compare_attribution_models`, `publish_with_rollback`. Read for pipeline internals and the five-segment key; not for CSV column schemas."
 lang: en-US
+source_files: modules/mta_attribution/src/simulated_touchpoints.py, modules/mta_attribution/src/synthetic_event_pipeline.py
 ---
 
 # AMC MTA Module
@@ -214,3 +215,28 @@ For a first review, read “this page → [complete usage guide](complete-guide.
 - AMC platform background research and project-management material are external to the original project. They are neither runtime dependencies nor included with the standalone `mta_attribution/` submission.
 
 AMC paths, Amazon Ads inputs, and attribution outputs all use `AD_PRODUCT:FORMAT:PLACEMENT:CREATIVE:INTERACTION_TYPE`, where `INTERACTION_TYPE` may only be `IMPRESSION` or `CLICK`. CPC cost is assigned only to CLICK, CPM cost only to IMPRESSION, and non-billable interactions have zero cost. AMC input explicitly distinguishes `converted_users` (unique purchasing users) from `purchase_count` (order count). The [data contract](../datasets/amc-data-contract.md) defines the complete constraints.
+
+## Source Files <span class="status-label status-verified" aria-label="Verified"></span>
+
+The code-level specification for the Python files this page describes. Each entry states responsibility, inputs, outputs, dependencies, and the test that verifies it.
+
+### `simulated_touchpoints.py`
+
+Source: `modules/mta_attribution/src/simulated_touchpoints.py`
+
+- Responsibility: Define the fixed legacy touchpoint catalogue used by committed sample generation.
+- Inputs: Declarative touchpoint specifications.
+- Outputs: Validated touchpoint and entity specifications.
+- Dependencies: `touchpoint_key.py`.
+- Verification: `modules/mta_attribution/tests/test_end_to_end_pipeline.py`.
+
+### `synthetic_event_pipeline.py`
+
+Source: `modules/mta_attribution/src/synthetic_event_pipeline.py`
+
+- Responsibility: Reproduce the legacy five-segment sample and its Ads/entity projections.
+- Inputs: Report dates and the fixed simulated touchpoint catalogue.
+- Outputs: Synthetic user events, path events, Ads rows, and entity aggregates.
+- Dependencies: `simulated_touchpoints.py` and `touchpoint_key.py`.
+- Verification: `modules/mta_attribution/tests/test_end_to_end_pipeline.py`.
+

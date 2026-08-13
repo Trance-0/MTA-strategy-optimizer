@@ -6,7 +6,7 @@ lang: en-US
 
 # AMC MTA Project Introduction
 
-AMC MTA is this repository's runnable attribution implementation: a reproducible multi-touch-attribution and dual-model diagnostic demonstration for Amazon advertising. It estimates how impressions and clicks on AMC-style anonymous aggregate paths contribute to converted users, purchase count, and revenue, then joins Amazon Ads cost and efficiency metrics at the same five-segment interaction grain. Its output is upstream evidence for the [MTA Strategy Initializer](../strategy/module-overview.md).
+AMC MTA is this repository's runnable attribution implementation: a reproducible multi-touch-attribution and dual-model diagnostic demonstration for Amazon advertising. It estimates how impressions and clicks on AMC-style anonymous aggregate paths contribute to converted users, purchase count, and revenue, then joins Amazon Ads cost and efficiency metrics at the same five-segment interaction grain. Its output is upstream evidence for the [MTA Strategy Initializer](../strategy_recommendation/module-overview.md).
 
 Model results allocate contribution under a specified attribution method. They are not causal incremental effects.
 

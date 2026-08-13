@@ -9,7 +9,7 @@ lang: en-US
 
 ## Purpose <span class="status-label status-recommendation" aria-label="Recommendation"></span>
 
-The attribution layer's [`model_registry.py`](/en/implementation/mta_standard/model_registry) lets a caller run every registered model with one loop:
+The attribution layer's [`model_registry.py`](/en/attribution/standardized-interface/#model-registry-py) lets a caller run every registered model with one loop:
 
 ```python
 for model_id in MODEL_REGISTRY:
@@ -133,7 +133,7 @@ Before a strategy's output is accepted, the loader runs a three-stage validation
 | Stage | Check | Failure behavior |
 | --- | --- | --- |
 | 1. Declaration validation | JSON schema, required fields, `strategy_id` format, capabilities types | `ValueError` with the specific field and reason |
-| 2. Input validation | Evidence lineage (Secure Hash Algorithm 256-bit (SHA-256) hashes match), scope consistency, required files present | `HierarchyValidationError` — same exception class used by the [current initializer](/en/strategy/module-overview#1-verify-evidence-lineage-before-calculation) |
+| 2. Input validation | Evidence lineage (Secure Hash Algorithm 256-bit (SHA-256) hashes match), scope consistency, required files present | `HierarchyValidationError` — same exception class used by the [current initializer](/en/strategy_recommendation/module-overview#1-verify-evidence-lineage-before-calculation) |
 | 3. Output validation | Conservation contract, field completeness, forbidden fields absent | `StrategyOutputError` before any file is written |
 
 Stage 1 runs at registry load time. Stages 2 and 3 run when `allocate()` is called with the validated evidence wrapper.

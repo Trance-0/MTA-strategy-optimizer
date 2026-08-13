@@ -55,11 +55,11 @@
 
 ## Implementation documentation
 
-- Every maintained implementation file under `modules/*/src/`, except `__init__.py`, must have exactly one English implementation page at `docs/en/implementation/<module>/<python_stem>.md`.
-- The documentation filename must match the Python filename stem exactly. Its frontmatter must contain `source_file` with the repository-relative Python path.
-- Each implementation page must state responsibility, inputs, outputs, dependencies, and the owning test file or verification command. Higher-level guides may link to these pages but must not replace them.
-- The implementation page is the code-level specification for its one or two Python files. It carries the behavior contract those files must satisfy: public entry points and their signatures, required field and column names, ordering and rounding rules, error and edge-case handling, and determinism guarantees. Do not collect code-level specification in a separate project-wide catalog page.
-- A specification that spans several files belongs on the owning module's `index.md` under `docs/en/implementation/<module>/`, with each file's page linking to it.
+- Every maintained implementation file under `modules/*/src/` and `dashboard/`, except `__init__.py`, must be covered by exactly one `## Source Files` section on the English page that describes the behavior it implements. Code-level specification is not a section, a subsection, or a directory of its own: it belongs to the page it specifies, so a reader finds the contract beside the behavior rather than in a parallel tree. Do not create an `implementation/` directory or a project-wide catalog page.
+- Within that section, give each Python file a third-level heading naming the file, then its repository-relative `Source:` path, then responsibility, inputs, outputs, dependencies, and the owning test file or verification command. Several files that share one contract, such as the interchangeable view modules, may share one entry provided it names every file it covers. A page whose subject has no Python file simply has no `## Source Files` section.
+- List every path the section covers in the page's `source_files` frontmatter field, comma-separated and repository-relative, so the code a page owns is machine-readable.
+- The section is the code-level specification for the files it names. It carries the behavior contract those files must satisfy: public entry points and their signatures, required field and column names, ordering and rounding rules, error and edge-case handling, and determinism guarantees.
+- A specification that spans several files belongs on the owning section's `index.md`, with each file's entry linking to it.
 - Keep each editable Draw.io source and its generated light and dark SVG renders in the same documentation subdirectory as the first or canonical page that embeds it. Embed its basename through `DrawioDiagram` so VitePress selects `.light.drawio.svg` or `.dark.drawio.svg` automatically and links `.drawio` as the editable source. Reuse a diagram from other pages through a site-absolute `/en/...` basename; do not duplicate its source, create a shared diagram-assets directory, or make pages traverse parent directories for diagrams.
 
 ## Development workflow

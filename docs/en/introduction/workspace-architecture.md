@@ -10,7 +10,7 @@ lang: en-US
 
 This repository has three layers—a business-data pipeline, a versioned knowledge base, and an embedded development toolchain. It is not a web service, database application, or deployment platform.
 
-<DrawioDiagram base="/en/implementation/module-ownership" alt="Parallel module ownership and data flow" />
+<DrawioDiagram base="/en/reference/module-ownership" alt="Parallel module ownership and data flow" />
 
 Historical tool outputs are reference material only. Trance-0 development does not use the BMad workflow unless a future task explicitly requests it, and neither `.agents` nor `_bmad` enters the runtime calculation path.
 

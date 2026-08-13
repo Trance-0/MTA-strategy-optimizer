@@ -43,4 +43,4 @@ flowchart LR
 - [进展与待办](./progress.md)
 - [数据集与兼容性](../datasets/index.md)
 - [归因模型总览](../attribution/index.md)
-- [策略优化模型](../strategy/index.md)
+- [策略优化模型](../strategy_recommendation/index.md)

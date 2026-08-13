@@ -6,5 +6,18 @@ readme = "README.md"
 requires-python = ">=3.12"
 dependencies = []
 
+[project.optional-dependencies]
+# The attribution, standard, and strategy modules remain standard-library only.
+# These dependencies belong to the dashboard alone; install with:
+#   uv sync --extra dashboard
+dashboard = [
+    "streamlit>=1.40",
+    "plotly>=5.24",
+    "pandas>=2.2",
+    "sqlalchemy>=2.0",
+    "psycopg[binary]>=3.2",
+    "python-dotenv>=1.0",
+]
+
 [tool.uv]
 package = false

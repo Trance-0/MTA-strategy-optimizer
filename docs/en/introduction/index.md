@@ -49,11 +49,11 @@ Current outputs should be understood as **historical evidence and a budget start
 | Top-level architecture and partitions | [Workspace architecture](./workspace-architecture.md) |
 | File locations and movement rules | [Workspace file-location management](./file-management.md) |
 | Runnable modules and commands | [AMC MTA module](../attribution/amc-mta-module.md) |
-| Per-file code-level specification | [Implementation reference](../implementation/) |
-| Campaign Group initial strategy | [Strategy Initializer](../strategy/module-overview.md) |
-| Initial-strategy plan and contract | [Overall model plan](../strategy/model-plan.md) |
-| Current budget calculation | [Step-by-step Ad Group initial-budget calculation](../strategy/current-budget-calculation.md) |
-| Future budget optimization research | [Problem definition and research plan](../strategy/optimization-plan.md) |
+| Per-file code-level specification | On the page describing that file: see the Source Files section of [Attribution](../attribution/index.md), [the standardized interface](../attribution/standardized-interface/index.md), [Strategy](../strategy_recommendation/module-overview.md), or [Dashboard](../dashboard/index.md) |
+| Campaign Group initial strategy | [Strategy Initializer](../strategy_recommendation/module-overview.md) |
+| Initial-strategy plan and contract | [Overall model plan](../strategy_recommendation/model-plan.md) |
+| Current budget calculation | [Step-by-step Ad Group initial-budget calculation](../strategy_recommendation/current-budget-calculation.md) |
+| Future budget optimization research | [Problem definition and research plan](../strategy_recommendation/optimization-plan.md) |
 | Input fields, paths, and cost rules | [AMC MTA data contract](../datasets/amc-data-contract.md) |
 | Markov/Shapley gaps and decision status | [Model-comparison governance](../attribution/model-governance.md) |
 | Individual-touchpoint reliability | [Touchpoint reliability guide](../attribution/reliability.md) |
@@ -86,5 +86,5 @@ Historical material under `design-artifacts/`, `_bmad-output/`, and `docs/zh/spe
 
 - [Datasets and compatibility](../datasets/index.md)
 - [Attribution model overview](../attribution/index.md)
-- [Strategy optimization model](../strategy/index.md)
-- [Implementation reference](../implementation/)
+- [Strategy optimization model](../strategy_recommendation/index.md)
+- [Dashboard](../dashboard/index.md)

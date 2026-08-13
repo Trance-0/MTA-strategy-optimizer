@@ -35,8 +35,8 @@
 - 当前项目入口与评价：`docs/en/workspace/` 与 `docs/zh/workspace/`。
 - 文件位置与移动规则：两个语言树中的 `workspace/file-management.md`。
 - 当前发布的业务架构与契约：`docs/en/`；`docs/zh/` 保留完整中文源文件但暂不发布。
-- 策略初始化说明与研究已迁移到项目级 `docs/en/strategy/`，中文源文件保存在
-  `docs/zh/strategy/`。当前实现以 `model-plan.md`、两份输出契约和
+- 策略初始化说明与研究已迁移到项目级 `docs/en/strategy_recommendation/`，中文源文件保存在
+  `docs/zh/strategy_recommendation/`。当前实现以 `model-plan.md`、两份输出契约和
   `current-budget-calculation.md` 为准；`optimization-plan.md` 是后续问题定义，
   不代表已实现优化能力。
 - AMC MTA 历史产品愿景：`design-artifacts/amc_mta/A-Product-Brief/`。

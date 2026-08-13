@@ -10,7 +10,7 @@ lang: zh-CN
 | 模块 | 用途 | 状态 | 入口 |
 | --- | --- | --- | --- |
 | AMC MTA | 基于 AMC 匿名聚合路径进行五段互动粒度归因和双模型诊断 | 可运行归因模块 | [AMC MTA 模块](../attribution/amc-mta-module.md) |
-| MTA Strategy Initializer | 以 Campaign Group 为顶层生成新 Ad Group 数量和预算初始点 | 可运行生成器、正式输出与校验已实现 | [策略初始化器](../strategy/module-overview.md) |
+| MTA Strategy Initializer | 以 Campaign Group 为顶层生成新 Ad Group 数量和预算初始点 | 可运行生成器、正式输出与校验已实现 | [策略初始化器](../strategy_recommendation/module-overview.md) |
 
 ## 目录约定
 

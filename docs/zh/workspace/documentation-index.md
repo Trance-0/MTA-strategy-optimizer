@@ -21,7 +21,7 @@
 - [AMC MTA 能力评价](../product/amc-mta/capability-assessment.md)
 - [AMC MTA 项目介绍](../product/amc-mta/project-introduction.md)
 - [Campaign Group 顶层数据关系](../research/campaign-data-hierarchy.md)
-- [MTA Strategy Initializer](../strategy/module-overview.md)
+- [MTA Strategy Initializer](../strategy_recommendation/module-overview.md)
 - [项目扫描状态](../../project-scan-report.json)
 
 ## 契约与运行
@@ -31,9 +31,9 @@
 - [运行说明](../environment/amc-mta-usage.md)
 - [模型比较治理](../attribution/model-governance.md)
 - [触点可靠性指南](../attribution/reliability.md)
-- [初始策略模型计划](../strategy/model-plan.md)
-- [当前 Ad Group 初始预算计算详解](../strategy/current-budget-calculation.md)
-- [MTA 到 Ad Group 预算问题定义与研究计划](../strategy/optimization-plan.md)
+- [初始策略模型计划](../strategy_recommendation/model-plan.md)
+- [当前 Ad Group 初始预算计算详解](../strategy_recommendation/current-budget-calculation.md)
+- [MTA 到 Ad Group 预算问题定义与研究计划](../strategy_recommendation/optimization-plan.md)
 
 ## 历史与研究
 
