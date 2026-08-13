@@ -2,3 +2,8 @@
 	path = external/mta_sim_dataset
 	url = https://github.com/Trance-0/MTA-SIM-dataset.git
 	branch = main
+
+[submodule "external/campaign-optimizer-llm-integration"]
+	path = external/campaign-optimizer-llm-integration
+	url = https://github.com/yyy805/campaign-optimizer-llm-integration.git
+	branch = main
