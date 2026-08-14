@@ -1,7 +1,7 @@
 ---
 title: Zheyuan Wu (Trance-0)
 description: Project manager work log covering pipeline development, integration, and algorithm testing
-compact: "Work log of Trance-0 (Zheyuan Wu), project manager since 2026-08-03: standardized MTA-SIM interface and DNN credit model, bilingual documentation migration, module restructuring, script centralization, public release with Gitee mirror, GitHub Pages, and specification-oriented documentation rules."
+compact: "Work log of Trance-0 (Zheyuan Wu), project manager since 2026-08-03: standardized MTA-SIM interface and DNN credit model, bilingual documentation migration, module restructuring, script centralization, public release with Gitee mirror, GitHub Pages, specification-oriented documentation rules, the Streamlit dashboard, and its published stlite browser build."
 order: 10
 lang: en-US
 ---
@@ -11,11 +11,23 @@ lang: en-US
 > Project: Marketing ROI Analysis
 > Handle: `Trance-0`
 > Role: Project manager — pipeline development, data simulation and integration, algorithm testing
-> Last updated: 2026-08-13
+> Last updated: 2026-08-14
 
 Entries are reconstructed from Git history. They record the change set behind each commit, not a separate narrative.
 
 ---
+
+## 2026-08-14
+
+### Completed
+
+- Published the dashboard to GitHub Pages at the site root and moved the documentation to `/docs/`, running the same `dashboard/` sources in the browser through stlite because Pages cannot host a Streamlit server.
+- Made the published build honest about its data: `DASHBOARD_HOSTED` forces file mode, since WebAssembly has no socket to reach PostgreSQL, and the settings modal shows the local-run instructions instead of a credential form that could never connect.
+- Added `dashboard/run.sh` and `run.bat` for local starts, and the rail's **Docs** and **Repo** links so a reader who lands on the published app can reach the specification and the source.
+
+### Next
+
+- Collect first dated entries from Tianle Chen, Yi Liu, and Yayu Yu.
 
 ## 2026-08-13
 
@@ -27,7 +39,7 @@ Entries are reconstructed from Git history. They record the change set behind ea
 
 ### Next
 
-- Collect first dated entries from Tianle Chen, Yi Liu, and Yayu Yu.
+- Publish the dashboard so reviewers can open it without a local Python environment.
 
 ## 2026-08-12
 

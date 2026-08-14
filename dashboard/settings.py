@@ -181,6 +181,12 @@ def write_env(updates: dict[str, str]) -> None:
 
 def status() -> tuple[str, str, str]:
     """Return (label, colour, detail) describing the active source."""
+    if config.is_hosted():
+        return (
+            "Sample data",
+            "#9db7e8",
+            "Published build, reading the repository's committed samples.",
+        )
     if config.use_database():
         usable, message = data_source.database_available()
         if usable:
@@ -217,6 +223,32 @@ def _connection_tab() -> None:
         """,
         unsafe_allow_html=True,
     )
+
+    # The published build runs on WebAssembly, which has no raw TCP socket and
+    # no writable `.env`. Rendering the credential form there would invite a
+    # reader to type a real password into a page that cannot use it, so the
+    # form is withheld and the reason is stated instead.
+    if config.is_hosted():
+        st.info(
+            "**This published build reads the repository's committed sample "
+            "files.** It runs entirely in your browser, which cannot open a "
+            "database connection, so the connection settings are available "
+            "only in a local run."
+        )
+        st.markdown(
+            "Run it locally against your own PostgreSQL mirror:\n\n"
+            "```bash\n"
+            "git clone https://github.com/Trance-0/MTA-strategy-optimizer.git\n"
+            "cd MTA-strategy-optimizer\n"
+            "cp sample.env .env      # set DATABASE=true and the PG_* values\n"
+            "./dashboard/run.sh      # dashboard\\run.bat on Windows\n"
+            "```"
+        )
+        st.caption(
+            "The import command that populates the mirror is "
+            "`uv run --extra dashboard python script/import_to_database.py`."
+        )
+        return
 
     with st.form("settings_connection"):
         use_db = st.toggle(

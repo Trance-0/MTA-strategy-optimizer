@@ -110,6 +110,10 @@ DEFAULT_VIEW = next(iter(VIEWS))
 #: Items that sit in the foot of the rail rather than in a navigation group.
 FOOT_ITEMS = ("Settings", "Reload data")
 
+#: Where the app points a reader who wants the source or the specification.
+REPO_URL = "https://github.com/Trance-0/MTA-strategy-optimizer"
+DOCS_URL = "https://trance-0.github.io/MTA-strategy-optimizer/docs"
+
 
 def rail_key(name: str) -> str:
     """Return the widget key for a rail item.
@@ -227,6 +231,29 @@ def _settings_module() -> None:
         if st.button("Reload data", key=rail_key("Reload data"), width="stretch"):
             data_source.clear_caches()
             st.rerun()
+        _outbound_links()
+
+
+def _outbound_links() -> None:
+    """Links out of the app, at the very foot of the rail.
+
+    A reader who arrives at the published dashboard has no other route to the
+    specification or the source, so the app carries them. The documentation
+    link is relative in the published build, where the site serves the
+    dashboard at its root and the documentation one level down at `/docs/`;
+    a local run has no such sibling and so points at the published site.
+    """
+    docs_href = "./docs/" if config.is_hosted() else f"{DOCS_URL}/"
+    st.markdown(
+        f"""
+        <div class="rail-links">
+          <a href="{docs_href}" target="_blank" rel="noopener">Docs</a>
+          <span>·</span>
+          <a href="{REPO_URL}" target="_blank" rel="noopener">Repo</a>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
 
 
 def sidebar() -> str:

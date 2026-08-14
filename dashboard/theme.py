@@ -263,7 +263,7 @@ _CSS = f"""
   }}
   section[data-testid="stSidebar"] .st-key-rail_foot {{
     border-top: 1px solid {RAIL_RULE};
-    padding: 10px 0 0 0; text-align: center; gap: 0;
+    padding: 10px 0 6px 0; text-align: center; gap: 0;
   }}
   .rail-status {{ display: flex; align-items: center; justify-content: center; gap: 5px; }}
   .rail-dot {{ width: 7px; height: 7px; border-radius: 50%; display: inline-block;
@@ -287,9 +287,21 @@ _CSS = f"""
     height: 50px; min-height: 50px; padding-bottom: 6px;
     background-position: center 7px; background-size: 17px 17px;
   }}
-  section[data-testid="stSidebar"] .st-key-rail_foot [data-testid="stMarkdown"] {{
-    margin-bottom: 10px;
+  /* The status block is markdown, whose container collapses to its content
+     height; without this gap the gear icon rides up into the logging pill.
+     `:first-child` keeps the gap off the outbound links, which are also
+     markdown but close the rail and need no space beneath the pill. */
+  section[data-testid="stSidebar"] .st-key-rail_foot
+    [data-testid="stElementContainer"]:first-child [data-testid="stMarkdown"] {{
+    margin-bottom: 16px;
   }}
+  .rail-links {{
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+    font-size: 9px; padding: 6px 0 0; border-top: 1px solid {RAIL_RULE};
+    margin-top: 2px; color: {RAIL_DIM};
+  }}
+  .rail-links a {{ color: {RAIL_DIM}; text-decoration: none; }}
+  .rail-links a:hover {{ color: #fff; text-decoration: underline; }}
 
   .block-container {{ padding-top: 2.2rem; max-width: 1400px; }}
 

@@ -1,9 +1,9 @@
 ---
 title: Dashboard
-description: The local Streamlit dashboard, its six views, and its dual data source
-compact: "Presentation layer specification: `streamlit run dashboard/app.py`, the six views (Command Center, Budget Manager, Campaigns, Campaign Optimizer, Optimization Log, Knowledge Base), the navigation rail and its settings module, the DATABASE=true/false dual source contract, and the rule that the dashboard never recomputes a pipeline number. Read before adding a view or a chart."
+description: The Streamlit dashboard, its six views, its dual data source, and the published browser build
+compact: "Presentation layer specification: `streamlit run dashboard/app.py`, the six views (Command Center, Budget Manager, Campaigns, Campaign Optimizer, Optimization Log, Knowledge Base), the navigation rail and its settings module, the DATABASE=true/false dual source contract, the stlite browser build published to GitHub Pages, and the rule that the dashboard never recomputes a pipeline number. Read before adding a view or a chart."
 lang: en-US
-source_files: dashboard/config.py, dashboard/models.py, dashboard/data_source.py, dashboard/theme.py, dashboard/app.py, dashboard/settings.py, dashboard/views/command_center.py, dashboard/views/budget_manager.py, dashboard/views/campaigns.py, dashboard/views/campaign_optimizer.py, dashboard/views/optimization_log.py, dashboard/views/knowledge_base.py, dashboard/views/common.py, script/import_to_database.py, script/verify_source_parity.py
+source_files: dashboard/config.py, dashboard/models.py, dashboard/data_source.py, dashboard/theme.py, dashboard/app.py, dashboard/settings.py, dashboard/views/command_center.py, dashboard/views/budget_manager.py, dashboard/views/campaigns.py, dashboard/views/campaign_optimizer.py, dashboard/views/optimization_log.py, dashboard/views/knowledge_base.py, dashboard/views/common.py, dashboard/run.sh, dashboard/run.bat, web/index.html, script/import_to_database.py, script/verify_source_parity.py, script/build_pages_site.mjs
 ---
 
 # Dashboard
@@ -109,6 +109,33 @@ The password is never rendered back to the page or written to the log: `Database
 
 Logging is off by default, because logging every query costs time on each rerun. Enabled, it attaches a bounded in-memory handler to `dashboard`, `sqlalchemy.engine`, and `sqlalchemy.pool` — so what it captures is the actual SQL and connection activity as the data streams, not a decorative message. The buffer is a fixed-capacity deque rather than a file: a demonstration machine's disk cannot be filled by leaving the dashboard open.
 
+### Links out of the app
+
+The rail closes with **Docs** and **Repo**. A reader who arrives at the published dashboard has no other route to the specification or the source, so the app carries them. The documentation link is relative in the published build, where the documentation is a sibling directory, and absolute in a local run, where there is no sibling to point at.
+
+## Running It Locally <span class="status-label status-verified" aria-label="Verified"></span>
+
+```bash
+./dashboard/run.sh          # macOS, Linux, Git Bash
+dashboard\run.bat           # Windows
+```
+
+Both take an optional port, resolve the repository root themselves so they work from any directory, verify `uv` is installed, and copy `sample.env` to `.env` when none exists — so a fresh clone starts in file mode rather than failing on a missing variable. They skip `uv sync` when the extra is already present. Reading the PostgreSQL mirror is a matter of setting `DATABASE=true` and the `PG_*` values in `.env`; nothing about the command changes.
+
+## Published Build <span class="status-label status-verified" aria-label="Verified"></span>
+
+The dashboard is deployed to GitHub Pages at the site root, with the documentation one level down at `/docs/`.
+
+GitHub Pages serves static files and cannot run a Streamlit server, so the published copy runs the **same `dashboard/` Python in the visitor's browser** through [stlite](https://github.com/whitphx/stlite), which executes Streamlit on Pyodide — CPython compiled to WebAssembly. `script/build_pages_site.mjs` copies the sources rather than forking them: the web build is a different runtime, never a different codebase. It fails the build if `web/index.html` and its own file list disagree, because a file added to one and not the other would otherwise surface as a missing-module error in a visitor's console.
+
+Three consequences follow from running in a browser tab, and each is handled rather than hidden:
+
+- **The database source is unavailable.** WebAssembly has no raw TCP socket, so no configuration could reach PostgreSQL from that page. `web/index.html` exports `DASHBOARD_HOSTED`, `config.use_database()` returns false whenever it is set, and the settings modal replaces the credential form with the local-run instructions. A visitor is never invited to type a real password into a page that cannot use it.
+- **The first load is slow.** Downloading and starting the Python runtime takes roughly 30–80 seconds on a cold cache, against about a second locally. The page states that on its splash rather than showing a blank screen, and the splash is removed on Streamlit's first paint rather than on a timer, so a slow runtime is never revealed as an empty page.
+- **Only the artifacts the loaders read are published.** Eleven files, about 330 KB. The 2.8 MB synthetic-events extract is excluded because no view reads it, and publishing it would cost every visitor a download for nothing.
+
+The workflow is `.github/workflows/deploy-pages.yml`. It builds the documentation with its base path set to the Pages base plus `docs/`, because Pages performs no rewrites and every internal link is resolved at build time, then assembles both into `site/` and uploads that as the Pages artifact.
+
 ## Source Files <span class="status-label status-verified" aria-label="Verified"></span>
 
 The code-level specification for the Python files this page describes. Each entry states responsibility, inputs, outputs, dependencies, and the test that verifies it.
@@ -118,9 +145,9 @@ The code-level specification for the Python files this page describes. Each entr
 Source: `dashboard/config.py`
 
 - Responsibility: Read `.env` at the repository root and expose the one switch that decides the data source, the PostgreSQL settings, and the artifact paths every other dashboard module resolves against.
-- Inputs: `.env` at the repository root, loaded without overriding real environment variables so a shell export or a container secret wins. `DATABASE` is true for any of `1`, `true`, `yes`, `on`, case-insensitively; anything else, including absence, is false.
-- Outputs: `use_database() -> bool`; `database_settings() -> DatabaseSettings`; the path constants `REPO_ROOT`, `SIMULATED_DIR`, `ATTRIBUTION_OUTPUT_DIR`, `STRATEGY_INPUT_DIR`, and `STRATEGY_OUTPUT_DIR`; and `DESCRIPTION_ROW_MARKERS`, the exact first-cell values that identify the Chinese field-description row every reader must drop.
-- Behavior contract: `DatabaseSettings.url()` percent-encodes the user and password. This is required, not defensive: a password containing `@` or `/` otherwise corrupts the URL and fails as a misleading host-resolution error. `safe_summary()` returns a display string that never contains the password, and is what the sidebar and the import command print. `database_settings()` raises `RuntimeError` naming every missing variable and pointing at `sample.env`, rather than failing later at connection time. Both accessors are `lru_cache`d, so the mode is fixed for the life of the process.
+- Inputs: `.env` at the repository root, loaded without overriding real environment variables so a shell export or a container secret wins. `DATABASE` is true for any of `1`, `true`, `yes`, `on`, case-insensitively; anything else, including absence, is false. `DASHBOARD_HOSTED` uses the same vocabulary and is set only by the published browser build.
+- Outputs: `use_database() -> bool`; `is_hosted() -> bool`; `database_settings() -> DatabaseSettings`; the path constants `REPO_ROOT`, `SIMULATED_DIR`, `ATTRIBUTION_OUTPUT_DIR`, `STRATEGY_INPUT_DIR`, and `STRATEGY_OUTPUT_DIR`; and `DESCRIPTION_ROW_MARKERS`, the exact first-cell values that identify the Chinese field-description row every reader must drop.
+- Behavior contract: `DatabaseSettings.url()` percent-encodes the user and password. This is required, not defensive: a password containing `@` or `/` otherwise corrupts the URL and fails as a misleading host-resolution error. `safe_summary()` returns a display string that never contains the password, and is what the sidebar and the import command print. `database_settings()` raises `RuntimeError` naming every missing variable and pointing at `sample.env`, rather than failing later at connection time. `use_database()` returns false whenever `is_hosted()` is true, regardless of `DATABASE` — the browser has no socket to open, so the hosted flag decides before the switch is read. The accessors are `lru_cache`d, so the mode is fixed for the life of the process.
 - Dependencies: `python-dotenv`. Installed with `uv sync --extra dashboard`.
 - Verification: `uv run --extra dashboard python script/verify_source_parity.py`, which loads both modes in separate subprocesses precisely because the cache prevents one process from holding both.
 
@@ -224,6 +251,28 @@ Source: `script/import_to_database.py`
 - Dependencies: SQLAlchemy, `psycopg`, and `python-dotenv`, plus `dashboard.config` and `dashboard.models`. Installed with `uv sync --extra dashboard`.
 - Verification: `uv run --extra dashboard python script/import_to_database.py --dry-run`, then `script/verify_source_parity.py` against the loaded instance.
 
+### `index.html`
+
+Source: `web/index.html`
+
+- Responsibility: Boot the dashboard in the visitor's browser — mount stlite over the copied `dashboard/` sources, declare the environment they run in, and hold a splash until Streamlit paints.
+- Inputs: The stlite runtime at `./stlite/`, and every Python file and sample artifact `build_pages_site.mjs` copies, each declared at its repository-relative path so the Python's own `REPO_ROOT`-relative lookups resolve unchanged.
+- Outputs: A mounted Streamlit application at the Pages root.
+- Behavior contract: The file list is the loader's half of the contract `build_pages_site.mjs` enforces; a file copied but not listed here is a missing module in a visitor's console, which is why the build fails on the mismatch instead. `env` sets `DATABASE=false` and `DASHBOARD_HOSTED=true`, the second being what makes `config.use_database()` refuse the database rather than merely defaulting away from it. The theme is passed through `streamlitConfig` rather than a config file, because the browser build has no `.streamlit/` to read. The splash is removed by a `MutationObserver` watching for Streamlit's app container, not by a timer: a runtime slower than the timeout would otherwise reveal an empty page.
+- Dependencies: `@stlite/browser`, served from the site itself rather than a CDN so the published build has no third-party runtime dependency.
+- Verification: Serving the assembled `site/` and opening the root in a browser, which is the only environment where the Pyodide runtime actually executes.
+
+### `build_pages_site.mjs`
+
+Source: `script/build_pages_site.mjs`
+
+- Responsibility: Assemble the GitHub Pages site — the dashboard at the root, the documentation under `/docs/`.
+- Inputs: `web/index.html`, the `dashboard/` sources, the eleven sample artifacts the file-mode loaders read, the stlite runtime from `docs/node_modules/`, and the VitePress output in `docs/.vitepress/dist`.
+- Outputs: `site/`, which is what the workflow uploads as the Pages artifact, plus a summary line naming the file counts and the total size.
+- Behavior contract: The script **copies the same Python the local run executes**; there is no separate web codebase to drift. It fails when `web/index.html` does not list every file it copies, because a mismatch would otherwise reach a visitor as a missing-module error rather than a build failure. `dashboard/models.py` is excluded deliberately — it declares the PostgreSQL schema, which a browser cannot reach, and nothing imports it in file mode. Source maps are excluded from the runtime copy: at roughly 58 MB they are two thirds of the site and no visitor fetches them. A `.nojekyll` marker is written, without which Pages would drop the underscore-prefixed files inside the built assets. The script refuses to run when the documentation has not been built, naming the command that builds it.
+- Dependencies: Node.js 22, and `@stlite/browser` installed as a `docs/` dev dependency.
+- Verification: `node script/build_pages_site.mjs` after a documentation build, then serving `site/` and opening the root. The rendered result was verified in a real browser: the rail, five metric tiles, four Plotly traces, the "Sample data" status, and both outbound links resolving to the sibling documentation and the repository.
+
 ### `verify_source_parity.py`
 
 Source: `script/verify_source_parity.py`
@@ -234,4 +283,15 @@ Source: `script/verify_source_parity.py`
 - Behavior contract: The two modes are probed in **separate subprocesses**, because `config.use_database()` is `lru_cache`d and one process therefore cannot hold both. `CHECKS` gives each tabular loader a set of sort keys, so the comparison is independent of each source's row order, and the numeric columns whose totals must agree. `BOOLEAN_COLUMNS` is checked by dtype as well as by sum, which is what catches the specific failure where the string `"false"` is read as truthy. `DOCUMENT_LOADERS` compares top-level key sets for the three loaders that return a nested mapping rather than a table. A loader added to `data_source.py` must be added here too; an unlisted loader is silently unchecked.
 - Dependencies: pandas, plus everything `dashboard/data_source.py` needs. Installed with `uv sync --extra dashboard`.
 - Verification: `uv run --extra dashboard python script/verify_source_parity.py`. It is a command rather than a unit test because it requires a populated database, which a clean checkout does not have.
+
+### `run.sh` and `run.bat`
+
+Source: `dashboard/run.sh`, `dashboard/run.bat`
+
+- Responsibility: Start the local dashboard from a clean clone, on either platform, with one command.
+- Inputs: An optional port as the first argument, defaulting to 8501. `uv` on `PATH`.
+- Outputs: A running Streamlit server, with its URL printed before it starts.
+- Behavior contract: Both resolve the repository root from the script's own location rather than the working directory, so the command works from anywhere. They exit with a message naming the installation page when `uv` is absent, rather than failing inside `uv sync`. They copy `sample.env` to `.env` when none exists, which is what makes a fresh clone start in file mode instead of failing on a missing variable; an existing `.env` is never overwritten, because it holds the operator's real credentials. `uv sync` is skipped when `import streamlit` already succeeds, so a warm checkout starts immediately.
+- Dependencies: `uv`. Nothing else is assumed present.
+- Verification: `./dashboard/run.sh` from a directory other than the repository root, against the live PostgreSQL mirror with `DATABASE=true`, which the sidebar then reported as connected.
 

@@ -73,8 +73,24 @@ class DatabaseSettings:
 
 
 @lru_cache(maxsize=1)
+def is_hosted() -> bool:
+    """Return True when running as the published browser build.
+
+    `web/index.html` sets `DASHBOARD_HOSTED` when it mounts the app through
+    stlite. WebAssembly has no raw TCP socket, so that build cannot reach
+    PostgreSQL at all, and `.env` is not writable in a browser tab. The flag
+    lets the settings module say so plainly instead of offering controls that
+    could never take effect.
+    """
+    _load_env()
+    return os.getenv("DASHBOARD_HOSTED", "false").strip().lower() in _TRUE_VALUES
+
+
+@lru_cache(maxsize=1)
 def use_database() -> bool:
     """Return True when the dashboard should read from PostgreSQL."""
+    if is_hosted():
+        return False
     _load_env()
     return os.getenv("DATABASE", "false").strip().lower() in _TRUE_VALUES
 

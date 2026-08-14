@@ -1,4 +1,14 @@
-name: Deploy documentation to GitHub Pages
+name: Deploy dashboard and documentation to GitHub Pages
+
+# Publishes two things from one artifact:
+#
+#   /       the dashboard, running in the browser through stlite
+#   /docs/  the VitePress documentation site
+#
+# Pages serves static files and cannot run a Streamlit server, so the dashboard
+# is the same `dashboard/` Python executed on Pyodide rather than a separate
+# web build. The documentation is built with its base path pointing at the
+# `/docs/` subdirectory, because Pages performs no rewrites.
 
 on:
   push:
@@ -37,16 +47,28 @@ jobs:
         working-directory: docs
         run: npm ci
 
+      # The documentation moves one level down, so its base path is the Pages
+      # base path plus `docs`. Every internal link and asset URL is resolved
+      # against this at build time. `base_path` is `/` for a user site and
+      # `/<repo>` for a project site, with no guarantee about a trailing slash,
+      # so the two are joined here rather than concatenated: `config.mts`
+      # appends the trailing slash VitePress requires.
       - name: Build VitePress site
         working-directory: docs
         env:
-          DOCS_BASE_PATH: ${{ steps.pages.outputs.base_path }}
-        run: npm run build
+          PAGES_BASE_PATH: ${{ steps.pages.outputs.base_path }}
+        run: |
+          DOCS_BASE_PATH="$(printf '%s' "$PAGES_BASE_PATH" | sed 's:/*$::')/docs/"
+          echo "Building the documentation with base ${DOCS_BASE_PATH}"
+          DOCS_BASE_PATH="$DOCS_BASE_PATH" npm run build
+
+      - name: Assemble the Pages site
+        run: node script/build_pages_site.mjs
 
       - name: Upload GitHub Pages artifact
         uses: actions/upload-pages-artifact@v4
         with:
-          path: docs/.vitepress/dist
+          path: site
 
   deploy:
     environment:

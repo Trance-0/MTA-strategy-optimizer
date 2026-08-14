@@ -13,6 +13,7 @@ This section records **what** changed. See the [work log](../worklog/) for **who
 
 | Version | Date | Summary |
 | --- | --- | --- |
+| [0.9.7](0.9.7.md) | 2026-08-14 | Published GitHub Pages dashboard through stlite with the documentation at `/docs/`, the hosted-mode file-only guarantee, outbound links, and the local start scripts |
 | [0.9.6](0.9.6.md) | 2026-08-13 | Local Streamlit dashboard, its dual data source and PostgreSQL mirror, the navigation rail and settings module, and the implementation-page merge |
 | [0.9.5](0.9.5.md) | 2026-08-13 | Version and work log separation, contributor roster, and work-log ownership rules |
 | [0.9.4](0.9.4.md) | 2026-08-12 | Specification-oriented documentation rules, compact routing metadata, navigation consolidation, and code reconciliation |
@@ -21,7 +22,6 @@ This section records **what** changed. See the [work log](../worklog/) for **who
 | [0.9.1](0.9.1.md) | 2026-08-12 | Base-aware Pages redirect, HTTPS Gitee target support, and version-governance clarification |
 | [0.9](0.9.md) | 2026-08-12 | GitHub Pages activation follow-up and current Pages action runtime |
 | [0.8](0.8.md) | 2026-08-12 | Public GitHub release, Pages documentation, data-model translations, and Gitee mirroring |
-| [0.7](0.7.md) | 2026-08-11 | Parallel module separation and implementation documentation migration |
-| [0.1–0.6](0.1-0.6.md) | 2026-07-16 to 2026-08-07 | Archived: initial AMC attribution baseline, reliability governance, submission documentation, unified event generation, the first MTA-informed budget initializer, MTA-SIM integration, and script centralization |
+| [0.1–0.7](0.1-0.7.md) | 2026-07-16 to 2026-08-11 | Archived: initial AMC attribution baseline, reliability governance, submission documentation, unified event generation, the first MTA-informed budget initializer, MTA-SIM integration, script centralization, and the parallel module separation |
 
 These versions were reconstructed from first-parent Git history and the preserved project work log. They are documentation milestones, not retroactively created Git tags.

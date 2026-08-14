@@ -11,6 +11,7 @@
     "preview": "npm run build && vitepress preview ."
   },
   "devDependencies": {
+    "@stlite/browser": "^1.8.1",
     "markdown-it-mathjax3": "4.3.2",
     "vitepress": "1.6.4",
     "vitepress-sidebar": "^1.38.0"

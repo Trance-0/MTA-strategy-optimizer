@@ -39,6 +39,10 @@ htmlcov/
 # Agent-only scratch files are local and must never be committed or pushed.
 /.agent-scratch/
 
+# The GitHub Pages site is assembled from tracked sources by
+# script/build_pages_site.mjs on every deployment; it is never committed.
+/site/
+
 # Local configuration and secrets
 .env
 .env.*

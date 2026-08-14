@@ -211,6 +211,28 @@ class SettingsTests(unittest.TestCase):
         self.assertIn("PG_SSLMODE=require", written)
         self.assertEqual(written.count("DATABASE="), 1)
 
+    def test_hosted_mode_forces_file_reads(self) -> None:
+        """The published build cannot open a socket, so it must never try.
+
+        `DASHBOARD_HOSTED` is set by `web/index.html`. A `.env` carried into the
+        virtual filesystem, or a stale `DATABASE=true` in the environment, must
+        not be able to flip the browser build into a mode it cannot serve.
+        """
+        from dashboard import config
+
+        os.environ["DASHBOARD_HOSTED"] = "true"
+        os.environ["DATABASE"] = "true"
+        config.is_hosted.cache_clear()
+        config.use_database.cache_clear()
+        try:
+            self.assertTrue(config.is_hosted())
+            self.assertFalse(config.use_database())
+        finally:
+            os.environ.pop("DASHBOARD_HOSTED", None)
+            os.environ["DATABASE"] = "false"
+            config.is_hosted.cache_clear()
+            config.use_database.cache_clear()
+
     def test_log_handler_is_bounded(self) -> None:
         """A long session must not grow the capture without limit."""
         from dashboard.settings import LOG_CAPACITY, RingBufferHandler
