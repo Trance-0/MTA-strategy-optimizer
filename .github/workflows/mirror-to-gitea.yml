@@ -1,0 +1,170 @@
+name: Mirror GitHub to Gitea
+
+on:
+  push:
+    branches:
+      - "**"
+    tags:
+      - "**"
+  delete:
+  workflow_dispatch:
+  schedule:
+    - cron: "23 3 * * *"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: mirror-to-gitea
+  cancel-in-progress: false
+
+jobs:
+  mirror:
+    if: github.event_name != 'delete' || github.event.ref_type == 'branch' || github.event.ref_type == 'tag'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check mirror configuration
+        id: configuration
+        shell: bash
+        env:
+          GITEA_USERNAME: ${{ secrets.GITEA_USERNAME }}
+          GITEA_PASSWORD: ${{ secrets.GITEA_PASSWORD }}
+          GITEA_REPOSITORY: ${{ secrets.GITEA_REPOSITORY }}
+        run: |
+          set -euo pipefail
+          if test -z "$GITEA_USERNAME" || test -z "$GITEA_PASSWORD" || test -z "$GITEA_REPOSITORY"; then
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::Gitea mirror is not configured. Add GITEA_USERNAME, GITEA_PASSWORD, and GITEA_REPOSITORY as repository secrets, then run this workflow manually."
+            exit 0
+          fi
+          case "$GITEA_REPOSITORY" in
+            https://gitea.com/*)
+              repository_path="${GITEA_REPOSITORY#https://gitea.com/}"
+              ;;
+            http://*|*://*|*@*)
+              echo "GITEA_REPOSITORY must be an HTTPS gitea.com URL or owner/repository.git without credentials."
+              exit 1
+              ;;
+            *)
+              repository_path="$GITEA_REPOSITORY"
+              ;;
+          esac
+          repository_path="${repository_path%/}"
+          repository_path="${repository_path%.git}"
+          IFS=/ read -r repository_owner repository_name extra_path <<EOF
+          $repository_path
+          EOF
+          if test -z "$repository_owner" || test -z "$repository_name" || test -n "${extra_path:-}"; then
+            echo "GITEA_REPOSITORY must identify exactly one owner and repository."
+            exit 1
+          fi
+          case "$repository_path" in
+            *[!A-Za-z0-9._/-]*)
+              echo "GITEA_REPOSITORY contains unsupported characters."
+              exit 1
+              ;;
+          esac
+          echo "ready=true" >> "$GITHUB_OUTPUT"
+          echo "repository_path=$repository_path" >> "$GITHUB_OUTPUT"
+
+      - name: Mirror branches and tags
+        if: steps.configuration.outputs.ready == 'true'
+        shell: bash
+        env:
+          GITEA_USERNAME: ${{ secrets.GITEA_USERNAME }}
+          GITEA_PASSWORD: ${{ secrets.GITEA_PASSWORD }}
+          GITEA_REPOSITORY_PATH: ${{ steps.configuration.outputs.repository_path }}
+        run: |
+          set -euo pipefail
+
+          progress() {
+            local percent="$1"
+            local label="$2"
+            local width=20
+            local filled=$((percent * width / 100))
+            local empty=$((width - filled))
+            local filled_bar empty_bar
+            printf -v filled_bar '%*s' "$filled" ''
+            printf -v empty_bar '%*s' "$empty" ''
+            filled_bar="${filled_bar// /#}"
+            empty_bar="${empty_bar// /-}"
+            printf '[%s%s] %3d%% %s\n' "$filled_bar" "$empty_bar" "$percent" "$label"
+            printf '| `%3d%%` | %s |\n' "$percent" "$label" >> "$GITHUB_STEP_SUMMARY"
+          }
+
+          cat >> "$GITHUB_STEP_SUMMARY" <<'EOF'
+          ### GitHub-to-Gitea mirror
+
+          GitHub is the source of truth. Gitea branches and tags are force-updated to the GitHub refs. Gitea's protected `master` branch is retained as an exact alias of GitHub `main` when GitHub has no `master` branch.
+
+          | Progress | Status |
+          | ---: | --- |
+          EOF
+
+          progress 5 "Preparing credential helper"
+
+          askpass="$RUNNER_TEMP/gitea-askpass.sh"
+          printf '%s\n' \
+            '#!/usr/bin/env bash' \
+            'case "$1" in' \
+            '  *Username*) printf '\''%s\n'\'' "$GITEA_USERNAME" ;;' \
+            '  *Password*) printf '\''%s\n'\'' "$GITEA_PASSWORD" ;;' \
+            '  *) exit 1 ;;' \
+            'esac' > "$askpass"
+          chmod 700 "$askpass"
+
+          export GIT_ASKPASS="$askpass"
+          export GIT_TERMINAL_PROMPT=0
+
+          progress 15 "Cloning the authoritative GitHub repository"
+          git clone --bare --filter=blob:none "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY.git" source.git
+          progress 30 "Refreshing every GitHub branch and tag"
+          git -C source.git fetch origin "+refs/heads/*:refs/heads/*" "+refs/tags/*:refs/tags/*" --prune --force
+          git -C source.git remote add gitea "https://gitea.com/${GITEA_REPOSITORY_PATH}.git"
+
+          progress 45 "Force-updating Gitea branches from GitHub"
+          while IFS= read -r branch; do
+            git -C source.git push gitea --force "refs/heads/${branch}:refs/heads/${branch}"
+          done < <(git -C source.git for-each-ref --format='%(refname:strip=2)' refs/heads)
+
+          if git -C source.git show-ref --verify --quiet refs/heads/main &&
+             ! git -C source.git show-ref --verify --quiet refs/heads/master; then
+            progress 55 "Aligning protected Gitea master with GitHub main"
+            git -C source.git push gitea --force "refs/heads/main:refs/heads/master"
+          fi
+
+          progress 65 "Pruning Gitea-only branches except protected master"
+          while IFS= read -r remote_ref; do
+            branch="${remote_ref#refs/heads/}"
+            if test "$branch" = "master"; then
+              continue
+            fi
+            if ! git -C source.git show-ref --verify --quiet "refs/heads/${branch}"; then
+              git -C source.git push gitea --delete "$branch"
+            fi
+          done < <(git -C source.git ls-remote --refs --heads gitea | awk '{print $2}')
+
+          progress 75 "Force-updating and pruning Gitea tags"
+          git -C source.git push gitea --force --prune "refs/tags/*:refs/tags/*"
+
+          progress 85 "Verifying branch and tag refs"
+          expected_refs="$RUNNER_TEMP/expected-refs.txt"
+          actual_refs="$RUNNER_TEMP/actual-refs.txt"
+          git -C source.git for-each-ref --format='%(objectname) refs/heads/%(refname:strip=2)' refs/heads > "$expected_refs"
+          if git -C source.git show-ref --verify --quiet refs/heads/main &&
+             ! git -C source.git show-ref --verify --quiet refs/heads/master; then
+            printf '%s refs/heads/master\n' "$(git -C source.git rev-parse refs/heads/main)" >> "$expected_refs"
+          fi
+          git -C source.git for-each-ref --format='%(objectname) refs/tags/%(refname:strip=2)' refs/tags >> "$expected_refs"
+          git -C source.git ls-remote --refs gitea 'refs/heads/*' 'refs/tags/*' |
+            awk '{print $1 " " $2}' > "$actual_refs"
+          sort -o "$expected_refs" "$expected_refs"
+          sort -o "$actual_refs" "$actual_refs"
+          if ! diff --unified=3 "$expected_refs" "$actual_refs"; then
+            echo "Gitea refs do not exactly match the authoritative GitHub refs."
+            exit 1
+          fi
+
+          progress 100 "Sync complete; Gitea refs match GitHub"
+
+          rm -f "$askpass"
