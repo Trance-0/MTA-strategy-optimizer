@@ -1,0 +1,29 @@
+{
+  "grain": "marketplace + date（SK-II，无 asin）",
+  "product": "SK-II",
+  "augmentation": "Jan–Jun 模拟；July 真实",
+  "feature_cols": [
+    "log1p_budget_sp",
+    "log1p_budget_sb",
+    "log1p_budget_sd",
+    "log1p_budget_dsp",
+    "share_sp",
+    "share_sb",
+    "share_sd",
+    "share_dsp",
+    "has_ad",
+    "is_weekend",
+    "dow",
+    "country"
+  ],
+  "time_split": {
+    "train": "<= 2025-06-20",
+    "val": "2025-06-21 .. 2025-07-10",
+    "test": ">= 2025-07-11"
+  },
+  "aux_labels": {
+    "traffic": "log1p_impressions_*",
+    "efficiency": "log1p_sales_ad",
+    "revenue": "log1p_revenue"
+  }
+}

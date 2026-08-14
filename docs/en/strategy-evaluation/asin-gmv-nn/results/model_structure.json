@@ -1,0 +1,92 @@
+{
+  "input_dim": 19,
+  "feature_names": [
+    "log1p_budget_sp",
+    "log1p_budget_sb",
+    "log1p_budget_sd",
+    "log1p_budget_dsp",
+    "share_sp",
+    "share_sb",
+    "share_sd",
+    "share_dsp",
+    "has_ad",
+    "is_weekend",
+    "dow_0",
+    "dow_1",
+    "dow_2",
+    "dow_3",
+    "dow_4",
+    "dow_5",
+    "dow_6",
+    "country_CA",
+    "country_US"
+  ],
+  "mlp": {
+    "layers": [
+      {
+        "name": "Dense1",
+        "in": 19,
+        "out": 32,
+        "act": "ReLU",
+        "dropout": 0.15
+      },
+      {
+        "name": "Dense2",
+        "in": 32,
+        "out": 16,
+        "act": "ReLU"
+      },
+      {
+        "name": "Out",
+        "in": 16,
+        "out": 1,
+        "act": "linear",
+        "target": "log1p(revenue)"
+      }
+    ],
+    "n_params": 1185
+  },
+  "multitask": {
+    "shared": [
+      {
+        "name": "Dense1",
+        "in": 19,
+        "out": 32,
+        "act": "ReLU",
+        "dropout": 0.15
+      },
+      {
+        "name": "Dense2",
+        "in": 32,
+        "out": 16,
+        "act": "ReLU"
+      }
+    ],
+    "heads": {
+      "traffic": {
+        "out": 4,
+        "target": "log1p(impressions_sp/sb/sd/dsp)",
+        "lambda": 0.3
+      },
+      "efficiency": {
+        "out": 1,
+        "target": "log1p(sales_ad)",
+        "lambda": 0.2
+      },
+      "revenue": {
+        "out": 1,
+        "target": "log1p(revenue)",
+        "lambda": 1.0
+      }
+    },
+    "n_params": 1270
+  },
+  "train": {
+    "optimizer": "Adam",
+    "lr": 0.001,
+    "weight_decay": 0.0001,
+    "loss": "Huber(delta=1) on log1p space",
+    "batch": 32,
+    "early_stopping_patience": 40
+  }
+}

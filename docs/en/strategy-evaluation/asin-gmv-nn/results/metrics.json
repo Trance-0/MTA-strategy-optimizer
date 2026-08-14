@@ -1,0 +1,169 @@
+{
+  "n_features": 19,
+  "hidden": [
+    32,
+    16
+  ],
+  "inputs": [
+    "log1p_budget_sp",
+    "log1p_budget_sb",
+    "log1p_budget_sd",
+    "log1p_budget_dsp",
+    "share_sp",
+    "share_sb",
+    "share_sd",
+    "share_dsp",
+    "has_ad",
+    "is_weekend",
+    "dow",
+    "marketplace"
+  ],
+  "label": "SK-II attributed sales (no ASIN)",
+  "product": "SK-II",
+  "baselines_removed": [
+    "persistence_lag1",
+    "ridge_log_elastic",
+    "asin"
+  ],
+  "type_elasticities_prior": {
+    "sp": 0.4,
+    "sb": 0.22,
+    "sd": 0.16,
+    "dsp": 0.12
+  },
+  "split_rows": {
+    "train": 342,
+    "val": 40,
+    "test": 42
+  },
+  "split_synthetic": {
+    "train_synth": 342,
+    "val_real": 20,
+    "test_real": 42
+  },
+  "epochs_mlp": 139,
+  "epochs_multitask": 164,
+  "val": {
+    "mlp": {
+      "MAE": 2149.452,
+      "RMSE": 2455.2023,
+      "MedAE": 1693.3357,
+      "sMAPE": 0.34,
+      "MAPE_gmv>=10": 0.312,
+      "R2": -2.0109,
+      "R2_log1p": -2.3525,
+      "n": 40,
+      "n_gmv_ge_10": 40
+    },
+    "multitask": {
+      "MAE": 1523.631,
+      "RMSE": 1946.6315,
+      "MedAE": 1375.1675,
+      "sMAPE": 0.2337,
+      "MAPE_gmv>=10": 0.2197,
+      "R2": -0.8927,
+      "R2_log1p": -0.8216,
+      "n": 40,
+      "n_gmv_ge_10": 40
+    }
+  },
+  "test": {
+    "mlp": {
+      "MAE": 2114.8251,
+      "RMSE": 2360.4667,
+      "MedAE": 2201.6582,
+      "sMAPE": 0.3741,
+      "MAPE_gmv>=10": 0.3052,
+      "R2": -4.3306,
+      "R2_log1p": -6.1436,
+      "n": 42,
+      "n_gmv_ge_10": 42
+    },
+    "multitask": {
+      "MAE": 1683.6124,
+      "RMSE": 1971.2935,
+      "MedAE": 1669.3075,
+      "sMAPE": 0.2889,
+      "MAPE_gmv>=10": 0.2428,
+      "R2": -2.7178,
+      "R2_log1p": -3.5927,
+      "n": 42,
+      "n_gmv_ge_10": 42
+    }
+  },
+  "test_aux_multitask": {
+    "type_impressions_sum": {
+      "MAE": 65152.9826,
+      "RMSE": 71711.5496,
+      "MedAE": 66850.4409,
+      "sMAPE": 0.3355,
+      "MAPE_gmv>=10": 0.2844,
+      "R2": -18.535,
+      "R2_log1p": -26.7606,
+      "n": 42,
+      "n_gmv_ge_10": 42
+    },
+    "sales_ad": {
+      "MAE": 5.5444,
+      "RMSE": 6.6472,
+      "MedAE": 4.6975,
+      "sMAPE": 0.1744,
+      "MAPE_gmv>=10": 0.1569,
+      "R2": -0.6907,
+      "R2_log1p": -0.6842,
+      "n": 42,
+      "n_gmv_ge_10": 42
+    }
+  },
+  "monotonicity_all_types_plus10pct": {
+    "mlp": {
+      "n": 42,
+      "share_pred_up": 0.9048,
+      "share_pred_flat": 0.0,
+      "median_delta_gmv": 472.9027,
+      "mean_delta_gmv": 564.5903
+    },
+    "multitask": {
+      "n": 42,
+      "share_pred_up": 0.9524,
+      "share_pred_flat": 0.0,
+      "median_delta_gmv": 732.0074,
+      "mean_delta_gmv": 735.0731
+    }
+  },
+  "whatif_test_multitask_plus_prior": {
+    "all_types_plus10pct": {
+      "scenario": "四类预算同时+10%",
+      "mean_pred_base": 5122.1464,
+      "mean_pred_new": 5857.2195,
+      "mean_delta": 735.0731,
+      "median_delta": 732.0074,
+      "share_up": 0.9524
+    },
+    "sp_only_plus10pct": {
+      "scenario": "仅 SP +10%",
+      "mean_pred_base": 5122.1464,
+      "mean_pred_new": 5593.2134,
+      "mean_delta": 471.067,
+      "median_delta": 396.0782,
+      "share_up": 0.9524
+    },
+    "shift_20pct_sp_to_sb": {
+      "scenario": "SP 的 20% 改投 SB（总额不变）",
+      "mean_pred_base": 5122.1464,
+      "mean_pred_new": 5186.0291,
+      "mean_delta": 63.8827,
+      "median_delta": 123.422,
+      "share_up": 0.5952
+    },
+    "shift_20pct_sp_to_sb_nn_only": {
+      "scenario": "同上但不用先验弹性（纯网络）",
+      "mean_pred_base": 5122.1464,
+      "mean_pred_new": 5407.1798,
+      "mean_delta": 285.0334,
+      "median_delta": 321.3546,
+      "share_up": 0.7381
+    }
+  },
+  "caveat": "训练含 Jan–Jun 模拟日；测试段含真实 July 后半。无 ASIN。"
+}

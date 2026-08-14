@@ -1,0 +1,14 @@
+{
+  "ad_types": [
+    "sp",
+    "sb",
+    "sd",
+    "dsp"
+  ],
+  "elasticities_for_whatif": {
+    "sp": 0.4,
+    "sb": 0.22,
+    "sd": 0.16,
+    "dsp": 0.12
+  }
+}
