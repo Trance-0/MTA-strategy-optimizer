@@ -38,14 +38,32 @@ jobs:
             exit 0
           fi
           case "$GITEA_REPOSITORY" in
-            https://gitea.com/*)
-              repository_path="${GITEA_REPOSITORY#https://gitea.com/}"
+            https://*)
+              repository_target="${GITEA_REPOSITORY#https://}"
+              case "$repository_target" in
+                */*)
+                  repository_host="${repository_target%%/*}"
+                  repository_path="${repository_target#*/}"
+                  ;;
+                *)
+                  echo "GITEA_REPOSITORY must include a host, owner, and repository."
+                  exit 1
+                  ;;
+              esac
+              case "$repository_host" in
+                ""|*@*|*[!A-Za-z0-9.:-]*)
+                  echo "GITEA_REPOSITORY contains an invalid HTTPS host."
+                  exit 1
+                  ;;
+              esac
+              gitea_base_url="https://${repository_host}"
               ;;
             http://*|*://*|*@*)
-              echo "GITEA_REPOSITORY must be an HTTPS gitea.com URL or owner/repository.git without credentials."
+              echo "GITEA_REPOSITORY must be an HTTPS Gitea URL or owner/repository.git without credentials."
               exit 1
               ;;
             *)
+              gitea_base_url="https://gitea.com"
               repository_path="$GITEA_REPOSITORY"
               ;;
           esac
@@ -65,6 +83,7 @@ jobs:
               ;;
           esac
           echo "ready=true" >> "$GITHUB_OUTPUT"
+          echo "base_url=$gitea_base_url" >> "$GITHUB_OUTPUT"
           echo "repository_path=$repository_path" >> "$GITHUB_OUTPUT"
 
       - name: Mirror branches and tags
@@ -73,6 +92,7 @@ jobs:
         env:
           GITEA_USERNAME: ${{ secrets.GITEA_USERNAME }}
           GITEA_PASSWORD: ${{ secrets.GITEA_PASSWORD }}
+          GITEA_BASE_URL: ${{ steps.configuration.outputs.base_url }}
           GITEA_REPOSITORY_PATH: ${{ steps.configuration.outputs.repository_path }}
         run: |
           set -euo pipefail
@@ -120,7 +140,7 @@ jobs:
           git clone --bare --filter=blob:none "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY.git" source.git
           progress 30 "Refreshing every GitHub branch and tag"
           git -C source.git fetch origin "+refs/heads/*:refs/heads/*" "+refs/tags/*:refs/tags/*" --prune --force
-          git -C source.git remote add gitea "https://gitea.com/${GITEA_REPOSITORY_PATH}.git"
+          git -C source.git remote add gitea "${GITEA_BASE_URL}/${GITEA_REPOSITORY_PATH}.git"
 
           progress 45 "Force-updating Gitea branches from GitHub"
           while IFS= read -r branch; do

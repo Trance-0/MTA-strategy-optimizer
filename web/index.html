@@ -230,11 +230,19 @@
         document.getElementById("root"),
       );
 
-      // Wait for Streamlit's own first paint rather than for a fixed delay, so
-      // a slow runtime is never revealed as an empty page.
+      // Wait for the dashboard's own first paint rather than for a fixed delay,
+      // so a slow runtime is never revealed as an empty page.
+      //
+      // The signal is the navigation rail, not `stAppViewContainer`. Streamlit
+      // mounts its shell as soon as the runtime starts, which is roughly twenty
+      // seconds before the script it runs produces any output; lifting the
+      // splash then exposes the interval in which the app's own CSS block has
+      // been written to the DOM but the stylesheet applying it has not yet been
+      // parsed, so the page shows the rules as text. The rail is the first
+      // thing `app.py` renders, so its presence means the script has run.
       const boot = document.getElementById("boot");
       const observer = new MutationObserver(() => {
-        if (document.querySelector('[data-testid="stAppViewContainer"]')) {
+        if (document.querySelector(".rail-brand")) {
           observer.disconnect();
           boot.classList.add("done");
           setTimeout(() => boot.remove(), 500);

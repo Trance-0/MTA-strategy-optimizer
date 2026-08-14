@@ -13,6 +13,8 @@ This section records **what** changed. See the [work log](../worklog/) for **who
 
 | Version | Date | Summary |
 | --- | --- | --- |
+| [0.9.9](0.9.9.md) | 2026-08-14 | Boot splash of the published dashboard held until the dashboard itself paints, ending the interval that showed its stylesheet as text |
+| [0.9.8](0.9.8.md) | 2026-08-14 | Self-hosted Gitea mirror destinations through validated credential-free secure addresses, with the configured host used for synchronization |
 | [0.9.7](0.9.7.md) | 2026-08-14 | Published GitHub Pages dashboard through stlite with the documentation at `/docs/`, the hosted-mode file-only guarantee, outbound links, and the local start scripts |
 | [0.9.6](0.9.6.md) | 2026-08-13 | Local Streamlit dashboard, its dual data source and PostgreSQL mirror, the navigation rail and settings module, and the implementation-page merge |
 | [0.9.5](0.9.5.md) | 2026-08-13 | Version and work log separation, contributor roster, and work-log ownership rules |
@@ -20,8 +22,6 @@ This section records **what** changed. See the [work log](../worklog/) for **who
 | [0.9.3](0.9.3.md) | 2026-08-12 | Authoritative GitHub-to-Gitee synchronization and strategy-evaluation design documentation |
 | [0.9.2](0.9.2.md) | 2026-08-12 | Exact English translation of the original three-page architecture diagram |
 | [0.9.1](0.9.1.md) | 2026-08-12 | Base-aware Pages redirect, HTTPS Gitee target support, and version-governance clarification |
-| [0.9](0.9.md) | 2026-08-12 | GitHub Pages activation follow-up and current Pages action runtime |
-| [0.8](0.8.md) | 2026-08-12 | Public GitHub release, Pages documentation, data-model translations, and Gitee mirroring |
-| [0.1–0.7](0.1-0.7.md) | 2026-07-16 to 2026-08-11 | Archived: initial AMC attribution baseline, reliability governance, submission documentation, unified event generation, the first MTA-informed budget initializer, MTA-SIM integration, script centralization, and the parallel module separation |
+| [0.1–0.9](0.1-0.9.md) | 2026-07-16 to 2026-08-12 | Archived: attribution baseline, reliability governance, first budget initializer, MTA-SIM integration, module split, public release, Pages documentation, data-model translations, Gitee mirroring, and Pages activation |
 
 These versions were reconstructed from first-parent Git history and the preserved project work log. They are documentation milestones, not retroactively created Git tags.

@@ -1,7 +1,7 @@
 ---
 title: Environment Setup
 description: Local execution, documentation development, and directory responsibilities
-compact: "Setup and toolchain: uv with Python 3.12, Node 20, `git submodule update --init --recursive`, `uv sync --locked`, PYTHONUTF8 on Windows, unittest discovery per module, `npm run dev`/`build`/`preview` in `docs/`, deploy-pages.yml, and a directory map of `modules/`, `script/`, `external/`, `docs/`."
+compact: "Setup and toolchain: Python and Node prerequisites, initialization and verification commands, local and published documentation, GitHub Pages deployment, GitHub-to-Gitea/Gitee mirror configuration, and the directory map. Read before running the project or changing its automation."
 lang: en-US
 ---
 
@@ -72,6 +72,17 @@ Three maintained helpers back these commands. `script/export_drawio_diagrams.mjs
 On Windows, you can also run `run-doc-site.bat dev`; on macOS/Linux, run `sh run-doc-site.sh dev`.
 
 The public site is built and deployed by `.github/workflows/deploy-pages.yml` after a push to `main`. The workflow obtains the repository-specific base path from GitHub Pages, runs `npm ci` and `npm run build`, uploads `docs/.vitepress/dist`, and deploys through the protected `github-pages` environment.
+
+## Repository Mirrors <span class="status-label status-verified" aria-label="Verified"></span>
+
+GitHub is the source of truth. `.github/workflows/mirror-to-gitea.yml` force-updates every branch and tag on its configured Gitea destination after a push, deletion, manual dispatch, or scheduled run, then compares the destination references with GitHub and fails unless they match exactly. When GitHub has `main` but no `master`, the destination's protected `master` is retained as an alias of `main`.
+
+Configure the workflow with the `GITEA_USERNAME`, `GITEA_PASSWORD`, and `GITEA_REPOSITORY` repository secrets. `GITEA_REPOSITORY` accepts either of these credential-free forms:
+
+- a complete secure address for any Gitea service, such as `https://git.example.com/owner/repository.git`;
+- `owner/repository.git`, which uses `https://gitea.com` for backward compatibility.
+
+Plain-text `http://` addresses, embedded credentials, query strings, fragments, nested repository paths, and unsupported characters are rejected before any network operation. The normalized secure Gitea base address and two-segment repository path are passed separately to the mirror step, which reconstructs the destination without placing credentials in the remote address. `.github/workflows/mirror-to-gitee.yml` remains the separate gitee.com-only mirror and uses the corresponding `GITEE_*` secrets.
 
 ## Directory Quick Reference <span class="status-label status-verified" aria-label="Verified"></span>
 

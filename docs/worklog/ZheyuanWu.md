@@ -21,7 +21,7 @@ Entries are reconstructed from Git history. They record the change set behind ea
 
 ### Completed
 
-- Published the dashboard to GitHub Pages at the site root and moved the documentation to `/docs/`, running the same `dashboard/` sources in the browser through stlite because Pages cannot host a Streamlit server.
+- Published the dashboard to GitHub Pages at the site root and moved the documentation to `/docs/`, running the same `dashboard/` sources in the browser through stlite because Pages cannot host a Streamlit server, then fixed the boot splash, which lifted when the runtime started rather than when the dashboard painted and so showed the stylesheet as text for the twenty seconds in between.
 - Made the published build honest about its data: `DASHBOARD_HOSTED` forces file mode, since WebAssembly has no socket to reach PostgreSQL, and the settings modal shows the local-run instructions instead of a credential form that could never connect.
 - Added `dashboard/run.sh` and `run.bat` for local starts, and the rail's **Docs** and **Repo** links so a reader who lands on the published app can reach the specification and the source.
 
