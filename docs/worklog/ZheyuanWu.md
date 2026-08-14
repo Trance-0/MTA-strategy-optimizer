@@ -1,7 +1,7 @@
 ---
 title: Zheyuan Wu (Trance-0)
 description: Project manager work log covering pipeline development, integration, and algorithm testing
-compact: "Work log of Trance-0 (Zheyuan Wu), project manager since 2026-08-03: standardized MTA-SIM interface and DNN credit model, bilingual documentation migration, module restructuring, script centralization, public release with Gitee mirror, GitHub Pages, specification-oriented documentation rules, the Streamlit dashboard, and its published stlite browser build."
+compact: "Work log of Trance-0 (Zheyuan Wu), project manager: MTA-SIM integration, module restructuring, public release, specification-oriented documentation, Streamlit and stlite dashboard delivery, GitHub Pages, and Gitee plus self-hosted Gitea mirroring."
 order: 10
 lang: en-US
 ---
@@ -23,7 +23,7 @@ Entries are reconstructed from Git history. They record the change set behind ea
 
 - Published the dashboard to GitHub Pages at the site root and moved the documentation to `/docs/`, running the same `dashboard/` sources in the browser through stlite because Pages cannot host a Streamlit server, then fixed the boot splash, which lifted when the runtime started rather than when the dashboard painted and so showed the stylesheet as text for the twenty seconds in between.
 - Made the published build honest about its data: `DASHBOARD_HOSTED` forces file mode, since WebAssembly has no socket to reach PostgreSQL, and the settings modal shows the local-run instructions instead of a credential form that could never connect.
-- Added `dashboard/run.sh` and `run.bat` for local starts, and the rail's **Docs** and **Repo** links so a reader who lands on the published app can reach the specification and the source.
+- Added `dashboard/run.sh` and `run.bat`, the rail's **Docs** and **Repo** links, and generalized the GitHub-to-Gitea mirror to support validated self-hosted HTTPS destinations such as `git.trance-0.com`.
 
 ### Next
 

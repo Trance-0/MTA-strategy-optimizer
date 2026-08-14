@@ -13,6 +13,7 @@ This section records **what** changed. See the [work log](../worklog/) for **who
 
 | Version | Date | Summary |
 | --- | --- | --- |
+| [0.9.10](0.9.10.md) | 2026-08-14 | Owner-approved work-log record of the self-hosted Gitea mirror completion and consolidation of two adjacent historical version pages |
 | [0.9.9](0.9.9.md) | 2026-08-14 | Boot splash of the published dashboard held until the dashboard itself paints, ending the interval that showed its stylesheet as text |
 | [0.9.8](0.9.8.md) | 2026-08-14 | Self-hosted Gitea mirror destinations through validated credential-free secure addresses, with the configured host used for synchronization |
 | [0.9.7](0.9.7.md) | 2026-08-14 | Published GitHub Pages dashboard through stlite with the documentation at `/docs/`, the hosted-mode file-only guarantee, outbound links, and the local start scripts |
@@ -20,8 +21,7 @@ This section records **what** changed. See the [work log](../worklog/) for **who
 | [0.9.5](0.9.5.md) | 2026-08-13 | Version and work log separation, contributor roster, and work-log ownership rules |
 | [0.9.4](0.9.4.md) | 2026-08-12 | Specification-oriented documentation rules, compact routing metadata, navigation consolidation, and code reconciliation |
 | [0.9.3](0.9.3.md) | 2026-08-12 | Authoritative GitHub-to-Gitee synchronization and strategy-evaluation design documentation |
-| [0.9.2](0.9.2.md) | 2026-08-12 | Exact English translation of the original three-page architecture diagram |
-| [0.9.1](0.9.1.md) | 2026-08-12 | Base-aware Pages redirect, HTTPS Gitee target support, and version-governance clarification |
+| [0.9.1–0.9.2](0.9.1-0.9.2.md) | 2026-08-12 | Archived: base-aware Pages and Gitee configuration, version ownership, and the exact English translation of the original architecture diagram |
 | [0.1–0.9](0.1-0.9.md) | 2026-07-16 to 2026-08-12 | Archived: attribution baseline, reliability governance, first budget initializer, MTA-SIM integration, module split, public release, Pages documentation, data-model translations, Gitee mirroring, and Pages activation |
 
 These versions were reconstructed from first-parent Git history and the preserved project work log. They are documentation milestones, not retroactively created Git tags.
