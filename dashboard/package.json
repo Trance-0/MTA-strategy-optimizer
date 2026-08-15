@@ -1,0 +1,30 @@
+{
+  "name": "mta-dashboard",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "description": "Vue dashboard over the marketing ROI pipeline's own artifacts",
+  "engines": {
+    "node": "^20.19.0 || >=22.12.0"
+  },
+  "scripts": {
+    "dev": "node server/index.js",
+    "start": "node server/index.js",
+    "build": "vite build",
+    "build:static": "node ../script/export_dashboard_snapshot.mjs && vite build --mode static",
+    "export:static": "node ../script/export_dashboard_snapshot.mjs",
+    "verify:parity": "node ../script/verify_dashboard_parity.mjs",
+    "test": "node --test \"tests/**/*.test.js\""
+  },
+  "dependencies": {
+    "dotenv": "^17.2.3",
+    "express": "^5.2.1",
+    "pg": "^8.23.0",
+    "plotly.js-dist-min": "^3.7.0",
+    "vue": "^3.5.41"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^6.0.8",
+    "vite": "^8.2.1"
+  }
+}

@@ -1,6 +1,0 @@
-node_modules/
-.vitepress/cache/
-.vitepress/dist/
-_site/
-.wrangler/
-.dev.vars*

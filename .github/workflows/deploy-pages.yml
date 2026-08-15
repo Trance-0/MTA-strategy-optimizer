@@ -2,12 +2,13 @@ name: Deploy dashboard and documentation to GitHub Pages
 
 # Publishes two things from one artifact:
 #
-#   /       the dashboard, running in the browser through stlite
+#   /       the Vue dashboard, built for a static host
 #   /docs/  the VitePress documentation site
 #
-# Pages serves static files and cannot run a Streamlit server, so the dashboard
-# is the same `dashboard/` Python executed on Pyodide rather than a separate
-# web build. The documentation is built with its base path pointing at the
+# Pages serves static files and cannot run the dashboard's Express API, so the
+# published client is built in static mode and reads a snapshot exported from
+# the committed artifacts at build time. It is the same client source the local
+# run serves. The documentation is built with its base path pointing at the
 # `/docs/` subdirectory, because Pages performs no rewrites.
 
 on:
@@ -36,16 +37,37 @@ jobs:
         id: pages
         uses: actions/configure-pages@v6
 
+      # Vite's engine range is `^20.19.0 || >=22.12.0`, and its bundler binding
+      # is an optional dependency carrying that same range: on an unsupported
+      # version npm skips the binding silently, `npm ci` still succeeds, and
+      # the build fails afterwards with a missing-module error naming neither
+      # Node nor the version. `22` resolves to the latest 22.x, which satisfies
+      # the range; the lower bound is what must not be crossed.
       - name: Set up Node.js
         uses: actions/setup-node@v6
         with:
           node-version: 22
           cache: npm
-          cache-dependency-path: docs/package-lock.json
+          cache-dependency-path: |
+            docs/package-lock.json
+            dashboard/package-lock.json
 
       - name: Install documentation dependencies
         working-directory: docs
         run: npm ci
+
+      - name: Install dashboard dependencies
+        working-directory: dashboard
+        run: npm ci
+
+      # The snapshot is exported from the committed CSV and JSON artifacts, not
+      # from a database: a static host has no socket to reach PostgreSQL with,
+      # and a snapshot exported from one would bake a private deployment's data
+      # into a public artifact. `export_dashboard_snapshot.mjs` pins file mode
+      # and refuses to write anything read from a database.
+      - name: Build the dashboard for a static host
+        working-directory: dashboard
+        run: npm run build:static
 
       # The documentation moves one level down, so its base path is the Pages
       # base path plus `docs`. Every internal link and asset URL is resolved

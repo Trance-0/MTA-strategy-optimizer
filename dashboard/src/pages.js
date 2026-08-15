@@ -1,0 +1,74 @@
+/**
+ * The six views, their navigation grouping, and their rail icons.
+ *
+ * This is the single place a view is registered. A page key appears here, in
+ * `PAGE_GROUPS`, and in `App.vue`'s component map; the test
+ * `tests/pages.test.js` asserts the three agree, so a view cannot be added to
+ * the rail without a component behind it.
+ *
+ * The grouping and the icon set are the reference prototype's
+ * (`external/UI_design/brandlens-vue`, by Rouxin Jin), redrawn for this
+ * project's six views.
+ */
+
+export const PAGES = {
+  overview: {
+    title: "Command Center",
+    crumb: "AI-MTA / Overview",
+    icon: '<path d="M4 4h6v6H4V4zm10 0h6v10h-6V4zM4 14h6v6H4v-6zm10 4h6v2h-6v-2z" stroke="currentColor" stroke-width="1.6"/>',
+  },
+  budget: {
+    title: "Budget Manager",
+    crumb: "AI-MTA / Planning / Budget",
+    icon: '<path d="M4 6h16v12H4V6zm0 4h16M8 15h4" stroke="currentColor" stroke-width="1.6"/>',
+  },
+  campaigns: {
+    title: "Campaigns",
+    crumb: "AI-MTA / Planning / Campaigns",
+    icon: '<path d="M4 12l15-7v14L4 13v-1zm4 3v4l4 1" stroke="currentColor" stroke-width="1.6"/>',
+  },
+  optimizer: {
+    title: "Campaign Optimizer",
+    crumb: "AI-MTA / Planning / Optimizer",
+    icon: '<path d="M5 17l4-5 3 2 6-8M15 6h3v3" stroke="currentColor" stroke-width="1.7"/>',
+  },
+  log: {
+    title: "Optimization Log",
+    crumb: "AI-MTA / Insights / Provenance",
+    icon: '<path d="M5 5h14v14H5V5zm3 4h8m-8 3h8m-8 3h5" stroke="currentColor" stroke-width="1.6"/>',
+  },
+  knowledge: {
+    title: "Knowledge Base",
+    crumb: "AI-MTA / Insights / Governance",
+    icon: '<path d="M4 5h7v14H4V5zm9 0h7v14h-7V5zM7 9h1m8 0h1" stroke="currentColor" stroke-width="1.6"/>',
+  },
+
+  // The two foot controls. They are not views and are excluded from
+  // `PAGE_GROUPS`, but the rail draws them from the same icon set.
+  reload: {
+    title: "Reload data",
+    icon: '<path d="M20 12a8 8 0 11-2.34-5.66M20 4v4h-4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>',
+  },
+  settings: {
+    title: "Settings",
+    icon:
+      '<path d="M12 15.2a3.2 3.2 0 100-6.4 3.2 3.2 0 000 6.4z" stroke="currentColor" stroke-width="1.6"/>' +
+      '<path d="M18.7 14.4a1.5 1.5 0 00.3 1.65l.05.06a1.8 1.8 0 11-2.55 2.55l-.05-.06a1.5 1.5 0 00-1.65-.3 1.5 1.5 0 00-.9 1.37v.16a1.8 1.8 0 11-3.6 0v-.09a1.5 1.5 0 00-.98-1.37 1.5 1.5 0 00-1.65.3l-.06.06a1.8 1.8 0 11-2.55-2.55l.06-.06a1.5 1.5 0 00.3-1.65 1.5 1.5 0 00-1.38-.9h-.15a1.8 1.8 0 010-3.6h.09a1.5 1.5 0 001.37-.98 1.5 1.5 0 00-.3-1.65l-.06-.06a1.8 1.8 0 112.55-2.55l.06.06a1.5 1.5 0 001.65.3h.07a1.5 1.5 0 00.9-1.38v-.15a1.8 1.8 0 013.6 0v.09a1.5 1.5 0 00.9 1.37 1.5 1.5 0 001.65-.3l.06-.06a1.8 1.8 0 112.55 2.55l-.06.06a1.5 1.5 0 00-.3 1.65v.07a1.5 1.5 0 001.38.9h.15a1.8 1.8 0 010 3.6h-.09a1.5 1.5 0 00-1.37.9z" stroke="currentColor" stroke-width="1.35"/>',
+  },
+};
+
+/** Section label -> the views beneath it, in the prototype's order. */
+export const PAGE_GROUPS = [
+  { label: "OVERVIEW", pages: ["overview"] },
+  { label: "PLANNING", pages: ["budget", "campaigns", "optimizer"] },
+  { label: "INSIGHTS", pages: ["log", "knowledge"] },
+];
+
+/** Every navigable page key, flattened. */
+export const PAGE_KEYS = PAGE_GROUPS.flatMap((group) => group.pages);
+
+export const DEFAULT_PAGE = PAGE_KEYS[0];
+
+/** Where the app points a reader who wants the source or the specification. */
+export const REPO_URL = "https://github.com/Trance-0/MTA-strategy-optimizer";
+export const DOCS_URL = "https://trance-0.github.io/MTA-strategy-optimizer/docs";
