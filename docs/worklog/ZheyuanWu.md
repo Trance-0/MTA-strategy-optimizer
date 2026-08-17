@@ -28,6 +28,7 @@ Entries are reconstructed from Git history. They record the change set behind ea
 ### Next
 
 - Collect first dated entries from Tianle Chen, Yi Liu, and Yayu Yu.
+- This week: define a minimal, class-based, object-oriented set of data structures shared across the project's modules and the dashboard's database schema, and implement a full runnable optimizer module built on them. See [Planned](../version/#planned) in the version log.
 
 ## 2026-08-14
 
