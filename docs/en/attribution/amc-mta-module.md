@@ -187,7 +187,7 @@ uv run python -X utf8 -B script/run_pipeline.py
 uv run python -X utf8 -B script/validate_data_alignment.py
 ```
 
-Update the events and Amazon Ads input files, then run directly. The canonical pipeline determines its window automatically from the earliest through latest Ads `reportDate`; it supports any duration, cross-year windows, and leap days without changing configuration dates. Aggregated paths and all five model results are published together only after every artifact passes validation. On failure, the previous six derived artifacts remain in place, and raw inputs are not overwritten. See [running the module](../environment/amc-mta-usage.md) for custom file locations and complete validation rules.
+Update the events and Amazon Ads input files, then run directly. The canonical pipeline determines its window automatically from the earliest through latest Ads `reportDate`; it supports any duration, cross-year windows, and leap days without changing configuration dates. Aggregated paths and all five model results are published together only after every artifact passes validation. On failure, the previous six derived artifacts remain in place, and raw inputs are not overwritten. See [running the module](../introduction/environment/amc-mta-usage.md) for custom file locations and complete validation rules.
 
 Default canonical outputs:
 
@@ -208,7 +208,7 @@ For a first review, read “this page → [complete usage guide](complete-guide.
 ## Documentation
 
 - [Data contract](../datasets/amc-data-contract.md): the only complete description of fields, 14-day path rules, AMC/Ads five-segment keys, billing assignment, and model semantics.
-- [Running the module](../environment/amc-mta-usage.md): commands, parameters, and outputs.
+- [Running the module](../introduction/environment/amc-mta-usage.md): commands, parameters, and outputs.
 - [Single-touchpoint attribution reliability](reliability.md): judge a result using calculation validity, sufficient data support, and model consistency.
 - [Amazon Ads sample](../datasets/amazon-ads-sample.md): cost table and join key.
 - [Simulated data](../datasets/amc-simulated-data.md): roles of the user-event master table and four derived artifacts.

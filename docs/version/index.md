@@ -13,6 +13,7 @@ This section records **what** changed. See the [work log](../worklog/) for **who
 
 | Version | Date | Summary |
 | --- | --- | --- |
+| [0.9.13](0.9.13.md) | 2026-08-17 | Moved Environment under Introduction and renamed Strategy Recommendation, fixed the resulting sidebar and cross-link breakage, and hardened the docs launcher against silent failures |
 | [0.9.12](0.9.12.md) | 2026-08-17 | Split the monolithic dashboard documentation page into `index.md`, `views.md`, `navigation.md`, `deployment.md`, and `database-import.md` |
 | [0.9.11](0.9.11.md) | 2026-08-15 | Vue client over a Node API replacing the Streamlit and stlite dashboard, three dual-source parity defects and five cold-start launcher defects fixed, and the parity command and test suite the repository was missing |
 | [0.9.10](0.9.10.md) | 2026-08-14 | Owner-approved work-log record of the self-hosted Gitea mirror completion and consolidation of two adjacent historical version pages |

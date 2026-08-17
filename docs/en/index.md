@@ -22,16 +22,16 @@ features:
     link: /en/introduction/
   - title: Environment setup
     details: Local commands, runtime requirements, and directory responsibilities.
-    link: /en/environment/
+    link: /en/introduction/environment/
   - title: Datasets
     details: Pinned ZheyuanWu generation, data contracts, synthetic fixtures, and compatibility boundaries.
-    link: /en/environment/mta-sim-generation
+    link: /en/introduction/environment/mta-sim-generation
   - title: Attribution models
     details: Markov removal effects, path-level Shapley, governance, and outputs.
     link: /en/attribution/
   - title: Strategy optimization
     details: The current budget seed and the roadmap toward constrained optimization.
-    link: /en/strategy_recommendation/
+    link: /en/strategy-recommendation/
   - title: Definitions
     details: Shared terminology and abbreviations for marketing, data, and engineering readers.
     link: /en/reference/definitions

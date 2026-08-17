@@ -22,7 +22,7 @@ uv run python -X utf8 -B script/run_pipeline.py
 uv run python -X utf8 script/validate_data_alignment.py
 ```
 
-The pipeline derives its window from the earliest through latest Amazon Ads `reportDate`; adding data should not require changing configured dates. See [AMC MTA execution](../environment/amc-mta-usage.md) for custom input and output arguments.
+The pipeline derives its window from the earliest through latest Amazon Ads `reportDate`; adding data should not require changing configured dates. See [AMC MTA execution](./environment/amc-mta-usage.md) for custom input and output arguments.
 
 Canonical attribution output is stored in:
 

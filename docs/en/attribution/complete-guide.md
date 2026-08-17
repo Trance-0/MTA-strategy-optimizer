@@ -80,7 +80,7 @@ uv run python -X utf8 -B script/run_pipeline.py
 uv run python -X utf8 -B script/validate_data_alignment.py
 ```
 
-The complete pipeline first creates and validates one aggregated path report and five canonical outputs in a temporary location. It publishes only after all six derived artifacts succeed as a group. If inputs are invalid, paths are empty, validation fails, or publishing fails, raw inputs are not overwritten and the previous derived artifact group remains unchanged. See [running the module](../environment/amc-mta-usage.md) for custom paths and stepwise commands.
+The complete pipeline first creates and validates one aggregated path report and five canonical outputs in a temporary location. It publishes only after all six derived artifacts succeed as a group. If inputs are invalid, paths are empty, validation fails, or publishing fails, raw inputs are not overwritten and the previous derived artifact group remains unchanged. See [running the module](../introduction/environment/amc-mta-usage.md) for custom paths and stepwise commands.
 
 To validate module tests independently without running the pipeline, execute from the repository root:
 

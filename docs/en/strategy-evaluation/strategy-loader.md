@@ -133,7 +133,7 @@ Before a strategy's output is accepted, the loader runs a three-stage validation
 | Stage | Check | Failure behavior |
 | --- | --- | --- |
 | 1. Declaration validation | JSON schema, required fields, `strategy_id` format, capabilities types | `ValueError` with the specific field and reason |
-| 2. Input validation | Evidence lineage (Secure Hash Algorithm 256-bit (SHA-256) hashes match), scope consistency, required files present | `HierarchyValidationError` — same exception class used by the [current initializer](/en/strategy_recommendation/module-overview#1-verify-evidence-lineage-before-calculation) |
+| 2. Input validation | Evidence lineage (Secure Hash Algorithm 256-bit (SHA-256) hashes match), scope consistency, required files present | `HierarchyValidationError` — same exception class used by the [current initializer](/en/strategy-recommendation/module-overview#1-verify-evidence-lineage-before-calculation) |
 | 3. Output validation | Conservation contract, field completeness, forbidden fields absent | `StrategyOutputError` before any file is written |
 
 Stage 1 runs at registry load time. Stages 2 and 3 run when `allocate()` is called with the validated evidence wrapper.

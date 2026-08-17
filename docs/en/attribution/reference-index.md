@@ -12,7 +12,7 @@ Only documentation for the currently runnable module is kept here:
 - [Current data-flow diagram](../introduction/amc-mta-architecture.md#current-data-flow): theme-aware Draw.io architecture showing canonical governance, standardized models, DNN, and isolated evaluation.
 - [Canonical output index](output-reference.md): reading order, fields, granularity, and interpretation boundaries for the five CSV files.
 - [Data contract](../datasets/amc-data-contract.md): the only complete source of truth for current fields and business rules.
-- [Usage](../environment/amc-mta-usage.md): commands, parameters, and outputs.
+- [Usage](../introduction/environment/amc-mta-usage.md): commands, parameters, and outputs.
 - [Single-touchpoint attribution reliability](reliability.md): interpret a single-touchpoint result using calculation validity, sufficient data support, and model consistency.
 - [Amazon Ads sample](../datasets/amazon-ads-sample.md): five-segment performance/cost input and billing assignment.
 - [Dual-model difference quantification and output specification](model-governance.md): consumer-goods-oriented gap thresholds, evidence thresholds, and output state machine for Markov and path-level Shapley.

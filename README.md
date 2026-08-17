@@ -1,6 +1,6 @@
 # Marketing ROI Analysis
 
-[Published documentation](https://trance-0.github.io/MTA-strategy-optimizer/en/) · [Project overview](docs/en/introduction/index.md) · [Environment setup](docs/en/environment/index.md) · [Module inventory](docs/en/reference/module-inventory.md) · [Version log](docs/version/index.md) · [Work log](docs/worklog/index.md)
+[Published documentation](https://trance-0.github.io/MTA-strategy-optimizer/en/) · [Project overview](docs/en/introduction/index.md) · [Environment setup](docs/en/introduction/environment/index.md) · [Module inventory](docs/en/reference/module-inventory.md) · [Version log](docs/version/index.md) · [Work log](docs/worklog/index.md)
 
 Marketing ROI Analysis is a validation-oriented Python workspace for historical Multi-Touch Attribution (MTA), standardized model evaluation, and explainable advertising budget initialization. It builds five-segment Amazon Marketing Cloud-style paths, compares Markov and path-level Shapley attribution, adapts four-segment MTA-SIM data to a shared model contract, and produces a deterministic Ad Group budget seed from governed attribution evidence.
 
@@ -26,12 +26,12 @@ The current results are appropriate for reproducible development, contract testi
 | Review the workspace assessment and risks | [Workspace assessment](docs/en/introduction/assessment.md) |
 | Understand the project objective and delivery boundary | [Project overview](docs/en/introduction/index.md) |
 | Follow the directory and data flow | [Project structure](docs/en/introduction/project-structure.md) |
-| Set up and run the project | [Environment setup](docs/en/environment/index.md) |
-| Run Amazon Marketing Cloud MTA attribution | [AMC MTA usage](docs/en/environment/amc-mta-usage.md) |
+| Set up and run the project | [Environment setup](docs/en/introduction/environment/index.md) |
+| Run Amazon Marketing Cloud MTA attribution | [AMC MTA usage](docs/en/introduction/environment/amc-mta-usage.md) |
 | Understand the standardized model interface | [Standardized MTA interface](docs/en/attribution/standardized-interface/index.md) |
-| Generate and validate an initial Ad Group budget | [Strategy initializer](docs/en/strategy_recommendation/module-overview.md) |
-| Reproduce the current budget step by step | [Current Ad Group budget calculation](docs/en/strategy_recommendation/current-budget-calculation.md) |
-| Plan the research path from MTA to budget optimization | [Budget optimization problem and research plan](docs/en/strategy_recommendation/optimization-plan.md) |
+| Generate and validate an initial Ad Group budget | [Strategy initializer](docs/en/strategy-recommendation/module-overview.md) |
+| Reproduce the current budget step by step | [Current Ad Group budget calculation](docs/en/strategy-recommendation/current-budget-calculation.md) |
+| Plan the research path from MTA to budget optimization | [Budget optimization problem and research plan](docs/en/strategy-recommendation/optimization-plan.md) |
 | Review the current module boundaries | [Module inventory](docs/en/reference/module-inventory.md) |
 | Review input, path, and metric contracts | [AMC data contract](docs/en/datasets/amc-data-contract.md) |
 | Review dual-model governance | [Model governance](docs/en/attribution/model-governance.md) |

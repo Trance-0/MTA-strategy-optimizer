@@ -12,7 +12,7 @@ lang: en-US
 | --- | --- | --- | --- |
 | MTA Attribution (`modules/mta_attribution/`) | Shared model interface; concrete Markov, Shapley, uniform, and DNN implementations; five-segment paths and governance comparison | Runnable model package | [AMC MTA module](../attribution/amc-mta-module.md) |
 | MTA Standard (`modules/mta_standard/`) | Framework-only MTA-SIM dataloader, four-to-five segment adapter, model registry and pipeline, output contract, and evaluator | Runnable framework package | [Standardized MTA interface](../attribution/standardized-interface/) |
-| MTA Strategy Recommendation (`modules/mta_strategy_recommendation/`) | Generate the new Ad Group count and initial budget using Campaign Group as the top level | Runnable generator, canonical output, and validator are implemented | [Strategy initializer](../strategy_recommendation/module-overview.md) |
+| MTA Strategy Recommendation (`modules/mta_strategy_recommendation/`) | Generate the new Ad Group count and initial budget using Campaign Group as the top level | Runnable generator, canonical output, and validator are implemented | [Strategy initializer](../strategy-recommendation/module-overview.md) |
 
 ## Directory Convention
 

@@ -95,7 +95,7 @@ git submodule update --init --recursive
 uv run python -X utf8 -B script/generate_mta_sim_dataset.py
 ```
 
-The generator adapter derives CPC/CPM from the resolved ZheyuanWu configuration rather than from observed delivery metrics. It preserves the original daily-window CSVs, aggregates path rows into the single reporting scope required by the local model interface, and keeps the normalized ground-truth view separate for evaluation. See [Generate MTA-SIM data](../../environment/mta-sim-generation.md).
+The generator adapter derives CPC/CPM from the resolved ZheyuanWu configuration rather than from observed delivery metrics. It preserves the original daily-window CSVs, aggregates path rows into the single reporting scope required by the local model interface, and keeps the normalized ground-truth view separate for evaluation. See [Generate MTA-SIM data](../../introduction/environment/mta-sim-generation.md).
 
 Both loaders take explicit paths and apply no repository-relative default, so a dataset generated anywhere on the filesystem works unchanged:
 

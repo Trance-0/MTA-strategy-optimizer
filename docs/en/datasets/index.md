@@ -56,7 +56,7 @@ The pinned submodule and explicit Dataset Adapter now:
 5. Run attribution only after the complete data package passes validation.
 6. Isolate `simulation_ground_truth` in the evaluation workflow.
 
-The adapter runs the ZheyuanWu generator, preserves its original four-segment files, aggregates daily path windows into one local model scope, and preserves Ground Truth as an independent answer table. See [Generate MTA-SIM data](../environment/mta-sim-generation.md).
+The adapter runs the ZheyuanWu generator, preserves its original four-segment files, aggregates daily path windows into one local model scope, and preserves Ground Truth as an independent answer table. See [Generate MTA-SIM data](../introduction/environment/mta-sim-generation.md).
 
 ## Adapter Status <span class="status-label status-verified" aria-label="Verified"></span>
 

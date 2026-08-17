@@ -6,7 +6,7 @@ lang: en-US
 
 # AMC MTA Usage
 
-Run all commands below from the repository root. See the [data contract](../datasets/amc-data-contract.md) for field and path rules. This module is for attribution analysis only; it does not allocate budgets or optimize activation.
+Run all commands below from the repository root. See the [data contract](../../datasets/amc-data-contract.md) for field and path rules. This module is for attribution analysis only; it does not allocate budgets or optimize activation.
 
 ## Run
 
@@ -82,7 +82,7 @@ uv run python -X utf8 -B script/validate_data_alignment.py
 
 ## Default Inputs and Outputs
 
-Inputs are under `modules/mta_attribution/data/simulated/`; see [AMC MTA simulated data](../datasets/amc-simulated-data.md) for each file's role.
+Inputs are under `modules/mta_attribution/data/simulated/`; see [AMC MTA simulated data](../../datasets/amc-simulated-data.md) for each file's role.
 
 Each run accepts exactly one marketplace, account, and currency scope. Ads data must be non-empty, dates must be continuous, the same five-segment touchpoint set must appear every day, and date/key combinations must be unique. Events must contain conversions; all conversions must fall inside the Ads window and yield at least one valid path. Violations raise an error immediately: the program does not crop, zero-fill, or publish. Every CSV input consistently ignores leading and trailing whitespace in field names and values while preserving spaces inside strings. The five canonical outputs continue to use a normalized physical format without leading or trailing whitespace.
 
@@ -100,4 +100,4 @@ The touchpoint-comparison file has a fixed 14-column schema and `17 × 3 = 51` r
 
 The current 90-day sample contains `51 RELIABLE / 0 UNRELIABLE`. Results can only be interpreted as exploratory attribution within the current window; they must not be used to adjust budgets automatically.
 
-For how to decide whether attribution for one touchpoint is reliable and how to interpret it, see [Single-touchpoint attribution reliability](../attribution/reliability.md).
+For how to decide whether attribution for one touchpoint is reliable and how to interpret it, see [Single-touchpoint attribution reliability](../../attribution/reliability.md).
