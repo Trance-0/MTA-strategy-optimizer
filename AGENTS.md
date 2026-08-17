@@ -42,6 +42,22 @@
 - Put one-off agent inspection, migration, scratch, and debugging files in the ignored project-root `/.agent-scratch/` directory and delete them when finished.
 - Start every maintained Python script with a module docstring that states its command purpose and place in the data flow. Start every maintained JavaScript script with an equivalent file-level documentation comment.
 
+## Ignore rules
+
+- The project-root `.gitignore` is the only ignore list the project owns. Do not create a `.gitignore` under `dashboard/`, `docs/`, `modules/`, or any other project-owned directory; add the rule to the root file instead, so one list cannot drift from another and a reader has one place to look.
+- Write Node and build patterns unanchored (`node_modules/`, `dist/`, `coverage/`) so they apply to every package in the tree rather than to one named directory. Anchor a pattern with a leading `/` only when the rule is genuinely specific to one location, such as `/dashboard/public/data/`.
+- A pattern containing a slash is anchored to the directory holding the ignore file, so a nested path such as `.vitepress/cache/` matches only at the top level. Prefix it with `**/` when it must apply at any depth.
+- Vendored trees under `external/` keep their own upstream ignore files. Those belong to their projects; do not edit or consolidate them.
+- Never commit a build output, an installed dependency tree, or a generated data file. Each is produced from tracked sources by a documented command, so a committed copy is a second version free to disagree with the sources beside it, with nothing to say which is authoritative.
+
+## Media handling
+
+- Media files — images, video, PDFs, screenshots, and rendered diagrams — are tracked when they are project or reference material. Keeping them is the default; the rule below governs how an agent **reads** them, not whether they exist.
+- **Never read media in bulk.** Loading several images into one context window exhausts it and terminates the session. This applies to the reference prototype under `external/UI_design/`, the research PDFs under `docs/research/`, the rendered diagrams, and any directory of screenshots.
+- Read at most one media file at a time, and only when the task actually requires seeing it. Prefer the cheaper evidence first: a file listing, a size, a hash comparison, or a text extraction usually answers the question without opening the file at all.
+- When verifying a rendered page, prefer a textual probe — a Document Object Model census, a console-error capture, a failed-request list — over a screenshot. Take a screenshot only to confirm a specifically visual property, and take one rather than a set.
+- When several media files must be compared, compare them by hash or by size and open only the one that differs.
+
 ## Module layout
 
 - `modules/mta_attribution/` — path building, every concrete attribution model, the shared attribution-model interface, and model comparison.
@@ -83,4 +99,7 @@
 - Follow the established scheme: reverse-chronological `## YYYY-MM-DD` sections, each with a `### Completed` list and an optional `### Next` list. Record **at most three bullet points per section**; merge related work into one bullet rather than adding a fourth.
 - A work-log page belongs to its owner. Do not edit another person's page, restructure their past entries, or translate a page whose author wrote it in another language.
 - **Before creating a commit, an agent must ask its owner whether to compact the current change set into today's working-log entry.** Propose the exact entry text and wait for explicit confirmation before writing it. Do not add a work-log entry silently, and do not add one on behalf of a person who is not the agent's owner. If the owner declines, commit without touching the work log.
+- **Propose the commit message and the work-log entry together, in one request, and wait for a single confirmation.** Both describe the same change set from two angles, so reviewing them side by side is what lets the owner see that they agree. Do not ask for the work-log entry, act on the answer, and then return separately for the commit message.
+- Once confirmed, write the work-log entry, stage it with the change set, and create the commit in one operation — the work-log edit belongs to the commit it describes, never to a follow-up commit. The version page, the `VERSION` bump, the work-log entry, and the code all land together.
+- Confirmation to commit is not confirmation to push. Push only when the owner asks for it in those terms.
 - GitHub Pages, built by `.github/workflows/deploy-pages.yml`, is the only maintained documentation deployment target. Do not add Cloudflare Pages or Wrangler deployment commands unless the user explicitly changes this policy.

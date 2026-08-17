@@ -20,7 +20,9 @@ The attribution, standard, and strategy modules never import these classes. They
 | `DATABASE=false` | `modules/*/data/simulated/*`, `modules/*/outputs/**` | Nothing beyond the repository |
 | `DATABASE=true` | The eighteen tables below | A populated PostgreSQL instance |
 
-`dashboard/data_source.py` guarantees that both modes return identical columns, dtypes, and values, so a view cannot tell which one it is reading. `script/verify_source_parity.py` asserts that guarantee against a live database. Three differences make it non-trivial and are normalised in the loader rather than in any view: PostgreSQL folds unquoted identifiers to lowercase, so the platform's camelCase field names survive only in file mode; the pipeline writes reliability flags as the strings `true` and `false`, and the non-empty string `"false"` is truthy in Python; and a date read from a file is a string while the same date from the database is a `date` object, which pandas assigns a different unit.
+`dashboard/server/data_source.js` guarantees that both modes return identical fields, types, values, and row order, so a view cannot tell which one it is reading. `script/verify_dashboard_parity.mjs` asserts that guarantee against a live database. Five differences make it non-trivial and are normalised in the loader rather than in any view; they are specified in full under [Two Data Sources, One Contract](../dashboard/index.md#two-data-sources-one-contract).
+
+One of them constrains this schema directly. **Row order is part of the contract**, because the views render in the order the loader returns, and a file loader returns the artifact's own order. Every table therefore carries a surrogate `id` primary key, `script/import_to_database.py` inserts rows in each artifact's order, and every query the dashboard issues orders by that key rather than by the business key — `order by campaign_id` sorts alphabetically and would put the same Campaigns on screen in a different sequence than file mode does.
 
 ## Layers
 

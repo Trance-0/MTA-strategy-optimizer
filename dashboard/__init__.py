@@ -1,13 +1,15 @@
-"""Local Streamlit dashboard for attribution evidence and budget strategy.
+"""Database schema and configuration shared by the dashboard and the importer.
 
-This package is the presentation layer. It reads the artifacts the pipeline
-already produces and never computes attribution or budget values itself, so
-the dashboard cannot become a second, divergent implementation.
+The dashboard itself is a Vue client over a Node API and holds no Python: see
+`dashboard/server/` and `dashboard/src/`. What remains here is the part
+`script/import_to_database.py` needs — the `.env` contract in `config.py` and
+the PostgreSQL schema in `models.py` — kept in this package because the
+dashboard's own reader is the only consumer of the tables it defines.
 
 Data flow:
-    modules/*/data and outputs  ->  dashboard/data_source.py  ->  views
-    (or the PostgreSQL mirror when DATABASE=true)
+    .env -> config.py -> script/import_to_database.py -> the PostgreSQL mirror
+    models.py declares the eighteen tables that import writes
 
-Run it from the repository root:
-    uv run --extra dashboard streamlit run dashboard/app.py
+Run the dashboard from the repository root:
+    ./dashboard/run.sh          # dashboard\\run.bat on Windows
 """

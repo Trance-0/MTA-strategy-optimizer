@@ -18,18 +18,81 @@ venv/
 htmlcov/
 /generated/
 
-# Editors
+# ---------------------------------------------------------------------------
+# Node and Vue
+# ---------------------------------------------------------------------------
+# This file is the only ignore list the project owns. Every rule below is
+# unanchored so it applies to each Node package in the tree -- `dashboard/`,
+# `docs/`, and any future one -- rather than being restated in a per-directory
+# `.gitignore` that then drifts from this one. Vendored trees under
+# `external/` keep their own upstream files; those are not ours to maintain.
+node_modules/
+.npm/
+.pnpm-store/
+.yarn/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# The launchers hide a successful install's output and print it only on
+# failure, so this holds the last one. It is deleted on success.
+/dashboard/.run.log
+
+# Build output. Every client here is built from tracked sources by `npm run
+# build`, so a committed build would be a second copy free to disagree with
+# the sources beside it, with nothing to say which was authoritative.
+dist/
+dist-ssr/
+dist-static/
+_site/
+# VitePress writes both of these under `docs/.vitepress/`. A pattern
+# containing a slash is anchored to the directory holding this file, so
+# `.vitepress/cache/` would match only a top-level one; the leading `**/`
+# is what makes it apply at any depth.
+**/.vitepress/cache/
+**/.vitepress/dist/
+
+# Vite and its toolchain
+.vite/
+vite.config.js.timestamp-*
+vite.config.ts.timestamp-*
+*.local
+
+# Test and type-check caches
+coverage/
+.nyc_output/
+.eslintcache
+.stylelintcache
+*.tsbuildinfo
+
+# The dashboard's published data snapshot is exported from the committed
+# artifacts by `script/export_dashboard_snapshot.mjs` at build time. It is
+# generated, not authored, so it is never committed.
+/dashboard/public/data/
+
+# Cloudflare tooling, retained from the documentation package. GitHub Pages is
+# the only maintained deployment target; these exist so a local experiment
+# cannot commit credentials.
+.wrangler/
+.dev.vars*
+
+# ---------------------------------------------------------------------------
+# Editors and temporary files
+# ---------------------------------------------------------------------------
 .idea/
 .vscode/
 *.swp
 *.swo
 *~
-
-# Temporary files
 .cache/
 *.bak
 *.temp
 *.tmp
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
 
 # Project command-line entry points are tracked only under /script.
 # Obsolete project-owned script directories must not be recreated.

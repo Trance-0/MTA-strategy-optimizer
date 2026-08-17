@@ -1,7 +1,7 @@
 ---
 title: Zheyuan Wu (Trance-0)
 description: Project manager work log covering pipeline development, integration, and algorithm testing
-compact: "Work log of Trance-0 (Zheyuan Wu), project manager: MTA-SIM integration, module restructuring, public release, specification-oriented documentation, Streamlit and stlite dashboard delivery, GitHub Pages, and Gitee plus self-hosted Gitea mirroring."
+compact: "Work log of Trance-0 (Zheyuan Wu), project manager: MTA-SIM integration, module restructuring, public release, specification-oriented documentation, dashboard delivery from Streamlit through stlite to the Vue client over a Node API, GitHub Pages, and Gitee plus self-hosted Gitea mirroring."
 order: 10
 lang: en-US
 ---
@@ -11,11 +11,23 @@ lang: en-US
 > Project: Marketing ROI Analysis
 > Handle: `Trance-0`
 > Role: Project manager — pipeline development, data simulation and integration, algorithm testing
-> Last updated: 2026-08-14
+> Last updated: 2026-08-15
 
 Entries are reconstructed from Git history. They record the change set behind each commit, not a separate narrative.
 
 ---
+
+## 2026-08-15
+
+### Completed
+
+- Replaced the Streamlit and stlite dashboard with a Vue 3 client over an Express JSON API, keeping the six views, the navigation rail, and the `DATABASE=true/false` contract unchanged in behavior, and published it as a static build reading a snapshot exported from the committed artifacts.
+- Fixed three defects that broke the promise that no view can tell which source it is reading: SQL row order against artifact order, a `Date` formatted into a weekday and a month name, and a CSV blank arriving where PostgreSQL sends NULL — 1,281 differences across four loaders, now none. Added the parity command and the twenty-seven-test suite the repository had been missing.
+- Rewrote both launchers for a one-click cold start and fixed five failures only a clean machine reaches, the sharpest being a Node version floor written as a major number where Vite's range turns on the minor: its bundler binding is optional, so npm skipped it in silence and the build failed minutes later naming neither Node nor the version.
+
+### Next
+
+- Collect first dated entries from Tianle Chen, Yi Liu, and Yayu Yu.
 
 ## 2026-08-14
 

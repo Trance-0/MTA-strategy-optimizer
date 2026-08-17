@@ -8,12 +8,14 @@ dependencies = []
 
 [project.optional-dependencies]
 # The attribution, standard, and strategy modules remain standard-library only.
-# These dependencies belong to the dashboard alone; install with:
+# These dependencies belong to the database import alone; install with:
 #   uv sync --extra dashboard
+#
+# The dashboard itself is a Vue client over a Node API and needs no Python at
+# all: `./dashboard/run.sh` installs its own dependencies with npm. What is
+# left here is what `script/import_to_database.py` needs to populate the
+# PostgreSQL mirror from the committed artifacts.
 dashboard = [
-    "streamlit>=1.40",
-    "plotly>=5.24",
-    "pandas>=2.2",
     "sqlalchemy>=2.0",
     "psycopg[binary]>=3.2",
     "python-dotenv>=1.0",
