@@ -11,11 +11,23 @@ lang: en-US
 > Project: Marketing ROI Analysis
 > Handle: `Trance-0`
 > Role: Project manager — pipeline development, data simulation and integration, algorithm testing
-> Last updated: 2026-08-15
+> Last updated: 2026-08-18
 
 Entries are reconstructed from Git history. They record the change set behind each commit, not a separate narrative.
 
 ---
+
+## 2026-08-18
+
+### Completed
+
+- Restructured the doc site's nav bar — dropped the redundant Home item, moved Dashboard to second position, and merged Versions and Work Log into a Logs dropdown — and renamed the Datasets section to Market Simulation across the config, directory, and roughly twenty cross-references.
+- Fixed `docs/version/0.9/` not collapsing by default and loosened the AGENTS.md work-log rule so an agent writes today's entry automatically while preparing a commit instead of asking first; this entry is the first written under that rule.
+- Reviewed a background inventory of the project's data representations — touchpoint keys, attribution results, spend records, and budget recommendations each have two to four incompatible shapes today — and drafted a class-based unification and migration plan, kept proposal-only per instruction.
+
+### Next
+
+- Decide where the shared data-type package should live (`modules/mta_common/` versus folding into `mta_standard`) and whether to start the low-risk `TouchpointKey` migration now or leave the plan proposal-only for longer.
 
 ## 2026-08-15
 

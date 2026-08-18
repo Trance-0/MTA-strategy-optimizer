@@ -16,7 +16,7 @@ In real AMC, event ordering, path construction, and privacy aggregation should o
 
 ## 2. Inputs and Data Locations
 
-Default demonstration inputs are under `modules/mta_attribution/data/simulated/`. See the [simulated data description](../datasets/amc-simulated-data.md) for file roles:
+Default demonstration inputs are under `modules/mta_attribution/data/simulated/`. See the [simulated data description](../market-simulation/amc-simulated-data.md) for file roles:
 
 - Synthetic user events: local simulation only and the common source of the other dynamic samples.
 - Anonymous conceptual events: aggregated from the master table by path template and used only for local path construction.
@@ -26,7 +26,7 @@ Default demonstration inputs are under `modules/mta_attribution/data/simulated/`
 
 One run accepts one marketplace, advertising account, and currency. Ads dates must be continuous, every day must have the same five-segment touchpoint set, and date/touchpoint combinations must be unique. The pipeline detects its window automatically from the earliest and latest Ads `reportDate`, so replacing the data does not require changing date configuration.
 
-The [data contract](../datasets/amc-data-contract.md) is authoritative for complete fields, numeric relationships, and alignment conditions.
+The [data contract](../market-simulation/amc-data-contract.md) is authoritative for complete fields, numeric relationships, and alignment conditions.
 
 ## 3. Five-Segment Touchpoints and Path Rules
 
@@ -117,7 +117,7 @@ After any failure, fix the input and rerun the complete group; never manually co
 ## 9. Five-Minute Demo
 
 1. Use the [AMC MTA module overview](amc-mta-module.md) to explain scope and the automatic window.
-2. Show the five-segment key and 14-day rules in the [data contract](../datasets/amc-data-contract.md).
+2. Show the five-segment key and 14-day rules in the [data contract](../market-simulation/amc-data-contract.md).
 3. Run the complete pipeline and alignment validation.
 4. Review all five results in the order in the [output index](output-reference.md).
 5. Use the recommendation table to explain the boundaries of `official`, `RELIABLE`, and unreliable intervals.

@@ -41,4 +41,4 @@ The touchpoint-comparison file has 14 columns. In addition to the primary key an
 - Efficiency metrics are empty for zero-cost rows. CPA-style metrics are also empty when their denominator is zero. Non-billable interactions do not copy cost.
 - None of the five outputs is a budget allocation, automated activation instruction, or causal-incrementality conclusion.
 
-See the [data contract](../datasets/amc-data-contract.md) for input, conservation, and cost rules, and the [complete usage guide](complete-guide.md) for the full review process.
+See the [data contract](../market-simulation/amc-data-contract.md) for input, conservation, and cost rules, and the [complete usage guide](complete-guide.md) for the full review process.

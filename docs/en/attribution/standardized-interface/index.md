@@ -305,7 +305,7 @@ Source: `modules/mta_standard/src/model_pipeline.py`
 
 ## References
 
-- [Datasets and the MTA-SIM contract](../../datasets/index.md)
+- [Market Simulation and the MTA-SIM contract](../../market-simulation/index.md)
 - [Markov removal effect](./markov.md)
 - [Path-level Shapley](./shapley.md)
 - [DNN credit model](./dnn.md)

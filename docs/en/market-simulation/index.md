@@ -1,11 +1,11 @@
 ---
-title: Datasets
+title: Market Simulation
 description: The MTA-SIM contract, this project's inputs, and compatibility boundaries
 compact: "Routing hub contrasting upstream MTA-SIM tables `amc_path_report`, `amazon_ads_daily_touchpoint_performance`, `simulation_ground_truth` with local inputs including `strategy_request.json` and `candidate_pool.json`. Explains four-segment versus five-segment incompatibility and what `modules/mta_standard/` adapter implements. Read to pick the right dataset page."
 lang: en-US
 ---
 
-# Datasets
+# Market Simulation
 
 This page adopts the documentation categories of the [Trance-0/MTA-SIM-dataset data contract](https://github.com/Trance-0/MTA-SIM-dataset/blob/main/ZheyuanWu/docs/DATA_CONTRACT.md) and [generation flow](https://github.com/Trance-0/MTA-SIM-dataset/blob/main/ZheyuanWu/docs/dataset-creation/generation-flow.md), and explains how they differ from this repository's current inputs.
 

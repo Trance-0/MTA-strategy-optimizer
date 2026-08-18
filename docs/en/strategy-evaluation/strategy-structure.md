@@ -119,7 +119,7 @@ class StrategyEvidence:
 
 | Field | Meaning |
 | --- | --- |
-| `attribution` | Rows from [the governed MTA recommendation](/en/datasets/amc-data-contract#models-and-outputs); each row contains a touchpoint, three Outcome shares, reliability status, and recommended value |
+| `attribution` | Rows from [the governed MTA recommendation](/en/market-simulation/amc-data-contract#models-and-outputs); each row contains a touchpoint, three Outcome shares, reliability status, and recommended value |
 | `candidates` | Eligible candidate counts per Campaign, as in the current [`candidate_pool.json`](/en/strategy-recommendation/output-data-contract) |
 | `entity_bridge` | Historical touchpoint-to-entity relationships for bridging attribution grain to Campaign grain |
 | `lineage` | Content hashes and scope of the evidence files, matching the pattern in the [current initializer](/en/strategy-recommendation/module-overview#1-verify-evidence-lineage-before-calculation) |

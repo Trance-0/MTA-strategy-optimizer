@@ -17,7 +17,7 @@ source_verification: true
 
 # Research Report: Technical
 
-> Historical research snapshot: this page records research and implementation recommendations as of 2026-07-06. Some directories and input structures differ from current code. The [AMC MTA module](../../../attribution/amc-mta-module.md) and [data contract](../../../datasets/amc-data-contract.md) govern current behavior.
+> Historical research snapshot: this page records research and implementation recommendations as of 2026-07-06. Some directories and input structures differ from current code. The [AMC MTA module](../../../attribution/amc-mta-module.md) and [data contract](../../../market-simulation/amc-data-contract.md) govern current behavior.
 
 **Date:** 2026-07-06
 **Author:** ericson

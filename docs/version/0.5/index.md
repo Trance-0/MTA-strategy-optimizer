@@ -2,7 +2,7 @@
 title: Version 0.5
 description: Expanded the demonstration dataset and consolidated the runnable campaign strategy initializer
 compact: "Historical record only: expanded the demonstration dataset used by the attribution and strategy stages, consolidated the runnable campaign strategy initializer and its canonical output, and documented the forward path toward response prediction and constrained optimization. Read for change provenance."
-order: 9
+order: 10
 ---
 
 # Version 0.5

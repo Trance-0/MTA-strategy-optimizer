@@ -19,6 +19,6 @@ Recommended order:
 
 1. [AMC overview](amc/)
 2. [AMC, MTA, and ROI data flow](amc/data-flow.md)
-3. [Current data contract](../../datasets/amc-data-contract.md)
+3. [Current data contract](../../market-simulation/amc-data-contract.md)
 4. [Historical technical research from 2026-07-06](research/technical-amazon-attribution-mta-2026-07-06.md)
 5. [Amazon research-original index](research/)

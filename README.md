@@ -33,7 +33,7 @@ The current results are appropriate for reproducible development, contract testi
 | Reproduce the current budget step by step | [Current Ad Group budget calculation](docs/en/strategy-recommendation/current-budget-calculation.md) |
 | Plan the research path from MTA to budget optimization | [Budget optimization problem and research plan](docs/en/strategy-recommendation/optimization-plan.md) |
 | Review the current module boundaries | [Module inventory](docs/en/reference/module-inventory.md) |
-| Review input, path, and metric contracts | [AMC data contract](docs/en/datasets/amc-data-contract.md) |
+| Review input, path, and metric contracts | [AMC data contract](docs/en/market-simulation/amc-data-contract.md) |
 | Review dual-model governance | [Model governance](docs/en/attribution/model-governance.md) |
 | Interpret touchpoint reliability | [Reliability guide](docs/en/attribution/reliability.md) |
 | Review maturity and planned work | [Progress and todos](docs/en/introduction/progress.md) |
@@ -165,7 +165,7 @@ Use caller-owned paths when testing other approved datasets:
 uv run python -X utf8 -B script/run_pipeline.py --events-file path/to/amc_touchpoint_events.csv --amazon-ads-report path/to/amazon_ads_report.csv --path-report path/to/amc_path_report.csv --output-dir path/to/attribution_outputs
 ```
 
-The pipeline detects its reporting window from the Amazon Ads input. Review the [AMC data contract](docs/en/datasets/amc-data-contract.md) before replacing inputs.
+The pipeline detects its reporting window from the Amazon Ads input. Review the [AMC data contract](docs/en/market-simulation/amc-data-contract.md) before replacing inputs.
 
 ## Run the strategy initializer
 

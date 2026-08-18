@@ -57,7 +57,7 @@ A single switch in `.env` decides where the numbers come from. `sample.env` is t
 | `DATABASE` | Reads from | Used for |
 | --- | --- | --- |
 | `false` | The committed CSV and JSON artifacts | Cloud demonstrations, and any checkout that has not run an import |
-| `true` | The PostgreSQL schema in [Dashboard data model](../datasets/dashboard-data-model.md) | A deployment with a populated database |
+| `true` | The PostgreSQL schema in [Dashboard data model](../market-simulation/dashboard-data-model.md) | A deployment with a populated database |
 
 `dashboard/server/data_source.js` is the only module that knows which mode is active. Every loader it exposes returns the **same fields, types, values, and row order in both modes**, so no view can tell them apart and no view contains a branch on the data source. `script/verify_dashboard_parity.mjs` asserts that property against a live database and exits non-zero on any difference.
 

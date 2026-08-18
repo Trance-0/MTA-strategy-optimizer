@@ -14,7 +14,7 @@ lang: en-US
 
 ## Scope
 
-- Created the Structured Query Language (SQL) database. Its schemas are documented as the [campaign data model](../en/datasets/campaign-data-model.md) and the [product data model](../en/datasets/product-data-model.md).
+- Created the Structured Query Language (SQL) database. Its schemas are documented as the [campaign data model](../en/market-simulation/campaign-data-model.md) and the [product data model](../en/market-simulation/product-data-model.md).
 - Shares ownership of the evaluation module, specified under [strategy evaluation](../en/strategy-evaluation/) and not yet implemented.
 
 ---

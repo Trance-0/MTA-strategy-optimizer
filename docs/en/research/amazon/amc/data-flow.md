@@ -18,7 +18,7 @@ AMC paths answer which combinations of touchpoints participated in conversion. A
 - AMC paths and models use `AD_PRODUCT:FORMAT:PLACEMENT:CREATIVE:INTERACTION_TYPE`; the final segment is `IMPRESSION` or `CLICK`.
 - Amazon Ads cost uses the same complete key. CPC belongs only to `CLICK`, CPM only to `IMPRESSION`, and non-billable interactions have zero cost. Output never collapses back to four segments.
 - `converted_users` counts unique purchasers; `purchase_count` counts orders. They are not interchangeable.
-- The [current data contract](../../../datasets/amc-data-contract.md) defines the contiguous 14-day path, report window, and model constraints.
+- The [current data contract](../../../market-simulation/amc-data-contract.md) defines the contiguous 14-day path, report window, and model constraints.
 
 ## Metrics
 

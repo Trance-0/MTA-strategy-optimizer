@@ -54,7 +54,7 @@ Current outputs should be understood as **historical evidence and a budget start
 | Initial-strategy plan and contract | [Overall model plan](../strategy-recommendation/model-plan.md) |
 | Current budget calculation | [Step-by-step Ad Group initial-budget calculation](../strategy-recommendation/current-budget-calculation.md) |
 | Future budget optimization research | [Problem definition and research plan](../strategy-recommendation/optimization-plan.md) |
-| Input fields, paths, and cost rules | [AMC MTA data contract](../datasets/amc-data-contract.md) |
+| Input fields, paths, and cost rules | [AMC MTA data contract](../market-simulation/amc-data-contract.md) |
 | Markov/Shapley gaps and decision status | [Model-comparison governance](../attribution/model-governance.md) |
 | Individual-touchpoint reliability | [Touchpoint reliability guide](../attribution/reliability.md) |
 | Campaign Group data hierarchy | [Campaign Group hierarchy and finest performance grain](../research/campaign-data-hierarchy.md) |
@@ -84,7 +84,7 @@ Historical material under `design-artifacts/`, `_bmad-output/`, and `docs/zh/spe
 
 ## Continue Reading
 
-- [Datasets and compatibility](../datasets/index.md)
+- [Market simulation and compatibility](../market-simulation/index.md)
 - [Attribution model overview](../attribution/index.md)
 - [Strategy optimization model](../strategy-recommendation/index.md)
 - [Dashboard](../dashboard/index.md)

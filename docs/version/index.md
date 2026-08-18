@@ -13,6 +13,7 @@ This section records **what** changed. See the [work log](../worklog/) for **who
 
 | Version | Date | Summary |
 | --- | --- | --- |
+| [0.9.15](0.9.15.md) | 2026-08-18 | Restructured the nav bar, renamed Datasets to Market Simulation, fixed version-folder default collapse, and loosened the work-log confirmation rule |
 | [0.9.14](0.9.14.md) | 2026-08-17 | Fixed nested sidebar folder titles, reversed version-log compaction into per-minor-version folders, and fixed the sidebar's alphabetical version sort |
 | [0.9.13](0.9.13.md) | 2026-08-17 | Moved Environment under Introduction and renamed Strategy Recommendation, fixed the resulting sidebar and cross-link breakage, and hardened the docs launcher against silent failures |
 | [0.9.12](0.9.12.md) | 2026-08-17 | Split the monolithic dashboard documentation page into `index.md`, `views.md`, `navigation.md`, `deployment.md`, and `database-import.md` |

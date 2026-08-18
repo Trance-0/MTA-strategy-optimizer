@@ -19,7 +19,7 @@ The project simulates AMC-style aggregate paths and joins cost from a separate A
 ## Reading Entry Points
 
 - [AMC, MTA, and ROI data flow](data-flow.md)
-- [Current data contract](../../../datasets/amc-data-contract.md)
+- [Current data contract](../../../market-simulation/amc-data-contract.md)
 - [AMC MTA project introduction](../../../introduction/amc-mta-introduction.md)
 - [Historical technical research from 2026-07-06](../research/technical-amazon-attribution-mta-2026-07-06.md)
 

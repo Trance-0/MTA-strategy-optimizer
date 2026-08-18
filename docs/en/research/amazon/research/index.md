@@ -17,4 +17,4 @@ This index describes external Amazon Ads, Amazon Attribution, and AMC originals 
 | [Original Amazon research](/research/amazon/research/amazon调研.docx) | DOCX | advertising products, billing, and AMC background |
 | [2026-07-06 technical research](technical-amazon-attribution-mta-2026-07-06.md) | Markdown | historical snapshot; current behavior follows module contracts |
 
-Read the parent [Amazon research entry](../) and [AMC overview](../amc/) before selecting an original. The [AMC MTA data contract](../../../datasets/amc-data-contract.md) is the authority for current fields and calculations.
+Read the parent [Amazon research entry](../) and [AMC overview](../amc/) before selecting an original. The [AMC MTA data contract](../../../market-simulation/amc-data-contract.md) is the authority for current fields and calculations.

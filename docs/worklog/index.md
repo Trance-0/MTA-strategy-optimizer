@@ -32,7 +32,7 @@ The 2026-08-08 boundary marks the handover of development ownership from Jiahao 
 | Pipeline, integration, script centralization | Zheyuan Wu | `script/`, `modules/mta_standard/` |
 | Data simulation | Zheyuan Wu, with the earlier data-collection groups | `external/mta_sim_dataset/`, `modules/*/data/simulated/` |
 | Algorithm testing, DNN attribution | Zheyuan Wu | `modules/mta_attribution/src/dnn_attribution_model.py` |
-| SQL database | Tianle Chen | External service schemas; see [campaign](../en/datasets/campaign-data-model.md) and [product](../en/datasets/product-data-model.md) data models |
+| SQL database | Tianle Chen | External service schemas; see [campaign](../en/market-simulation/campaign-data-model.md) and [product](../en/market-simulation/product-data-model.md) data models |
 | Evaluation module | Tianle Chen, Yi Liu | `modules/mta_strategy_evaluation/`, specified in [strategy evaluation](../en/strategy-evaluation/) |
 | Knowledge base, ontology, research | Yayu Yu | [Research](../en/research/) |
 

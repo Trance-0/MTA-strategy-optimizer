@@ -284,7 +284,7 @@ Without `--check-output`, the generator writes its result to standard output so 
 - [Problem definition and research plan from MTA to Ad Group budget](optimization-plan.md)
 - [Output data contract](output-data-contract.md)
 - [Budget strategy output contract](strategy-output-contract.md)
-- [Simulated input description](../datasets/strategy-simulated-data.md)
+- [Simulated input description](../market-simulation/strategy-simulated-data.md)
 - Canonical initial-budget result: `modules/mta_strategy_recommendation/outputs/initial_budget_recommendation.json`
 
 ## Source Files <span class="status-label status-verified" aria-label="Verified"></span>

@@ -207,14 +207,14 @@ For a first review, read “this page → [complete usage guide](complete-guide.
 
 ## Documentation
 
-- [Data contract](../datasets/amc-data-contract.md): the only complete description of fields, 14-day path rules, AMC/Ads five-segment keys, billing assignment, and model semantics.
+- [Data contract](../market-simulation/amc-data-contract.md): the only complete description of fields, 14-day path rules, AMC/Ads five-segment keys, billing assignment, and model semantics.
 - [Running the module](../introduction/environment/amc-mta-usage.md): commands, parameters, and outputs.
 - [Single-touchpoint attribution reliability](reliability.md): judge a result using calculation validity, sufficient data support, and model consistency.
-- [Amazon Ads sample](../datasets/amazon-ads-sample.md): cost table and join key.
-- [Simulated data](../datasets/amc-simulated-data.md): roles of the user-event master table and four derived artifacts.
+- [Amazon Ads sample](../market-simulation/amazon-ads-sample.md): cost table and join key.
+- [Simulated data](../market-simulation/amc-simulated-data.md): roles of the user-event master table and four derived artifacts.
 - AMC platform background research and project-management material are external to the original project. They are neither runtime dependencies nor included with the standalone `mta_attribution/` submission.
 
-AMC paths, Amazon Ads inputs, and attribution outputs all use `AD_PRODUCT:FORMAT:PLACEMENT:CREATIVE:INTERACTION_TYPE`, where `INTERACTION_TYPE` may only be `IMPRESSION` or `CLICK`. CPC cost is assigned only to CLICK, CPM cost only to IMPRESSION, and non-billable interactions have zero cost. AMC input explicitly distinguishes `converted_users` (unique purchasing users) from `purchase_count` (order count). The [data contract](../datasets/amc-data-contract.md) defines the complete constraints.
+AMC paths, Amazon Ads inputs, and attribution outputs all use `AD_PRODUCT:FORMAT:PLACEMENT:CREATIVE:INTERACTION_TYPE`, where `INTERACTION_TYPE` may only be `IMPRESSION` or `CLICK`. CPC cost is assigned only to CLICK, CPM cost only to IMPRESSION, and non-billable interactions have zero cost. AMC input explicitly distinguishes `converted_users` (unique purchasing users) from `purchase_count` (order count). The [data contract](../market-simulation/amc-data-contract.md) defines the complete constraints.
 
 ## Source Files <span class="status-label status-verified" aria-label="Verified"></span>
 
