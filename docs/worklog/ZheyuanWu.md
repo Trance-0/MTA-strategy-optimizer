@@ -22,12 +22,12 @@ Entries are reconstructed from Git history. They record the change set behind ea
 ### Completed
 
 - Restructured the doc site's nav bar — dropped the redundant Home item, moved Dashboard to second position, and merged Versions and Work Log into a Logs dropdown — renamed the Datasets section to Market Simulation across the config, directory, and roughly twenty cross-references, fixed `docs/version/0.9/` not collapsing by default, and loosened the AGENTS.md work-log rule so an agent writes today's entry automatically instead of asking first; this entry is the first written under that rule.
-- Reviewed a background inventory of the project's data representations — touchpoint keys, attribution results, spend records, and budget recommendations each have two to four incompatible shapes today — and drafted a class-based unification and migration plan, kept proposal-only per instruction.
+- Followed through on the data-representation unification plan drafted earlier and built `modules/mta_common/`: provider-independent, frozen dataclasses for touchpoints, campaigns, products, budgets, delivery, outcomes, attribution evidence, and episodes, plus a legacy-to-canonical compatibility bridge, 96 passing tests, and 27 documentation pages under `docs/en/introduction/data-models/`.
 - Recorded the `external/UI_design/` reference prototype's move to `design-artifacts/UI_design/`, matching the documented split between `external/` for pinned third-party repositories and `design-artifacts/` for historical product vision.
 
 ### Next
 
-- Decide where the shared data-type package should live (`modules/mta_common/` versus folding into `mta_standard`) and whether to start the low-risk `TouchpointKey` migration now or leave the plan proposal-only for longer.
+- Wire `modules/mta_attribution`, `mta_standard`, `mta_strategy_recommendation`, and `mta_strategy_evaluation`, plus the dashboard's database schema, to actually consume `modules/mta_common` instead of their current native shapes — nothing outside its own test suite calls it yet.
 
 ## 2026-08-15
 
