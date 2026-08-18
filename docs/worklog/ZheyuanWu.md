@@ -21,9 +21,9 @@ Entries are reconstructed from Git history. They record the change set behind ea
 
 ### Completed
 
-- Restructured the doc site's nav bar — dropped the redundant Home item, moved Dashboard to second position, and merged Versions and Work Log into a Logs dropdown — and renamed the Datasets section to Market Simulation across the config, directory, and roughly twenty cross-references.
-- Fixed `docs/version/0.9/` not collapsing by default and loosened the AGENTS.md work-log rule so an agent writes today's entry automatically while preparing a commit instead of asking first; this entry is the first written under that rule.
+- Restructured the doc site's nav bar — dropped the redundant Home item, moved Dashboard to second position, and merged Versions and Work Log into a Logs dropdown — renamed the Datasets section to Market Simulation across the config, directory, and roughly twenty cross-references, fixed `docs/version/0.9/` not collapsing by default, and loosened the AGENTS.md work-log rule so an agent writes today's entry automatically instead of asking first; this entry is the first written under that rule.
 - Reviewed a background inventory of the project's data representations — touchpoint keys, attribution results, spend records, and budget recommendations each have two to four incompatible shapes today — and drafted a class-based unification and migration plan, kept proposal-only per instruction.
+- Recorded the `external/UI_design/` reference prototype's move to `design-artifacts/UI_design/`, matching the documented split between `external/` for pinned third-party repositories and `design-artifacts/` for historical product vision.
 
 ### Next
 
