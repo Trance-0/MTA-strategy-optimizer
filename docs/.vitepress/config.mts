@@ -47,6 +47,8 @@ const sidebar = generateSidebar([
     collapseFromLevel: 2,
     rootGroupText: "Introduction",
     rootGroupLink: "/en/introduction/",
+    sortMenusByFrontmatterOrder: true,
+    frontmatterOrderDefaultValue: 100,
   },
   {
     documentRootPath: ".",

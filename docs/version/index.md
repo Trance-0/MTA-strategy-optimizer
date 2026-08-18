@@ -11,6 +11,11 @@ The project version is recorded in the repository-root `VERSION` file. Each page
 
 This section records **what** changed. See the [work log](../worklog/) for **who** did the work and when.
 
+## [0.9.19](0.9.19.md)
+
+- Date: 2026-08-18
+- Summary: Grouped the canonical data-model class reference into eight ordered subsections and added a vertical topological Draw.io dependency map with arrows reserved for foreign-key-style identifiers
+
 ## [0.9.18](0.9.18.md)
 
 - Date: 2026-08-18

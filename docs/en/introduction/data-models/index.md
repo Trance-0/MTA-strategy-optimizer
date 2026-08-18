@@ -1,7 +1,7 @@
 ---
 title: Canonical Data Model
 description: Provider-independent domain model foundation shared across attribution, strategy, and dashboard modules
-compact: "Provider-independent canonical dataclasses (Touchpoint, Campaign, Product, Budget, Outcome, AttributionEvidence, CampaignEpisode) replacing the five-segment string key as ground truth, with a legacy compatibility bridge. Foundation only: no optimizer, incrementality estimation, or similarity calculation implemented."
+compact: "Provider-independent canonical dataclasses and their relationship diagram, grouped into vocabularies, provider/touchpoint contracts, identities, observations, evidence, episodes, and presentation-only types. Covers the legacy compatibility bridge; no optimizer, incrementality estimation, or similarity calculation is implemented."
 lang: en-US
 source_files: modules/mta_common/src/enums.py, modules/mta_common/src/provider_capabilities.py, modules/mta_common/src/touchpoint.py, modules/mta_common/src/reporting_scope.py, modules/mta_common/src/campaign.py, modules/mta_common/src/product.py, modules/mta_common/src/budget.py, modules/mta_common/src/delivery.py, modules/mta_common/src/outcome.py, modules/mta_common/src/attribution_evidence.py, modules/mta_common/src/lineage.py, modules/mta_common/src/episode.py, modules/mta_common/src/evaluation_only.py, modules/mta_common/src/presentation/similarity.py, modules/mta_common/src/legacy_adapters.py
 ---
@@ -34,61 +34,70 @@ The model-facing flow runs in one direction:
 4. `CampaignEpisode` composes one campaign's decision-time and observed-after-treatment records into the shape a future response model would consume.
 5. A future response model and a future strategy optimizer would read `CampaignEpisode` (and, for evaluation only, `EvaluationEpisode`). Neither is implemented in this module.
 
-A second, separate path does not feed back into the flow above: canonical product and campaign information may in the future feed a similarity process, whose output is a `SimilarityReference` consumed only by the dashboard for display. `SimilarityReference` lives in the separate `presentation` namespace precisely so this one-way path cannot be mistaken for model input. See [Similarity Reference](./similarity-reference.md) for the isolation guarantee and its tests.
+A second, separate path does not feed back into the flow above: canonical product and campaign information may in the future feed a similarity process, whose output is a `SimilarityReference` consumed only by the dashboard for display. `SimilarityReference` lives in the separate `presentation` namespace precisely so this one-way path cannot be mistaken for model input. See [Similarity Reference](/en/introduction/data-models/presentation-only-similarity/similarity-reference.md) for the isolation guarantee and its tests.
+
+## Relationship Diagram <span class="status-label status-verified" aria-label="Verified"></span>
+
+The diagram is a vertical topological map of every canonical data class and vocabulary: a term appears only after the terms it depends on. Each consumer box names its typed dependencies directly so the graph does not need connector lines for ordinary fields. Orange arrows are reserved exclusively for foreign-key-style identifier relationships and point from the referenced identity to the referencing record. `SimilarityReference` uses plain presentation identifiers rather than foreign keys and therefore has no arrow. `StrategyObjective` remains intentionally unused because no current data class stores it.
+
+<DrawioDiagram base="./canonical-data-model-relationships" alt="Relationships among the canonical data model classes and vocabularies" />
+
+> [!NOTE]
+> Follow-up: revisit the class-index dependency diagram after the canonical classes are integrated into the attribution, strategy, evaluation, and dashboard paths; their adopted runtime relationships may justify a different grouping or topology.
 
 ## Class Index <span class="status-label status-verified" aria-label="Verified"></span>
 
-### Vocabularies
+### [Vocabularies](./vocabularies/index.md)
 
 Seven `StrEnum` classes in `enums.py`, the repository's only use of `Enum` outside this module — see each page's Known Limitations for why.
 
-- [Provider](./provider.md): which advertising platform a record came from, independent of `ad_product`.
-- [Field Availability](./field-availability.md): the five explicit reasons a field may not carry a value.
-- [Strategy Objective](./strategy-objective.md): what a future optimizer would maximize.
-- [Budget Usage Policy](./budget-usage-policy.md): whether a future optimizer must exhaust an authorized budget.
-- [Assignment Type](./assignment-type.md): how a budget was assigned, reserved for a future intervention study.
-- [Record Classification](./record-classification.md): when in the decision cycle a record's fields became available.
-- [Margin Source](./margin-source.md): whether a `ProductEconomics` margin was given directly or derived.
+- [Provider](/en/introduction/data-models/vocabularies/provider.md): which advertising platform a record came from, independent of `ad_product`.
+- [Field Availability](/en/introduction/data-models/vocabularies/field-availability.md): the five explicit reasons a field may not carry a value.
+- [Strategy Objective](/en/introduction/data-models/vocabularies/strategy-objective.md): what a future optimizer would maximize.
+- [Budget Usage Policy](/en/introduction/data-models/vocabularies/budget-usage-policy.md): whether a future optimizer must exhaust an authorized budget.
+- [Assignment Type](/en/introduction/data-models/vocabularies/assignment-type.md): how a budget was assigned, reserved for a future intervention study.
+- [Record Classification](/en/introduction/data-models/vocabularies/record-classification.md): when in the decision cycle a record's fields became available.
+- [Margin Source](/en/introduction/data-models/vocabularies/margin-source.md): whether a `ProductEconomics` margin was given directly or derived.
 
-### Touchpoint and Provider Contract
+### [Touchpoint and Provider Contract](./touchpoint-and-provider-contract/index.md)
 
-- [Provider Capabilities](./provider-capabilities.md): a provider-level ceiling declaring which `Touchpoint` fields a provider can supply at all.
-- [Touchpoint](./touchpoint.md): the canonical, typed replacement for the five-segment string key.
-- [Touchpoint Field Availability](./touchpoint-field-availability.md): the per-record realization of `ProviderCapabilities` for one `Touchpoint` instance.
-- [Reporting Scope](./reporting-scope.md): the account, market, currency, and date window an observation covers.
+- [Provider Capabilities](/en/introduction/data-models/touchpoint-and-provider-contract/provider-capabilities.md): a provider-level ceiling declaring which `Touchpoint` fields a provider can supply at all.
+- [Touchpoint](/en/introduction/data-models/touchpoint-and-provider-contract/touchpoint.md): the canonical, typed replacement for the five-segment string key.
+- [Touchpoint Field Availability](/en/introduction/data-models/touchpoint-and-provider-contract/touchpoint-field-availability.md): the per-record realization of `ProviderCapabilities` for one `Touchpoint` instance.
+- [Reporting Scope](/en/introduction/data-models/touchpoint-and-provider-contract/reporting-scope.md): the account, market, currency, and date window an observation covers.
 
-### Campaign Identity
+### [Campaign Identity](./campaign-identity/index.md)
 
-- [Campaign](./campaign.md): one advertising campaign, independent of provider or product count.
-- [Ad Group](./ad-group.md): one ad group belonging to exactly one Campaign.
+- [Campaign](/en/introduction/data-models/campaign-identity/campaign.md): one advertising campaign, independent of provider or product count.
+- [Ad Group](/en/introduction/data-models/campaign-identity/ad-group.md): one ad group belonging to exactly one Campaign.
 
-### Product Identity and Economics
+### [Product Identity and Economics](./product-identity-and-economics/index.md)
 
-- [Product](./product.md): a business product, identified independently of any ad platform.
-- [Product Economics](./product-economics.md): a product's price and cost structure, with missing cost-of-goods-sold kept missing rather than zero-filled.
-- [Campaign Product Link](./campaign-product-link.md): the explicit many-to-many relationship between Campaign and Product.
+- [Product](/en/introduction/data-models/product-identity-and-economics/product.md): a business product, identified independently of any ad platform.
+- [Product Economics](/en/introduction/data-models/product-identity-and-economics/product-economics.md): a product's price and cost structure, with missing cost-of-goods-sold kept missing rather than zero-filled.
+- [Campaign Product Link](/en/introduction/data-models/product-identity-and-economics/campaign-product-link.md): the explicit many-to-many relationship between Campaign and Product.
 
-### Budget, Delivery, and Outcome Observations
+### [Budget, Delivery, and Outcome Observations](./budget-delivery-and-outcome-observations/index.md)
 
-- [Budget Constraints](./budget-constraints.md): forward-looking budget bounds and usage policy for one campaign.
-- [Budget Observation](./budget-observation.md): configured budget versus actual spend, kept as two independent fields.
-- [Delivery Observation](./delivery-observation.md): impressions, clicks, and cost observed for one Touchpoint.
-- [Outcome Observation](./outcome-observation.md): total, organic, and incremental outcomes, kept distinct.
+- [Budget Constraints](/en/introduction/data-models/budget-delivery-and-outcome-observations/budget-constraints.md): forward-looking budget bounds and usage policy for one campaign.
+- [Budget Observation](/en/introduction/data-models/budget-delivery-and-outcome-observations/budget-observation.md): configured budget versus actual spend, kept as two independent fields.
+- [Delivery Observation](/en/introduction/data-models/budget-delivery-and-outcome-observations/delivery-observation.md): impressions, clicks, and cost observed for one Touchpoint.
+- [Outcome Observation](/en/introduction/data-models/budget-delivery-and-outcome-observations/outcome-observation.md): total, organic, and incremental outcomes, kept distinct.
 
-### Historical Evidence and Lineage
+### [Historical Evidence and Lineage](./historical-evidence-and-lineage/index.md)
 
-- [Attribution Evidence](./attribution-evidence.md): one touchpoint's attributed share of one outcome, free of any optimization claim.
-- [Data Lineage](./data-lineage.md): where a record came from, without coupling to a local file path.
+- [Attribution Evidence](/en/introduction/data-models/historical-evidence-and-lineage/attribution-evidence.md): one touchpoint's attributed share of one outcome, free of any optimization claim.
+- [Data Lineage](/en/introduction/data-models/historical-evidence-and-lineage/data-lineage.md): where a record came from, without coupling to a local file path.
 
-### Composed Episodes and Evaluation Isolation
+### [Composed Episodes and Evaluation Isolation](./composed-episodes-and-evaluation-isolation/index.md)
 
-- [Campaign Episode](./campaign-episode.md): one campaign's decision-time and observed-after-treatment fields, composed for a future response model.
-- [Evaluation Ground Truth](./evaluation-ground-truth.md): simulator-known truth, isolated to evaluation-only code.
-- [Evaluation Episode](./evaluation-episode.md): a `CampaignEpisode` paired with its `EvaluationGroundTruth`, by composition rather than inheritance.
+- [Campaign Episode](/en/introduction/data-models/composed-episodes-and-evaluation-isolation/campaign-episode.md): one campaign's decision-time and observed-after-treatment fields, composed for a future response model.
+- [Evaluation Ground Truth](/en/introduction/data-models/composed-episodes-and-evaluation-isolation/evaluation-ground-truth.md): simulator-known truth, isolated to evaluation-only code.
+- [Evaluation Episode](/en/introduction/data-models/composed-episodes-and-evaluation-isolation/evaluation-episode.md): a `CampaignEpisode` paired with its `EvaluationGroundTruth`, by composition rather than inheritance.
 
-### Presentation-Only Similarity
+### [Presentation-Only Similarity](./presentation-only-similarity/index.md)
 
-- [Similarity Reference](./similarity-reference.md): a dashboard-facing "similar items" pointer, structurally isolated from every model-facing class.
+- [Similarity Reference](/en/introduction/data-models/presentation-only-similarity/similarity-reference.md): a dashboard-facing "similar items" pointer, structurally isolated from every model-facing class.
 
 ## Legacy Compatibility Direction <span class="status-label status-verified" aria-label="Verified"></span>
 
@@ -103,15 +112,15 @@ Every lossy conversion this bridge performs is documented once in `legacy_adapte
 
 ### Relationship to Attribution Documentation
 
-The five-segment key this model wraps is specified in [Attribution Model Overview](/en/attribution/index.md) and canonicalized by `touchpoint_key.py`, described there under its Source Files section. [Touchpoint](./touchpoint.md) and [Attribution Evidence](./attribution-evidence.md) reference that existing contract rather than restating its validation rules.
+The five-segment key this model wraps is specified in [Attribution Model Overview](/en/attribution/index.md) and canonicalized by `touchpoint_key.py`, described there under its Source Files section. [Touchpoint](/en/introduction/data-models/touchpoint-and-provider-contract/touchpoint.md) and [Attribution Evidence](/en/introduction/data-models/historical-evidence-and-lineage/attribution-evidence.md) reference that existing contract rather than restating its validation rules.
 
 ### Relationship to Market Simulation Documentation
 
-The four-segment MTA-SIM key, `AttributionResult`, and `TouchpointSpend` this model adapts are specified in [Market Simulation and Compatibility](/en/market-simulation/index.md), [Campaign data model](/en/market-simulation/campaign-data-model.md), and [Product data model](/en/market-simulation/product-data-model.md). `simulation_ground_truth`'s existing isolation, documented there, is the precedent [Evaluation Ground Truth](./evaluation-ground-truth.md) follows for the canonical model.
+The four-segment MTA-SIM key, `AttributionResult`, and `TouchpointSpend` this model adapts are specified in [Market Simulation and Compatibility](/en/market-simulation/index.md), [Campaign data model](/en/market-simulation/campaign-data-model.md), and [Product data model](/en/market-simulation/product-data-model.md). `simulation_ground_truth`'s existing isolation, documented there, is the precedent [Evaluation Ground Truth](/en/introduction/data-models/composed-episodes-and-evaluation-isolation/evaluation-ground-truth.md) follows for the canonical model.
 
 ### Relationship to Strategy Recommendation
 
-`strategy_request.json`'s Campaign, Ad Group, and budget fields, adapted by `legacy_adapters.py` into [Campaign](./campaign.md), [Ad Group](./ad-group.md), [Budget Constraints](./budget-constraints.md), and [Budget Observation](./budget-observation.md), are specified in [Strategy Recommendation](/en/strategy-recommendation/index.md).
+`strategy_request.json`'s Campaign, Ad Group, and budget fields, adapted by `legacy_adapters.py` into [Campaign](/en/introduction/data-models/campaign-identity/campaign.md), [Ad Group](/en/introduction/data-models/campaign-identity/ad-group.md), [Budget Constraints](/en/introduction/data-models/budget-delivery-and-outcome-observations/budget-constraints.md), and [Budget Observation](/en/introduction/data-models/budget-delivery-and-outcome-observations/budget-observation.md), are specified in [Strategy Recommendation](/en/strategy-recommendation/index.md).
 
 ## Source Files <span class="status-label status-verified" aria-label="Verified"></span>
 

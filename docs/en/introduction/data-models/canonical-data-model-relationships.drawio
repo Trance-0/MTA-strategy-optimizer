@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="app.diagrams.net" modified="2026-08-18T00:00:00.000Z" agent="Codex" version="24.7.17">
+  <diagram id="canonical-model-topology" name="Page-1">
+    <mxGraphModel dx="2400" dy="2180" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="2400" pageHeight="2180" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <mxCell id="title" value="&lt;b&gt;Canonical data model term dependencies&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#666666;align=center;verticalAlign=middle;fontSize=28;" vertex="1" parent="1">
+          <mxGeometry x="300" y="20" width="1800" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="reading-rule" value="Read from top to bottom: dependencies precede consumers. Boxes name typed dependencies. Orange arrows alone show foreign-key-style identifiers, from the referenced identity to the referencing record." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff4e5;strokeColor=#d68910;fontSize=15;" vertex="1" parent="1">
+          <mxGeometry x="250" y="80" width="1900" height="60" as="geometry" />
+        </mxCell>
+
+        <mxCell id="tier-1" value="1 · Controlled vocabularies" style="swimlane;html=1;rounded=1;container=0;collapsible=0;startSize=44;fillColor=#f5f5f5;strokeColor=#666666;fontStyle=1;fontSize=19;horizontal=1;" vertex="1" parent="1">
+          <mxGeometry x="20" y="170" width="2360" height="250" as="geometry" />
+        </mxCell>
+        <mxCell id="tier-2" value="2 · Shared value objects and capability contracts" style="swimlane;html=1;rounded=1;container=0;collapsible=0;startSize=44;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;fontSize=19;horizontal=1;" vertex="1" parent="1">
+          <mxGeometry x="20" y="450" width="2360" height="270" as="geometry" />
+        </mxCell>
+        <mxCell id="tier-3" value="3 · Canonical identities and provenance" style="swimlane;html=1;rounded=1;container=0;collapsible=0;startSize=44;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;fontSize=19;horizontal=1;" vertex="1" parent="1">
+          <mxGeometry x="20" y="750" width="2360" height="300" as="geometry" />
+        </mxCell>
+        <mxCell id="tier-4" value="4 · Identifier-linked records, observations, and evidence" style="swimlane;html=1;rounded=1;container=0;collapsible=0;startSize=44;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=1;fontSize=19;horizontal=1;" vertex="1" parent="1">
+          <mxGeometry x="20" y="1080" width="2360" height="360" as="geometry" />
+        </mxCell>
+        <mxCell id="tier-5" value="5 · Model-facing composition and presentation terminal" style="swimlane;html=1;rounded=1;container=0;collapsible=0;startSize=44;fillColor=#e1d5e7;strokeColor=#9673a6;fontStyle=1;fontSize=19;horizontal=1;" vertex="1" parent="1">
+          <mxGeometry x="20" y="1470" width="2360" height="300" as="geometry" />
+        </mxCell>
+        <mxCell id="tier-6" value="6 · Evaluation-only composition" style="swimlane;html=1;rounded=1;container=0;collapsible=0;startSize=44;fillColor=#d0cee2;strokeColor=#56517e;fontStyle=1;fontSize=19;horizontal=1;" vertex="1" parent="1">
+          <mxGeometry x="20" y="1800" width="2360" height="300" as="geometry" />
+        </mxCell>
+
+        <mxCell id="fk-campaign-ad-group" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;strokeColor=#d68910;strokeWidth=3;exitX=0.12;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="campaign" target="ad-group">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="fk-campaign-budget-constraints" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;strokeColor=#d68910;strokeWidth=3;exitX=0.38;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="campaign" target="budget-constraints">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="fk-campaign-budget-observation" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;strokeColor=#d68910;strokeWidth=3;exitX=0.64;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="campaign" target="budget-observation">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="fk-campaign-product-link" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;strokeColor=#d68910;strokeWidth=3;exitX=0.9;exitY=1;entryX=0.35;entryY=0;" edge="1" parent="1" source="campaign" target="campaign-product-link">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="fk-product-campaign-product-link" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;strokeColor=#d68910;strokeWidth=3;exitX=0.3;exitY=1;entryX=0.65;entryY=0;" edge="1" parent="1" source="product" target="campaign-product-link">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="fk-product-economics" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;strokeColor=#d68910;strokeWidth=3;exitX=0.72;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="product" target="product-economics">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <mxCell id="provider" value="&lt;b&gt;Provider&lt;/b&gt;&lt;br&gt;Advertising-platform vocabulary" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#666666;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="30" y="250" width="300" height="105" as="geometry" />
+        </mxCell>
+        <mxCell id="field-availability" value="&lt;b&gt;FieldAvailability&lt;/b&gt;&lt;br&gt;Five explicit availability states" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#666666;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="365" y="250" width="300" height="105" as="geometry" />
+        </mxCell>
+        <mxCell id="strategy-objective" value="&lt;b&gt;StrategyObjective&lt;/b&gt;&lt;br&gt;No current consumer" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#666666;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="700" y="250" width="300" height="105" as="geometry" />
+        </mxCell>
+        <mxCell id="budget-usage-policy" value="&lt;b&gt;BudgetUsagePolicy&lt;/b&gt;&lt;br&gt;Consumed by BudgetConstraints" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#666666;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="1035" y="250" width="300" height="105" as="geometry" />
+        </mxCell>
+        <mxCell id="assignment-type" value="&lt;b&gt;AssignmentType&lt;/b&gt;&lt;br&gt;Consumed by BudgetObservation" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#666666;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="1370" y="250" width="300" height="105" as="geometry" />
+        </mxCell>
+        <mxCell id="record-classification" value="&lt;b&gt;RecordClassification&lt;/b&gt;&lt;br&gt;Consumed by DataLineage" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#666666;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="1705" y="250" width="300" height="105" as="geometry" />
+        </mxCell>
+        <mxCell id="margin-source" value="&lt;b&gt;MarginSource&lt;/b&gt;&lt;br&gt;Consumed by ProductEconomics" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#666666;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="2040" y="250" width="300" height="105" as="geometry" />
+        </mxCell>
+
+        <mxCell id="provider-capabilities" value="&lt;b&gt;ProviderCapabilities&lt;/b&gt;&lt;br&gt;Uses: Provider, FieldAvailability&lt;br&gt;Provider-wide capability ceiling" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#6c8ebf;fontSize=15;" vertex="1" parent="1">
+          <mxGeometry x="100" y="540" width="450" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="touchpoint-field-availability" value="&lt;b&gt;TouchpointFieldAvailability&lt;/b&gt;&lt;br&gt;Uses: FieldAvailability&lt;br&gt;Per-record availability state" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#6c8ebf;fontSize=15;" vertex="1" parent="1">
+          <mxGeometry x="650" y="540" width="450" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="reporting-scope" value="&lt;b&gt;ReportingScope&lt;/b&gt;&lt;br&gt;No canonical type dependencies&lt;br&gt;Account, market, currency, and dates" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#6c8ebf;fontSize=15;" vertex="1" parent="1">
+          <mxGeometry x="1200" y="540" width="450" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="evaluation-ground-truth" value="&lt;b&gt;EvaluationGroundTruth&lt;/b&gt;&lt;br&gt;No canonical type dependencies&lt;br&gt;Evaluation-only simulator truth" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#6c8ebf;fontSize=15;" vertex="1" parent="1">
+          <mxGeometry x="1750" y="540" width="450" height="120" as="geometry" />
+        </mxCell>
+
+        <mxCell id="campaign" value="&lt;b&gt;Campaign&lt;/b&gt;&lt;br&gt;Uses: Provider, ReportingScope&lt;br&gt;Referenced identity for campaign_id" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#82b366;fontSize=15;" vertex="1" parent="1">
+          <mxGeometry x="50" y="850" width="500" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="product" value="&lt;b&gt;Product&lt;/b&gt;&lt;br&gt;No canonical type dependencies&lt;br&gt;Referenced identity for product_id" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#82b366;fontSize=15;" vertex="1" parent="1">
+          <mxGeometry x="650" y="850" width="500" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="touchpoint" value="&lt;b&gt;Touchpoint&lt;/b&gt;&lt;br&gt;Uses: Provider, TouchpointFieldAvailability&lt;br&gt;Typed advertising key" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#82b366;fontSize=15;" vertex="1" parent="1">
+          <mxGeometry x="1250" y="850" width="500" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="data-lineage" value="&lt;b&gt;DataLineage&lt;/b&gt;&lt;br&gt;Uses: Provider, RecordClassification&lt;br&gt;Logical source and timing provenance" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#82b366;fontSize=15;" vertex="1" parent="1">
+          <mxGeometry x="1850" y="850" width="500" height="120" as="geometry" />
+        </mxCell>
+
+        <mxCell id="ad-group" value="&lt;b&gt;AdGroup&lt;/b&gt;&lt;br&gt;Foreign key: campaign_id&lt;br&gt;References Campaign" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#d6b656;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="20" y="1190" width="275" height="150" as="geometry" />
+        </mxCell>
+        <mxCell id="budget-constraints" value="&lt;b&gt;BudgetConstraints&lt;/b&gt;&lt;br&gt;Uses: BudgetUsagePolicy&lt;br&gt;Foreign key: campaign_id&lt;br&gt;References Campaign" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#d6b656;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="315" y="1190" width="275" height="150" as="geometry" />
+        </mxCell>
+        <mxCell id="budget-observation" value="&lt;b&gt;BudgetObservation&lt;/b&gt;&lt;br&gt;Uses: ReportingScope, AssignmentType&lt;br&gt;Foreign key: campaign_id&lt;br&gt;References Campaign" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#d6b656;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="610" y="1190" width="275" height="150" as="geometry" />
+        </mxCell>
+        <mxCell id="campaign-product-link" value="&lt;b&gt;CampaignProductLink&lt;/b&gt;&lt;br&gt;Foreign keys: campaign_id, product_id&lt;br&gt;References Campaign and Product" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#d6b656;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="905" y="1190" width="275" height="150" as="geometry" />
+        </mxCell>
+        <mxCell id="product-economics" value="&lt;b&gt;ProductEconomics&lt;/b&gt;&lt;br&gt;Uses: MarginSource&lt;br&gt;Foreign key: product_id&lt;br&gt;References Product" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#d6b656;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="1200" y="1190" width="275" height="150" as="geometry" />
+        </mxCell>
+        <mxCell id="delivery-observation" value="&lt;b&gt;DeliveryObservation&lt;/b&gt;&lt;br&gt;Uses: Touchpoint, ReportingScope&lt;br&gt;Delivery for one touchpoint" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#d6b656;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="1495" y="1190" width="275" height="150" as="geometry" />
+        </mxCell>
+        <mxCell id="outcome-observation" value="&lt;b&gt;OutcomeObservation&lt;/b&gt;&lt;br&gt;Uses: Touchpoint, ReportingScope&lt;br&gt;Total, organic, and incremental outcomes" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#d6b656;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="1790" y="1190" width="275" height="150" as="geometry" />
+        </mxCell>
+        <mxCell id="attribution-evidence" value="&lt;b&gt;AttributionEvidence&lt;/b&gt;&lt;br&gt;Uses: Touchpoint, ReportingScope&lt;br&gt;Historical share and value" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#d6b656;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="2085" y="1190" width="275" height="150" as="geometry" />
+        </mxCell>
+
+        <mxCell id="campaign-episode" value="&lt;b&gt;CampaignEpisode&lt;/b&gt;&lt;br&gt;Uses: Campaign, BudgetConstraints, optional BudgetObservation,&lt;br&gt;DeliveryObservation, OutcomeObservation, and AttributionEvidence collections&lt;br&gt;Model-facing composition; no ground-truth field" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#9673a6;fontSize=16;" vertex="1" parent="1">
+          <mxGeometry x="180" y="1570" width="1100" height="130" as="geometry" />
+        </mxCell>
+        <mxCell id="similarity-reference" value="&lt;b&gt;SimilarityReference&lt;/b&gt;&lt;br&gt;Plain identifiers may name Campaign or Product&lt;br&gt;Not foreign keys; presentation-only&lt;br&gt;No arrow by design" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#d79b00;fontSize=16;" vertex="1" parent="1">
+          <mxGeometry x="1480" y="1570" width="740" height="130" as="geometry" />
+        </mxCell>
+
+        <mxCell id="evaluation-episode" value="&lt;b&gt;EvaluationEpisode&lt;/b&gt;&lt;br&gt;Uses: CampaignEpisode and EvaluationGroundTruth&lt;br&gt;Evaluation-only composition; never accepted by model-facing code" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#56517e;fontSize=17;" vertex="1" parent="1">
+          <mxGeometry x="600" y="1900" width="1200" height="130" as="geometry" />
+        </mxCell>
+
+        <mxCell id="header-tier-1" value="1 · Controlled vocabularies" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=none;fontStyle=1;fontSize=19;" vertex="1" parent="1">
+          <mxGeometry x="22" y="172" width="2356" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="header-tier-2" value="2 · Shared value objects and capability contracts" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=none;fontStyle=1;fontSize=19;" vertex="1" parent="1">
+          <mxGeometry x="22" y="452" width="2356" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="header-tier-3" value="3 · Canonical identities and provenance" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=none;fontStyle=1;fontSize=19;" vertex="1" parent="1">
+          <mxGeometry x="22" y="752" width="2356" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="header-tier-4" value="4 · Identifier-linked records, observations, and evidence" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=none;fontStyle=1;fontSize=19;" vertex="1" parent="1">
+          <mxGeometry x="22" y="1082" width="2356" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="header-tier-5" value="5 · Model-facing composition and presentation terminal" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=none;fontStyle=1;fontSize=19;" vertex="1" parent="1">
+          <mxGeometry x="22" y="1472" width="2356" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="header-tier-6" value="6 · Evaluation-only composition" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d0cee2;strokeColor=none;fontStyle=1;fontSize=19;" vertex="1" parent="1">
+          <mxGeometry x="22" y="1802" width="2356" height="40" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

@@ -177,7 +177,7 @@ The direct unit cost of producing or acquiring one unit of a product, excluding 
 
 ### Contribution Margin
 
-Unit price minus unit COGS: the profit contributed by one additional unit sold before advertising Spend is subtracted. `ProductEconomics.unit_contribution_margin` may be given directly by a source or derived from price and COGS; see [Margin Source](/en/introduction/data-models/margin-source.md).
+Unit price minus unit COGS: the profit contributed by one additional unit sold before advertising Spend is subtracted. `ProductEconomics.unit_contribution_margin` may be given directly by a source or derived from price and COGS; see [Margin Source](/en/introduction/data-models/vocabularies/margin-source.md).
 
 ## Strategy and Optimization Terms <span class="status-label status-verified" aria-label="Verified"></span>
 
