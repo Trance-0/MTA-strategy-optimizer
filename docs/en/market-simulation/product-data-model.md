@@ -15,13 +15,30 @@ This page translates and restructures the preserved Chinese schema analysis in `
 
 The model has five logical layers:
 
-| Layer | Responsibility | Representative tables |
-| --- | --- | --- |
-| Dimension master data | Globally referenced dictionaries with the strongest foreign-key enforcement | `retailer`, `market`, `category`, `brand`, `segment` |
-| Product master data | Product-to-Stock Keeping Unit (SKU) identity | `product`, `sku` |
-| Product detail | Extensible SKU attributes, price observations, and health | `sku_attributes`, `sku_price_daily`, `sku_item_health` |
-| Keyword relationships | Keyword links to Brand, Category, Segment, and SKU | `keyword`, `brand_keyword`, `category_keyword`, `keyword_segment`, `keyword_sku_mapping`, `keyword_categorization` |
-| Search and market facts | Search volume, impressions, ranks, incremental return, and market share | `keyword_traffic`, `keyword_search_volume`, `keyword_impressions`, `keyword_sku_rank`, `keyword_sku_eiroas`, `market_share` |
+### Dimension master data
+
+- Responsibility: Globally referenced dictionaries with the strongest foreign-key enforcement
+- Representative tables: `retailer`, `market`, `category`, `brand`, `segment`
+
+### Product master data
+
+- Responsibility: Product-to-Stock Keeping Unit (SKU) identity
+- Representative tables: `product`, `sku`
+
+### Product detail
+
+- Responsibility: Extensible SKU attributes, price observations, and health
+- Representative tables: `sku_attributes`, `sku_price_daily`, `sku_item_health`
+
+### Keyword relationships
+
+- Responsibility: Keyword links to Brand, Category, Segment, and SKU
+- Representative tables: `keyword`, `brand_keyword`, `category_keyword`, `keyword_segment`, `keyword_sku_mapping`, `keyword_categorization`
+
+### Search and market facts
+
+- Responsibility: Search volume, impressions, ranks, incremental return, and market share
+- Representative tables: `keyword_traffic`, `keyword_search_volume`, `keyword_impressions`, `keyword_sku_rank`, `keyword_sku_eiroas`, `market_share`
 
 ## Core Master Data
 
@@ -40,32 +57,77 @@ source  varchar(255), only on category, market, and retailer
 
 ### `product`
 
-| Field | Type | Meaning |
-| --- | --- | --- |
-| `id` | Integer primary key | Internal identifier |
-| `gtin` | Required unique text | Global Trade Item Number and stable business key |
-| `category_id` | Foreign key | References `category.id` |
-| `brand_id` | Foreign key | References `brand.id` |
-| `segment_id` | Foreign key | References `segment.id` |
-| `source_system_code` | Text | Upstream source |
-| `tier` | Text | Product tier such as priority or tail |
+#### `id`
+
+Type: Integer primary key. Meaning: Internal identifier.
+
+#### `gtin`
+
+Type: Required unique text. Meaning: Global Trade Item Number and stable business key.
+
+#### `category_id`
+
+Type: Foreign key. Meaning: References `category.id`.
+
+#### `brand_id`
+
+Type: Foreign key. Meaning: References `brand.id`.
+
+#### `segment_id`
+
+Type: Foreign key. Meaning: References `segment.id`.
+
+#### `source_system_code`
+
+Type: Text. Meaning: Upstream source.
+
+#### `tier`
+
+Type: Text. Meaning: Product tier such as priority or tail.
 
 `product` is uniquely identified by `gtin`. Its Category, Brand, and Segment relationships are real database foreign keys, making it one of the most strictly constrained entities in the wider system.
 
 ### `sku`
 
-| Field | Type | Meaning |
-| --- | --- | --- |
-| `id` | Integer primary key | Internal identifier |
-| `retailer_id` | Required foreign key | Retailer dimension |
-| `market_id` | Nullable foreign key | Market dimension |
-| `value` | Required text | Retailer-side SKU or Amazon Standard Identification Number (ASIN) |
-| `product_id` | Required foreign key | Parent Product |
-| `description` | Text | Display title |
-| `scope_for_search_optimization` | Boolean | Whether search optimization may use the SKU |
-| `specification_profit` | Numeric | Configured profit basis |
-| `specification_for_paid_search_to_bid` | Boolean | Whether paid-search bidding may use the SKU |
-| `specification_updated_at` | Timestamp | Last specification update |
+#### `id`
+
+Type: Integer primary key. Meaning: Internal identifier.
+
+#### `retailer_id`
+
+Type: Required foreign key. Meaning: Retailer dimension.
+
+#### `market_id`
+
+Type: Nullable foreign key. Meaning: Market dimension.
+
+#### `value`
+
+Type: Required text. Meaning: Retailer-side SKU or Amazon Standard Identification Number (ASIN).
+
+#### `product_id`
+
+Type: Required foreign key. Meaning: Parent Product.
+
+#### `description`
+
+Type: Text. Meaning: Display title.
+
+#### `scope_for_search_optimization`
+
+Type: Boolean. Meaning: Whether search optimization may use the SKU.
+
+#### `specification_profit`
+
+Type: Numeric. Meaning: Configured profit basis.
+
+#### `specification_for_paid_search_to_bid`
+
+Type: Boolean. Meaning: Whether paid-search bidding may use the SKU.
+
+#### `specification_updated_at`
+
+Type: Timestamp. Meaning: Last specification update.
 
 `UNIQUE(retailer_id, market_id, value)` prevents duplicate SKU values within one retailer and market.
 
@@ -94,17 +156,41 @@ It has no primary key. The Product-service version is a master-data view of cate
 
 ## Search, Rank, and Market Facts
 
-| Table | Grain and role |
-| --- | --- |
-| `keyword_traffic` | Seed Keyword to discovered Keyword, with a 30-day exact-search-volume observation |
-| `keyword_traffic_stats` | Monthly aggregation by seed Keyword |
-| `search_volume_monthly` | Keyword-by-month search volume with Retailer and Market dimensions |
-| `keyword_search_volume` | Campaign Group-scoped search volume with a composite primary key and real foreign keys |
-| `keyword_impressions` | Monthly partitioned organic impression facts |
-| `keyword_sku_daily_webscraping` | Monthly partitioned scraped item-position facts |
-| `keyword_sku_rank` | Monthly partitioned SKU rank by Keyword |
-| `keyword_sku_eiroas` | SKU × Keyword × date incremental Return on Ad Spend (ROAS) and incrementality factor |
-| `market_share` | Monthly Category, Brand, Retailer, and Market share value |
+### `keyword_traffic`
+
+Grain and role: Seed Keyword to discovered Keyword, with a 30-day exact-search-volume observation.
+
+### `keyword_traffic_stats`
+
+Grain and role: Monthly aggregation by seed Keyword.
+
+### `search_volume_monthly`
+
+Grain and role: Keyword-by-month search volume with Retailer and Market dimensions.
+
+### `keyword_search_volume`
+
+Grain and role: Campaign Group-scoped search volume with a composite primary key and real foreign keys.
+
+### `keyword_impressions`
+
+Grain and role: Monthly partitioned organic impression facts.
+
+### `keyword_sku_daily_webscraping`
+
+Grain and role: Monthly partitioned scraped item-position facts.
+
+### `keyword_sku_rank`
+
+Grain and role: Monthly partitioned SKU rank by Keyword.
+
+### `keyword_sku_eiroas`
+
+Grain and role: SKU × Keyword × date incremental Return on Ad Spend (ROAS) and incrementality factor.
+
+### `market_share`
+
+Grain and role: Monthly Category, Brand, Retailer, and Market share value.
 
 `keyword_sku_eiroas.date` is text rather than a database date and therefore requires explicit conversion for date operations. The three monthly fact tables require partitions to be created before writes reach a new month.
 

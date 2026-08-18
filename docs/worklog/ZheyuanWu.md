@@ -23,7 +23,7 @@ Entries are reconstructed from Git history. They record the change set behind ea
 
 - Restructured the doc site's nav bar — dropped the redundant Home item, moved Dashboard to second position, and merged Versions and Work Log into a Logs dropdown — renamed the Datasets section to Market Simulation across the config, directory, and roughly twenty cross-references, fixed `docs/version/0.9/` not collapsing by default, and loosened the AGENTS.md work-log rule so an agent writes today's entry automatically instead of asking first; this entry is the first written under that rule.
 - Followed through on the data-representation unification plan drafted earlier and built `modules/mta_common/`: provider-independent, frozen dataclasses for touchpoints, campaigns, products, budgets, delivery, outcomes, attribution evidence, and episodes, plus a legacy-to-canonical compatibility bridge, 96 passing tests, and 27 documentation pages under `docs/en/introduction/data-models/`.
-- Recorded the `external/UI_design/` reference prototype's move to `design-artifacts/UI_design/`, matching the documented split between `external/` for pinned third-party repositories and `design-artifacts/` for historical product vision.
+- Recorded the `external/UI_design/` reference prototype's move to `design-artifacts/UI_design/`, matching the documented split between `external/` for pinned third-party repositories and `design-artifacts/` for historical product vision, and added a project-wide rule restricting documentation tables to strict two-item comparisons, decomposing 135 non-comparison tables into sub-level headings across 45 files under `docs/en`, `docs/version`, and `docs/worklog` (`docs/en/strategy-evaluation/` was excluded, out of scope for this pass).
 
 ### Next
 

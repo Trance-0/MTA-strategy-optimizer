@@ -41,12 +41,25 @@ if null_weight > 0:                                                # 7
     })
 ```
 
-| Line | Detailed step | Algorithm mapping | Reason |
-| --- | --- | --- | --- |
-| 1 | Prefix the observed touchpoint sequence with `START` | Creates the initial Markov state | Every journey needs a common origin for its conversion probability |
-| 2-5 | Emit a `CONVERSION`-terminal path weighted by converted users | Adds converting transition mass | Aggregated rows represent populations, so one row must count as many users rather than one path observation |
-| 6 | Derive non-converters as `users - converted_users` | Reconciles the aggregate into two mutually exclusive terminal populations | This preserves the input user total exactly |
-| 7-10 | Emit a `NULL`-terminal path for positive non-converting mass | Adds failure/abandonment transition mass | Without a competing absorbing state, eventual conversion probability would be trivially one for every connected path |
+#### Line 1 — Prefix the observed touchpoint sequence with `START`
+
+- Algorithm mapping: Creates the initial Markov state
+- Reason: Every journey needs a common origin for its conversion probability
+
+#### Lines 2-5 — Emit a `CONVERSION`-terminal path weighted by converted users
+
+- Algorithm mapping: Adds converting transition mass
+- Reason: Aggregated rows represent populations, so one row must count as many users rather than one path observation
+
+#### Line 6 — Derive non-converters as `users - converted_users`
+
+- Algorithm mapping: Reconciles the aggregate into two mutually exclusive terminal populations
+- Reason: This preserves the input user total exactly
+
+#### Lines 7-10 — Emit a `NULL`-terminal path for positive non-converting mass
+
+- Algorithm mapping: Adds failure/abandonment transition mass
+- Reason: Without a competing absorbing state, eventual conversion probability would be trivially one for every connected path
 
 For `purchase_count` and `revenue`, `amc_rows_to_outcome_markov_rows()` keeps only positive-Outcome paths, appends `CONVERSION`, and uses the selected Outcome as `weight`. This means the three models share mechanics but not weights: converted-user attribution models people versus non-converters, whereas purchase and revenue attribution model the network traversed by their respective Outcome mass.
 
@@ -63,11 +76,17 @@ self.touchpoints = sorted({                                         # 3
 })
 ```
 
-| Line | Detailed step | Why |
-| --- | --- | --- |
-| 1 | Materialize the input sequence | The rows are traversed repeatedly for baseline and every removal run |
-| 2 | Parse serialized paths once | Transition estimation should operate on state lists, not repeatedly split strings |
-| 3-5 | Collect nonterminal states and sort them | Every observed touchpoint is removed exactly once, and sorting makes output order reproducible |
+#### Line 1 — Materialize the input sequence
+
+Why: The rows are traversed repeatedly for baseline and every removal run.
+
+#### Line 2 — Parse serialized paths once
+
+Why: Transition estimation should operate on state lists, not repeatedly split strings.
+
+#### Lines 3-5 — Collect nonterminal states and sort them
+
+Why: Every observed touchpoint is removed exactly once, and sorting makes output order reproducible.
 
 ### 3. Build the Weighted Transition Matrix
 
@@ -90,16 +109,45 @@ for current, next_counts in counts.items():                         # 9
     matrix[current] = {nxt: count / total for nxt, count in next_counts.items()} # 11
 ```
 
-| Line | Detailed step | Mapping to the Markov algorithm | Why it is implemented this way |
-| --- | --- | --- | --- |
-| 1 | Traverse each aggregate beside its parsed path | Associates the path topology with its population/Outcome mass | Aggregated observations cannot be counted equally |
-| 2 | Prefer the explicit Outcome weight, falling back to users | Supports all three model adapters with one transition engine | The engine stays independent of a particular Outcome column |
-| 3 | Ignore zero-mass rows | Zero weight cannot change a probability and may otherwise create empty transition totals | This keeps normalization defined |
-| 4 | Convert each path into adjacent directed edges | Implements the first-order assumption | Only the current state determines the next-state distribution |
-| 5 | Stop if the traversal has reached the removed node | Removes all outgoing behavior from that touchpoint | A removed state cannot transmit probability further |
-| 6-7 | Redirect an edge entering the removed node to `NULL`, then stop | Implements failure when the path depends on the removed touchpoint | Simply deleting the node and joining its neighbors would invent a transition never observed |
-| 8 | Add the complete row weight to the observed edge | Builds weighted transition counts | The resulting matrix represents mass, not just distinct path shapes |
-| 9-11 | Normalize every current state's outgoing counts | Produces conditional probabilities whose row sums equal one | Absorption iteration requires probabilities rather than counts |
+#### Line 1 — Traverse each aggregate beside its parsed path
+
+- Mapping to the Markov algorithm: Associates the path topology with its population/Outcome mass
+- Why it is implemented this way: Aggregated observations cannot be counted equally
+
+#### Line 2 — Prefer the explicit Outcome weight, falling back to users
+
+- Mapping to the Markov algorithm: Supports all three model adapters with one transition engine
+- Why it is implemented this way: The engine stays independent of a particular Outcome column
+
+#### Line 3 — Ignore zero-mass rows
+
+- Mapping to the Markov algorithm: Zero weight cannot change a probability and may otherwise create empty transition totals
+- Why it is implemented this way: This keeps normalization defined
+
+#### Line 4 — Convert each path into adjacent directed edges
+
+- Mapping to the Markov algorithm: Implements the first-order assumption
+- Why it is implemented this way: Only the current state determines the next-state distribution
+
+#### Line 5 — Stop if the traversal has reached the removed node
+
+- Mapping to the Markov algorithm: Removes all outgoing behavior from that touchpoint
+- Why it is implemented this way: A removed state cannot transmit probability further
+
+#### Lines 6-7 — Redirect an edge entering the removed node to `NULL`, then stop
+
+- Mapping to the Markov algorithm: Implements failure when the path depends on the removed touchpoint
+- Why it is implemented this way: Simply deleting the node and joining its neighbors would invent a transition never observed
+
+#### Line 8 — Add the complete row weight to the observed edge
+
+- Mapping to the Markov algorithm: Builds weighted transition counts
+- Why it is implemented this way: The resulting matrix represents mass, not just distinct path shapes
+
+#### Lines 9-11 — Normalize every current state's outgoing counts
+
+- Mapping to the Markov algorithm: Produces conditional probabilities whose row sums equal one
+- Why it is implemented this way: Absorption iteration requires probabilities rather than counts
 
 ### 4. Solve Eventual Conversion Probability
 
@@ -125,17 +173,41 @@ for _ in range(1000):                                               # 4
 return values.get(START, 0.0)                                      # 14
 ```
 
-| Line | Detailed step | Algorithm mapping and reason |
-| --- | --- | --- |
-| 1-3 | Initialize unknown states to zero, conversion to one, and null to zero | These are the boundary conditions for eventual absorption |
-| 4 | Limit the solver to 1,000 iterations | Prevents a malformed or non-convergent graph from hanging the pipeline |
-| 5 | Reset the largest observed change for this iteration | Convergence is evaluated separately for each complete update |
-| 6 | Copy the prior iteration before updating | Produces a synchronous update: every new value uses the same previous vector, independent of set iteration order |
-| 7-8 | Update only transient states | Absorbing boundary values must remain fixed |
-| 9 | Apply `value(state) = sum(P(state,next) * value(next))` | This is the Bellman-style fixed-point equation for eventual conversion probability |
-| 10-11 | Record the largest change and store the new probability | The maximum norm gives a direct convergence test across all states |
-| 12-13 | Commit the iteration and stop below `1e-12` | The tolerance yields stable downstream removal differences without solving a matrix inverse |
-| 14 | Read the probability at the common initial state | This is the model's overall probability of eventual conversion |
+#### Lines 1-3 — Initialize unknown states to zero, conversion to one, and null to zero
+
+Algorithm mapping and reason: These are the boundary conditions for eventual absorption.
+
+#### Line 4 — Limit the solver to 1,000 iterations
+
+Algorithm mapping and reason: Prevents a malformed or non-convergent graph from hanging the pipeline.
+
+#### Line 5 — Reset the largest observed change for this iteration
+
+Algorithm mapping and reason: Convergence is evaluated separately for each complete update.
+
+#### Line 6 — Copy the prior iteration before updating
+
+Algorithm mapping and reason: Produces a synchronous update: every new value uses the same previous vector, independent of set iteration order.
+
+#### Lines 7-8 — Update only transient states
+
+Algorithm mapping and reason: Absorbing boundary values must remain fixed.
+
+#### Line 9 — Apply `value(state) = sum(P(state,next) * value(next))`
+
+Algorithm mapping and reason: This is the Bellman-style fixed-point equation for eventual conversion probability.
+
+#### Lines 10-11 — Record the largest change and store the new probability
+
+Algorithm mapping and reason: The maximum norm gives a direct convergence test across all states.
+
+#### Lines 12-13 — Commit the iteration and stop below `1e-12`
+
+Algorithm mapping and reason: The tolerance yields stable downstream removal differences without solving a matrix inverse.
+
+#### Line 14 — Read the probability at the common initial state
+
+Algorithm mapping and reason: This is the model's overall probability of eventual conversion.
 
 If the limit is reached while transient states exist, the function raises an error instead of publishing an approximate result whose quality is unknown.
 
@@ -154,14 +226,29 @@ if total_effect <= 0:                                               # 6
 return {touchpoint: effect / total_effect for touchpoint, effect in effects.items()} # 9
 ```
 
-| Line | Detailed step | Algorithm mapping and reason |
-| --- | --- | --- |
-| 1 | Solve the intact network once | Establishes the counterfactual reference probability |
-| 2-3 | Rebuild and solve the network after removing each touchpoint | Measures each node with the same removal intervention |
-| 4 | Take the non-negative probability loss | Defines removal effect and prevents numerical or structural increases from becoming negative attribution |
-| 5 | Sum all effects | Creates the normalization denominator |
-| 6-8 | Use an equal split only when no touchpoint has positive removal effect | Preserves a complete share vector in a degenerate but non-empty model |
-| 9 | Normalize positive effects | Produces shares that sum to one |
+#### Line 1 — Solve the intact network once
+
+Algorithm mapping and reason: Establishes the counterfactual reference probability.
+
+#### Lines 2-3 — Rebuild and solve the network after removing each touchpoint
+
+Algorithm mapping and reason: Measures each node with the same removal intervention.
+
+#### Line 4 — Take the non-negative probability loss
+
+Algorithm mapping and reason: Defines removal effect and prevents numerical or structural increases from becoming negative attribution.
+
+#### Line 5 — Sum all effects
+
+Algorithm mapping and reason: Creates the normalization denominator.
+
+#### Lines 6-8 — Use an equal split only when no touchpoint has positive removal effect
+
+Algorithm mapping and reason: Preserves a complete share vector in a degenerate but non-empty model.
+
+#### Line 9 — Normalize positive effects
+
+Algorithm mapping and reason: Produces shares that sum to one.
 
 ### 6. Orchestrate Three Independent Outcome Models
 

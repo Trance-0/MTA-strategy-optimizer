@@ -86,11 +86,20 @@ The demonstration uses module-local CSV under `modules/mta_attribution/data/simu
 
 The research distinguishes three data types:
 
-| Data type | Recommended format | Purpose |
-| --- | --- | --- |
-| Amazon Attribution aggregate report | CSV | funnel and conversion analysis by channel, publisher, Campaign, Ad Group, ASIN |
-| AMC-style anonymous aggregate path | CSV | five-segment Markov and path-level Shapley demonstration |
-| model output | CSV | attribution, model differences, support, governance |
+#### Amazon Attribution aggregate report
+
+- **Recommended format:** CSV
+- **Purpose:** funnel and conversion analysis by channel, publisher, Campaign, Ad Group, ASIN
+
+#### AMC-style anonymous aggregate path
+
+- **Recommended format:** CSV
+- **Purpose:** five-segment Markov and path-level Shapley demonstration
+
+#### model output
+
+- **Recommended format:** CSV
+- **Purpose:** attribution, model differences, support, governance
 
 For production, immutable raw API snapshots should precede normalized analytical tables. AMC user-level signals cannot be exported directly; preserve query version, parameters, and aggregate results rather than assuming access to complete user logs.
 
@@ -181,10 +190,11 @@ The legacy code reviewed by the research expected `markov_user_paths.csv`, `shap
 
 The recommendation was two adapters rather than direct algorithm edits:
 
-| Adapter | Input | Output | Limitation |
-| --- | --- | --- | --- |
-| `AmazonAttributionAggregateAdapter` | Amazon Attribution aggregate report | Channel/Campaign funnel and ROI analysis | Does not create real MTA paths |
-| `AmazonPathAggregateAdapter` | AMC aggregate paths or explicitly labeled synthetic paths | Path tables required by Markov/Shapley | Must record provenance and whether paths are synthetic |
+| Aspect | `AmazonAttributionAggregateAdapter` | `AmazonPathAggregateAdapter` |
+| --- | --- | --- |
+| Input | Amazon Attribution aggregate report | AMC aggregate paths or explicitly labeled synthetic paths |
+| Output | Channel/Campaign funnel and ROI analysis | Path tables required by Markov/Shapley |
+| Limitation | Does not create real MTA paths | Must record provenance and whether paths are synthetic |
 
 Those names describe the legacy design. Current code uses the AMC aggregate and Amazon Ads contracts documented elsewhere.
 

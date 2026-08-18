@@ -169,6 +169,16 @@ A lightweight text-based data interchange format. Strategy requests and outputs 
 
 A defined way for one program to request services from another. In this project, Amazon Ads API and Amazon Marketing Cloud API provide the upstream data that feeds into attribution and strategy calculations.
 
+## Product Economics Terms <span class="status-label status-verified" aria-label="Verified"></span>
+
+### COGS (Cost of Goods Sold)
+
+The direct unit cost of producing or acquiring one unit of a product, excluding advertising Spend. In this project, `ProductEconomics.unit_cogs` stays unset rather than zero-filled when a source has not reported it, since a missing COGS is not the same fact as a zero-cost product.
+
+### Contribution Margin
+
+Unit price minus unit COGS: the profit contributed by one additional unit sold before advertising Spend is subtracted. `ProductEconomics.unit_contribution_margin` may be given directly by a source or derived from price and COGS; see [Margin Source](/en/introduction/data-models/margin-source.md).
+
 ## Strategy and Optimization Terms <span class="status-label status-verified" aria-label="Verified"></span>
 
 ### Budget Seed

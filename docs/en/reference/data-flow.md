@@ -15,11 +15,23 @@ This page follows one report from raw events to a budget seed, naming the file r
 
 Dependencies are explicit Python package imports. `mta_standard` owns loading and execution, imports the model contract and registered implementations from `mta_attribution`, and validates their returned rows. `mta_strategy_recommendation` consumes published CSV evidence and never imports attribution mathematics.
 
-| Module | Receives | Produces | Consumer |
-| --- | --- | --- | --- |
-| `mta_attribution` | Five-segment paths or a standard dataset | Concrete model outputs, path report, comparison CSVs | Standard framework, strategy module, documentation |
-| `mta_standard` | MTA-SIM tables from any path | `StandardAttributionRow` list, `EvaluationReport` | Contributors comparing models |
-| `mta_strategy_recommendation` | Recommended attribution, entity bridge, request, candidate pool | `initial_budget_recommendation.json` | Downstream planning |
+### `mta_attribution`
+
+- **Receives:** Five-segment paths or a standard dataset
+- **Produces:** Concrete model outputs, path report, comparison CSVs
+- **Consumer:** Standard framework, strategy module, documentation
+
+### `mta_standard`
+
+- **Receives:** MTA-SIM tables from any path
+- **Produces:** `StandardAttributionRow` list, `EvaluationReport`
+- **Consumer:** Contributors comparing models
+
+### `mta_strategy_recommendation`
+
+- **Receives:** Recommended attribution, entity bridge, request, candidate pool
+- **Produces:** `initial_budget_recommendation.json`
+- **Consumer:** Downstream planning
 
 ---
 
@@ -38,12 +50,25 @@ Everything shipped in `data/simulated/` descends from one synthetic event stream
 > [!IMPORTANT]
 > The four samples are **derived from a common source**, not written independently. Editing one by hand breaks alignment validation, because the Ads report would then describe delivery that the paths never saw. Regenerate the set instead.
 
-| Script | Passes forward | Why it exists separately |
-| --- | --- | --- |
-| `generate_simulated_synthetic_user_events.py` | Journey-level events | The single source every other sample is projected from |
-| `generate_simulated_amc_touchpoint_events.py` | Touchpoint events | The path builder's input shape |
-| `generate_simulated_amazon_ads_report.py` | Daily delivery and cost | Spend joins and alignment checks |
-| `generate_simulated_touchpoint_entity_aggregate.py` | Touchpoint → Campaign/Ad Group bridge | The only file linking attribution to the strategy module |
+### `generate_simulated_synthetic_user_events.py`
+
+- **Passes forward:** Journey-level events
+- **Why it exists separately:** The single source every other sample is projected from
+
+### `generate_simulated_amc_touchpoint_events.py`
+
+- **Passes forward:** Touchpoint events
+- **Why it exists separately:** The path builder's input shape
+
+### `generate_simulated_amazon_ads_report.py`
+
+- **Passes forward:** Daily delivery and cost
+- **Why it exists separately:** Spend joins and alignment checks
+
+### `generate_simulated_touchpoint_entity_aggregate.py`
+
+- **Passes forward:** Touchpoint → Campaign/Ad Group bridge
+- **Why it exists separately:** The only file linking attribution to the strategy module
 
 ---
 
@@ -51,9 +76,13 @@ Everything shipped in `data/simulated/` descends from one synthetic event stream
 
 **`src/path_report_builder.py`**, driven by **`script/build_path_report.py`**.
 
-| In | Out |
-| --- | --- |
-| Touchpoint event rows (per journey) | Aggregated rows keyed by `(marketplace, advertiser_id, path)` with users, converted users, purchases, revenue |
+### In
+
+Touchpoint event rows (per journey).
+
+### Out
+
+Aggregated rows keyed by `(marketplace, advertiser_id, path)` with users, converted users, purchases, revenue.
 
 The builder decides which touchpoints belong to which conversion:
 
@@ -80,12 +109,25 @@ report_start, report_end = infer_ads_report_window(read_csv(args.amazon_ads_repo
 
 **`src/attribution_contract.py`** is the floor both models stand on. It owns four responsibilities and deliberately no model mathematics.
 
-| Responsibility | Key functions | Handed to |
-| --- | --- | --- |
-| CSV boundary | `read_csv_normalized`, `write_csv_set_atomic` | Every script |
-| Row validation | `validate_amc_aggregated_row` | Both models, comparison, alignment |
-| Result shape | `AttributionResult`, `TouchpointSpend` | Both models |
-| Published rows | `aggregate_spend_by_touchpoint`, `result_rows` | `run_attribution_models.py` |
+### CSV boundary
+
+- **Key functions:** `read_csv_normalized`, `write_csv_set_atomic`
+- **Handed to:** Every script
+
+### Row validation
+
+- **Key functions:** `validate_amc_aggregated_row`
+- **Handed to:** Both models, comparison, alignment
+
+### Result shape
+
+- **Key functions:** `AttributionResult`, `TouchpointSpend`
+- **Handed to:** Both models
+
+### Published rows
+
+- **Key functions:** `aggregate_spend_by_touchpoint`, `result_rows`
+- **Handed to:** `run_attribution_models.py`
 
 > [!NOTE]
 > Validation lives here, not in each model, so both models are guaranteed to have rejected the same malformed input. If Markov and Shapley each validated separately, a rule could drift in one and not the other, and the comparison layer would then be comparing two different datasets while reporting a model disagreement.
@@ -143,11 +185,17 @@ The comparison receives Markov, Shapley, and path rows. `_validate_models` check
 
 Reliability is a fixed three-criterion contract, and all three must pass:
 
-| Criterion | Threshold |
-| --- | --- |
-| `calculation_valid` | Conservation and efficiency checks passed |
-| `data_support_sufficient` | ≥30 purchases, ≥20 converted users, ≥5 unique paths |
-| `models_consistent` | Gap ≤1.0 pp **and** relative gap ≤0.20 |
+### `calculation_valid`
+
+Conservation and efficiency checks passed.
+
+### `data_support_sufficient`
+
+≥30 purchases, ≥20 converted users, ≥5 unique paths.
+
+### `models_consistent`
+
+Gap ≤1.0 pp **and** relative gap ≤0.20.
 
 > [!IMPORTANT]
 > When a touchpoint is unreliable, `recommended_value` becomes the **interval** between the two model shares rather than a point estimate. A single number would hide the disagreement, and the strategy module would spend against a precision that does not exist.
@@ -184,10 +232,15 @@ The standardization sequence is:
 
 The key grain changes twice and only at the edges:
 
-| Boundary | Direction | Owner |
-| --- | --- | --- |
-| Load | four → five segments | `SimulatorConfig.to_five_segment` |
-| Output | five → four segments | `to_four_segment` |
+### Load
+
+- **Direction:** four → five segments
+- **Owner:** `SimulatorConfig.to_five_segment`
+
+### Output
+
+- **Direction:** five → four segments
+- **Owner:** `to_four_segment`
 
 > [!CAUTION]
 > `IMPRESSION` versus `CLICK` **cannot** be recovered from four-segment MTA-SIM data. It is supplied by explicit `SimulatorConfig` mapping (`CPC → CLICK`, `CPM → IMPRESSION`), and missing, ambiguous, or colliding mappings are rejected. Inferring it from impression or click counts would invent a contract the data never stated.
@@ -227,54 +280,141 @@ The strategy module combines `amc_mta_recommended_attribution.csv` and `amc_touc
 
 ## File Reference <span class="status-label status-verified" aria-label="Verified"></span>
 
-Every file states its own role and position in its module docstring. This table is the index.
+Every file states its own role and position in its module docstring. The headings below are the index.
 
 ### `modules/mta_attribution/`
 
-| File | Role |
-| --- | --- |
-| `config.py` | Default paths, report window, thresholds |
-| `script/run_pipeline.py` | End-to-end entry point with atomic publication |
-| `src/touchpoint_key.py` | The canonical five-segment key and its component rules |
-| `src/synthetic_event_pipeline.py` | Synthetic event generation and derivation |
-| `src/simulated_touchpoints.py` | Touchpoint catalogue for simulation |
-| `src/path_report_builder.py` | Events → aggregated paths |
-| `src/attribution_contract.py` | CSV IO, validation, result shaping |
-| `src/attribution_model_interface.py` | Shared `fit`/`attribute`/`save`/`load` contract |
-| `src/markov_attribution_model.py` | Removal-effect model |
-| `src/markov_standard_attribution_model.py` | Standard-output adapter for Markov |
-| `src/shapley_attribution_model.py` | Path-level Shapley model |
-| `src/shapley_standard_attribution_model.py` | Standard-output adapter for Shapley |
-| `src/uniform_attribution_model.py` | Equal-credit reference baseline |
-| `src/dnn_attribution_model.py` | Learned model and new-campaign prediction |
-| `src/attribution_model_comparison.py` | Gaps, support, reliability, recommendation |
-| `script/build_path_report.py` | Path report CLI |
-| `script/run_attribution_models.py` | Attribution and comparison CLI |
-| `script/compare_attribution_models.py` | Re-compare two stored model CSVs |
-| `script/validate_data_alignment.py` | Preflight alignment check |
-| `script/regenerate_simulated_dataset.py` | Reproduce the four legacy samples atomically |
-| `script/generate_mta_sim_dataset.py` | Run and adapt the pinned ZheyuanWu generator |
-| `script/generate_simulated_*.py` | One legacy sample each |
+#### `config.py`
+
+Default paths, report window, thresholds.
+
+#### `script/run_pipeline.py`
+
+End-to-end entry point with atomic publication.
+
+#### `src/touchpoint_key.py`
+
+The canonical five-segment key and its component rules.
+
+#### `src/synthetic_event_pipeline.py`
+
+Synthetic event generation and derivation.
+
+#### `src/simulated_touchpoints.py`
+
+Touchpoint catalogue for simulation.
+
+#### `src/path_report_builder.py`
+
+Events → aggregated paths.
+
+#### `src/attribution_contract.py`
+
+CSV IO, validation, result shaping.
+
+#### `src/attribution_model_interface.py`
+
+Shared `fit`/`attribute`/`save`/`load` contract.
+
+#### `src/markov_attribution_model.py`
+
+Removal-effect model.
+
+#### `src/markov_standard_attribution_model.py`
+
+Standard-output adapter for Markov.
+
+#### `src/shapley_attribution_model.py`
+
+Path-level Shapley model.
+
+#### `src/shapley_standard_attribution_model.py`
+
+Standard-output adapter for Shapley.
+
+#### `src/uniform_attribution_model.py`
+
+Equal-credit reference baseline.
+
+#### `src/dnn_attribution_model.py`
+
+Learned model and new-campaign prediction.
+
+#### `src/attribution_model_comparison.py`
+
+Gaps, support, reliability, recommendation.
+
+#### `script/build_path_report.py`
+
+Path report CLI.
+
+#### `script/run_attribution_models.py`
+
+Attribution and comparison CLI.
+
+#### `script/compare_attribution_models.py`
+
+Re-compare two stored model CSVs.
+
+#### `script/validate_data_alignment.py`
+
+Preflight alignment check.
+
+#### `script/regenerate_simulated_dataset.py`
+
+Reproduce the four legacy samples atomically.
+
+#### `script/generate_mta_sim_dataset.py`
+
+Run and adapt the pinned ZheyuanWu generator.
+
+#### `script/generate_simulated_*.py`
+
+One legacy sample each.
 
 ### `modules/mta_standard/`
 
-| File | Role |
-| --- | --- |
-| `src/touchpoint_adapter.py` | Four ↔ five segment adaptation and `SimulatorConfig` |
-| `src/dataloader.py` | MTA-SIM table loading into `MtaSimDataset` |
-| `src/model_registry.py` | Identifier → model class map |
-| `src/model_pipeline.py` | Registry-driven model execution and result validation |
-| `src/output_contract.py` | Standard row and its four invariants |
-| `src/evaluation.py` | Ground-truth loading and metrics |
+#### `src/touchpoint_adapter.py`
+
+Four ↔ five segment adaptation and `SimulatorConfig`.
+
+#### `src/dataloader.py`
+
+MTA-SIM table loading into `MtaSimDataset`.
+
+#### `src/model_registry.py`
+
+Identifier → model class map.
+
+#### `src/model_pipeline.py`
+
+Registry-driven model execution and result validation.
+
+#### `src/output_contract.py`
+
+Standard row and its four invariants.
+
+#### `src/evaluation.py`
+
+Ground-truth loading and metrics.
 
 ### `modules/mta_strategy_recommendation/`
 
-| File | Role |
-| --- | --- |
-| `src/hierarchy_validator.py` | Input consistency and evidence lineage |
-| `src/budget_recommender.py` | Ad Group count and budget seed |
-| `script/generate_initial_budget.py` | Budget JSON CLI, with `--check-output` |
-| `script/validate_simulated_hierarchy.py` | Hierarchy preflight |
+#### `src/hierarchy_validator.py`
+
+Input consistency and evidence lineage.
+
+#### `src/budget_recommender.py`
+
+Ad Group count and budget seed.
+
+#### `script/generate_initial_budget.py`
+
+Budget JSON CLI, with `--check-output`.
+
+#### `script/validate_simulated_hierarchy.py`
+
+Hierarchy preflight.
 
 ## References
 

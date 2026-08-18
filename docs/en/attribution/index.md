@@ -22,16 +22,45 @@ For background on reconstructing and interpreting customer journeys, read [Mappi
 
 ## Components, Files, and Objectives <span class="status-label status-verified" aria-label="Verified"></span>
 
-| Component | Primary file | Objective |
-| --- | --- | --- |
-| Path and schema validation | `src/attribution_contract.py` | Read aggregated paths; validate counts, monetary values, and five-segment keys |
-| Markov attribution | `src/markov_attribution_model.py` | Calculate contribution shares from the change in conversion probability when a touchpoint is removed |
-| Shapley attribution | `src/shapley_attribution_model.py` | Allocate each Outcome fairly among unique touchpoints within each path, then aggregate across paths |
-| Model comparison | `src/attribution_model_comparison.py` | Check calculation validity, data support, and model consistency |
-| Pipeline | `script/run_pipeline.py` | Run and publish validated artifacts together |
-| Attribution implementations | `modules/mta_attribution/` | Own the shared model interface and each concrete Markov, Shapley, uniform, and DNN model |
-| Standardized framework | `modules/mta_standard/` | Load MTA-SIM data, resolve touchpoint grain, execute registered models, validate and score results |
-| DNN credit model | `DeepNeuralAttributionModel` | Learn credit from touchpoint segment structure and predict a split for a campaign with no path history |
+### Path and schema validation
+
+- Primary file: `src/attribution_contract.py`
+- Objective: Read aggregated paths; validate counts, monetary values, and five-segment keys
+
+### Markov attribution
+
+- Primary file: `src/markov_attribution_model.py`
+- Objective: Calculate contribution shares from the change in conversion probability when a touchpoint is removed
+
+### Shapley attribution
+
+- Primary file: `src/shapley_attribution_model.py`
+- Objective: Allocate each Outcome fairly among unique touchpoints within each path, then aggregate across paths
+
+### Model comparison
+
+- Primary file: `src/attribution_model_comparison.py`
+- Objective: Check calculation validity, data support, and model consistency
+
+### Pipeline
+
+- Primary file: `script/run_pipeline.py`
+- Objective: Run and publish validated artifacts together
+
+### Attribution implementations
+
+- Primary file: `modules/mta_attribution/`
+- Objective: Own the shared model interface and each concrete Markov, Shapley, uniform, and DNN model
+
+### Standardized framework
+
+- Primary file: `modules/mta_standard/`
+- Objective: Load MTA-SIM data, resolve touchpoint grain, execute registered models, validate and score results
+
+### DNN credit model
+
+- Primary file: `DeepNeuralAttributionModel`
+- Objective: Learn credit from touchpoint segment structure and predict a split for a campaign with no path history
 
 > The correct terms are **Shapley value** and **Markov chain**. Shapely is a different Python library for geometric computation, not this project's attribution model.
 

@@ -16,13 +16,25 @@ Strict entry points such as AMC paths and model results still require field orde
 
 ## Simulated Data Layers and Canonical Attribution Input
 
-| Data | Purpose |
-| --- | --- |
-| `synthetic_user_events_sample.csv` | Integrated fact source for local simulation only; one synthetic user event per row |
-| `amc_touchpoint_events_sample.csv` | Used only to demonstrate local path construction; does not represent user detail exportable from AMC |
-| `amc_mta_path_report_raw_sample.csv` | Anonymous aggregated paths; direct input to the attribution algorithms |
-| `amazon_ads_report_sample.csv` | Amazon Ads cost and performance used to calculate efficiency metrics |
-| `amc_touchpoint_entity_aggregate_sample.csv` | Anonymous aggregated evidence from touchpoints to historical Campaign/Ad Group/Keyword/SKU entities |
+### `synthetic_user_events_sample.csv`
+
+Purpose: Integrated fact source for local simulation only; one synthetic user event per row.
+
+### `amc_touchpoint_events_sample.csv`
+
+Purpose: Used only to demonstrate local path construction; does not represent user detail exportable from AMC.
+
+### `amc_mta_path_report_raw_sample.csv`
+
+Purpose: Anonymous aggregated paths; direct input to the attribution algorithms.
+
+### `amazon_ads_report_sample.csv`
+
+Purpose: Amazon Ads cost and performance used to calculate efficiency metrics.
+
+### `amc_touchpoint_entity_aggregate_sample.csv`
+
+Purpose: Anonymous aggregated evidence from touchpoints to historical Campaign/Ad Group/Keyword/SKU entities.
 
 `synthetic_user_id` from the master table must not enter any of the latter four data types. Entity aggregation currently uses a local demonstration threshold of at least five synthetic users; this value is not an official Amazon privacy threshold. A real application should sort events, construct paths, and perform privacy aggregation inside the AMC clean room, exporting only aggregates that satisfy platform privacy rules.
 
@@ -38,12 +50,21 @@ A missing, empty, or other value terminates path construction. This interaction 
 
 A `CONVERSION` must provide:
 
-| Field | Meaning |
-| --- | --- |
-| `users` | Unique users covered by the path |
-| `converted_users` | Unique users who purchased at least once |
-| `purchase_count` | Number of orders/purchase events; may exceed the number of purchasers |
-| `revenue` | Purchase revenue |
+### `users`
+
+Meaning: Unique users covered by the path.
+
+### `converted_users`
+
+Meaning: Unique users who purchased at least once.
+
+### `purchase_count`
+
+Meaning: Number of orders/purchase events; may exceed the number of purchasers.
+
+### `revenue`
+
+Meaning: Purchase revenue.
 
 The AMC aggregated path table used for attribution retains only these four metrics plus the window, account, and `path` fields. `new_to_brand_purchases` and `avg_days_to_purchase` do not enter the aggregated path output.
 

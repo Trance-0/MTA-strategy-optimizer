@@ -49,24 +49,50 @@ class UniformCreditModel(MtaAttributionModel):
         return rows
 ```
 
-| Step | What it does | Why |
-| --- | --- | --- |
-| Fit on dataset | Records the outcome totals and touchpoint set | Ensures `attribute()` is called with a matching scope |
-| Sort touchpoints | Deterministic order for reproducible output | Same touchpoints always produce the same row order |
-| Equal share | `1.0 / count` for each touchpoint | Every touchpoint receives identical credit |
-| Zero-outcome handling | `share = 0.0` when total is zero | Complies with the [standardized interface](./index.md#the-standard-output-row) zero-outcome rule |
-| Conservation | `value = total / count` preserves the total | Sum of all attributed values equals the input total |
+### Fit on dataset
+
+- What it does: Records the outcome totals and touchpoint set
+- Why: Ensures `attribute()` is called with a matching scope
+
+### Sort touchpoints
+
+- What it does: Deterministic order for reproducible output
+- Why: Same touchpoints always produce the same row order
+
+### Equal share
+
+- What it does: `1.0 / count` for each touchpoint
+- Why: Every touchpoint receives identical credit
+
+### Zero-outcome handling
+
+- What it does: `share = 0.0` when total is zero
+- Why: Complies with the [standardized interface](./index.md#the-standard-output-row) zero-outcome rule
+
+### Conservation
+
+- What it does: `value = total / count` preserves the total
+- Why: Sum of all attributed values equals the input total
 
 ## Why a Baseline Matters <span class="status-label status-verified" aria-label="Verified"></span>
 
 The uniform model makes every other model's numbers meaningful in context:
 
-| Scenario | What uniform tells you |
-| --- | --- |
-| Markov beats uniform on MAE | The removal-effect method captures real path structure |
-| Markov ties uniform on MAE | Historical paths carry no attribution signal beyond "these touchpoints exist" |
-| DNN matches Shapley but not uniform | Both learn from path structure; uniform confirms the structure exists |
-| All models equal uniform | The data provides no differentiation between touchpoints — any allocation is arbitrary |
+### Markov beats uniform on MAE
+
+The removal-effect method captures real path structure.
+
+### Markov ties uniform on MAE
+
+Historical paths carry no attribution signal beyond "these touchpoints exist".
+
+### DNN matches Shapley but not uniform
+
+Both learn from path structure; uniform confirms the structure exists.
+
+### All models equal uniform
+
+The data provides no differentiation between touchpoints — any allocation is arbitrary.
 
 ## Interpretation <span class="status-label status-inference" aria-label="Inference"></span>
 
@@ -76,15 +102,54 @@ Because every share is identical, Spearman's rho (rank correlation) is `None` �
 
 ## Comparison with Other Models
 
-| Property | Uniform | [Markov](./markov.md) | [Shapley](./shapley.md) | [DNN](./dnn.md) |
-| --- | --- | --- | --- | --- |
-| Uses path order | No | Yes | No | No |
-| Uses segment structure | No | No | No | Yes |
-| Requires training | No | No | No | Yes |
-| Persistable | No | Yes | Yes | Yes |
-| Can predict new campaigns | No | No | No | Yes |
-| Deterministic | Yes | Yes | Yes | Yes |
-| Best use | Baseline floor | Official display | Sensitivity reference | New-campaign ranking |
+### Uses path order
+
+- Uniform: No
+- [Markov](./markov.md): Yes
+- [Shapley](./shapley.md): No
+- [DNN](./dnn.md): No
+
+### Uses segment structure
+
+- Uniform: No
+- [Markov](./markov.md): No
+- [Shapley](./shapley.md): No
+- [DNN](./dnn.md): Yes
+
+### Requires training
+
+- Uniform: No
+- [Markov](./markov.md): No
+- [Shapley](./shapley.md): No
+- [DNN](./dnn.md): Yes
+
+### Persistable
+
+- Uniform: No
+- [Markov](./markov.md): Yes
+- [Shapley](./shapley.md): Yes
+- [DNN](./dnn.md): Yes
+
+### Can predict new campaigns
+
+- Uniform: No
+- [Markov](./markov.md): No
+- [Shapley](./shapley.md): No
+- [DNN](./dnn.md): Yes
+
+### Deterministic
+
+- Uniform: Yes
+- [Markov](./markov.md): Yes
+- [Shapley](./shapley.md): Yes
+- [DNN](./dnn.md): Yes
+
+### Best use
+
+- Uniform: Baseline floor
+- [Markov](./markov.md): Official display
+- [Shapley](./shapley.md): Sensitivity reference
+- [DNN](./dnn.md): New-campaign ranking
 
 ## Source Files <span class="status-label status-verified" aria-label="Verified"></span>
 

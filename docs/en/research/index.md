@@ -12,13 +12,30 @@ The current internal business hierarchy is defined in [Campaign Group hierarchy 
 
 ## Relevance to AMC MTA
 
-| Level | Section | Purpose |
-| --- | --- | --- |
-| core method | [MTA reading entry](mta/) | Markov, Shapley, stability, and MTA methodology |
-| core platform | [Amazon reading entry](amazon/) | AMC, Amazon Ads, advertising products, data boundaries |
-| future validation | [A/B-testing reading entry](ab-testing/) | future validation of attribution/budget conclusions; not part of current calculations |
-| background | [Ontology research](/research/ontology/本体论研究（最终）.pdf) | knowledge-organization research with no direct runtime dependency |
-| background | [Cross-industry proposal](/research/industry/跨行业AI应用项目-营销场景AI应用与数据.pdf) | early marketing-AI proposal and project context |
+### [MTA reading entry](mta/)
+
+- **Level:** core method
+- **Purpose:** Markov, Shapley, stability, and MTA methodology
+
+### [Amazon reading entry](amazon/)
+
+- **Level:** core platform
+- **Purpose:** AMC, Amazon Ads, advertising products, data boundaries
+
+### [A/B-testing reading entry](ab-testing/)
+
+- **Level:** future validation
+- **Purpose:** future validation of attribution/budget conclusions; not part of current calculations
+
+### [Ontology research](/research/ontology/本体论研究（最终）.pdf)
+
+- **Level:** background
+- **Purpose:** knowledge-organization research with no direct runtime dependency
+
+### [Cross-industry proposal](/research/industry/跨行业AI应用项目-营销场景AI应用与数据.pdf)
+
+- **Level:** background
+- **Purpose:** early marketing-AI proposal and project context
 
 ### Core MTA Material
 

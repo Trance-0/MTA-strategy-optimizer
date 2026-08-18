@@ -78,12 +78,21 @@ The study note decomposes training as follows.
 
 **Step 1: data.** Sample training and test records from the population and fit on training data.
 
-| User | Facebook | Google | Email | Converted |
-| --- | ---: | ---: | ---: | ---: |
-| User 1 | 1 | 1 | 0 | 1 |
-| User 2 | 0 | 1 | 1 | 1 |
-| User 3 | 1 | 0 | 0 | 0 |
-| User 4 | 0 | 0 | 1 | 0 |
+#### User 1
+
+Facebook: 1; Google: 1; Email: 0; Converted: 1
+
+#### User 2
+
+Facebook: 0; Google: 1; Email: 1; Converted: 1
+
+#### User 3
+
+Facebook: 1; Google: 0; Email: 0; Converted: 0
+
+#### User 4
+
+Facebook: 0; Google: 0; Email: 1; Converted: 0
 
 Facebook, Google, and Email are independent variables; conversion is the dependent variable.
 

@@ -104,13 +104,30 @@ See the [canonical output index](output-reference.md) for keys, fields, and limi
 
 ## 8. Common Errors
 
-| Symptom | Common cause | Resolution |
-| --- | --- | --- |
-| Input fails immediately | Empty/duplicate header after cleanup, missing/extra column, invalid number, or legacy field | Leading/trailing whitespace is tolerated directly; correct all other issues in the upstream export according to the data contract |
-| Alignment fails | Window, account, currency, dates, or touchpoint set do not match | Run alignment validation first and ensure complete daily Ads coverage |
-| Paths are empty | No valid conversions, gaps exceed the limit, or the window-start rule fails | Check event types, timestamps, and 14-day rules |
-| Efficiency metric is empty | Cost is 0, or the attributed denominator of a CPA-style metric is 0 | Leave it empty; do not copy cost or output infinity |
-| Result is unreliable | Support is insufficient or the two-model gap exceeds thresholds | Use the recommended range and explicitly state that evidence is currently insufficient |
+### Input fails immediately
+
+- Common cause: Empty/duplicate header after cleanup, missing/extra column, invalid number, or legacy field
+- Resolution: Leading/trailing whitespace is tolerated directly; correct all other issues in the upstream export according to the data contract
+
+### Alignment fails
+
+- Common cause: Window, account, currency, dates, or touchpoint set do not match
+- Resolution: Run alignment validation first and ensure complete daily Ads coverage
+
+### Paths are empty
+
+- Common cause: No valid conversions, gaps exceed the limit, or the window-start rule fails
+- Resolution: Check event types, timestamps, and 14-day rules
+
+### Efficiency metric is empty
+
+- Common cause: Cost is 0, or the attributed denominator of a CPA-style metric is 0
+- Resolution: Leave it empty; do not copy cost or output infinity
+
+### Result is unreliable
+
+- Common cause: Support is insufficient or the two-model gap exceeds thresholds
+- Resolution: Use the recommended range and explicitly state that evidence is currently insufficient
 
 After any failure, fix the input and rerun the complete group; never manually combine old and new batches.
 

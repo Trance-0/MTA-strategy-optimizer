@@ -25,14 +25,41 @@ This module performs attribution analysis only. It is not responsible for budget
 
 The current implementation is a six-stage deterministic pipeline. The table follows the actual call order in `script/run_pipeline.py`, not merely the order in which the output files are presented.
 
-| Stage | Code entry point | Algorithm responsibility | Why it is separated |
-| --- | --- | --- | --- |
-| 1. Establish the reporting window | `infer_ads_report_window()` | Derive one inclusive date window from Amazon Ads `reportDate` values | AMC paths, Ads cost, and model outputs must describe the same observation period |
-| 2. Validate and canonicalize events | `_validated_events()` and `canonical_amc_touchpoint_key()` | Reject malformed events and construct the five-segment touchpoint key | A single key contract prevents attribution and cost from being joined at different grains |
-| 3. Build anonymous paths | `build_aggregated_path_rows()` | Segment journeys at conversions, enforce the maximum gap, and aggregate identical paths | Attribution consumes anonymous aggregates rather than user-level event histories |
-| 4. Run both attribution models | `run_markov_attribution()` and `run_shapley_attribution()` | Calculate three Outcome allocations with two different path algorithms | Markov is the official model; path-level Shapley is an independently structured benchmark |
-| 5. Join spend and govern the recommendation | `aggregate_spend_by_touchpoint()`, `result_rows()`, and `compare_attribution_models()` | Add efficiency metrics, test support and model agreement, and select a point or range | Attribution, cost efficiency, and reliability are distinct calculations and remain auditable |
-| 6. Publish the complete artifact set | `publish_with_rollback()` | Replace all six derived artifacts as one recoverable set | A partial run must not leave path, model, and recommendation files from different executions |
+### 1. Establish the reporting window
+
+- Code entry point: `infer_ads_report_window()`
+- Algorithm responsibility: Derive one inclusive date window from Amazon Ads `reportDate` values
+- Why it is separated: AMC paths, Ads cost, and model outputs must describe the same observation period
+
+### 2. Validate and canonicalize events
+
+- Code entry point: `_validated_events()` and `canonical_amc_touchpoint_key()`
+- Algorithm responsibility: Reject malformed events and construct the five-segment touchpoint key
+- Why it is separated: A single key contract prevents attribution and cost from being joined at different grains
+
+### 3. Build anonymous paths
+
+- Code entry point: `build_aggregated_path_rows()`
+- Algorithm responsibility: Segment journeys at conversions, enforce the maximum gap, and aggregate identical paths
+- Why it is separated: Attribution consumes anonymous aggregates rather than user-level event histories
+
+### 4. Run both attribution models
+
+- Code entry point: `run_markov_attribution()` and `run_shapley_attribution()`
+- Algorithm responsibility: Calculate three Outcome allocations with two different path algorithms
+- Why it is separated: Markov is the official model; path-level Shapley is an independently structured benchmark
+
+### 5. Join spend and govern the recommendation
+
+- Code entry point: `aggregate_spend_by_touchpoint()`, `result_rows()`, and `compare_attribution_models()`
+- Algorithm responsibility: Add efficiency metrics, test support and model agreement, and select a point or range
+- Why it is separated: Attribution, cost efficiency, and reliability are distinct calculations and remain auditable
+
+### 6. Publish the complete artifact set
+
+- Code entry point: `publish_with_rollback()`
+- Algorithm responsibility: Replace all six derived artifacts as one recoverable set
+- Why it is separated: A partial run must not leave path, model, and recommendation files from different executions
 
 ### 1. Canonicalize the Shared Touchpoint Grain
 
@@ -51,15 +78,47 @@ return ":".join((                                                      # 4
 ))
 ```
 
-| Line | Detailed step | Mapping to the data algorithm | Why it is implemented this way |
-| --- | --- | --- | --- |
-| 1 | Trim, uppercase, and validate the interaction text through `_component()` | Normalizes the fifth key segment before any comparison | Case or surrounding whitespace must not create a second identity for the same interaction |
-| 2 | Restrict the segment to `IMPRESSION` or `CLICK` | Preserves the billing and path semantics used later | [Cost Per Click (CPC)](/en/reference/definitions#cpc-cost-per-click) and [Cost Per Mille (CPM)](/en/reference/definitions#cpm-cost-per-mille--cost-per-thousand-impressions) assignment depends on this distinction; accepting arbitrary values would make cost validation ambiguous |
-| 3 | Fail before a malformed key enters a path or output | Enforces the contract at ingestion | Silent repair would hide upstream schema errors |
-| 4 | Join exactly five components with `:` | Creates the canonical attribution grain | A fixed shape makes equality checks and joins deterministic |
-| 5-6 | Require ad product and format | Identifies the advertising product and inventory/ad type | These dimensions are never structurally nullable in the model |
-| 7-8 | Convert missing placement or creative to `UNSPECIFIED` inside the normalized key | Preserves a complete key while keeping the raw structural-null rule separate | The key cannot contain empty segments, but the code does not pretend that missing raw data was observed |
-| 9 | Append the already validated interaction | Completes the impression/click-specific identity | Impression and click nodes remain separate even when the first four segments match |
+#### Line 1
+
+- Detailed step: Trim, uppercase, and validate the interaction text through `_component()`
+- Mapping to the data algorithm: Normalizes the fifth key segment before any comparison
+- Why it is implemented this way: Case or surrounding whitespace must not create a second identity for the same interaction
+
+#### Line 2
+
+- Detailed step: Restrict the segment to `IMPRESSION` or `CLICK`
+- Mapping to the data algorithm: Preserves the billing and path semantics used later
+- Why it is implemented this way: [Cost Per Click (CPC)](/en/reference/definitions#cpc-cost-per-click) and [Cost Per Mille (CPM)](/en/reference/definitions#cpm-cost-per-mille--cost-per-thousand-impressions) assignment depends on this distinction; accepting arbitrary values would make cost validation ambiguous
+
+#### Line 3
+
+- Detailed step: Fail before a malformed key enters a path or output
+- Mapping to the data algorithm: Enforces the contract at ingestion
+- Why it is implemented this way: Silent repair would hide upstream schema errors
+
+#### Line 4
+
+- Detailed step: Join exactly five components with `:`
+- Mapping to the data algorithm: Creates the canonical attribution grain
+- Why it is implemented this way: A fixed shape makes equality checks and joins deterministic
+
+#### Lines 5-6
+
+- Detailed step: Require ad product and format
+- Mapping to the data algorithm: Identifies the advertising product and inventory/ad type
+- Why it is implemented this way: These dimensions are never structurally nullable in the model
+
+#### Lines 7-8
+
+- Detailed step: Convert missing placement or creative to `UNSPECIFIED` inside the normalized key
+- Mapping to the data algorithm: Preserves a complete key while keeping the raw structural-null rule separate
+- Why it is implemented this way: The key cannot contain empty segments, but the code does not pretend that missing raw data was observed
+
+#### Line 9
+
+- Detailed step: Append the already validated interaction
+- Mapping to the data algorithm: Completes the impression/click-specific identity
+- Why it is implemented this way: Impression and click nodes remain separate even when the first four segments match
 
 For Amazon Ads rows, `touchpoint_key_from_ads_row()` additionally chooses `inventoryType` for `AMAZON_DSP` and `adType` for sponsored products, reconstructs the expected key, and compares it with the stored `normalizedTouchpoint`. This turns the cost-side key into a verified value rather than trusting a precomputed string.
 
@@ -81,15 +140,40 @@ for row_number, row in enumerate(event_rows, start=2):                 # 1
     events.append({... "event_time_parsed": _parse_datetime(...), ...}) # 11
 ```
 
-| Line | Detailed step | Algorithm mapping and reason |
-| --- | --- | --- |
-| 1 | Keep the CSV row number for precise errors | Validation is fail-fast and must identify the source record |
-| 2 | Require journey identity, event type, and timestamp | These are the minimum fields needed for grouping, branching, and ordering |
-| 3 | Normalize the discriminator once | Later branches compare one stable representation |
-| 4-5 | Build touchpoint identity from component columns and reject the legacy free-form key | Path nodes can only enter through the canonical five-segment constructor |
-| 6-8 | Parse conversion counts and money as finite, non-negative values | Outcomes become aggregation weights; invalid numbers cannot safely enter sums |
-| 9-10 | Enforce `converted_users <= users` | The unique converters represented by a row cannot exceed its represented users |
-| 11 | Store a UTC timestamp beside the normalized row | Sorting and gap calculations then use one time basis without mutating the input record |
+#### Line 1
+
+- Detailed step: Keep the CSV row number for precise errors
+- Algorithm mapping and reason: Validation is fail-fast and must identify the source record
+
+#### Line 2
+
+- Detailed step: Require journey identity, event type, and timestamp
+- Algorithm mapping and reason: These are the minimum fields needed for grouping, branching, and ordering
+
+#### Line 3
+
+- Detailed step: Normalize the discriminator once
+- Algorithm mapping and reason: Later branches compare one stable representation
+
+#### Lines 4-5
+
+- Detailed step: Build touchpoint identity from component columns and reject the legacy free-form key
+- Algorithm mapping and reason: Path nodes can only enter through the canonical five-segment constructor
+
+#### Lines 6-8
+
+- Detailed step: Parse conversion counts and money as finite, non-negative values
+- Algorithm mapping and reason: Outcomes become aggregation weights; invalid numbers cannot safely enter sums
+
+#### Lines 9-10
+
+- Detailed step: Enforce `converted_users <= users`
+- Algorithm mapping and reason: The unique converters represented by a row cannot exceed its represented users
+
+#### Line 11
+
+- Detailed step: Store a UTC timestamp beside the normalized row
+- Algorithm mapping and reason: Sorting and gap calculations then use one time basis without mutating the input record
 
 The same block also enforces `purchase_count >= converted_users`, `new_to_brand_purchases <= purchase_count`, and the rule that a positive purchase, revenue, or new-to-brand Outcome requires at least one converted user. These checks encode the Outcome contract before modeling, rather than allowing a model to compensate for impossible input states.
 
@@ -112,15 +196,47 @@ for conversion in sorted(conversions, key=lambda event: event["event_time_parsed
     path = " > ".join(event["touchpoint"] for event in path_events)      # 9
 ```
 
-| Line | Detailed step | Mapping to the path algorithm | Why it is implemented this way |
-| --- | --- | --- | --- |
-| 1 | Process a journey's conversions chronologically | Defines non-overlapping conversion segments | Earlier conversions must establish the boundary before later ones are evaluated |
-| 2-4 | Keep touchpoints after the prior conversion and no later than the current conversion | Assigns each touchpoint to at most one conversion segment | Prevents historical interactions from being reused to support multiple purchases |
-| 5 | Move the segment boundary to the current conversion | Closes the current segment | The next iteration cannot look behind this purchase |
-| 6 | Sort eligible touchpoints and keep only the last contiguous suffix whose adjacent gaps are within the configured maximum | Implements the 14-day adjacency rule across the path | A single old break removes the disconnected prefix without discarding the valid recent suffix |
-| 7 | Reject empty paths and paths that start on or before the lower report boundary | Applies the strict path-start window | The full observable path must begin inside the analysis window |
-| 8 | Enforce the same maximum gap from the last touchpoint to conversion | Adds the terminal edge to the adjacency rule | Checking touchpoint-to-touchpoint gaps alone would admit stale final interactions |
-| 9 | Serialize the ordered canonical nodes with ` > ` | Produces the AMC path contract | Order is retained for Markov; Shapley later derives a unique set explicitly |
+#### Line 1
+
+- Detailed step: Process a journey's conversions chronologically
+- Mapping to the path algorithm: Defines non-overlapping conversion segments
+- Why it is implemented this way: Earlier conversions must establish the boundary before later ones are evaluated
+
+#### Lines 2-4
+
+- Detailed step: Keep touchpoints after the prior conversion and no later than the current conversion
+- Mapping to the path algorithm: Assigns each touchpoint to at most one conversion segment
+- Why it is implemented this way: Prevents historical interactions from being reused to support multiple purchases
+
+#### Line 5
+
+- Detailed step: Move the segment boundary to the current conversion
+- Mapping to the path algorithm: Closes the current segment
+- Why it is implemented this way: The next iteration cannot look behind this purchase
+
+#### Line 6
+
+- Detailed step: Sort eligible touchpoints and keep only the last contiguous suffix whose adjacent gaps are within the configured maximum
+- Mapping to the path algorithm: Implements the 14-day adjacency rule across the path
+- Why it is implemented this way: A single old break removes the disconnected prefix without discarding the valid recent suffix
+
+#### Line 7
+
+- Detailed step: Reject empty paths and paths that start on or before the lower report boundary
+- Mapping to the path algorithm: Applies the strict path-start window
+- Why it is implemented this way: The full observable path must begin inside the analysis window
+
+#### Line 8
+
+- Detailed step: Enforce the same maximum gap from the last touchpoint to conversion
+- Mapping to the path algorithm: Adds the terminal edge to the adjacency rule
+- Why it is implemented this way: Checking touchpoint-to-touchpoint gaps alone would admit stale final interactions
+
+#### Line 9
+
+- Detailed step: Serialize the ordered canonical nodes with ` > `
+- Mapping to the path algorithm: Produces the AMC path contract
+- Why it is implemented this way: Order is retained for Markov; Shapley later derives a unique set explicitly
 
 Identical `(marketplace, advertiser_id, path)` records are then summed for `users`, `converted_users`, `purchase_count`, and `revenue`. Revenue is rounded only after aggregation, and rows are sorted by the grouping key so identical inputs produce identical output order.
 
@@ -128,11 +244,20 @@ Identical `(marketplace, advertiser_id, path)` records are then summed for `user
 
 The models deliberately receive different representations of the same validated aggregate:
 
-| Representation | Construction | Algorithm meaning |
-| --- | --- | --- |
-| Converted-user Markov path | One `START ... CONVERSION` row weighted by `converted_users`, plus one `START ... NULL` row weighted by `users - converted_users` | Estimates the probability of reaching conversion versus non-conversion |
-| Purchase and revenue Markov paths | Only positive-Outcome paths, ending in `CONVERSION` and weighted by the selected Outcome | Applies the same removal-effect network independently to order and revenue mass |
-| Shapley coalition row | Ordered path converted to its first-occurrence unique touchpoint set | Defines the members of the path-level unanimity game; position and repetition intentionally do not change the split |
+#### Converted-user Markov path
+
+- Construction: One `START ... CONVERSION` row weighted by `converted_users`, plus one `START ... NULL` row weighted by `users - converted_users`
+- Algorithm meaning: Estimates the probability of reaching conversion versus non-conversion
+
+#### Purchase and revenue Markov paths
+
+- Construction: Only positive-Outcome paths, ending in `CONVERSION` and weighted by the selected Outcome
+- Algorithm meaning: Applies the same removal-effect network independently to order and revenue mass
+
+#### Shapley coalition row
+
+- Construction: Ordered path converted to its first-occurrence unique touchpoint set
+- Algorithm meaning: Defines the members of the path-level unanimity game; position and repetition intentionally do not change the split
 
 See [Markov removal effect](standardized-interface/markov.md) and [Shapley path attribution](standardized-interface/shapley.md) for the line-by-line model internals.
 
@@ -165,12 +290,25 @@ reliability = reliability_fields(                                       # 3
 recommended_value = _recommended_value(row, has_outcome=has_outcome)     # 7
 ```
 
-| Line | Detailed step | Why it is implemented this way |
-| --- | --- | --- |
-| 1 | Calculate absolute percentage-point and mean-relative gaps from preserved decimal shares | Reliability must not change because an output column was rounded for display |
-| 2 | Retrieve raw unique-path, converted-user, and purchase support for the complete touchpoint | Support is evidence about the source data, not about the model's allocated result |
-| 3-6 | Require calculation validity, all support thresholds, and both consistency thresholds | The contract exposes three independent Boolean criteria and labels a row `RELIABLE` only when all pass |
-| 7 | Return the official Markov share when reliable; otherwise return the ordered Markov-Shapley interval | Downstream use receives either one governed point or an explicit sensitivity range |
+#### Line 1
+
+- Detailed step: Calculate absolute percentage-point and mean-relative gaps from preserved decimal shares
+- Why it is implemented this way: Reliability must not change because an output column was rounded for display
+
+#### Line 2
+
+- Detailed step: Retrieve raw unique-path, converted-user, and purchase support for the complete touchpoint
+- Why it is implemented this way: Support is evidence about the source data, not about the model's allocated result
+
+#### Lines 3-6
+
+- Detailed step: Require calculation validity, all support thresholds, and both consistency thresholds
+- Why it is implemented this way: The contract exposes three independent Boolean criteria and labels a row `RELIABLE` only when all pass
+
+#### Line 7
+
+- Detailed step: Return the official Markov share when reliable; otherwise return the ordered Markov-Shapley interval
+- Why it is implemented this way: Downstream use receives either one governed point or an explicit sensitivity range
 
 Zero-total Outcomes remain empty because a normalized attribution recommendation is undefined when there is no Outcome mass.
 

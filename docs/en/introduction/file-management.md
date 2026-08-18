@@ -10,16 +10,45 @@ This page defines each workspace partition's sole responsibility, stable paths, 
 
 ## Responsibility Partitions
 
-| Partition | Sole responsibility | Allowed content |
-| --- | --- | --- |
-| repository root | workspace entry and a small set of global configuration | `README.md`, `VERSION`, and ignore/format rules |
-| `modules/mta_attribution/` | five-segment touchpoint attribution | source, scripts, tests, module input, and five canonical outputs; no Markdown documentation |
-| `modules/mta_strategy_recommendation/` | Campaign Group count and budget initialization | synthetic run-condition data, generator, canonical budget output, validator, and tests; no Markdown documentation |
-| `docs/en/` and `docs/zh/` | current project knowledge | mirrored language documentation for contracts, architecture, assessments, management rules, product introductions, and research explanations |
-| `docs/research/` | external research originals | PDFs, DOCX, JSON, TXT, and other source binaries; no project-authored Markdown after migration |
-| `design-artifacts/` | historical product vision | Product Brief, PRD, model concepts, addenda, and decision records |
-| `_bmad-output/` | workflow traceability | approved specifications, implementation status, and deferred work |
-| `.agents/`, `_bmad/` | installed development tools | skills, manifests, configuration, templates, and shared runtime material |
+### repository root
+
+- Sole responsibility: workspace entry and a small set of global configuration
+- Allowed content: `README.md`, `VERSION`, and ignore/format rules
+
+### `modules/mta_attribution/`
+
+- Sole responsibility: five-segment touchpoint attribution
+- Allowed content: source, scripts, tests, module input, and five canonical outputs; no Markdown documentation
+
+### `modules/mta_strategy_recommendation/`
+
+- Sole responsibility: Campaign Group count and budget initialization
+- Allowed content: synthetic run-condition data, generator, canonical budget output, validator, and tests; no Markdown documentation
+
+### `docs/en/` and `docs/zh/`
+
+- Sole responsibility: current project knowledge
+- Allowed content: mirrored language documentation for contracts, architecture, assessments, management rules, product introductions, and research explanations
+
+### `docs/research/`
+
+- Sole responsibility: external research originals
+- Allowed content: PDFs, DOCX, JSON, TXT, and other source binaries; no project-authored Markdown after migration
+
+### `design-artifacts/`
+
+- Sole responsibility: historical product vision
+- Allowed content: Product Brief, PRD, model concepts, addenda, and decision records
+
+### `_bmad-output/`
+
+- Sole responsibility: workflow traceability
+- Allowed content: approved specifications, implementation status, and deferred work
+
+### `.agents/`, `_bmad/`
+
+- Sole responsibility: installed development tools
+- Allowed content: skills, manifests, configuration, templates, and shared runtime material
 
 Research papers and platform originals are not AMC MTA inputs. Historical design/workflow files do not describe current delivered capability. Duplicate resources inside installed tools are self-contained distribution assets and are not cleaned as ordinary duplicates.
 

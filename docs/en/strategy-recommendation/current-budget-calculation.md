@@ -22,22 +22,48 @@ The output records `recommendation_type` as `INITIAL_SEED`, `is_optimized` as `f
 
 Strategy-model paths in the following table are relative to the `modules/mta_strategy_recommendation` module root; MTA source-data paths are relative to the workspace root.
 
-| Data | Current file | Content entering the calculation |
-| --- | --- | --- |
-| Strategy request | `data/simulated/strategy_request.json` | Campaign Group daily budget, four Campaigns, Outcome weights, capacity rules, and minimum daily budget per group |
-| Candidate pool | `data/simulated/candidate_pool.json` | Eligible Keyword-unit, SKU, valid-Pair, Target, and Audience counts for each Campaign |
-| MTA attribution | `../mta_attribution/outputs/attribution/amc_mta_recommended_attribution.csv` | `recommended_value` and reliability status for every touchpoint and Outcome |
-| AMC entity aggregate | `../mta_attribution/data/simulated/amc_touchpoint_entity_aggregate_sample.csv` | Relationships between touchpoints and historical Campaigns/Ad Groups, plus supporting metrics for the Bridge |
-| Canonical result | `outputs/initial_budget_recommendation.json` | Score, count, and budget of four Campaigns, plus each anonymous new group's budget |
+### Strategy request
+
+- **Current file:** `data/simulated/strategy_request.json`
+- **Content entering the calculation:** Campaign Group daily budget, four Campaigns, Outcome weights, capacity rules, and minimum daily budget per group
+
+### Candidate pool
+
+- **Current file:** `data/simulated/candidate_pool.json`
+- **Content entering the calculation:** Eligible Keyword-unit, SKU, valid-Pair, Target, and Audience counts for each Campaign
+
+### MTA attribution
+
+- **Current file:** `../mta_attribution/outputs/attribution/amc_mta_recommended_attribution.csv`
+- **Content entering the calculation:** `recommended_value` and reliability status for every touchpoint and Outcome
+
+### AMC entity aggregate
+
+- **Current file:** `../mta_attribution/data/simulated/amc_touchpoint_entity_aggregate_sample.csv`
+- **Content entering the calculation:** Relationships between touchpoints and historical Campaigns/Ad Groups, plus supporting metrics for the Bridge
+
+### Canonical result
+
+- **Current file:** `outputs/initial_budget_recommendation.json`
+- **Content entering the calculation:** Score, count, and budget of four Campaigns, plus each anonymous new group's budget
 
 The current sample Campaign Group has a daily budget of 1,000 USD and contains four Campaigns:
 
-| Campaign | Ad Product |
-| --- | --- |
-| `C_DEMO_SP` | Sponsored Products |
-| `C_DEMO_SB` | Sponsored Brands |
-| `C_DEMO_SD` | Sponsored Display |
-| `C_DEMO_DSP` | Amazon DSP |
+### `C_DEMO_SP`
+
+Ad Product: Sponsored Products
+
+### `C_DEMO_SB`
+
+Ad Product: Sponsored Brands
+
+### `C_DEMO_SD`
+
+Ad Product: Sponsored Display
+
+### `C_DEMO_DSP`
+
+Ad Product: Amazon DSP
 
 ## 3. Overall Calculation Flow
 
@@ -101,11 +127,17 @@ An entity row matches when `entity.touchpoint` equals $t$ and its `campaign_id` 
 
 It then chooses an allocation metric by Outcome:
 
-| Outcome | First-priority allocation metric |
-| --- | --- |
-| `converted_users` | `assisted_converted_users` |
-| `purchase_count` | `assisted_purchase_count` |
-| `revenue` | `assisted_revenue` |
+#### `converted_users`
+
+First-priority allocation metric: `assisted_converted_users`
+
+#### `purchase_count`
+
+First-priority allocation metric: `assisted_purchase_count`
+
+#### `revenue`
+
+First-priority allocation metric: `assisted_revenue`
 
 If the sum of the corresponding `assisted_*` metric is zero, weighting falls back in this order:
 
@@ -152,13 +184,35 @@ $$
 
 The current canonical results are:
 
-| Campaign | Converted Users | Purchase Count | Revenue |
-| --- | ---: | ---: | ---: |
-| SP | 0.242017 | 0.241830 | 0.234920 |
-| SB | 0.298984 | 0.299673 | 0.293010 |
-| SD | 0.235849 | 0.234967 | 0.231124 |
-| DSP | 0.223150 | 0.223530 | 0.240946 |
-| Total | 1.000000 | 1.000000 | 1.000000 |
+### SP
+
+- **Converted Users:** 0.242017
+- **Purchase Count:** 0.241830
+- **Revenue:** 0.234920
+
+### SB
+
+- **Converted Users:** 0.298984
+- **Purchase Count:** 0.299673
+- **Revenue:** 0.293010
+
+### SD
+
+- **Converted Users:** 0.235849
+- **Purchase Count:** 0.234967
+- **Revenue:** 0.231124
+
+### DSP
+
+- **Converted Users:** 0.223150
+- **Purchase Count:** 0.223530
+- **Revenue:** 0.240946
+
+### Total
+
+- **Converted Users:** 1.000000
+- **Purchase Count:** 1.000000
+- **Revenue:** 1.000000
 
 For example, SP's `converted_users=0.242017` means that, in the current MTA results, 24.2017% of attribution credit for converted users aggregates to the SP Campaign after the AMC Bridge.
 
@@ -191,13 +245,25 @@ $$
 
 The four Campaign results are:
 
-| Campaign | Result |
-| --- | ---: |
-| SP | 0.2398318 |
-| SB | 0.2973985 |
-| SD | 0.2341669 |
-| DSP | 0.2286028 |
-| Total | 1.0000000 |
+### SP
+
+Result: 0.2398318
+
+### SB
+
+Result: 0.2973985
+
+### SD
+
+Result: 0.2341669
+
+### DSP
+
+Result: 0.2286028
+
+### Total
+
+Result: 1.0000000
 
 Because Campaign contributions sum to 1 for each Outcome and Outcome weights also sum to 1, the current `campaign_score_total=1.0`.
 
@@ -211,13 +277,30 @@ $$
 
 The current total score equals 1 exactly, so each Campaign's budget share is numerically equal to its MTA composite score:
 
-| Campaign | Campaign budget share | Percentage |
-| --- | ---: | ---: |
-| SP | 0.2398318 | 23.98318% |
-| SB | 0.2973985 | 29.73985% |
-| SD | 0.2341669 | 23.41669% |
-| DSP | 0.2286028 | 22.86028% |
-| Total | 1.0000000 | 100% |
+### SP
+
+- **Campaign budget share:** 0.2398318
+- **Percentage:** 23.98318%
+
+### SB
+
+- **Campaign budget share:** 0.2973985
+- **Percentage:** 29.73985%
+
+### SD
+
+- **Campaign budget share:** 0.2341669
+- **Percentage:** 23.41669%
+
+### DSP
+
+- **Campaign budget share:** 0.2286028
+- **Percentage:** 22.86028%
+
+### Total
+
+- **Campaign budget share:** 1.0000000
+- **Percentage:** 100%
 
 The Campaign Group total daily budget is 1,000 USD, so:
 
@@ -228,13 +311,25 @@ $$
 
 This produces:
 
-| Campaign | Campaign initial daily budget (displayed to 4 decimal places) |
-| --- | ---: |
-| SP | 239.8318 USD |
-| SB | 297.3985 USD |
-| SD | 234.1669 USD |
-| DSP | 228.6028 USD |
-| Total | 1,000.0000 USD |
+### SP
+
+Campaign initial daily budget (displayed to 4 decimal places): 239.8318 USD
+
+### SB
+
+Campaign initial daily budget (displayed to 4 decimal places): 297.3985 USD
+
+### SD
+
+Campaign initial daily budget (displayed to 4 decimal places): 234.1669 USD
+
+### DSP
+
+Campaign initial daily budget (displayed to 4 decimal places): 228.6028 USD
+
+### Total
+
+Campaign initial daily budget (displayed to 4 decimal places): 1,000.0000 USD
 
 ## 9. Step Six: Calculate How Many Ad Groups Each Campaign Needs
 
@@ -326,12 +421,29 @@ $$
 
 All four current Campaigns have one new group, so each new-group budget equals its Campaign budget:
 
-| New Ad Group Slot | Campaign | Initial budget share | Initial daily budget (displayed to 4 decimal places) |
-| --- | --- | ---: | ---: |
-| `C_DEMO_SP_NEW_AG_01` | SP | 0.2398318 | 239.8318 USD |
-| `C_DEMO_SB_NEW_AG_01` | SB | 0.2973985 | 297.3985 USD |
-| `C_DEMO_SD_NEW_AG_01` | SD | 0.2341669 | 234.1669 USD |
-| `C_DEMO_DSP_NEW_AG_01` | DSP | 0.2286028 | 228.6028 USD |
+### `C_DEMO_SP_NEW_AG_01`
+
+- **Campaign:** SP
+- **Initial budget share:** 0.2398318
+- **Initial daily budget (displayed to 4 decimal places):** 239.8318 USD
+
+### `C_DEMO_SB_NEW_AG_01`
+
+- **Campaign:** SB
+- **Initial budget share:** 0.2973985
+- **Initial daily budget (displayed to 4 decimal places):** 297.3985 USD
+
+### `C_DEMO_SD_NEW_AG_01`
+
+- **Campaign:** SD
+- **Initial budget share:** 0.2341669
+- **Initial daily budget (displayed to 4 decimal places):** 234.1669 USD
+
+### `C_DEMO_DSP_NEW_AG_01`
+
+- **Campaign:** DSP
+- **Initial budget share:** 0.2286028
+- **Initial daily budget (displayed to 4 decimal places):** 228.6028 USD
 
 ### 10.1 Calculation with Multiple New Groups
 
@@ -420,12 +532,21 @@ Using the new SP group as an example:
 
 Field meanings:
 
-| Field | Meaning |
-| --- | --- |
-| `ad_group_slot_id` | Anonymous new-group slot for the next activation, not a historical Ad Group ID |
-| `allocation_basis` | First calculate the Campaign budget from MTA, then split equally within Campaign |
-| `budget_seed_share` | The new group's share of the Campaign Group total budget |
-| `initial_daily_budget` | Initial daily-budget amount for the new group |
+### `ad_group_slot_id`
+
+Anonymous new-group slot for the next activation, not a historical Ad Group ID
+
+### `allocation_basis`
+
+First calculate the Campaign budget from MTA, then split equally within Campaign
+
+### `budget_seed_share`
+
+The new group's share of the Campaign Group total budget
+
+### `initial_daily_budget`
+
+Initial daily-budget amount for the new group
 
 ## 15. What the Current Calculation Does Not Do
 

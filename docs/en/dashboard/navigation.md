@@ -21,10 +21,13 @@ The rail writes the selected page into the location hash, so a view is linkable 
 
 Everything about the dashboard's own plumbing is pinned to the foot of the rail, ruled off from the view navigation above it, so it never reads as a seventh place to navigate to. It shows the active source, a status dot, and whether logging is on, and opens a modal with two tabs:
 
-| Tab | Contains |
-| --- | --- |
-| Data source | The `DATABASE` toggle and the PostgreSQL host, port, database, user, password, and Secure Sockets Layer (SSL) mode, with **Test connection** and **Save to `.env`** |
-| Logging | The streaming-data log switch, its level, and the captured records |
+#### Data source
+
+Contains the `DATABASE` toggle and the PostgreSQL host, port, database, user, password, and Secure Sockets Layer (SSL) mode, with **Test connection** and **Save to `.env`**.
+
+#### Logging
+
+Contains the streaming-data log switch, its level, and the captured records.
 
 **Test connection** opens a throwaway connection using what was typed rather than what is saved, so a correction can be validated before it is committed to `.env`. Saving rewrites `.env` in place — comments and unrelated keys are preserved, and a key already present is replaced rather than appended, so a file cannot end up with two values for one key and the winner decided by read order. Saving also drops the loader caches and disposes the connection pool, because both would otherwise hold the old mode until a restart.
 

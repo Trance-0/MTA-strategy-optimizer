@@ -42,13 +42,30 @@ Trance-0 development uses the repository's root commands, package imports, unit 
 
 ## Technology Stack
 
-| Area | Technology | Purpose |
-| --- | --- | --- |
-| AMC MTA | Python 3.10+ standard library | CSV data pipeline, algorithms, and tests |
-| Preserved historical tools | TOML, YAML, CSV, Markdown, scripts | reference only; not a development dependency |
-| Documentation helpers | Node.js JavaScript, Draw.io | site build and editable architecture assets |
-| Documentation | CommonMark, SVG, JSON, PDF, DOCX | project knowledge and research |
-| Version control | Git | the audited state had no continuous integration/deployment configuration |
+### AMC MTA
+
+- Technology: Python 3.10+ standard library
+- Purpose: CSV data pipeline, algorithms, and tests
+
+### Preserved historical tools
+
+- Technology: TOML, YAML, CSV, Markdown, scripts
+- Purpose: reference only; not a development dependency
+
+### Documentation helpers
+
+- Technology: Node.js JavaScript, Draw.io
+- Purpose: site build and editable architecture assets
+
+### Documentation
+
+- Technology: CommonMark, SVG, JSON, PDF, DOCX
+- Purpose: project knowledge and research
+
+### Version control
+
+- Technology: Git
+- Purpose: the audited state had no continuous integration/deployment configuration
 
 ## Data and Security Boundaries
 

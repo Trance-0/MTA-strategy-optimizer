@@ -16,14 +16,29 @@ It is more than an algorithm sketch: input, paths, cost, models, comparison, gov
 
 ## Layered Maturity
 
-| Dimension | Assessment | Evidence |
-| --- | --- | --- |
-| engineering reliability | relatively high | reproducible execution and strict validation; recorded 107-test coverage of lineage, privacy, conservation, reliability, and rollback |
-| attribution method | medium | complementary models with explicit semantics, but hand-worked benchmarks and real-data calibration remain necessary |
-| data evidence | low | deterministic synthetic sample only; no real AMC query or cross-window evidence |
-| business decision support | very low | model diagnostics and reliability only; no automatic-execution authority |
-| demonstration completeness | relatively high | suitable for demonstration, teaching, interface review, and preparing real-data integration |
-| production readiness | low | missing production data, stability, continuous integration, monitoring, and causal validation |
+### engineering reliability
+
+Assessment: relatively high. Evidence: reproducible execution and strict validation; recorded 107-test coverage of lineage, privacy, conservation, reliability, and rollback.
+
+### attribution method
+
+Assessment: medium. Evidence: complementary models with explicit semantics, but hand-worked benchmarks and real-data calibration remain necessary.
+
+### data evidence
+
+Assessment: low. Evidence: deterministic synthetic sample only; no real AMC query or cross-window evidence.
+
+### business decision support
+
+Assessment: very low. Evidence: model diagnostics and reliability only; no automatic-execution authority.
+
+### demonstration completeness
+
+Assessment: relatively high. Evidence: suitable for demonstration, teaching, interface review, and preparing real-data integration.
+
+### production readiness
+
+Assessment: low. Evidence: missing production data, stability, continuous integration, monitoring, and causal validation.
 
 These assessments are recommendations based on the code, tests, inputs, and outputs reviewed by the source document. They are not statistical ratings and do not automatically apply to future data versions.
 
@@ -69,11 +84,17 @@ The migrated source recorded a deterministic snapshot rebuilt on 2026-07-29 from
 
 ### Overall Differences
 
-| Outcome | Five-segment TVD | Spearman rho | Top 5 overlap | Interpretation |
-| --- | ---: | ---: | ---: | --- |
-| converted users | 1.945% | 0.8890 | 3/5 | close shares with some head-ranking differences |
-| purchase count | 1.975% | 0.9111 | 3/5 | close shares and broadly consistent ranking |
-| revenue | 2.059% | 0.9314 | 4/5 | close shares and broadly consistent ranking |
+#### converted users
+
+Five-segment TVD: 1.945%. Spearman rho: 0.8890. Top 5 overlap: 3/5. Interpretation: close shares with some head-ranking differences.
+
+#### purchase count
+
+Five-segment TVD: 1.975%. Spearman rho: 0.9111. Top 5 overlap: 3/5. Interpretation: close shares and broadly consistent ranking.
+
+#### revenue
+
+Five-segment TVD: 2.059%. Spearman rho: 0.9314. Top 5 overlap: 4/5. Interpretation: close shares and broadly consistent ranking.
 
 Approximately two percent of contribution mass would have to move for the two models to agree. The accurate conclusion is that total shares are close while some leading ranks remain sensitive to model assumptions; synthetic results do not establish real-business stability.
 
@@ -89,13 +110,25 @@ Its recorded revenue share was 6.129% under Markov and 6.660% under Shapley: a 0
 
 The snapshot's 51 touchpoint/Outcome records were:
 
-| Current sample result | Count |
-| --- | ---: |
-| `calculation_valid=true` | 51 |
-| `data_support_sufficient=true` | 51 |
-| `models_consistent=true` | 51 |
-| `reliability_status=RELIABLE` | 51 |
-| `reliability_status=UNRELIABLE` | 0 |
+#### `calculation_valid=true`
+
+Count: 51.
+
+#### `data_support_sufficient=true`
+
+Count: 51.
+
+#### `models_consistent=true`
+
+Count: 51.
+
+#### `reliability_status=RELIABLE`
+
+Count: 51.
+
+#### `reliability_status=UNRELIABLE`
+
+Count: 0.
 
 Each Outcome summary AND-aggregated its touchpoint-level Booleans. Total variation distance, Spearman, and Top-K overlap remained supporting diagnostics and did not change reliability.
 

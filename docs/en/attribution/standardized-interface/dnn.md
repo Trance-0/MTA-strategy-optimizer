@@ -24,12 +24,25 @@ Each encoded touchpoint passes through a 16-unit `tanh` layer, an 8-unit `tanh` 
 
 That choice matters for the output contract. A softmax always sums to one, so **share conservation holds by construction** rather than by a post-hoc rescale that could hide a defective model.
 
-| Hyperparameter | Default | Reason |
-| --- | --- | --- |
-| `hidden_sizes` | `(16, 8)` | Two hidden layers give the model interaction terms between segments without exceeding the evidence a report-scale dataset carries |
-| `epochs` | `400` | Full-batch steps; fixed length keeps training deterministic |
-| `learning_rate` | `0.5` | Plain gradient descent on an averaged batch gradient |
-| `seed` | `20260803` | Seeds Glorot-uniform weight initialisation |
+### `hidden_sizes`
+
+- Default: `(16, 8)`
+- Reason: Two hidden layers give the model interaction terms between segments without exceeding the evidence a report-scale dataset carries
+
+### `epochs`
+
+- Default: `400`
+- Reason: Full-batch steps; fixed length keeps training deterministic
+
+### `learning_rate`
+
+- Default: `0.5`
+- Reason: Plain gradient descent on an averaged batch gradient
+
+### `seed`
+
+- Default: `20260803`
+- Reason: Seeds Glorot-uniform weight initialisation
 
 The implementation uses only the Python standard library, matching the repository's existing zero-dependency constraint. It is a genuine multi-layer network trained by backpropagation, sized for report-scale touchpoint counts rather than for large-scale training.
 
@@ -37,13 +50,25 @@ The implementation uses only the Python standard library, matching the repositor
 
 `build_touchpoint_features()` derives every feature from the model-facing path rows. Ground truth is not reachable from the dataset, so no feature can encode the answer.
 
-| Feature | Definition |
-| --- | --- |
-| Segment one-hots | One vocabulary per contract segment, with index 0 reserved for an unseen value |
-| `appearance_ratio` | Share of paths containing the touchpoint |
-| `mean_relative_position` | Average position within its paths, `0` first to `1` last; a single-touchpoint path scores `0.5` |
-| `mean_path_length_ratio` | Average length of its paths, scaled by the longest observed path |
-| `user_share` | Share of total path users on paths containing the touchpoint |
+### Segment one-hots
+
+One vocabulary per contract segment, with index 0 reserved for an unseen value.
+
+### `appearance_ratio`
+
+Share of paths containing the touchpoint.
+
+### `mean_relative_position`
+
+Average position within its paths, `0` first to `1` last; a single-touchpoint path scores `0.5`.
+
+### `mean_path_length_ratio`
+
+Average length of its paths, scaled by the longest observed path.
+
+### `user_share`
+
+Share of total path users on paths containing the touchpoint.
 
 The reserved unknown bucket is what makes new-campaign prediction possible. A segment value the model never saw still encodes; it simply lands in the bucket the network learned as "unfamiliar."
 
@@ -61,11 +86,17 @@ self._network.apply_gradients(                                       # 5
     activations_batch, gradients, self.learning_rate)
 ```
 
-| Line | Detailed step | Algorithm mapping and reason |
-| --- | --- | --- |
-| 1 | Softmax the current logits across the touchpoint set | Turns raw scores into a share distribution comparable to the target |
-| 2-4 | Set the gradient to `predicted - target` | This is exactly `d(cross entropy)/d(logit)` for a softmax, so no separate loss derivative is needed |
-| 5 | Apply one averaged full-batch step | Averaging before the update makes the step independent of touchpoint order |
+### Line 1 — Softmax the current logits across the touchpoint set
+
+Algorithm mapping and reason: Turns raw scores into a share distribution comparable to the target.
+
+### Lines 2-4 — Set the gradient to `predicted - target`
+
+Algorithm mapping and reason: This is exactly `d(cross entropy)/d(logit)` for a softmax, so no separate loss derivative is needed.
+
+### Line 5 — Apply one averaged full-batch step
+
+Algorithm mapping and reason: Averaging before the update makes the step independent of touchpoint order.
 
 An outcome whose observed total is zero is excluded from training entirely: there is no distribution to learn, and fabricating one would violate the zero-outcome rule in the output contract.
 

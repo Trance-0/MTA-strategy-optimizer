@@ -50,14 +50,29 @@ The six share one contract and are specified together.
 
 - Responsibility: Render the six pages of the dashboard, one component per view, in the prototype's navigation order.
 
-  | Component | Content |
-  | --- | --- |
-  | `CommandCenter.vue` | Five headline tiles, spend against return over time, the per-Outcome reliability verdict, and attributed revenue by ad product for both models. |
-  | `BudgetManager.vue` | Handoff state, the recommended daily budget per Campaign against its required minimum, the derivation that produced it, the score composition, and the Ad Group slots. |
-  | `Campaigns.vue` | Three tabs over the historical record: filterable daily performance, the Campaign and Ad Group bridge, and searchable conversion paths. |
-  | `CampaignOptimizer.vue` | Markov against Shapley per touchpoint, the governed recommendation, and the budget shift the recommendation implies. |
-  | `OptimizationLog.vue` | Run identifiers, the report window, the input digests, the pipeline stage trail, and the per-touchpoint reliability flags. |
-  | `KnowledgeBase.vue` | The five-segment vocabulary, the reliability contract, the Outcomes, capacity rules, the hierarchy, and the artifacts in use. |
+#### `CommandCenter.vue`
+
+Five headline tiles, spend against return over time, the per-Outcome reliability verdict, and attributed revenue by ad product for both models.
+
+#### `BudgetManager.vue`
+
+Handoff state, the recommended daily budget per Campaign against its required minimum, the derivation that produced it, the score composition, and the Ad Group slots.
+
+#### `Campaigns.vue`
+
+Three tabs over the historical record: filterable daily performance, the Campaign and Ad Group bridge, and searchable conversion paths.
+
+#### `CampaignOptimizer.vue`
+
+Markov against Shapley per touchpoint, the governed recommendation, and the budget shift the recommendation implies.
+
+#### `OptimizationLog.vue`
+
+Run identifiers, the report window, the input digests, the pipeline stage trail, and the per-touchpoint reliability flags.
+
+#### `KnowledgeBase.vue`
+
+The five-segment vocabulary, the reliability contract, the Outcomes, capacity rules, the hierarchy, and the artifacts in use.
 
 - Inputs: None. Each component takes no props and reads the shared snapshot through `useDashboard()`, so a view never holds a file path, a Structured Query Language (SQL) statement, or a `fetch` call.
 - Outputs: The rendered page. Nothing is returned and nothing is written.

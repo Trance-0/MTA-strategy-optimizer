@@ -11,6 +11,11 @@ The project version is recorded in the repository-root `VERSION` file. Each page
 
 This section records **what** changed. See the [work log](../worklog/) for **who** did the work and when.
 
+## [0.9.18](0.9.18.md)
+
+- Date: 2026-08-18
+- Summary: Added a project-wide documentation table-usage rule to `AGENTS.md` and decomposed 135 non-comparison tables into sub-level headings across 45 files under `docs/en`, `docs/version`, and `docs/worklog`
+
 ## [0.9.17](0.9.17.md)
 
 - Date: 2026-08-18

@@ -13,24 +13,54 @@ For the translated operational schema references, see the [Product data model](p
 
 ## MTA-SIM's Three Logical Tables <span class="status-label status-external" aria-label="External"></span>
 
-| Table | Purpose | Training boundary |
-| --- | --- | --- |
-| `amc_path_report` | Aggregated, ordered customer paths and observed Outcomes | Primary path-attribution input |
-| `amazon_ads_daily_touchpoint_performance` | Daily touchpoint delivery, cost, and platform-reported results | Optional feature, diagnostic, or reporting input |
-| `simulation_ground_truth` | Simulator-known incremental removal effects and credit shares for touchpoints | **Evaluation only; prohibited as a training feature** |
+### `amc_path_report`
+
+- Purpose: Aggregated, ordered customer paths and observed Outcomes
+- Training boundary: Primary path-attribution input
+
+### `amazon_ads_daily_touchpoint_performance`
+
+- Purpose: Daily touchpoint delivery, cost, and platform-reported results
+- Training boundary: Optional feature, diagnostic, or reporting input
+
+### `simulation_ground_truth`
+
+- Purpose: Simulator-known incremental removal effects and credit shares for touchpoints
+- Training boundary: **Evaluation only; prohibited as a training feature**
 
 Purchases in the path table and platform-reported purchases in the Ads table must not be added together; they are Outcomes with different semantics.
 
 ## This Repository's Current Inputs <span class="status-label status-verified" aria-label="Verified"></span>
 
-| File | Granularity | Role |
-| --- | --- | --- |
-| `amc_mta_path_report_raw_sample.csv` | Aggregated path | Markov and Shapley input |
-| `amazon_ads_report_sample.csv` | Date × touchpoint | Cost and diagnostic metrics |
-| `amc_touchpoint_entity_aggregate_sample.csv` | Touchpoint × delivery entity | Bridge from touchpoint to Campaign/historical Ad Group |
-| `amc_mta_recommended_attribution.csv` | Touchpoint × Outcome | Attribution input for the strategy initializer |
-| `strategy_request.json` | Campaign Group request | Total budget, Outcome weights, and capacity rules |
-| `candidate_pool.json` | Campaign candidate counts | Calculate the new Ad Group count |
+### `amc_mta_path_report_raw_sample.csv`
+
+- Granularity: Aggregated path
+- Role: Markov and Shapley input
+
+### `amazon_ads_report_sample.csv`
+
+- Granularity: Date × touchpoint
+- Role: Cost and diagnostic metrics
+
+### `amc_touchpoint_entity_aggregate_sample.csv`
+
+- Granularity: Touchpoint × delivery entity
+- Role: Bridge from touchpoint to Campaign/historical Ad Group
+
+### `amc_mta_recommended_attribution.csv`
+
+- Granularity: Touchpoint × Outcome
+- Role: Attribution input for the strategy initializer
+
+### `strategy_request.json`
+
+- Granularity: Campaign Group request
+- Role: Total budget, Outcome weights, and capacity rules
+
+### `candidate_pool.json`
+
+- Granularity: Campaign candidate counts
+- Role: Calculate the new Ad Group count
 
 ## Why the Two Sets of Simulated Results Are Not Directly Compatible <span class="status-label status-verified" aria-label="Verified"></span>
 
@@ -62,14 +92,29 @@ The adapter runs the ZheyuanWu generator, preserves its original four-segment fi
 
 `modules/mta_standard/` implements the generation boundary and items 1, 2, 3, 5, and 6 above:
 
-| Recommendation | Where it is implemented |
-| --- | --- |
-| Run the reviewed generator source | `mta_sim_generator_adapter` invokes the pinned `external/mta_sim_dataset/ZheyuanWu` pipeline |
-| 1. Validate column order | `dataloader` requires the exact contract header for each table |
-| 2. Never guess `INTERACTION_TYPE` | `SimulatorConfig` supplies it explicitly and rejects missing, ambiguous, or colliding mappings |
-| 3. Preserve `unitsSold` | Kept verbatim on the annotated performance rows as a diagnostic |
-| 5. Validate before attributing | Loading fails before any model runs; `validate_standard_output` guards the results |
-| 6. Isolate Ground Truth | `MtaSimDataset` has no ground-truth field and the loader accepts no ground-truth path |
+### Run the reviewed generator source
+
+Where it is implemented: `mta_sim_generator_adapter` invokes the pinned `external/mta_sim_dataset/ZheyuanWu` pipeline.
+
+### 1. Validate column order
+
+Where it is implemented: `dataloader` requires the exact contract header for each table.
+
+### 2. Never guess `INTERACTION_TYPE`
+
+Where it is implemented: `SimulatorConfig` supplies it explicitly and rejects missing, ambiguous, or colliding mappings.
+
+### 3. Preserve `unitsSold`
+
+Where it is implemented: Kept verbatim on the annotated performance rows as a diagnostic.
+
+### 5. Validate before attributing
+
+Where it is implemented: Loading fails before any model runs; `validate_standard_output` guards the results.
+
+### 6. Isolate Ground Truth
+
+Where it is implemented: `MtaSimDataset` has no ground-truth field and the loader accepts no ground-truth path.
 
 Item 4, the Campaign and Ad Group entity Bridge, remains the responsibility of the strategy module and is unchanged.
 

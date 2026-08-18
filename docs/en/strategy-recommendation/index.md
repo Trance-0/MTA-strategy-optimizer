@@ -38,14 +38,29 @@ $$
 
 Related files:
 
-| Responsibility | File |
-| --- | --- |
-| Core calculation | `src/budget_recommender.py` |
-| Generation entry point | `script/generate_initial_budget.py` |
-| Strategy input | `data/simulated/strategy_request.json` |
-| Candidate pool | `data/simulated/candidate_pool.json` |
-| Current output | `outputs/initial_budget_recommendation.json` |
-| Output validation | `src/hierarchy_validator.py` |
+### Core calculation
+
+File: `src/budget_recommender.py`
+
+### Generation entry point
+
+File: `script/generate_initial_budget.py`
+
+### Strategy input
+
+File: `data/simulated/strategy_request.json`
+
+### Candidate pool
+
+File: `data/simulated/candidate_pool.json`
+
+### Current output
+
+File: `outputs/initial_budget_recommendation.json`
+
+### Output validation
+
+File: `src/hierarchy_validator.py`
 
 ## Next Stage: One Ad Group Response Model <span class="status-label status-recommendation" aria-label="Recommendation"></span>
 

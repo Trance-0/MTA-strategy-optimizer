@@ -10,10 +10,13 @@ This directory contains only two v4 input JSON files and this explanation. It do
 
 The deterministic canonical result is at `modules/mta_strategy_recommendation/outputs/initial_budget_recommendation.json`.
 
-| File | Purpose |
-| --- | --- |
-| `strategy_request.json` | Group, four Campaigns, AMC file SHA/scope, Outcome weights, capacity for each ad product, and minimum budget |
-| `candidate_pool.json` | Count of eligible Keyword units, SKUs, valid Pairs, Targets, and Audiences for each Campaign |
+## `strategy_request.json`
+
+Purpose: Group, four Campaigns, AMC file SHA/scope, Outcome weights, capacity for each ad product, and minimum budget.
+
+## `candidate_pool.json`
+
+Purpose: Count of eligible Keyword units, SKUs, valid Pairs, Targets, and Audiences for each Campaign.
 
 Counting rules:
 

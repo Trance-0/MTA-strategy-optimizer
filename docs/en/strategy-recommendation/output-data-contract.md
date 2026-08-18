@@ -10,29 +10,71 @@ The canonical result is always saved at `modules/mta_strategy_recommendation/out
 
 ## 1. Current Sample
 
-| Data | Count or definition |
-| --- | ---: |
-| Campaign Group | 1 |
-| Campaign | 4 |
-| Recommended new Ad Groups | 4 (`1/1/1/1`) |
-| AMC MTA touchpoints | 17 (all used) |
-| AMC entity-aggregate rows | 34 |
-| Group daily-budget baseline | 1,000 USD |
+### Campaign Group
+
+Count or definition: 1
+
+### Campaign
+
+Count or definition: 4
+
+### Recommended new Ad Groups
+
+Count or definition: 4 (`1/1/1/1`)
+
+### AMC MTA touchpoints
+
+Count or definition: 17 (all used)
+
+### AMC entity-aggregate rows
+
+Count or definition: 34
+
+### Group daily-budget baseline
+
+Count or definition: 1,000 USD
 
 ## 2. Top-Level Fields
 
-| Field | Meaning |
-| --- | --- |
-| `schema_version` | Fixed to `4.0` |
-| `campaign_group_id`, `candidate_pool_id`, `mta_batch_id` | Input lineage |
-| `mta_source_snapshot` | AMC window, marketplace, account, and both file SHAs |
-| `budget_derivation` | Bridge formula, weights, row counts, fallback order, and total score |
-| `recommendation_type` | `INITIAL_SEED` |
-| `handoff_status` | `READY_FOR_OPTIMIZATION` |
-| `is_optimized` | `false` |
-| `warnings` | Shares-only, insufficient-budget, and similar statuses |
-| `budget_seed_total` | Present when a Group budget baseline is supplied |
-| `campaigns` | Count and budget for four Campaigns |
+### `schema_version`
+
+Fixed to `4.0`
+
+### `campaign_group_id`, `candidate_pool_id`, `mta_batch_id`
+
+Input lineage
+
+### `mta_source_snapshot`
+
+AMC window, marketplace, account, and both file SHAs
+
+### `budget_derivation`
+
+Bridge formula, weights, row counts, fallback order, and total score
+
+### `recommendation_type`
+
+`INITIAL_SEED`
+
+### `handoff_status`
+
+`READY_FOR_OPTIMIZATION`
+
+### `is_optimized`
+
+`false`
+
+### `warnings`
+
+Shares-only, insufficient-budget, and similar statuses
+
+### `budget_seed_total`
+
+Present when a Group budget baseline is supplied
+
+### `campaigns`
+
+Count and budget for four Campaigns
 
 The budget normalization scope is fixed to `ALL_AVAILABLE_MTA_TOUCHPOINTS`; six touchpoints are no longer selected manually.
 

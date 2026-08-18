@@ -33,6 +33,14 @@
 - Every abbreviated term expanded or linked in documentation must also have a corresponding entry in `docs/en/definitions.md` under the appropriate category.
 - Link to the definitions page anchor when the term's meaning is nuanced in this project's context (e.g., `[AMC](/en/definitions#amc-amazon-marketing-cloud)`). Use inline expansion when the term is common knowledge (`Comma-Separated Values (CSV)`).
 
+## Documentation table usage
+
+- A Markdown table is permitted only as a strict side-by-side comparison of exactly two items: column one names the topic being compared, column two holds the first item's value for that topic, column three holds the second item's value. No other table shape is allowed anywhere under `docs/`.
+- Every other kind of content that might otherwise be tempting to lay out as a table — a list of definitions, a list of components, a list of fields, a list of steps, a list of options — must be decomposed into sub-level headings instead. Prefer a fourth-level heading (`####`) per item; drop to a fifth-level heading (`#####`) only when the item already sits inside a fourth-level section.
+- Prefer `####` specifically for definition lists: one heading per term, with its definition as the body underneath.
+- When reviewing or authoring any page, treat a table that is not a two-item comparison as a defect. Convert each row into its own heading with that row's content underneath it, rather than trimming or reformatting the table.
+- `docs/en/introduction/data-models/` carries a stricter, page-specific rule: no tables at all, including comparison tables. That rule is a narrower subset of this one and takes precedence within that directory.
+
 ## Script placement
 
 - Keep every maintained project command-line entry point in the project-root `/script` directory. Its contents are tracked product code.

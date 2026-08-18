@@ -86,19 +86,52 @@ Plain-text `http://` addresses, embedded credentials, query strings, fragments, 
 
 ## Directory Quick Reference <span class="status-label status-verified" aria-label="Verified"></span>
 
-| Directory | When to use it |
-| --- | --- |
-| `modules/mta_attribution/src/` | Modify attribution algorithms and aggregation logic |
-| `modules/mta_standard/src/` | Modify loading, adaptation, registry, execution, output validation, or evaluation logic |
-| `modules/mta_attribution/src/` | Modify the model interface or an individual attribution implementation |
-| `external/mta_sim_dataset/` | Inspect the pinned external generator source; update only through Git submodule workflows |
-| `script/` | Run every maintained project data, attribution, strategy, or documentation command |
-| `modules/mta_attribution/data/simulated/` | Inspect this repository's synthetic demonstration inputs |
-| `modules/mta_attribution/outputs/` | Inspect current attribution outputs |
-| `modules/mta_strategy_recommendation/src/` | Modify budget-initialization logic |
-| `modules/mta_strategy_recommendation/data/simulated/` | Inspect the strategy request and candidate pool |
-| `modules/mta_strategy_recommendation/outputs/` | Inspect the canonical initial-budget JSON |
-| `docs/.vitepress/` | Modify site configuration and theme |
-| `docs/research/` | Store and display research attachments on the site; not runtime input |
+### `modules/mta_attribution/src/`
+
+Modify attribution algorithms and aggregation logic.
+
+### `modules/mta_standard/src/`
+
+Modify loading, adaptation, registry, execution, output validation, or evaluation logic.
+
+### `modules/mta_attribution/src/`
+
+Modify the model interface or an individual attribution implementation.
+
+### `external/mta_sim_dataset/`
+
+Inspect the pinned external generator source; update only through Git submodule workflows.
+
+### `script/`
+
+Run every maintained project data, attribution, strategy, or documentation command.
+
+### `modules/mta_attribution/data/simulated/`
+
+Inspect this repository's synthetic demonstration inputs.
+
+### `modules/mta_attribution/outputs/`
+
+Inspect current attribution outputs.
+
+### `modules/mta_strategy_recommendation/src/`
+
+Modify budget-initialization logic.
+
+### `modules/mta_strategy_recommendation/data/simulated/`
+
+Inspect the strategy request and candidate pool.
+
+### `modules/mta_strategy_recommendation/outputs/`
+
+Inspect the canonical initial-budget JSON.
+
+### `docs/.vitepress/`
+
+Modify site configuration and theme.
+
+### `docs/research/`
+
+Store and display research attachments on the site; not runtime input.
 
 Do not commit credentials, customer-level data, production account identifiers, or real generated data to this repository.

@@ -10,13 +10,30 @@ The five canonical CSV files are in `modules/mta_attribution/outputs/attribution
 
 ## Recommended Reading Order
 
-| Order | File | Granularity and primary key | Purpose |
-| --- | --- | --- | --- |
-| 1 | `amc_markov_attribution_results.csv` | One row per five-segment `touchpoint` | Three sets of attribution, Ads performance, cost, and efficiency from the official display model |
-| 2 | `amc_shapley_attribution_results.csv` | One row per five-segment `touchpoint` | Reference-model results used to assess model sensitivity |
-| 3 | `amc_mta_model_comparison_touchpoints.csv` | `touchpoint + outcome`; currently 51 rows | Compare shares, gaps, raw support, and touchpoint-level reliability |
-| 4 | `amc_mta_model_comparison_summary.csv` | `outcome`; always three rows | Summarize [Total Variation Distance (TVD)](/en/reference/definitions#tvd-total-variation-distance), [Spearman's Rho](/en/reference/definitions#spearmans-rho-spearman-rank-correlation-ρ), [Top-K overlap](/en/reference/definitions#top-k-overlap), and overall reliability |
-| 5 | `amc_mta_recommended_attribution.csv` | `touchpoint + outcome`; currently 51 rows | Provide the official Markov value, Shapley reference value, and final display value |
+### 1. `amc_markov_attribution_results.csv`
+
+- Granularity and primary key: One row per five-segment `touchpoint`
+- Purpose: Three sets of attribution, Ads performance, cost, and efficiency from the official display model
+
+### 2. `amc_shapley_attribution_results.csv`
+
+- Granularity and primary key: One row per five-segment `touchpoint`
+- Purpose: Reference-model results used to assess model sensitivity
+
+### 3. `amc_mta_model_comparison_touchpoints.csv`
+
+- Granularity and primary key: `touchpoint + outcome`; currently 51 rows
+- Purpose: Compare shares, gaps, raw support, and touchpoint-level reliability
+
+### 4. `amc_mta_model_comparison_summary.csv`
+
+- Granularity and primary key: `outcome`; always three rows
+- Purpose: Summarize [Total Variation Distance (TVD)](/en/reference/definitions#tvd-total-variation-distance), [Spearman's Rho](/en/reference/definitions#spearmans-rho-spearman-rank-correlation-ρ), [Top-K overlap](/en/reference/definitions#top-k-overlap), and overall reliability
+
+### 5. `amc_mta_recommended_attribution.csv`
+
+- Granularity and primary key: `touchpoint + outcome`; currently 51 rows
+- Purpose: Provide the official Markov value, Shapley reference value, and final display value
 
 `touchpoint` already contains the interaction type; the separate `interaction_type` field makes filtering easier. Both fields must agree. The three Outcomes are `converted_users`, `purchase_count`, and `revenue`.
 

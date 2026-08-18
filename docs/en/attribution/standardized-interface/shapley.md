@@ -39,13 +39,30 @@ for idx, row in enumerate(amc_rows, start=1):                         # 1
     })
 ```
 
-| Line | Detailed step | Algorithm mapping | Why it is implemented this way |
-| --- | --- | --- | --- |
-| 1 | Preserve a stable row identifier while traversing aggregates | Keeps validation errors attributable to an input row | The adapter must fail before a malformed coalition enters the model |
-| 2 | Retain each touchpoint's first occurrence only | Converts an ordered path into a set-like coalition | In a unanimity game, membership matters; repeated exposure is not a second player |
-| 3 | Enforce path, terminal-state, key, and Outcome invariants | Establishes a valid game record | The model should not assign value to invalid or reserved states |
-| 4-5 | Serialize the unique members as `channels` | Supplies the class's coalition input | The name distinguishes unordered membership from the ordered AMC `path` |
-| 6-8 | Carry each Outcome independently | Creates three games over the same coalitions | People, purchases, and money are allocated separately and are never added together |
+#### Line 1 — Preserve a stable row identifier while traversing aggregates
+
+- Algorithm mapping: Keeps validation errors attributable to an input row
+- Why it is implemented this way: The adapter must fail before a malformed coalition enters the model
+
+#### Line 2 — Retain each touchpoint's first occurrence only
+
+- Algorithm mapping: Converts an ordered path into a set-like coalition
+- Why it is implemented this way: In a unanimity game, membership matters; repeated exposure is not a second player
+
+#### Line 3 — Enforce path, terminal-state, key, and Outcome invariants
+
+- Algorithm mapping: Establishes a valid game record
+- Why it is implemented this way: The model should not assign value to invalid or reserved states
+
+#### Lines 4-5 — Serialize the unique members as `channels`
+
+- Algorithm mapping: Supplies the class's coalition input
+- Why it is implemented this way: The name distinguishes unordered membership from the ordered AMC `path`
+
+#### Lines 6-8 — Carry each Outcome independently
+
+- Algorithm mapping: Creates three games over the same coalitions
+- Why it is implemented this way: People, purchases, and money are allocated separately and are never added together
 
 `unique_touchpoints()` preserves first-occurrence order for deterministic serialization, but the scoring algorithm treats the result as a coalition. Therefore path order and exposure count do not affect a row's split.
 
@@ -62,11 +79,20 @@ return sum(                                                          # 2
 )
 ```
 
-| Line | Detailed step | Mapping to the Shapley game | Reason |
-| --- | --- | --- | --- |
-| 1 | Convert the evaluated coalition to a membership set | Removes irrelevant order | Cooperative-game coalitions are sets of players |
-| 2-4 | Sum the selected Outcome over eligible path games | Defines the value `v(S)` | Each aggregate contributes its own payoff mass |
-| 5 | Include a path only when all its unique touchpoints are present | Implements a unanimity game | A path's payoff is unavailable to a partial subset of its members |
+#### Line 1 — Convert the evaluated coalition to a membership set
+
+- Mapping to the Shapley game: Removes irrelevant order
+- Reason: Cooperative-game coalitions are sets of players
+
+#### Lines 2-4 — Sum the selected Outcome over eligible path games
+
+- Mapping to the Shapley game: Defines the value `v(S)`
+- Reason: Each aggregate contributes its own payoff mass
+
+#### Line 5 — Include a path only when all its unique touchpoints are present
+
+- Mapping to the Shapley game: Implements a unanimity game
+- Reason: A path's payoff is unavailable to a partial subset of its members
 
 In notation, the implemented value function is:
 
@@ -96,16 +122,45 @@ for row in self.rows:                                               # 2
 return scores                                                       # 9
 ```
 
-| Line | Detailed step | Algorithm mapping | Why it is implemented this way |
-| --- | --- | --- | --- |
-| 1 | Initialize every observed player at zero | Creates a complete deterministic result domain | Touchpoints remain present even if one Outcome has zero mass |
-| 2 | Treat each aggregate as one weighted unanimity subgame | Uses Shapley additivity | The Shapley value of a sum of games equals the sum of their Shapley values |
-| 3 | Defensively deduplicate while retaining first occurrence | Defines the row's unique members | It protects the equal split even if an adapter is bypassed |
-| 4 | Skip an empty coalition | Avoids division by zero | Valid AMC paths normally make this branch unreachable, but the class remains safe in isolation |
-| 5 | Read only the Outcome requested by the caller | Runs the same mechanics for three distinct measures | Outcome types remain separate |
-| 6 | Divide the row payoff equally among all coalition members | Applies the exact Shapley value for a unanimity game | Every member is essential and symmetric within that subgame |
-| 7-8 | Accumulate the member's credit across all path games | Uses Shapley additivity | A touchpoint's final score includes every path on which it appears |
-| 9 | Return unnormalized attributed mass | Preserves the Outcome total before shares are calculated | The caller can expose both amount and share |
+#### Line 1 — Initialize every observed player at zero
+
+- Algorithm mapping: Creates a complete deterministic result domain
+- Why it is implemented this way: Touchpoints remain present even if one Outcome has zero mass
+
+#### Line 2 — Treat each aggregate as one weighted unanimity subgame
+
+- Algorithm mapping: Uses Shapley additivity
+- Why it is implemented this way: The Shapley value of a sum of games equals the sum of their Shapley values
+
+#### Line 3 — Defensively deduplicate while retaining first occurrence
+
+- Algorithm mapping: Defines the row's unique members
+- Why it is implemented this way: It protects the equal split even if an adapter is bypassed
+
+#### Line 4 — Skip an empty coalition
+
+- Algorithm mapping: Avoids division by zero
+- Why it is implemented this way: Valid AMC paths normally make this branch unreachable, but the class remains safe in isolation
+
+#### Line 5 — Read only the Outcome requested by the caller
+
+- Algorithm mapping: Runs the same mechanics for three distinct measures
+- Why it is implemented this way: Outcome types remain separate
+
+#### Line 6 — Divide the row payoff equally among all coalition members
+
+- Algorithm mapping: Applies the exact Shapley value for a unanimity game
+- Why it is implemented this way: Every member is essential and symmetric within that subgame
+
+#### Lines 7-8 — Accumulate the member's credit across all path games
+
+- Algorithm mapping: Uses Shapley additivity
+- Why it is implemented this way: A touchpoint's final score includes every path on which it appears
+
+#### Line 9 — Return unnormalized attributed mass
+
+- Algorithm mapping: Preserves the Outcome total before shares are calculated
+- Why it is implemented this way: The caller can expose both amount and share
 
 Thus, if path $p$ has unique-touchpoint set $U_p$ and Outcome $y_p$, the score for touchpoint $t$ is:
 
@@ -135,12 +190,21 @@ AttributionResult(                                                   # 8
 )
 ```
 
-| Line | Detailed step | Algorithm mapping and reason |
-| --- | --- | --- |
-| 1-3 | Calculate independent score vectors for the three Outcomes | No Outcome is used as a proxy or added to another Outcome |
-| 4 | Sum one score vector | Shapley efficiency makes this equal the input Outcome total, subject only to floating-point arithmetic |
-| 5-7 | Normalize when the Outcome total is positive; otherwise return zero | Avoids an undefined division and correctly represents a zero-Outcome dataset |
-| 8-10 | Emit both normalized share and original allocated mass | Consumers can use proportions while auditors can verify conservation against source totals |
+#### Lines 1-3 — Calculate independent score vectors for the three Outcomes
+
+Algorithm mapping and reason: No Outcome is used as a proxy or added to another Outcome.
+
+#### Line 4 — Sum one score vector
+
+Algorithm mapping and reason: Shapley efficiency makes this equal the input Outcome total, subject only to floating-point arithmetic.
+
+#### Lines 5-7 — Normalize when the Outcome total is positive; otherwise return zero
+
+Algorithm mapping and reason: Avoids an undefined division and correctly represents a zero-Outcome dataset.
+
+#### Lines 8-10 — Emit both normalized share and original allocated mass
+
+Algorithm mapping and reason: Consumers can use proportions while auditors can verify conservation against source totals.
 
 The converted-user and purchase-count branches use the same lines and guards. Output rounding is handled later by the shared largest-remainder serializer, so row formatting does not change the model's internal scores.
 

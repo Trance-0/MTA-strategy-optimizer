@@ -15,10 +15,15 @@ This schema is a **mirror, not a source**. Nothing computes an attribution share
 
 The attribution, standard, and strategy modules never import these classes. They read and write files, and they depend on the Python standard library alone. The database and the classes that define it belong to the dashboard, so a reader can reproduce every published number without a database at all.
 
-| Mode | Reads | Requires |
-| --- | --- | --- |
-| `DATABASE=false` | `modules/*/data/simulated/*`, `modules/*/outputs/**` | Nothing beyond the repository |
-| `DATABASE=true` | The eighteen tables below | A populated PostgreSQL instance |
+### `DATABASE=false`
+
+- Reads: `modules/*/data/simulated/*`, `modules/*/outputs/**`
+- Requires: Nothing beyond the repository
+
+### `DATABASE=true`
+
+- Reads: The eighteen tables below
+- Requires: A populated PostgreSQL instance
 
 `dashboard/server/data_source.js` guarantees that both modes return identical fields, types, values, and row order, so a view cannot tell which one it is reading. `script/verify_dashboard_parity.mjs` asserts that guarantee against a live database. Five differences make it non-trivial and are normalised in the loader rather than in any view; they are specified in full under [Two Data Sources, One Contract](../dashboard/index.md#two-data-sources-one-contract).
 
@@ -28,12 +33,25 @@ One of them constrains this schema directly. **Row order is part of the contract
 
 The classes group into four layers that mirror the project's own stages. Each layer depends only on the ones above it.
 
-| Layer | Question it answers | Classes |
-| --- | --- | --- |
-| Entity | What exists? | `Advertiser`, `CampaignGroup`, `Campaign`, `AdGroup`, `Touchpoint`, `TargetingCandidate` |
-| History | What was observed? | `AdsDailyPerformance`, `PathReport`, `TouchpointEntityBridge`, `SyntheticUserEvent` |
-| Model output | What did the models conclude? | `AttributionRun`, `AttributionResult`, `ModelComparisonTouchpoint`, `ModelComparisonSummary`, `RecommendedAttribution` |
-| Strategy | What was recommended? | `BudgetRecommendationRun`, `CampaignBudgetRecommendation`, `AdGroupBudgetSlot` |
+### Entity
+
+- Question it answers: What exists?
+- Classes: `Advertiser`, `CampaignGroup`, `Campaign`, `AdGroup`, `Touchpoint`, `TargetingCandidate`
+
+### History
+
+- Question it answers: What was observed?
+- Classes: `AdsDailyPerformance`, `PathReport`, `TouchpointEntityBridge`, `SyntheticUserEvent`
+
+### Model output
+
+- Question it answers: What did the models conclude?
+- Classes: `AttributionRun`, `AttributionResult`, `ModelComparisonTouchpoint`, `ModelComparisonSummary`, `RecommendedAttribution`
+
+### Strategy
+
+- Question it answers: What was recommended?
+- Classes: `BudgetRecommendationRun`, `CampaignBudgetRecommendation`, `AdGroupBudgetSlot`
 
 Every table that belongs to a run carries a foreign key to that run, so two report windows can be loaded side by side without one overwriting the other.
 

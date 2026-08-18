@@ -14,13 +14,25 @@ All dynamic metrics in this directory derive from one user-event master table us
 - `amazon_ads_report_sample.csv`; and
 - `amc_touchpoint_entity_aggregate_sample.csv`.
 
-| File | Purpose |
-| --- | --- |
-| `synthetic_user_events_sample.csv` | The single simulated fact source; one synthetic user's touchpoint or outcome event per row |
-| `amc_touchpoint_events_sample.csv` | Anonymous conceptual events aggregated from the same path templates for local path construction |
-| `amc_mta_path_report_raw_sample.csv` | Five-segment aggregated paths generated from anonymous conceptual events for attribution input |
-| `amazon_ads_report_sample.csv` | Five-segment daily performance, platform last-click outcomes, and cost aggregated from the master table |
-| `amc_touchpoint_entity_aggregate_sample.csv` | Privacy-safe aggregated relationship between touchpoints and historical Campaign/Ad Group/Keyword/SKU entities |
+## `synthetic_user_events_sample.csv`
+
+Purpose: The single simulated fact source; one synthetic user's touchpoint or outcome event per row.
+
+## `amc_touchpoint_events_sample.csv`
+
+Purpose: Anonymous conceptual events aggregated from the same path templates for local path construction.
+
+## `amc_mta_path_report_raw_sample.csv`
+
+Purpose: Five-segment aggregated paths generated from anonymous conceptual events for attribution input.
+
+## `amazon_ads_report_sample.csv`
+
+Purpose: Five-segment daily performance, platform last-click outcomes, and cost aggregated from the master table.
+
+## `amc_touchpoint_entity_aggregate_sample.csv`
+
+Purpose: Privacy-safe aggregated relationship between touchpoints and historical Campaign/Ad Group/Keyword/SKU entities.
 
 The sample window is `2026-01-01` through `2026-03-31`, or 90 days. The master table contains 11,147 events, 2,400 synthetic users, and 3,547 journeys. It derives 645 anonymous conceptual events, 153 unique paths, 1,530 Ads daily rows, and 34 entity aggregates. A user may have multiple journeys; non-converting journeys are retained to form Null paths. Entity aggregation requires at least five synthetic users, but this is only a local simulation threshold and does not represent Amazon's actual privacy threshold.
 

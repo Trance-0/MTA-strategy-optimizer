@@ -22,16 +22,37 @@ The upper lane is the canonical AMC evidence and governance pipeline. It publish
 
 ## Component Responsibilities
 
-| Component | Responsibility |
-| --- | --- |
-| `src/synthetic_event_pipeline.py` | synthetic fact source, AMC/Ads/entity derivation, privacy and conservation checks |
-| `src/touchpoint_key.py` | construct and strictly validate five-segment keys; keep impressions and clicks separate |
-| `src/path_report_builder.py` | event ordering, 14-day contiguous gaps, multiple-purchase segmentation, anonymous aggregation |
-| `src/attribution_contract.py` | input validation, Markov, Shapley, Ads cost aggregation, efficiency measures, atomic CSV writes |
-| `src/attribution_model_comparison.py` | five-segment support, model gaps, three reliability criteria, total variation distance, ranking, governed recommendations |
-| `script/` | project-level path building, compatibility generation, attribution, comparison, and validation entry points |
-| `script/run_pipeline.py` | derive the window from Ads dates, build complete temporary artifacts, and restore previous files if publication fails |
-| `tests/` | lock field contracts, boundaries, conservation, strict parsing, and publication rollback |
+### `src/synthetic_event_pipeline.py`
+
+synthetic fact source, AMC/Ads/entity derivation, privacy and conservation checks
+
+### `src/touchpoint_key.py`
+
+construct and strictly validate five-segment keys; keep impressions and clicks separate
+
+### `src/path_report_builder.py`
+
+event ordering, 14-day contiguous gaps, multiple-purchase segmentation, anonymous aggregation
+
+### `src/attribution_contract.py`
+
+input validation, Markov, Shapley, Ads cost aggregation, efficiency measures, atomic CSV writes
+
+### `src/attribution_model_comparison.py`
+
+five-segment support, model gaps, three reliability criteria, total variation distance, ranking, governed recommendations
+
+### `script/`
+
+project-level path building, compatibility generation, attribution, comparison, and validation entry points
+
+### `script/run_pipeline.py`
+
+derive the window from Ads dates, build complete temporary artifacts, and restore previous files if publication fails
+
+### `tests/`
+
+lock field contracts, boundaries, conservation, strict parsing, and publication rollback
 
 The runtime modules are regular Python packages. Maintained command wrappers add only the project root when invoked directly; reusable model and framework modules use explicit package-relative imports.
 
@@ -47,13 +68,25 @@ Advertising components contain uppercase letters, digits, and underscores. Missi
 
 ### Simulated Data Layer
 
-| Input | Recorded sample size | Role |
-| --- | ---: | --- |
-| synthetic user events | 11,147 rows | sole dynamic fact source for simulation |
-| anonymous conceptual events | 645 rows | validate local path construction |
-| AMC aggregate paths | 153 rows | direct attribution input |
-| Amazon Ads daily report | 1,530 rows | 17 touchpoints over 90 days |
-| touchpoint-entity aggregate | 34 rows | anonymous historical evidence linking touchpoints to Campaign/Ad Group entities |
+#### synthetic user events
+
+Recorded sample size: 11,147 rows. Role: sole dynamic fact source for simulation.
+
+#### anonymous conceptual events
+
+Recorded sample size: 645 rows. Role: validate local path construction.
+
+#### AMC aggregate paths
+
+Recorded sample size: 153 rows. Role: direct attribution input.
+
+#### Amazon Ads daily report
+
+Recorded sample size: 1,530 rows. Role: 17 touchpoints over 90 days.
+
+#### touchpoint-entity aggregate
+
+Recorded sample size: 34 rows. Role: anonymous historical evidence linking touchpoints to Campaign/Ad Group entities.
 
 One run accepts a single marketplace, advertiser, currency, and reporting window. AMC and Ads require the same touchpoint set and complete daily coverage. CPC cost belongs only to `CLICK`; CPM cost belongs only to `IMPRESSION`; non-billable interactions have zero cost.
 
@@ -87,13 +120,25 @@ It preserves path participation but not order or repetition frequency and is not
 
 ## Output Architecture
 
-| File | Recorded rows | Purpose |
-| --- | ---: | --- |
-| `amc_markov_attribution_results.csv` | 17 | five-segment Markov result |
-| `amc_shapley_attribution_results.csv` | 17 | five-segment Shapley result |
-| `amc_mta_model_comparison_touchpoints.csv` | 51 | shares, gaps, support, reliability |
-| `amc_mta_model_comparison_summary.csv` | 3 | one summary per Outcome |
-| `amc_mta_recommended_attribution.csv` | 51 | official, benchmark, recommended value, reliability |
+### `amc_markov_attribution_results.csv`
+
+Recorded rows: 17. Purpose: five-segment Markov result.
+
+### `amc_shapley_attribution_results.csv`
+
+Recorded rows: 17. Purpose: five-segment Shapley result.
+
+### `amc_mta_model_comparison_touchpoints.csv`
+
+Recorded rows: 51. Purpose: shares, gaps, support, reliability.
+
+### `amc_mta_model_comparison_summary.csv`
+
+Recorded rows: 3. Purpose: one summary per Outcome.
+
+### `amc_mta_recommended_attribution.csv`
+
+Recorded rows: 51. Purpose: official, benchmark, recommended value, reliability.
 
 Both models conserve converted users, purchase count, and revenue independently. ROI, ROAS, CPA, and cost per converted user use the same five-segment spend; efficiency fields are empty for zero-cost rows. The recommendation is a governance view, not a third attribution model: Markov is the official display, Shapley is the benchmark, and `recommended_value` is the Markov point when reliable or the ordered model-share interval otherwise. It is not a budget-decision value and grants no automation authority.
 
@@ -116,13 +161,25 @@ Tests establish conformance with the current contract; they do not independently
 
 ## Implementation Traceability
 
-| Claim | Implementation | Principal test |
-| --- | --- | --- |
-| five-segment key and CPC/CPM assignment | `src/touchpoint_key.py`, `aggregate_spend_by_touchpoint()` | `test_touchpoint_key.py` |
-| 14-day path, start boundary, purchase segmentation | `src/path_report_builder.py` | `test_amc_path_builder.py` |
-| Markov/Shapley semantics and conservation | `src/attribution_contract.py` | `test_amc_mta_attribution.py` |
-| gaps, support, reliability, governance | `src/attribution_model_comparison.py` | `test_model_comparison.py` |
-| full reproduction and publication rollback | `script/run_pipeline.py`, `script/` | `test_end_to_end_pipeline.py` |
+### five-segment key and CPC/CPM assignment
+
+Implementation: `src/touchpoint_key.py`, `aggregate_spend_by_touchpoint()`. Principal test: `test_touchpoint_key.py`.
+
+### 14-day path, start boundary, purchase segmentation
+
+Implementation: `src/path_report_builder.py`. Principal test: `test_amc_path_builder.py`.
+
+### Markov/Shapley semantics and conservation
+
+Implementation: `src/attribution_contract.py`. Principal test: `test_amc_mta_attribution.py`.
+
+### gaps, support, reliability, governance
+
+Implementation: `src/attribution_model_comparison.py`. Principal test: `test_model_comparison.py`.
+
+### full reproduction and publication rollback
+
+Implementation: `script/run_pipeline.py`, `script/`. Principal test: `test_end_to_end_pipeline.py`.
 
 The migrated source recorded baseline commit `1000bcc` plus its reliability implementation and stated that code, tests, documents, and five outputs were synchronized to the three-criterion contract. Current code and tests supersede that dated statement if they differ.
 

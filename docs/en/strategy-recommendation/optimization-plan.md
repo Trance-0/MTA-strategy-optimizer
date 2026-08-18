@@ -65,15 +65,40 @@ There is therefore a clear granularity break between MTA output and the final bu
 
 Besides MTA, data involved in the current problem falls into the categories below. This section organizes only their roles and gaps; it does not prescribe a use.
 
-| Data category | Possible content | Relationship to the budget problem |
-| --- | --- | --- |
-| Historical advertising structure | Campaign ID, Ad Group ID, Ad Product, platform | Shows which advertising structures carried historical touchpoints |
-| Delivery entities | Keyword, Match Type, Target, Audience | Describes targeting objects inside Ad Groups |
-| Product entities | SKU, ASIN, category, brand | Describes the products actually promoted by ads |
-| Product operating data | Price, margin, inventory, salability, promotion | Indicates whether attributed results have business value and remain eligible for investment |
-| Historical performance data | Impressions, clicks, cost, purchases, sales | Describes historical delivery scale and outcomes |
-| Budget data | Budget, Spend, budget-limited status, pacing | Describes the relationship between budget settings and actual spend |
-| Next-period input | Candidate Keyword/SKU counts or details, total budget, Campaign count | Defines objects and boundaries for the next budget strategy |
+### Historical advertising structure
+
+- **Possible content:** Campaign ID, Ad Group ID, Ad Product, platform
+- **Relationship to the budget problem:** Shows which advertising structures carried historical touchpoints
+
+### Delivery entities
+
+- **Possible content:** Keyword, Match Type, Target, Audience
+- **Relationship to the budget problem:** Describes targeting objects inside Ad Groups
+
+### Product entities
+
+- **Possible content:** SKU, ASIN, category, brand
+- **Relationship to the budget problem:** Describes the products actually promoted by ads
+
+### Product operating data
+
+- **Possible content:** Price, margin, inventory, salability, promotion
+- **Relationship to the budget problem:** Indicates whether attributed results have business value and remain eligible for investment
+
+### Historical performance data
+
+- **Possible content:** Impressions, clicks, cost, purchases, sales
+- **Relationship to the budget problem:** Describes historical delivery scale and outcomes
+
+### Budget data
+
+- **Possible content:** Budget, Spend, budget-limited status, pacing
+- **Relationship to the budget problem:** Describes the relationship between budget settings and actual spend
+
+### Next-period input
+
+- **Possible content:** Candidate Keyword/SKU counts or details, total budget, Campaign count
+- **Relationship to the budget problem:** Defines objects and boundaries for the next budget strategy
 
 The most important current data fact is that MTA has touchpoint contribution but lacks product and delivery entities. Other data may have entity information, but whether its results can join reliably to MTA touchpoints still requires separate confirmation.
 

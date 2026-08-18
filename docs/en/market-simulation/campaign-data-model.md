@@ -13,26 +13,59 @@ This page translates and restructures the preserved Chinese schema analysis in `
 
 <DrawioDiagram base="./campaign-data-model" alt="Campaign data model architecture" />
 
-| Layer | Responsibility | Representative tables |
-| --- | --- | --- |
-| Business grouping | Campaign Group scope, membership, conditions, and Key Performance Indicators (KPIs) | `campaign_group`, `campaign_group_relationship`, `campaign_group_condition_relationship`, `campaign_group_kpi` |
-| Advertising entities | Campaign, Ad Group, Keyword, and Stock Keeping Unit (SKU) associations | `campaign`, `ad_group`, `ad_group_keyword`, `ad_group_sku`, `keyword`, `sku` |
-| Rules and labels | Rule conditions/actions/schedules and Campaign classification | `campaign_rule_*`, `campaign_label`, `campaign_label_relationship` |
-| Audit and operations | Snapshots, changes, uploads, negative Keywords, and harvesting | `campaign_audit`, `ad_group_audit`, `campaign_change_history`, `campaign_upload_record`, `negative_keywords_*`, `keyword_harvesting_*` |
-| Time-series facts | Delivery, conversion, spend, profit, and placement metrics | `paid_search_traffic`, `paid_search_conversion`, `paid_search_metrics`, `campaign_spend`, `campaign_profit`, `daily_item_spots` |
-| Read views | Common joins and derived KPIs | `vw_group_campaign_adgroup`, `vw_campaign_metadata`, `vw_campaign_kpi_metrics` |
+### Business grouping
+
+- Responsibility: Campaign Group scope, membership, conditions, and Key Performance Indicators (KPIs)
+- Representative tables: `campaign_group`, `campaign_group_relationship`, `campaign_group_condition_relationship`, `campaign_group_kpi`
+
+### Advertising entities
+
+- Responsibility: Campaign, Ad Group, Keyword, and Stock Keeping Unit (SKU) associations
+- Representative tables: `campaign`, `ad_group`, `ad_group_keyword`, `ad_group_sku`, `keyword`, `sku`
+
+### Rules and labels
+
+- Responsibility: Rule conditions/actions/schedules and Campaign classification
+- Representative tables: `campaign_rule_*`, `campaign_label`, `campaign_label_relationship`
+
+### Audit and operations
+
+- Responsibility: Snapshots, changes, uploads, negative Keywords, and harvesting
+- Representative tables: `campaign_audit`, `ad_group_audit`, `campaign_change_history`, `campaign_upload_record`, `negative_keywords_*`, `keyword_harvesting_*`
+
+### Time-series facts
+
+- Responsibility: Delivery, conversion, spend, profit, and placement metrics
+- Representative tables: `paid_search_traffic`, `paid_search_conversion`, `paid_search_metrics`, `campaign_spend`, `campaign_profit`, `daily_item_spots`
+
+### Read views
+
+- Responsibility: Common joins and derived KPIs
+- Representative tables: `vw_group_campaign_adgroup`, `vw_campaign_metadata`, `vw_campaign_kpi_metrics`
 
 ## Core Advertising Entities
 
 ### `campaign`
 
-| Field group | Meaning |
-| --- | --- |
-| Identity | Internal `id`, required `name`, and external `api_id`/`ers_id` |
-| Schedule | `fiscal_year`, `start_date`, and nullable `end_date` |
-| Advertising type | `sponsored_ads`, optional subtype, `targeting`, and `target_object_type` |
-| Scope | `retailer_id`, `market_id`, and `account_id` |
-| Control | `managed_by_search_planner`, platform `status`, update time, and pause reason |
+#### Identity
+
+Meaning: Internal `id`, required `name`, and external `api_id`/`ers_id`.
+
+#### Schedule
+
+Meaning: `fiscal_year`, `start_date`, and nullable `end_date`.
+
+#### Advertising type
+
+Meaning: `sponsored_ads`, optional subtype, `targeting`, and `target_object_type`.
+
+#### Scope
+
+Meaning: `retailer_id`, `market_id`, and `account_id`.
+
+#### Control
+
+Meaning: `managed_by_search_planner`, platform `status`, update time, and pause reason.
 
 Composite and partial indexes support common queries by status, retailer, advertising type, targeting mode, and active dates.
 
@@ -75,14 +108,35 @@ Labels use `campaign_label` and `campaign_label_relationship`. Negative Keyword 
 
 ## Time-Series Metrics
 
-| Table | Partitioning | Role |
-| --- | --- | --- |
-| `paid_search_traffic` | Monthly range on `date` | Impressions, clicks, budget, entity IDs, and platform IDs |
-| `paid_search_conversion` | Monthly range on `date` | Sales and unit-sales facts |
-| `paid_search_metrics` | Monthly historical partitions | Older combined delivery and conversion facts |
-| `campaign_spend` | Unpartitioned | Platform campaign spend basis |
-| `campaign_profit` | Unpartitioned | Campaign profit basis |
-| `daily_item_spots` | Monthly range on `date` | Keyword/SKU item spots and advertising type |
+### `paid_search_traffic`
+
+- Partitioning: Monthly range on `date`
+- Role: Impressions, clicks, budget, entity IDs, and platform IDs
+
+### `paid_search_conversion`
+
+- Partitioning: Monthly range on `date`
+- Role: Sales and unit-sales facts
+
+### `paid_search_metrics`
+
+- Partitioning: Monthly historical partitions
+- Role: Older combined delivery and conversion facts
+
+### `campaign_spend`
+
+- Partitioning: Unpartitioned
+- Role: Platform campaign spend basis
+
+### `campaign_profit`
+
+- Partitioning: Unpartitioned
+- Role: Campaign profit basis
+
+### `daily_item_spots`
+
+- Partitioning: Monthly range on `date`
+- Role: Keyword/SKU item spots and advertising type
 
 The partitioned fact tables are append-oriented and do not have primary keys. New monthly partitions must exist before ingestion. Prefer existing covering indexes before adding new single-column indexes, because extra indexes amplify write cost.
 
@@ -90,13 +144,25 @@ The partitioned fact tables are append-oriented and do not have primary keys. Ne
 
 ## Read Views
 
-| View | Responsibility |
-| --- | --- |
-| `vw_group_campaign_adgroup` | Expands currently active Campaign Group → Campaign → Ad Group membership |
-| `vw_campaign_group_metadata` | Group-level fiscal year, Retailer, Market, Category, and Campaign metadata |
-| `vw_campaign_metadata` | Expands active manual Campaign × Ad Group × Keyword × SKU combinations and calculates optimization eligibility |
-| `vw_sku_keyword_kpi_metrics` | Aggregates traffic and conversion at date, Campaign, Ad Group, SKU, and Keyword grain |
-| `vw_campaign_kpi_metrics` | Produces daily Campaign KPIs from traffic, conversion, and campaign-spend sources |
+### `vw_group_campaign_adgroup`
+
+Responsibility: Expands currently active Campaign Group → Campaign → Ad Group membership.
+
+### `vw_campaign_group_metadata`
+
+Responsibility: Group-level fiscal year, Retailer, Market, Category, and Campaign metadata.
+
+### `vw_campaign_metadata`
+
+Responsibility: Expands active manual Campaign × Ad Group × Keyword × SKU combinations and calculates optimization eligibility.
+
+### `vw_sku_keyword_kpi_metrics`
+
+Responsibility: Aggregates traffic and conversion at date, Campaign, Ad Group, SKU, and Keyword grain.
+
+### `vw_campaign_kpi_metrics`
+
+Responsibility: Produces daily Campaign KPIs from traffic, conversion, and campaign-spend sources.
 
 These are ordinary views, not materialized views. Their query load reaches underlying tables, so partition pruning and index use remain important.
 

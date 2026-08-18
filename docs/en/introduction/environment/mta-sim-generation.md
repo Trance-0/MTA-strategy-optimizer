@@ -55,15 +55,33 @@ uv run python -X utf8 -B script/generate_mta_sim_dataset.py \
 
 ## Generated files <span class="status-label status-verified" aria-label="Verified"></span>
 
-| File | Owner | Role |
-| --- | --- | --- |
-| `amc_path_report.csv` | ZheyuanWu | Original daily-window four-segment path report |
-| `amazon_ads_daily_touchpoint_performance.csv` | ZheyuanWu | Original daily delivery and cost table |
-| `simulation_ground_truth.csv` | ZheyuanWu | Original evaluation-only truth table |
-| `dataset_manifest.json` | ZheyuanWu | Reproducibility metadata and source hashes |
-| `validation_report.json` | ZheyuanWu | Generator contract validation result |
-| `model_input_amc_path_report.csv` | Local adapter | Daily windows aggregated into one model scope |
-| `model_evaluation_ground_truth.csv` | Local adapter | Ground-truth scope normalized for separate evaluation |
+### `amc_path_report.csv`
+
+Owner: ZheyuanWu. Role: Original daily-window four-segment path report.
+
+### `amazon_ads_daily_touchpoint_performance.csv`
+
+Owner: ZheyuanWu. Role: Original daily delivery and cost table.
+
+### `simulation_ground_truth.csv`
+
+Owner: ZheyuanWu. Role: Original evaluation-only truth table.
+
+### `dataset_manifest.json`
+
+Owner: ZheyuanWu. Role: Reproducibility metadata and source hashes.
+
+### `validation_report.json`
+
+Owner: ZheyuanWu. Role: Generator contract validation result.
+
+### `model_input_amc_path_report.csv`
+
+Owner: Local adapter. Role: Daily windows aggregated into one model scope.
+
+### `model_evaluation_ground_truth.csv`
+
+Owner: Local adapter. Role: Ground-truth scope normalized for separate evaluation.
 
 The original generator files are never rewritten by the adapter. Generated output is ignored by Git; only deliberately reviewed synthetic public fixtures may be committed.
 

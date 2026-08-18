@@ -25,15 +25,47 @@ These figures describe the dated source audit and must not replace current verif
 
 File and byte counts change as tool packages and implementation records evolve; use the machine inventory for exact values. That inventory excludes Git internals, itself, ignored personal configuration, and protected files.
 
-| Partition | File count | Size | Role |
-| --- | ---: | ---: | --- |
-| `.agents` | machine inventory | machine inventory | installed Agent/workflow skills |
-| `_bmad` | machine inventory | machine inventory | BMad installation configuration, manifests, and shared WDS runtime material |
-| `_bmad-output` | machine inventory | machine inventory | completed specifications, organization records, and deferred work |
-| `design-artifacts` | machine inventory | machine inventory | early product vision, model descriptions, and decisions |
-| `docs` | machine inventory | machine inventory | current bilingual documentation, research originals, and scan state |
-| `modules` | machine inventory | machine inventory | AMC MTA and Strategy Initializer modules |
-| root files | machine inventory | machine inventory | navigation, ignore rules, and formatting configuration |
+### `.agents`
+
+- File count: machine inventory
+- Size: machine inventory
+- Role: installed Agent/workflow skills
+
+### `_bmad`
+
+- File count: machine inventory
+- Size: machine inventory
+- Role: BMad installation configuration, manifests, and shared WDS runtime material
+
+### `_bmad-output`
+
+- File count: machine inventory
+- Size: machine inventory
+- Role: completed specifications, organization records, and deferred work
+
+### `design-artifacts`
+
+- File count: machine inventory
+- Size: machine inventory
+- Role: early product vision, model descriptions, and decisions
+
+### `docs`
+
+- File count: machine inventory
+- Size: machine inventory
+- Role: current bilingual documentation, research originals, and scan state
+
+### `modules`
+
+- File count: machine inventory
+- Size: machine inventory
+- Role: AMC MTA and Strategy Initializer modules
+
+### root files
+
+- File count: machine inventory
+- Size: machine inventory
+- Role: navigation, ignore rules, and formatting configuration
 
 The file-by-file paths, sizes, permissions, and SHA-256 digests are recorded in [`docs/workspace-file-inventory.json`](../../workspace-file-inventory.json).
 
@@ -70,19 +102,49 @@ The 127 identical-content groups were mainly knowledge files copied into test-ar
 
 ## Verification Results
 
-| Verification recorded by the source audit | Result |
-| --- | --- |
-| AMC MTA unit and end-to-end tests | 107/107 passed |
-| Ad Group count and budget model tests | 34/34 passed |
-| Complete AMC pipeline | passed; five outputs rebuilt |
-| AMC/Ads alignment | 17/17 touchpoints; window, account, country, and currency aligned |
-| `_bmad` configuration parsing | 1/1 passed |
-| installed skill directories versus manifest | 119/119 matched |
-| Python syntax | 108/108 passed |
-| JavaScript syntax | 7/7 passed |
-| Bash entry-point syntax | 1/1 passed |
-| local project-Markdown links | 44 documents, 217 links, no broken links |
-| real JSON/TOML configuration | parsed successfully |
+### AMC MTA unit and end-to-end tests
+
+107/107 passed
+
+### Ad Group count and budget model tests
+
+34/34 passed
+
+### Complete AMC pipeline
+
+passed; five outputs rebuilt
+
+### AMC/Ads alignment
+
+17/17 touchpoints; window, account, country, and currency aligned
+
+### `_bmad` configuration parsing
+
+1/1 passed
+
+### installed skill directories versus manifest
+
+119/119 matched
+
+### Python syntax
+
+108/108 passed
+
+### JavaScript syntax
+
+7/7 passed
+
+### Bash entry-point syntax
+
+1/1 passed
+
+### local project-Markdown links
+
+44 documents, 217 links, no broken links
+
+### real JSON/TOML configuration
+
+parsed successfully
 
 Tool-test qualifications:
 

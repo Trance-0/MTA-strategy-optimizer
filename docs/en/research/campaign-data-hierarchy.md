@@ -18,24 +18,57 @@ Amazon, US, Campaign names, Keywords, and SKUs in the example only illustrate re
 
 ## 2. Business Responsibilities
 
-| Level | Primary responsibility | Relationship to next level |
-| --- | --- | --- |
-| Campaign Group | set one platform, marketplace, account, category, brand, and Segment scope; filter the bounded candidate pool | current task contains exactly four Campaigns |
-| Campaign | hold campaign configuration; `ad_product` is one required single-value field | one Campaign contains multiple Ad Groups |
-| Ad Group | hold executable configuration; initializer recommends only new-group count and budget slots | many-to-many with Keywords and SKUs in the activation platform |
-| Keyword | express search demand and Match Type | may enter multiple Ad Groups, with duplicate control within a Campaign |
-| SKU | identify a sellable item in one platform and marketplace | belongs to a Product and may enter multiple strategy groups |
-| Product | identify the merchandise concept across selling environments | one Product may map to multiple SKUs |
+### Campaign Group
+
+- **Primary responsibility:** set one platform, marketplace, account, category, brand, and Segment scope; filter the bounded candidate pool
+- **Relationship to next level:** current task contains exactly four Campaigns
+
+### Campaign
+
+- **Primary responsibility:** hold campaign configuration; `ad_product` is one required single-value field
+- **Relationship to next level:** one Campaign contains multiple Ad Groups
+
+### Ad Group
+
+- **Primary responsibility:** hold executable configuration; initializer recommends only new-group count and budget slots
+- **Relationship to next level:** many-to-many with Keywords and SKUs in the activation platform
+
+### Keyword
+
+- **Primary responsibility:** express search demand and Match Type
+- **Relationship to next level:** may enter multiple Ad Groups, with duplicate control within a Campaign
+
+### SKU
+
+- **Primary responsibility:** identify a sellable item in one platform and marketplace
+- **Relationship to next level:** belongs to a Product and may enter multiple strategy groups
+
+### Product
+
+- **Primary responsibility:** identify the merchandise concept across selling environments
+- **Relationship to next level:** one Product may map to multiple SKUs
 
 Current recommendation relationships are:
 
-| Relationship | Cardinality |
-| --- | --- |
-| Campaign Group to Campaign | 1 to 4 in the current task |
-| Campaign to Ad Group | 1 to many |
-| Ad Group to Keyword | many to many |
-| Ad Group to SKU | many to many |
-| Product to SKU | 1 to many |
+### Campaign Group to Campaign
+
+- **Cardinality:** 1 to 4 in the current task
+
+### Campaign to Ad Group
+
+- **Cardinality:** 1 to many
+
+### Ad Group to Keyword
+
+- **Cardinality:** many to many
+
+### Ad Group to SKU
+
+- **Cardinality:** many to many
+
+### Product to SKU
+
+- **Cardinality:** 1 to many
 
 Campaign and Campaign Group do not directly own SKUs. The complete product chain is:
 
@@ -52,27 +85,63 @@ Each Campaign further filters content according to its ad product. The initializ
 
 Allowed combination provenance is:
 
-| Provenance | Meaning |
-| --- | --- |
-| `EXISTING` | A real existing activation relationship |
-| `VALIDATED` | Rules or human review validated the combination |
-| `EXPLORATION` | A bounded test combination |
-| `BLOCKED` | Prohibited from assignment |
+### `EXISTING`
+
+A real existing activation relationship.
+
+### `VALIDATED`
+
+Rules or human review validated the combination.
+
+### `EXPLORATION`
+
+A bounded test combination.
+
+### `BLOCKED`
+
+Prohibited from assignment.
 
 ## 4. Finest Paid-Search Performance Record
 
-| Field | Example value |
-| --- | ---: |
-| `date` | `2026-07-01` |
-| `campaign_id` | `C001` |
-| `ad_group_id` | `AG001` |
-| `keyword_id` | `K001` |
-| `sku_id` | `S001` |
-| `impressions` | 10,000 |
-| `clicks` | 250 |
-| `traffic_budget` | 500 |
-| `sales` | 2,000 |
-| `unit_sales` | 20 |
+### `date`
+
+Example value: `2026-07-01`
+
+### `campaign_id`
+
+Example value: `C001`
+
+### `ad_group_id`
+
+Example value: `AG001`
+
+### `keyword_id`
+
+Example value: `K001`
+
+### `sku_id`
+
+Example value: `S001`
+
+### `impressions`
+
+Example value: 10,000
+
+### `clicks`
+
+Example value: 250
+
+### `traffic_budget`
+
+Example value: 500
+
+### `sales`
+
+Example value: 2,000
+
+### `unit_sales`
+
+Example value: 20
 
 The record represents one real Keyword-by-SKU combination's aggregate result on one day within a specific Campaign and Ad Group. The finest described performance grain is:
 

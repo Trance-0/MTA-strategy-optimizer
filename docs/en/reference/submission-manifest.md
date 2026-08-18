@@ -33,15 +33,44 @@ These materials do not accompany the standalone package, are not runtime depende
 
 ## Acceptance Status
 
-| Check | Status | Notes |
-| --- | --- | --- |
-| Core entry point, complete guide, and output index are reachable | Complete | Reachable step by step from the module README |
-| Standalone data-flow diagram | Complete | PNG and SVG are stored separately and not embedded in the complete usage guide |
-| Automatic window and both publishing boundaries are documented | Complete | Complete simulation regeneration atomically publishes ten items; the canonical run publishes six derived artifacts from two inputs |
-| `official`, reliability, and causal boundaries are documented | Complete | See the output index and governance specification |
-| Boundaries among core package, optional attachments, and process archive are documented | Complete | See this manifest |
-| Module tests | Complete | Module tests run on 2026-07-29: 107/107 passed |
-| Markdown relative-link check | Complete | No broken links in current non-frozen documentation for the core package and supporting material; protected paths excluded |
-| Canonical CSV contract | Preserved | All five physical headers match the schema exactly; no difference from the approved baseline |
+### Core entry point, complete guide, and output index are reachable
+
+- **Status:** Complete
+- **Notes:** Reachable step by step from the module README
+
+### Standalone data-flow diagram
+
+- **Status:** Complete
+- **Notes:** PNG and SVG are stored separately and not embedded in the complete usage guide
+
+### Automatic window and both publishing boundaries are documented
+
+- **Status:** Complete
+- **Notes:** Complete simulation regeneration atomically publishes ten items; the canonical run publishes six derived artifacts from two inputs
+
+### `official`, reliability, and causal boundaries are documented
+
+- **Status:** Complete
+- **Notes:** See the output index and governance specification
+
+### Boundaries among core package, optional attachments, and process archive are documented
+
+- **Status:** Complete
+- **Notes:** See this manifest
+
+### Module tests
+
+- **Status:** Complete
+- **Notes:** Module tests run on 2026-07-29: 107/107 passed
+
+### Markdown relative-link check
+
+- **Status:** Complete
+- **Notes:** No broken links in current non-frozen documentation for the core package and supporting material; protected paths excluded
+
+### Canonical CSV contract
+
+- **Status:** Preserved
+- **Notes:** All five physical headers match the schema exactly; no difference from the approved baseline
 
 Before final submission, reviewers should confirm that working-tree differences contain only approved content and run independent tests and link validation according to project rules.

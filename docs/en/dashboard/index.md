@@ -31,12 +31,15 @@ The one place the dashboard derives anything is the Campaign Optimizer's implied
 
 The dashboard is a Vue 3 client over a JavaScript Object Notation (JSON) Application Programming Interface (API) served by Express. One Node process serves both, so a local run is one command and one port.
 
-| Half | Lives in | Knows about |
-| --- | --- | --- |
-| The API | `dashboard/server/` | Files, Structured Query Language (SQL), and `.env`. Nothing about rendering. |
-| The client | `dashboard/src/` | The snapshot shape. Nothing about where it came from. |
-
 The boundary is exact: `src/api/client.js` is the only module in the client that issues a request, and `server/data_source.js` is the only module on the server that opens a file or a connection. A view holds no file path, no SQL statement, and no `fetch` call.
+
+### The API
+
+Lives in `dashboard/server/`. Knows about files, Structured Query Language (SQL), and `.env`. Nothing about rendering.
+
+### The client
+
+Lives in `dashboard/src/`. Knows about the snapshot shape. Nothing about where it came from.
 
 ### Why the whole snapshot arrives at once
 
@@ -54,10 +57,13 @@ The dashboard's own dependencies are `express`, `pg`, `vue`, and `plotly.js-dist
 
 A single switch in `.env` decides where the numbers come from. `sample.env` is the tracked template; `.env` itself is ignored and must never be committed.
 
-| `DATABASE` | Reads from | Used for |
-| --- | --- | --- |
-| `false` | The committed CSV and JSON artifacts | Cloud demonstrations, and any checkout that has not run an import |
-| `true` | The PostgreSQL schema in [Dashboard data model](../market-simulation/dashboard-data-model.md) | A deployment with a populated database |
+### `DATABASE=false`
+
+Reads from the committed CSV and JSON artifacts. Used for cloud demonstrations, and any checkout that has not run an import.
+
+### `DATABASE=true`
+
+Reads from the PostgreSQL schema in [Dashboard data model](../market-simulation/dashboard-data-model.md). Used for a deployment with a populated database.
 
 `dashboard/server/data_source.js` is the only module that knows which mode is active. Every loader it exposes returns the **same fields, types, values, and row order in both modes**, so no view can tell them apart and no view contains a branch on the data source. `script/verify_dashboard_parity.mjs` asserts that property against a live database and exits non-zero on any difference.
 
@@ -87,14 +93,29 @@ Continue with [Populating PostgreSQL](./database-import.md) for the importer tha
 
 The navigation mirrors the reference prototype in `external/UI_design/brandlens-vue`, by Rouxin Jin. Each view is one Single-File Component under `dashboard/src/views/` that takes no props and reads the shared snapshot.
 
-| View | Question it answers |
-| --- | --- |
-| Command Center | What was spent and returned, which touchpoints earned credit, and is that credit trustworthy? |
-| Budget Manager | What daily budget does each Campaign get, and what derived it? |
-| Campaigns | What actually happened, filtered and queried against the raw record? |
-| Campaign Optimizer | Where do the two models disagree, and what spend shift does the recommendation imply? |
-| Optimization Log | Which run produced these numbers, from which inputs, and can it be reproduced? |
-| Knowledge Base | What do the terms mean and which rules do the numbers obey? |
+### Command Center
+
+What was spent and returned, which touchpoints earned credit, and is that credit trustworthy?
+
+### Budget Manager
+
+What daily budget does each Campaign get, and what derived it?
+
+### Campaigns
+
+What actually happened, filtered and queried against the raw record?
+
+### Campaign Optimizer
+
+Where do the two models disagree, and what spend shift does the recommendation imply?
+
+### Optimization Log
+
+Which run produced these numbers, from which inputs, and can it be reproduced?
+
+### Knowledge Base
+
+What do the terms mean and which rules do the numbers obey?
 
 Continue with [Views and visual contract](./views.md) for the reliability rule every view honors, the colour and chart system, and the per-component specification. The rail that switches between them, and its settings module, are specified on [Navigation rail and settings](./navigation.md).
 
