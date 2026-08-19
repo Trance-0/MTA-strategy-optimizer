@@ -1,29 +1,8 @@
-"""Product identity, its economics, and its many-to-many link to Campaigns.
+"""Canonical product identity, economics, and Campaign relationship values.
 
-No `Product` or product-economics concept exists anywhere in the currently
-implemented pipeline: ``dashboard/models.py`` has no price, cost-of-goods,
-margin, or inventory field, and `modules/mta_strategy_recommendation` treats
-`sku_id`/`sku_ids` as explicitly *forbidden* output fields
-(`hierarchy_validator.FORBIDDEN_OUTPUT_FIELDS`). The only identified-SKU-
-adjacent field anywhere is `eligible_sku_count`, an anonymous integer count.
-`docs/en/market-simulation/product-data-model.md` documents an external,
-unconnected `msproduct` schema (including a `sku.specification_profit`
-field) that is historical reference material, not data this pipeline reads.
-
-`Product` therefore separates a business identity (`product_id`) from
-provider-specific advertising identities (an ASIN under Amazon Ads, or
-whatever a future provider uses), since no current data ties the two
-together and a future provider may use a different identifier scheme.
-`ProductEconomics` is entirely new: no field it defines has a populated
-source today, so every instance built from current data leaves its economic
-fields `None` rather than zero-filling them. `CampaignProductLink` makes the
-Campaign-to-Product relationship an explicit many-to-many object instead of
-a single field on either side, since no such link exists today at all.
-
-Data flow: a future product-data integration would populate `Product` and
-`ProductEconomics`; a future targeting integration would populate
-`CampaignProductLink` from what is today only an anonymous
-`eligible_sku_count`. Nothing in this module performs that integration.
+The market-simulation adapter constructs these provider-independent records
+from MTA-SIM research snapshots. Legacy strategy input has no identified
+product source and therefore does not fabricate them.
 """
 
 from __future__ import annotations
@@ -59,19 +38,27 @@ class Product:
     provider_ad_identifiers: Mapping[Provider, str] = field(
         default_factory=lambda: MappingProxyType({})
     )
+    sku_id: str | None = None
     name: str | None = None
     category: str | None = None
     brand: str | None = None
     status: str | None = None
+    inventory_units: int | None = None
+    salable: bool | None = None
 
     def __post_init__(self) -> None:
         if not str(self.product_id).strip():
             raise ValueError("product_id is required")
+        identifiers = dict(self.provider_ad_identifiers)
+        if any(not str(value).strip() for value in identifiers.values()):
+            raise ValueError("provider_ad_identifiers must not contain blank values")
         object.__setattr__(
             self,
             "provider_ad_identifiers",
-            MappingProxyType(dict(self.provider_ad_identifiers)),
+            MappingProxyType(identifiers),
         )
+        if self.inventory_units is not None and self.inventory_units < 0:
+            raise ValueError("inventory_units must not be negative")
 
 
 @dataclass(frozen=True)
@@ -104,6 +91,10 @@ class ProductEconomics:
     currency: str
     unit_price: float | None = None
     unit_cogs: float | None = None
+    variable_cost_per_unit: float | None = None
+    variable_fulfillment_cost_per_unit: float | None = None
+    variable_platform_fee_per_unit: float | None = None
+    other_variable_cost_per_unit: float | None = None
     unit_contribution_margin: float | None = None
     margin_source: MarginSource | None = None
 
@@ -116,6 +107,32 @@ class ProductEconomics:
             raise ValueError("unit_price must not be negative")
         if self.unit_cogs is not None and self.unit_cogs < 0:
             raise ValueError("unit_cogs must not be negative")
+        for field_name in (
+            "variable_cost_per_unit",
+            "variable_fulfillment_cost_per_unit",
+            "variable_platform_fee_per_unit",
+            "other_variable_cost_per_unit",
+        ):
+            value = getattr(self, field_name)
+            if value is not None and value < 0:
+                raise ValueError(f"{field_name} must not be negative")
+        components = tuple(
+            value
+            for value in (
+                self.variable_fulfillment_cost_per_unit,
+                self.variable_platform_fee_per_unit,
+                self.other_variable_cost_per_unit,
+            )
+            if value is not None
+        )
+        if (
+            self.variable_cost_per_unit is not None
+            and components
+            and abs(self.variable_cost_per_unit - sum(components)) > 1e-6
+        ):
+            raise ValueError(
+                "variable_cost_per_unit contradicts granular variable costs"
+            )
         if (self.unit_contribution_margin is None) != (self.margin_source is None):
             raise ValueError(
                 "unit_contribution_margin and margin_source must be given together"
@@ -132,13 +149,33 @@ class ProductEconomics:
             and self.unit_price is not None
             and self.unit_cogs is not None
         ):
-            implied = self.unit_price - self.unit_cogs
+            implied = (
+                self.unit_price
+                - self.unit_cogs
+                - self.represented_variable_cost_per_unit
+            )
             if abs(implied - self.unit_contribution_margin) > 1e-6:
                 raise ValueError(
                     "unit_contribution_margin contradicts unit_price minus "
-                    f"unit_cogs: given={self.unit_contribution_margin}, "
+                    "unit costs: "
+                    f"given={self.unit_contribution_margin}, "
                     f"implied={implied}"
                 )
+
+    @property
+    def represented_variable_cost_per_unit(self) -> float:
+        """Return the aggregate cost, or the sum of supplied components."""
+
+        if self.variable_cost_per_unit is not None:
+            return self.variable_cost_per_unit
+        return sum(
+            value or 0.0
+            for value in (
+                self.variable_fulfillment_cost_per_unit,
+                self.variable_platform_fee_per_unit,
+                self.other_variable_cost_per_unit,
+            )
+        )
 
 
 @dataclass(frozen=True)

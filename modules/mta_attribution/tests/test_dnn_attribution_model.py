@@ -30,14 +30,16 @@ from modules.mta_standard.src.output_contract import (
     ZERO_OUTCOME_WARNING,
     validate_standard_output,
 )
-from modules.mta_standard.src.touchpoint_adapter import SimulatorConfig, to_four_segment
+from modules.mta_standard.src.touchpoint_adapter import SimulatorConfig
 from modules.mta_standard.tests import mta_sim_fixtures as fixtures
 
 
 NEW_CAMPAIGN = (
-    "SPONSORED_PRODUCTS:PRODUCT_AD:REST_OF_SEARCH:UNSPECIFIED",
-    "AMAZON_DSP:DISPLAY:UNSPECIFIED:IMAGE",
+    "SPONSORED_PRODUCTS:PRODUCT_AD:REST_OF_SEARCH:UNSPECIFIED:CLICK",
+    "AMAZON_DSP:DISPLAY:UNSPECIFIED:IMAGE:IMPRESSION",
 )
+DISPLAY = f"{fixtures.DISPLAY}:IMPRESSION"
+SEARCH = f"{fixtures.SEARCH}:CLICK"
 ZERO_OUTCOME_PATHS = (
     (f"{fixtures.DISPLAY} > {fixtures.SEARCH}", 100, 0, 0, "0.00"),
     (fixtures.BRAND, 40, 0, 0, "0.00"),
@@ -94,20 +96,20 @@ class FeatureTest(DnnTestCase):
 
     def test_appearance_ratio_counts_paths(self) -> None:
         # SEARCH appears in three of the four fixture paths, DISPLAY in two.
-        self.assertAlmostEqual(self.features[fixtures.SEARCH].numeric[0], 0.75)
-        self.assertAlmostEqual(self.features[fixtures.DISPLAY].numeric[0], 0.50)
+        self.assertAlmostEqual(self.features[SEARCH].numeric[0], 0.75)
+        self.assertAlmostEqual(self.features[DISPLAY].numeric[0], 0.50)
 
     def test_relative_position_distinguishes_first_from_last(self) -> None:
         # DISPLAY only ever opens a two-step path; SEARCH only ever closes one
         # except for the single-touchpoint path scored at 0.5.
-        self.assertAlmostEqual(self.features[fixtures.DISPLAY].numeric[1], 0.0)
+        self.assertAlmostEqual(self.features[DISPLAY].numeric[1], 0.0)
         self.assertAlmostEqual(
-            self.features[fixtures.SEARCH].numeric[1], (1.0 + 0.5 + 1.0) / 3
+            self.features[SEARCH].numeric[1], (1.0 + 0.5 + 1.0) / 3
         )
 
     def test_user_share_is_weighted_by_path_users(self) -> None:
         self.assertAlmostEqual(
-            self.features[fixtures.DISPLAY].numeric[3], 160 / 290
+            self.features[DISPLAY].numeric[3], 160 / 290
         )
 
     def test_features_never_expose_ground_truth(self) -> None:
@@ -125,23 +127,23 @@ class EncoderTest(DnnTestCase):
         self.encoder = _FeatureEncoder.fit(self.features)
 
     def test_width_matches_the_encoded_vector(self) -> None:
-        item = self.features[fixtures.SEARCH]
+        item = self.features[SEARCH]
         self.assertEqual(len(self.encoder.encode(item.segments, item.numeric)),
                          self.encoder.width)
 
     def test_known_value_sets_its_own_bucket(self) -> None:
-        item = self.features[fixtures.SEARCH]
+        item = self.features[SEARCH]
         vector = self.encoder.encode(item.segments, item.numeric)
         # The first block is ad_product; index 0 is the reserved unknown bucket.
         self.assertEqual(vector[0], 0.0)
         self.assertEqual(sum(vector[: len(self.encoder.vocabularies[0]) + 1]), 1.0)
 
     def test_unseen_value_falls_into_the_unknown_bucket(self) -> None:
-        vector = self.encoder.encode(("NEW_PRODUCT", "NEW_FORMAT", "X", "Y"))
+        vector = self.encoder.encode(("NEW_PRODUCT", "NEW_FORMAT", "X", "Y", "CLICK"))
         self.assertEqual(vector[0], 1.0)
 
     def test_missing_numeric_features_fall_back_to_training_means(self) -> None:
-        vector = self.encoder.encode(("NEW_PRODUCT", "NEW_FORMAT", "X", "Y"))
+        vector = self.encoder.encode(("NEW_PRODUCT", "NEW_FORMAT", "X", "Y", "CLICK"))
         self.assertEqual(
             tuple(vector[-len(NUMERIC_FEATURE_NAMES):]), self.encoder.numeric_means
         )
@@ -152,7 +154,7 @@ class EncoderTest(DnnTestCase):
 
     def test_payload_round_trip(self) -> None:
         restored = _FeatureEncoder.from_payload(self.encoder.to_payload())
-        item = self.features[fixtures.SEARCH]
+        item = self.features[SEARCH]
         self.assertEqual(
             restored.encode(item.segments, item.numeric),
             self.encoder.encode(item.segments, item.numeric),
@@ -174,12 +176,11 @@ class TrainingTest(DnnTestCase):
         model = DeepNeuralAttributionModel().fit(self.dataset)
         predicted = model.predicted_shares(self.dataset)
         for result in run_shapley_attribution(list(self.dataset.path_rows)):
-            touchpoint = to_four_segment(result.touchpoint)
             for outcome in SUPPORTED_OUTCOMES:
                 share_field, _ = OUTCOME_FIELDS[outcome]
-                with self.subTest(touchpoint=touchpoint, outcome=outcome):
+                with self.subTest(touchpoint=result.touchpoint, outcome=outcome):
                     self.assertAlmostEqual(
-                        predicted[outcome][touchpoint],
+                        predicted[outcome][result.touchpoint],
                         getattr(result, share_field),
                         places=4,
                     )
@@ -287,9 +288,9 @@ class NewCampaignPredictionTest(DnnTestCase):
         with self.assertRaisesRegex(ValueError, "distinct touchpoints"):
             self.model.predict_new_campaign([NEW_CAMPAIGN[0], NEW_CAMPAIGN[0]])
 
-    def test_rejects_a_five_segment_key(self) -> None:
+    def test_rejects_a_four_segment_key(self) -> None:
         with self.assertRaises(ValueError):
-            self.model.predict_new_campaign([f"{fixtures.DISPLAY}:IMPRESSION"])
+            self.model.predict_new_campaign([fixtures.DISPLAY])
 
 
 class PersistenceTest(DnnTestCase):

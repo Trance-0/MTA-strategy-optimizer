@@ -64,6 +64,34 @@ export async function reloadData() {
   return readJson(response);
 }
 
+/** Save one future-run master/configuration object in database mode. */
+export async function saveMasterObject(entityType, entityId, payload) {
+  if (IS_STATIC) throw new Error("Master editing is unavailable in the static build.");
+  const response = await fetch(
+    `/api/master/${encodeURIComponent(entityType)}/${encodeURIComponent(entityId)}`,
+    {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ payload }),
+    },
+  );
+  const result = await readJson(response);
+  if (!response.ok) throw new Error(result.message ?? "Master object was not saved.");
+  return result;
+}
+
+/** Archive one future-run object; generated history has no deletion endpoint. */
+export async function archiveMasterObject(entityType, entityId) {
+  if (IS_STATIC) throw new Error("Master editing is unavailable in the static build.");
+  const response = await fetch(
+    `/api/master/${encodeURIComponent(entityType)}/${encodeURIComponent(entityId)}`,
+    { method: "DELETE" },
+  );
+  const result = await readJson(response);
+  if (!response.ok) throw new Error(result.message ?? "Master object was not archived.");
+  return result;
+}
+
 /**
  * The settings state.
  *

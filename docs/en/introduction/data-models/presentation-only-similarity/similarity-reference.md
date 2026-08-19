@@ -1,7 +1,7 @@
 ---
 title: Similarity Reference
 description: A dashboard-facing "similar items" pointer, structurally isolated from every model-facing canonical class
-compact: "SimilarityReference is a presentation-only dataclass in a separate namespace, proven unreachable from every model-facing class by four independent isolation tests. No legacy source or adapter populates it; only a future, unimplemented similarity process would."
+compact: "SimilarityReference is a presentation-only dataclass isolated from every model-facing class. The Campaigns dashboard emits the same fields from a transparent selector-profile heuristic for historical browsing only; scores never enter attribution, response, budget, outcome, or optimization inputs."
 order: 10
 lang: en-US
 ---
@@ -10,7 +10,7 @@ lang: en-US
 
 ## Purpose <span class="status-label status-verified" aria-label="Verified"></span>
 
-`SimilarityReference` is a dashboard-facing pointer from one subject entity to a similar comparable entity — for example, "this Product is similar to that Product" — carrying a similarity score and a human-readable rationale for display. It exists so a future similarity process, not implemented anywhere in this repository, has a defined place to put its output for the dashboard to render, without that output ever being mistaken for canonical model input.
+`SimilarityReference` is a dashboard-facing pointer from one subject entity to a similar comparable entity — for example, "this Product is similar to that Product" — carrying a similarity score and a human-readable rationale for display. The Campaigns view now emits this field shape from a transparent, presentation-only selector-profile heuristic. It is not a trained model and never becomes canonical model input.
 
 The class sits at the end of a one-way, non-feeding-back data flow: canonical product and campaign information (read elsewhere in the model) may in the future feed a separate similarity process; that process's output is a `SimilarityReference`, consumed only by the dashboard. It never flows back into attribution, response modeling, or budget optimization — no `AttributionEvidence`, `CampaignEpisode`, or future optimizer input is derived from it. See [Canonical Data Model](/en/introduction/data-models/index.md) for where this path branches off the main model-facing flow.
 
@@ -144,7 +144,7 @@ Together these prove both that the presentation layer cannot reach into the core
 
 ### Relationship to Product and Campaign
 
-`subject_id`/`comparable_id` may in the future identify a [Product](/en/introduction/data-models/product-identity-and-economics/product.md) or [Campaign](/en/introduction/data-models/campaign-identity/campaign.md), but only by plain string id, never by object reference. The future similarity process that would populate this class is expected to read canonical `Product`/`Campaign` data as its input, but that dependency runs one way: canonical data flows into the similarity process, never the reverse.
+`subject_id`/`comparable_id` identify a [Product](/en/introduction/data-models/product-identity-and-economics/product.md) or [Campaign](/en/introduction/data-models/campaign-identity/campaign.md), but only by plain string id, never by object reference. Canonical data flows into the dashboard calculation; its reference-shaped output never flows back.
 
 ### Relationship to the dashboard
 
@@ -154,11 +154,11 @@ The sole documented consumer of `SimilarityReference` is the dashboard, for disp
 
 ### Current Source Fields
 
-None. No existing data source, report, or schema in this repository carries a similarity relationship between two entities.
+No persisted data source carries a similarity relationship. The Campaigns dashboard derives references at presentation time from selected Provider, Product, ad-product, and budget similarity components.
 
 ### Canonical Conversion
 
-Not applicable. `modules/mta_common/src/legacy_adapters.py` — the only module permitted to adapt legacy shapes into the canonical model — contains no function that constructs a `SimilarityReference`, and none is planned as part of this foundation; a `SimilarityReference` is populated only by a future, separate similarity-calculation process that this module deliberately does not implement.
+No legacy conversion exists. The browser constructs objects with the same `subject_type`, `subject_id`, `comparable_id`, `similarity_score`, `rationale`, and `generated_by` semantics as this class; it does not add similarity to any core adapter or persisted observation.
 
 ### Information Loss
 
@@ -192,14 +192,14 @@ SimilarityReference(
 
 ## Downstream Usage <span class="status-label status-recommendation" aria-label="Recommendation"></span>
 
-A future similarity process would read canonical `Product`/`Campaign` data, compute a similarity score by a method this repository does not implement or specify, and emit one `SimilarityReference` per subject/comparable pair. A future dashboard view would read those references to render "similar items" panels. Neither consumer exists yet; only the type they would produce and consume, respectively, is implemented here.
+The Campaigns dashboard computes equal-weight matches across the selector components the user supplies and filters them by the selected threshold. It labels the result as historical reference only. The Python type remains useful as the contract and isolation boundary; no attribution, prediction, or strategy module consumes these references.
 
 ## Current Availability <span class="status-label status-verified" aria-label="Verified"></span>
 
-Implemented and tested: `SimilarityReference`'s own validation (unit-interval score, non-blank ids, subject-cannot-equal-comparable) and all four isolation guarantees above are covered by `modules/mta_common/tests/test_similarity_isolation.py`, part of the 96 tests across 9 files in `modules/mta_common/tests/` that currently pass. No current pipeline component or dashboard code constructs a `SimilarityReference`; it is exercised only by its own test suite.
+Implemented and tested: `SimilarityReference` validation and the four isolation guarantees are covered by `modules/mta_common/tests/test_similarity_isolation.py`. The Campaigns dashboard emits the corresponding JSON field shape for its modal and dashboard tests verify the threshold control and isolation label.
 
 ## Known Limitations <span class="status-label status-verified" aria-label="Verified"></span>
 
-- No similarity calculation is implemented anywhere in this repository; this page documents only the presentation-only type that would carry such a calculation's output.
+- The dashboard heuristic is intentionally simple and user-driven; it is neither learned nor validated as a predictive similarity model.
 - `rationale` and `generated_by` use plain `str | None`, not the five-state `FieldAvailability` vocabulary the core model uses elsewhere (see [Field Availability](/en/introduction/data-models/vocabularies/field-availability.md)) — a deliberate simplification, since this is a presentation-only type with no requirement to distinguish *why* an optional display field is absent.
 - `subject_type` is a free string rather than a controlled vocabulary, since the set of entity types a future similarity process might compare across is not yet known; this may need to become a shared enum once a real similarity process exists.

@@ -7,6 +7,31 @@ source_files: dashboard/config.py, dashboard/models.py, script/import_to_databas
 
 # Populating PostgreSQL
 
+## Direct MTA-SIM Scale Insertion
+
+The simulator's optional PostgreSQL writer accepts
+`research-100k-postgresql.json`, inserts the stable three tables and canonical
+research records in configurable batches, and requires the explicit
+`--reset-database` flag before replacing populated simulator tables. A normal
+dashboard start, connection test, or generation command never destroys data.
+The database Uniform Resource Locator (URL) is supplied through
+`MTA_SIM_DATABASE_URL` or the command line and is never committed.
+
+The direct schema consists of `mta_simulation_run`, `mta_sim_provider`,
+`mta_sim_product`, `mta_sim_product_economics`, `mta_sim_campaign`,
+`mta_sim_ad_group`, `mta_sim_campaign_product_link`, `mta_sim_touchpoint`,
+`mta_sim_delivery_observation`, `mta_sim_budget_observation`, and
+`mta_sim_outcome_observation`, plus the unchanged three logical tables. The
+100,000-row primary grain is Campaign × marketplace × day × budget level.
+Indexes cover run, Campaign/date, Provider/date, Product/date, and the stable
+report dates used by dashboard filters. `effective_configuration` is retained
+per run so editing a future configuration does not change historical meaning.
+
+The dashboard creates `dashboard_master_object` lazily for future Provider,
+Product, Campaign, Ad Group, Touchpoint, Product Economics, and generation
+configuration drafts. Its JSON payloads are separate from simulator-owned
+history. Archiving a draft never deletes or updates a generated run.
+
 Setting `DATABASE=true` and the `PG_*` values in `.env` is not enough on its own — see [Two Data Sources, One Contract](./index.md#two-data-sources-one-contract) — the PostgreSQL tables have to be populated first. This page specifies the two files that define that schema and the one script that writes to it.
 
 ## Source Files <span class="status-label status-verified" aria-label="Verified"></span>

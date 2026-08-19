@@ -1,6 +1,6 @@
 ---
 title: Dashboard Views and Visual Contract
-compact: "The six views' shared contract: the two prototype views repointed at real records, the reliability verdict shown beside every attributed share, and the colour, chart, and formatting system in `theme.js`/`style.css`. Specifies the six view components, the shared components, and `lib/common.js`."
+compact: "Six Vue views and visual contract. Budget Manager progressively exposes overview, Providers, Products, Campaigns, Ad Groups, Touchpoints, Product Economics, and Generation Configs; Campaigns filters generated history and opens presentation-only similarity. Attribution remains read-only."
 lang: en-US
 source_files: dashboard/src/theme.js, dashboard/src/style.css, dashboard/src/views/CommandCenter.vue, dashboard/src/views/BudgetManager.vue, dashboard/src/views/Campaigns.vue, dashboard/src/views/CampaignOptimizer.vue, dashboard/src/views/OptimizationLog.vue, dashboard/src/views/KnowledgeBase.vue, dashboard/src/components/SidebarNav.vue, dashboard/src/components/TopBar.vue, dashboard/src/components/SettingsDialog.vue, dashboard/src/components/PlotlyChart.vue, dashboard/src/components/DataTable.vue, dashboard/src/components/TableView.vue, dashboard/src/components/MetricRow.vue, dashboard/src/components/KeyValuePanel.vue, dashboard/src/components/ReliabilityBanner.vue, dashboard/src/lib/common.js
 ---
@@ -56,11 +56,26 @@ Five headline tiles, spend against return over time, the per-Outcome reliability
 
 #### `BudgetManager.vue`
 
-Handoff state, the recommended daily budget per Campaign against its required minimum, the derivation that produced it, the score composition, and the Ad Group slots.
+Progressive sub-navigation for Overview, Providers, Products, Campaigns, Ad
+Groups, Touchpoints, Product Economics, and Generation Configs. Database mode
+may edit master/configuration objects through the server service; file mode is
+read-only. Generated delivery, spend, outcomes, and paths are never editable.
+Missing economics remain unavailable rather than becoming zero. Touchpoint
+detail exposes Provider, ad product, format, placement, creative, field
+availability, enabled interactions, billing, delivery/response parameters, and
+the derived five-segment display key. Product detail exposes `sku_id`,
+inventory, and salable state; economics detail keeps aggregate variable cost
+separate from fulfillment, platform-fee, and other variable unit costs.
 
 #### `Campaigns.vue`
 
-Three tabs over the historical record: filterable daily performance, the Campaign and Ad Group bridge, and searchable conversion paths.
+Generated historical evidence filtered by Provider, Product, Campaign, ad
+product, marketplace, date, and simulation run. Detail includes configured
+budget against actual spend, delivery and outcome metrics, Product economics,
+interaction frequencies, path frequencies, length, and transitions. A modal
+finds presentation-only historical similarity references at a selected
+threshold and states that they are not used by attribution or strategy. When
+no attribution artifact exists, the view displays “Attribution not available.”
 
 #### `CampaignOptimizer.vue`
 
@@ -76,7 +91,7 @@ The five-segment vocabulary, the reliability contract, the Outcomes, capacity ru
 
 - Inputs: None. Each component takes no props and reads the shared snapshot through `useDashboard()`, so a view never holds a file path, a Structured Query Language (SQL) statement, or a `fetch` call.
 - Outputs: The rendered page. Nothing is returned and nothing is written.
-- Behavior contract: **No view computes an attribution share or a budget figure.** Every value displayed is read. The single exception is `CampaignOptimizer.vue`'s implied budget shift, which restates the recommended attribution as a spend split at constant total budget; it is labelled as a restatement, does not predict the result of acting on it, never overrides the allocation in `BudgetManager.vue`, and is refused outright when the Outcome's verdict is UNRELIABLE, because an interval cannot carry a spend split. Every view that shows an attributed share shows its reliability verdict beside it. Filters sit in one row above everything they scope, so all panels on a page show the same slice, and every chart is paired with a table view or direct labels, so no value is reachable only by hovering. `OptimizationLog.vue` and `KnowledgeBase.vue` back the two prototype views that had no data of their own: the first reports the real run record and states plainly that the optimisation stage has not run, and the second is populated from the data in use, so it cannot drift from the charts beside it.
+- Behavior contract: **No view recomputes attribution or predicts an outcome.** The Campaigns and Budget Manager views may aggregate displayed generated observations into descriptive totals and ratios such as Click-Through Rate (CTR), Cost Per Click (CPC), and Cost Per Mille (CPM); they do not alter source rows. The similarity modal uses only a transparent, equal-weight selector heuristic and its objects follow the presentation-only `SimilarityReference` fields. `CampaignOptimizer.vue` retains its labelled constant-total-budget restatement and refuses it for an unreliable Outcome. Generated history is immutable, filters scope every related panel, and charts retain a table or direct-label alternative.
 - Dependencies: Vue 3 and Plotly, through `src/lib/useDashboard.js`, `src/lib/common.js`, `src/theme.js`, and the shared components.
 - Verification: Rendered in a real browser in all three deployments — the API against PostgreSQL, the API against the committed files, and the static build — with no console error, no failed request, and no error card in any of the six.
 

@@ -29,6 +29,7 @@ from typing import Mapping, Sequence
 from modules.mta_attribution.src.attribution_contract import read_csv_normalized
 from modules.mta_attribution.src.attribution_model_comparison import spearman_rho
 from modules.mta_attribution.src.attribution_model_interface import MtaAttributionModel
+from modules.mta_attribution.src.touchpoint_key import canonicalize_touchpoint_key
 
 from .dataloader import MtaSimDataset, ReportScope, parse_iso_date, required_text
 from .output_contract import (
@@ -36,7 +37,7 @@ from .output_contract import (
     StandardAttributionRow,
     validate_standard_output,
 )
-from .touchpoint_adapter import canonicalize_four_segment_key
+from .touchpoint_adapter import SimulatorConfig, canonicalize_four_segment_key
 
 
 MTA_SIM_GROUND_TRUTH_FIELDS: tuple[str, ...] = (
@@ -68,7 +69,7 @@ class GroundTruth:
         report_start_date: Inclusive ISO start date.
         report_end_date: Inclusive ISO end date.
         marketplace: Advertising marketplace code.
-        credit_share: Normalised share per canonical four-segment touchpoint.
+        credit_share: Normalised share per canonical five-segment touchpoint.
         causal_increment: Summed removal increment per touchpoint, kept for
             reporting; it is never normalised.
         row_count: Number of ground-truth rows read.
@@ -83,10 +84,10 @@ class GroundTruth:
 
     @property
     def touchpoints(self) -> tuple[str, ...]:
-        """Return the sorted four-segment touchpoints covered by ground truth.
+        """Return the sorted five-segment touchpoints covered by ground truth.
 
         Returns:
-            tuple[str, ...]: Sorted canonical four-segment keys.
+            tuple[str, ...]: Sorted canonical five-segment keys.
         """
         return tuple(sorted(self.credit_share))
 
@@ -143,7 +144,10 @@ class EvaluationReport:
 
 
 def load_simulation_ground_truth(
-    ground_truth: str | Path, *, scope: ReportScope | None = None
+    ground_truth: str | Path,
+    *,
+    scope: ReportScope | None = None,
+    config: SimulatorConfig | None = None,
 ) -> GroundTruth:
     """Load ``simulation_ground_truth`` for evaluation only.
 
@@ -157,7 +161,7 @@ def load_simulation_ground_truth(
             window and marketplace.
 
     Returns:
-        GroundTruth: Normalised credit shares per four-segment touchpoint.
+        GroundTruth: Normalised credit shares per five-segment touchpoint.
 
     Raises:
         FileNotFoundError: if the CSV does not exist.
@@ -191,9 +195,23 @@ def load_simulation_ground_truth(
         marketplace = required_text(row, "marketplace", context)
         scopes.add((start_text, end_text, marketplace))
 
-        touchpoint = canonicalize_four_segment_key(
-            required_text(row, "normalized_touchpoint", context)
-        )
+        raw_touchpoint = required_text(row, "normalized_touchpoint", context)
+        segment_count = len(raw_touchpoint.split(":"))
+        if segment_count == 5:
+            touchpoint = canonicalize_touchpoint_key(raw_touchpoint)
+        elif segment_count == 4 and config is not None:
+            touchpoint = config.to_five_segment(
+                canonicalize_four_segment_key(raw_touchpoint)
+            )
+        elif segment_count == 4:
+            raise ValueError(
+                f"{context}: historical four-segment ground truth requires "
+                "an explicit SimulatorConfig"
+            )
+        else:
+            raise ValueError(
+                f"{context}: normalized_touchpoint must contain four or five segments"
+            )
         share = _finite_number(row.get("credit_share"), f"{context}: credit_share")
         if share < 0:
             raise ValueError(f"{context}: credit_share must be non-negative")

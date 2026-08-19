@@ -28,6 +28,12 @@ SIMULATOR_COST_TYPES: Mapping[str, str] = {
     BRAND: "CPC",
 }
 
+FIVE_SEGMENT_TOUCHPOINTS: tuple[str, ...] = (
+    f"{DISPLAY}:IMPRESSION",
+    f"{SEARCH}:CLICK",
+    f"{BRAND}:CLICK",
+)
+
 PATH_REPORT_FIELDS = (
     "report_start_date",
     "report_end_date",

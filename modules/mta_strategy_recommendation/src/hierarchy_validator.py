@@ -24,6 +24,7 @@ from .budget_recommender import (
     BudgetRecommendationError,
     NORMALIZATION_UNIVERSE,
     SUPPORTED_SAMPLE_VERSION,
+    _touchpoint_product,
     generate_budget_recommendation,
 )
 
@@ -270,7 +271,12 @@ def load_aligned_strategy_inputs(
     for row in entity_rows:
         if any(row.get(field) != expected for field, expected in scope.items()):
             raise HierarchyValidationError("AMC entity scope does not match strategy input")
-        product = row.get("touchpoint", "").split(":", 1)[0]
+        try:
+            product = _touchpoint_product(
+                row.get("touchpoint"), "AMC entity touchpoint"
+            )
+        except BudgetRecommendationError as exc:
+            raise HierarchyValidationError(str(exc)) from exc
         if campaign_products.get(row.get("campaign_id")) != product:
             raise HierarchyValidationError("AMC entity Campaign/ad_product does not match strategy input")
 

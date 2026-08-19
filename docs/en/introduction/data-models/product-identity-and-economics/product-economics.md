@@ -1,7 +1,7 @@
 ---
 title: Product Economics
 description: A product's price and cost structure, with missing cost-of-goods-sold kept missing rather than zero-filled
-compact: "ProductEconomics: unit_price, unit_cogs (missing stays None, never zero-filled), unit_contribution_margin, margin_source (EXPLICIT or DERIVED, cross-validated within 1e-6 tolerance of price minus COGS). No current price/COGS/margin source; tested in test_product_and_economics.py."
+compact: "ProductEconomics preserves price, COGS, aggregate or granular fulfillment/platform/other variable unit costs, contribution margin, and provenance. Aggregate/components cannot contradict; derived margin subtracts represented costs. Missing fields remain None; MTA-SIM snapshots populate it."
 order: 20
 lang: en-US
 ---
@@ -10,7 +10,7 @@ lang: en-US
 
 ## Purpose <span class="status-label status-verified" aria-label="Verified"></span>
 
-`ProductEconomics` carries a product's price and cost structure. It exists because no price, [Cost of Goods Sold (COGS)](/en/reference/definitions#cogs-cost-of-goods-sold), or margin field exists anywhere in the currently implemented pipeline, and because a profit-relevant field like COGS must never be allowed to silently default to zero — a missing cost and a zero cost are different facts with different downstream consequences, so this class enforces the distinction by construction rather than leaving it to caller discipline.
+`ProductEconomics` carries a product's price and variable unit-cost structure. MTA-SIM research snapshots are its first implemented source. A missing [Cost of Goods Sold (COGS)](/en/reference/definitions#cogs-cost-of-goods-sold) or variable cost must never silently become zero; a missing cost and a reported zero cost are different facts.
 
 ## Ownership and Layer <span class="status-label status-verified" aria-label="Verified"></span>
 
@@ -118,7 +118,7 @@ Optional; defaults to `None`. Required to be given together with `margin_source`
 
 #### Meaning
 
-Per-unit [Contribution Margin](/en/reference/definitions#contribution-margin): `unit_price` minus `unit_cogs`, before any allocation of fixed or corporate overhead. No fixed corporate overhead allocation is computed or required anywhere in this class.
+Per-unit [Contribution Margin](/en/reference/definitions#contribution-margin): `unit_price` minus `unit_cogs` minus the represented aggregate or granular variable unit costs, before any allocation of fixed or corporate overhead.
 
 #### Missingness
 
@@ -126,7 +126,39 @@ Per-unit [Contribution Margin](/en/reference/definitions#contribution-margin): `
 
 #### Validation
 
-Must be `None` exactly when `margin_source` is also `None` (`__post_init__` raises `ValueError` if only one of the two is set). When both `unit_contribution_margin`, `unit_price`, and `unit_cogs` are present, the implied margin `unit_price - unit_cogs` must equal `unit_contribution_margin` within an absolute tolerance of `1e-6`; a contradiction raises `ValueError` naming both the given and implied values.
+Must be `None` exactly when `margin_source` is also `None`. When the price and COGS components are present, the implied margin subtracts the aggregate variable cost when supplied, otherwise the sum of supplied granular components, and must equal `unit_contribution_margin` within an absolute tolerance of `1e-6`.
+
+### variable_cost_per_unit
+
+#### Type
+
+`float | None`
+
+#### Meaning
+
+Optional aggregate non-COGS variable cost incurred per unit. `None` means no aggregate was supplied and remains distinguishable from a reported zero. When granular components are present instead, their supplied values form the represented variable-cost total.
+
+#### Validation
+
+When present, it must not be negative.
+
+### variable_fulfillment_cost_per_unit
+
+Optional non-negative fulfillment cost per unit. `None` remains unavailable.
+
+### variable_platform_fee_per_unit
+
+Optional non-negative platform fee per unit. `None` remains unavailable.
+
+### other_variable_cost_per_unit
+
+Optional non-negative residual variable cost per unit. `None` remains unavailable.
+
+When `variable_cost_per_unit` and one or more granular components are both
+present, the aggregate must equal the sum of supplied components within
+`1e-6`; contradictory records are rejected. Contribution-margin validation
+subtracts the aggregate when present, otherwise the sum of supplied granular
+components.
 
 ### margin_source
 
@@ -157,7 +189,8 @@ Must be given together with `unit_contribution_margin` (see above). When `margin
 - A missing `unit_cogs` always stays `None`; it is never zero-filled by this class or by any current adapter.
 - `unit_contribution_margin` and `margin_source` are always both `None` or both set — never one without the other.
 - `MarginSource.DERIVED` always requires both `unit_price` and `unit_cogs` to be present.
-- Whenever `unit_contribution_margin`, `unit_price`, and `unit_cogs` are all present together, they must agree within `1e-6`, regardless of whether `margin_source` is `EXPLICIT` or `DERIVED` — a contradictory record cannot be constructed at all, rather than being caught later by a downstream consumer.
+- Aggregate and granular variable costs cannot contradict.
+- Whenever `unit_contribution_margin`, `unit_price`, and `unit_cogs` are all present together, they must agree with price minus COGS minus the represented variable unit-cost total within `1e-6`.
 
 ## Relationships <span class="status-label status-verified" aria-label="Verified"></span>
 
@@ -177,11 +210,11 @@ Conceptually, a future strategy optimizer's profit objective — `sum_s(incremen
 
 ### Current Source Fields
 
-None. No price, cost-of-goods, or margin field exists anywhere in the currently implemented pipeline: the dashboard schema has none of these fields, and neither `modules/mta_strategy_recommendation` nor `modules/mta_attribution` carries any product-economics data. `docs/en/market-simulation/product-data-model.md` documents an external, unconnected `msproduct` schema — including a `sku.specification_profit` field — as historical reference material only, not a data source this pipeline reads.
+MTA-SIM research snapshots and the direct PostgreSQL research tables provide price, COGS, aggregate/granular variable unit costs, contribution margin, and margin source. The market-simulation adapter maps the sidecar representation into this class. Attribution and strategy modules do not consume these fields in this task.
 
 ### Canonical Conversion
 
-Not implemented. `modules/mta_common/src/legacy_adapters.py` contains no function that constructs a `ProductEconomics`.
+Implemented for MTA-SIM research snapshots by `load_mta_sim_research_snapshot`. The legacy strategy-request adapter has no economics source and leaves this concept absent.
 
 ### Information Loss
 
@@ -222,10 +255,10 @@ A future strategy optimizer running under `StrategyObjective.MAXIMIZE_PROFIT` (s
 
 ## Current Availability <span class="status-label status-verified" aria-label="Verified"></span>
 
-Implemented in `modules/mta_common/src/product.py`. Validated by `modules/mta_common/tests/test_product_and_economics.py::ProductEconomicsMissingCogsTests` and `::ProductEconomicsMarginTests`: a missing `unit_cogs` stays `None` and is explicitly asserted not equal to zero, negative `unit_cogs` is rejected, an explicit margin with no components is valid, a margin without its source (and a source without its margin) is rejected, a derived margin requires both components, a consistent derived margin is accepted, and a contradictory explicit margin is rejected. No current pipeline component constructs a `ProductEconomics` instance outside this test suite.
+Implemented in `modules/mta_common/src/product.py`. Tests cover missing-cost preservation, non-negative costs, explicit and derived margins, variable-cost arithmetic, and contradictions. MTA-SIM snapshot conversion is verified by the market-simulation adapter tests.
 
 ## Known Limitations <span class="status-label status-verified" aria-label="Verified"></span>
 
-- No current data source supplies price, COGS, or margin; every instance today is hand-constructed in tests.
+- CSV-only MTA-SIM imports cannot reconstruct economics because the unchanged legacy CSV schemas contain no economics columns; the research sidecar or database tables are required.
 - The class docstring describes it as covering "one reporting scope," but `ProductEconomics` carries no `reporting_scope` field itself — associating an instance with a specific window is left entirely to the caller's construction-time convention and is not validated by this class.
 - `unit_contribution_margin` is a single flat per-unit figure; tiered or promotional pricing that varies within a window is not representable without constructing multiple instances, which this class does not itself distinguish or prevent from overlapping.

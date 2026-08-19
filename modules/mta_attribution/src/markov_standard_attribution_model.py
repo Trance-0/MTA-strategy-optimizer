@@ -1,7 +1,7 @@
 """Expose the Markov implementation through the shared model contract.
 
 Data flow: ``MtaSimDataset`` -> the native Markov removal-effect estimator ->
-four-segment ``StandardAttributionRow`` records for framework validation.
+five-segment ``StandardAttributionRow`` records for framework validation.
 """
 
 from __future__ import annotations

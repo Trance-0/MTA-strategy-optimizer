@@ -23,11 +23,9 @@ from .attribution_contract import (
     NULL,
     START,
     AttributionResult,
-    parse_channels,
     parse_path,
     safe_float,
     safe_int,
-    unique_touchpoints,
     validate_amc_aggregated_row,
 )
 from .touchpoint_key import canonicalize_amc_touchpoint_key

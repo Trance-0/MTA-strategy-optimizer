@@ -18,13 +18,14 @@ from modules.mta_standard.src.dataloader import (
     GROUND_TRUTH_ONLY_FIELDS,
     MTA_SIM_ADS_FIELDS,
     MtaSimDataset,
-    four_segment_touchpoints_from_path_rows,
+    five_segment_touchpoints_from_path_rows,
     load_amazon_ads_daily_touchpoint_performance,
     load_amc_path_report,
     load_mta_sim_dataset,
 )
 from modules.mta_standard.src.touchpoint_adapter import SimulatorConfig
 from modules.mta_standard.tests import mta_sim_fixtures as fixtures
+from modules.mta_common.src.enums import FieldAvailability, Provider
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -78,17 +79,17 @@ class ExternalPathLoadingTest(DataloaderTestCase):
                 self.directory / "absent.csv", config=self.config
             )
 
-    def test_touchpoints_are_four_segment_and_paths_are_five_segment(self) -> None:
+    def test_touchpoints_and_paths_are_five_segment(self) -> None:
         dataset = self.load()
         self.assertEqual(
             dataset.touchpoints,
-            tuple(sorted(fixtures.SIMULATOR_COST_TYPES)),
+            tuple(sorted(fixtures.FIVE_SEGMENT_TOUCHPOINTS)),
         )
         for row in dataset.path_rows:
             for part in str(row["path"]).split(">"):
                 self.assertEqual(len(part.strip().split(":")), 5)
         self.assertEqual(
-            four_segment_touchpoints_from_path_rows(dataset.path_rows),
+            five_segment_touchpoints_from_path_rows(dataset.path_rows),
             dataset.touchpoints,
         )
 
@@ -117,21 +118,70 @@ class ExternalPathLoadingTest(DataloaderTestCase):
     def test_performance_table_is_optional(self) -> None:
         dataset = load_mta_sim_dataset(self.paths["path_report"], config=self.config)
         self.assertEqual(dataset.ads_rows, ())
-        self.assertEqual(dataset.touchpoints, tuple(sorted(fixtures.SIMULATOR_COST_TYPES)))
+        self.assertEqual(
+            dataset.touchpoints,
+            tuple(sorted(fixtures.FIVE_SEGMENT_TOUCHPOINTS)),
+        )
 
     def test_performance_rows_are_annotated_and_keep_units_sold(self) -> None:
         dataset = self.load()
         self.assertEqual(len(dataset.ads_rows), 6)
         for row in dataset.ads_rows:
-            self.assertIn(row["touchpoint"], fixtures.SIMULATOR_COST_TYPES)
+            four = row["touchpoint"].rsplit(":", 1)[0]
+            self.assertIn(four, fixtures.SIMULATOR_COST_TYPES)
             self.assertEqual(
-                row["cost_type"], fixtures.SIMULATOR_COST_TYPES[row["touchpoint"]]
+                row["cost_type"], fixtures.SIMULATOR_COST_TYPES[four]
             )
             self.assertEqual(
                 row["five_segment_touchpoint"],
-                self.config.to_five_segment(row["touchpoint"]),
+                row["touchpoint"],
             )
+            self.assertEqual(row["canonical_touchpoint"].interaction_type, row["interaction_type"])
             self.assertEqual(row["unitsSold"], "6")
+
+    def test_native_simulator_rows_construct_mta_common_touchpoints(self) -> None:
+        """The file boundary preserves representable semantics without config."""
+
+        path_rows = self.read_csv(self.paths["path_report"])
+        for row in path_rows:
+            row["path"] = " > ".join(
+                self.config.to_five_segment(part.strip())
+                for part in row["path"].split(">")
+            )
+        self.rewrite_csv(
+            self.paths["path_report"], path_rows, fixtures.PATH_REPORT_FIELDS
+        )
+        performance_rows = self.read_csv(self.paths["ads_performance"])
+        for row in performance_rows:
+            row["normalizedTouchpoint"] = self.config.to_five_segment(
+                row["normalizedTouchpoint"]
+            )
+        self.rewrite_csv(
+            self.paths["ads_performance"], performance_rows, MTA_SIM_ADS_FIELDS
+        )
+
+        dataset = load_mta_sim_dataset(
+            self.paths["path_report"],
+            self.paths["ads_performance"],
+            provider=Provider.GENERIC,
+        )
+        self.assertIsNone(dataset.config)
+        self.assertEqual(
+            {item.provider for item in dataset.canonical_touchpoints},
+            {Provider.GENERIC},
+        )
+        display = next(
+            item
+            for item in dataset.canonical_touchpoints
+            if item.ad_product == "AMAZON_DSP"
+        )
+        self.assertEqual(display.format, "OTT")
+        self.assertIsNone(display.placement)
+        self.assertEqual(
+            display.field_availability.placement,
+            FieldAvailability.NOT_PROVIDED,
+        )
+        self.assertEqual(display.interaction_type, "IMPRESSION")
 
 
 class GroundTruthIsolationTest(DataloaderTestCase):
@@ -142,7 +192,10 @@ class GroundTruthIsolationTest(DataloaderTestCase):
 
     def test_dataset_loader_accepts_no_ground_truth_argument(self) -> None:
         parameters = set(inspect.signature(load_mta_sim_dataset).parameters)
-        self.assertEqual(parameters, {"path_report", "ads_performance", "config"})
+        self.assertEqual(
+            parameters,
+            {"path_report", "ads_performance", "config", "provider"},
+        )
 
     def test_no_loaded_row_carries_a_ground_truth_column(self) -> None:
         dataset = self.load()

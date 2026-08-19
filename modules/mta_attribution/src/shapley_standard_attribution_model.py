@@ -1,7 +1,7 @@
 """Expose the path-level Shapley implementation through the shared contract.
 
 Data flow: ``MtaSimDataset`` -> native path-level Shapley attribution ->
-four-segment ``StandardAttributionRow`` records for framework validation.
+five-segment ``StandardAttributionRow`` records for framework validation.
 """
 
 from __future__ import annotations

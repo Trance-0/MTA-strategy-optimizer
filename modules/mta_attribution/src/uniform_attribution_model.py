@@ -1,6 +1,6 @@
 """Provide a uniform-credit reference model through the shared contract.
 
-Data flow: ``MtaSimDataset`` -> equal outcome shares at four-segment grain ->
+Data flow: ``MtaSimDataset`` -> equal outcome shares at five-segment grain ->
 ``StandardAttributionRow`` records used as a deterministic baseline.
 """
 

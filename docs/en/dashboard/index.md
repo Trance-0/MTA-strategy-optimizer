@@ -1,7 +1,7 @@
 ---
 title: Dashboard
 description: The Vue dashboard's architecture, its dual data source contract, and where each topic is documented
-compact: "Dashboard architecture: one Node process serves an Express API and a Vue client over the `DATABASE=true/false` contract. `server/config.js`, `server/csv.js`, `server/data_source.js` normalize five file/database differences and enforce surrogate-key row order. See `./views.md`, `./navigation.md`, `./deployment.md`, `./database-import.md` for views, the rail, running it, and populating PostgreSQL."
+compact: "Vue/Express dashboard: one normalized snapshot covers file/database modes, canonical master/config records, immutable generated history, simulator runs/configs, filters, and presentation-only similarity. `server/data_source.js` owns source branching; views never issue SQL or recompute attribution."
 lang: en-US
 source_files: dashboard/server/config.js, dashboard/server/csv.js, dashboard/server/data_source.js, dashboard/server/index.js, dashboard/src/api/client.js, dashboard/src/lib/useDashboard.js, dashboard/tests/dashboard.test.js, script/verify_dashboard_parity.mjs
 ---
@@ -61,11 +61,16 @@ A single switch in `.env` decides where the numbers come from. `sample.env` is t
 
 Reads from the committed CSV and JSON artifacts. Used for cloud demonstrations, and any checkout that has not run an import.
 
+When `MTA_SIM_DATA_DIR` names a generated run directory, the server reads the
+three unchanged MTA-SIM CSV files plus `effective_configuration.json` and
+`simulation_research.json` from that directory. Without it, the legacy
+committed demonstration artifacts remain the file source.
+
 ### `DATABASE=true`
 
 Reads from the PostgreSQL schema in [Dashboard data model](../market-simulation/dashboard-data-model.md). Used for a deployment with a populated database.
 
-`dashboard/server/data_source.js` is the only module that knows which mode is active. Every loader it exposes returns the **same fields, types, values, and row order in both modes**, so no view can tell them apart and no view contains a branch on the data source. `script/verify_dashboard_parity.mjs` asserts that property against a live database and exits non-zero on any difference.
+`dashboard/server/data_source.js` is the only module that knows which mode is active. Legacy artifact loaders return the **same fields, types, values, and row order in both modes**. The additional `simulationResearch` object has the same normalized shape and types in file and database mode, while its row count reflects the selected generated run: a local 10,000-observation sidecar and a remote 100,000-observation database are not expected to contain identical rows. No view contains a source-mode branch.
 
 Five real differences must be normalised for that contract to hold, and all five are handled in the loader rather than in a view:
 
@@ -129,7 +134,7 @@ Source: `dashboard/server/config.js`
 
 - Responsibility: Read `.env` at the repository root and expose the one switch that decides the data source, the PostgreSQL settings, and the artifact paths every other server module resolves against.
 - Inputs: `.env` at the repository root, loaded without overriding real environment variables so a shell export or a container secret wins. `DATABASE` is true for any of `1`, `true`, `yes`, `on`, case-insensitively; anything else, including absence, is false. `DASHBOARD_HOSTED` uses the same vocabulary and is set only by the published build.
-- Outputs: `useDatabase()`, `isHosted()`, `databaseSettings()`, `safeSummary()`, `serverPort()`; the path constants `REPO_ROOT`, `DASHBOARD_ROOT`, `SIMULATED_DIR`, `ATTRIBUTION_OUTPUT_DIR`, `STRATEGY_INPUT_DIR`, `STRATEGY_OUTPUT_DIR`; and `DESCRIPTION_ROW_MARKERS`, the exact first-cell values that identify the Chinese field-description row every reader must drop.
+- Outputs: `useDatabase()`, `isHosted()`, `databaseSettings()`, `safeSummary()`, `serverPort()`, `simulatorDataDirectory()`; the legacy artifact path constants; and `DESCRIPTION_ROW_MARKERS`.
 - Behavior contract: `databaseSettings()` throws naming **every** missing variable and pointing at `sample.env`, rather than failing later at connection time with a misleading network error. `safeSummary()` returns a display string that never contains the password, omitted by construction rather than masked, so no future edit can accidentally widen it. `useDatabase()` returns false whenever `isHosted()` is true, regardless of the switch — a static host has no socket to open, so the hosted flag decides before the switch is read. `.env` is read once and cached, so the mode is fixed for the life of the process; this is why `verify_dashboard_parity.mjs` probes the two modes in separate processes.
 - Dependencies: `dotenv`. Installed with `npm install` in `dashboard/`.
 - Verification: `node script/verify_dashboard_parity.mjs`, which exercises both modes.
@@ -150,9 +155,9 @@ Source: `dashboard/server/csv.js`
 Source: `dashboard/server/data_source.js`
 
 - Responsibility: Be the only module that knows whether the dashboard is reading files or a database, and return results a view cannot distinguish between the two.
-- Inputs: `server/config.js` for the mode and the paths; the committed artifacts under `modules/*/`; or the PostgreSQL tables in `dashboard/models.py`.
-- Outputs: Seven tabular loaders — `loadAdsDaily`, `loadAttributionResults`, `loadComparisonTouchpoints`, `loadComparisonSummary`, `loadRecommendedAttribution`, `loadEntityBridge`, `loadPathReport` — and three that return the JSON artifacts' own nested shape: `loadBudgetRecommendation`, `loadStrategyRequest`, `loadCandidatePool`. Also `loadSnapshot()`, which is the whole API payload; `formatDate()`; `TOUCHPOINT_SEGMENTS`; and `activeMode()`, `sourceLabel()`, `databaseAvailable()`, `clearCaches()`, `disposePool()`.
-- Behavior contract: **Every loader returns identical fields, types, values, and row order in both modes.** A view must never branch on the data source, and none does. The five normalisations and the surrogate-key ordering rule are specified under [Two Data Sources, One Contract](#two-data-sources-one-contract). `formatDate()` is the single conversion for every date the API returns: a `Date` is formatted from its **local** components, because `toISOString()` converts to UTC first and so reports the previous day for any host east of Greenwich, and because `String(date).slice(0, 10)` yields `Tue Mar 31` — a weekday and a month name — rather than a date. `project()` pins an absent value to `null` in both modes and fixes the field order, so serialised rows can be compared directly. `databaseAvailable()` returns a `(usable, message)` pair instead of throwing, so the API can report a connection failure as a page rather than as a stack trace inside a chart. `pg` is imported lazily, so a file-mode run never loads the driver. Results are cached for ten minutes, which the Reload control clears.
+- Inputs: `server/config.js`; committed legacy artifacts or an optional generated MTA-SIM run directory; and either the legacy PostgreSQL tables or direct `mta_sim_*` research tables.
+- Outputs: The legacy loaders plus `loadSimulationResearch()` and `loadSnapshot()`. `simulationResearch` contains runs, Provider profiles, Products, Campaigns, Ad Groups, structured Touchpoints, economics, links, budget/outcome history, delivery, configurations, and latent/observed Touchpoint pairs. The module also exposes master-draft upsert/archive operations, date normalization, source/status helpers, cache clearing, and pool disposal.
+- Behavior contract: Legacy loaders preserve exact cross-mode parity. Research loaders normalize the same fields and types across modes and preserve the selected run's natural scale. Generated history is read-only. Only `dashboard_master_object` accepts future-run drafts, and only in database mode; drafts never update the `mta_sim_*` observation tables. `formatDate()` is the single date conversion. `project()` pins absent values to `null`. `pg` is loaded lazily and results are cached for ten minutes until Reload.
 - Dependencies: `pg`, plus `server/config.js` and `server/csv.js`.
 - Verification: `node script/verify_dashboard_parity.mjs` against a populated database. The file-mode invariants — booleans, date format, null-not-empty-string, finite numbers, and JSON round-tripping — are covered by `dashboard/tests/dashboard.test.js`, which needs no database.
 
@@ -162,8 +167,8 @@ Source: `dashboard/server/index.js`
 
 - Responsibility: Serve the JSON API and the built client from one process.
 - Inputs: HTTP requests. The client build in `dashboard/dist`, when one exists.
-- Outputs: `createApp()`, and a listening server when run directly. `GET /api/dashboard`, `POST /api/reload`, `GET /api/settings`, `POST /api/settings`.
-- Behavior contract: `GET /api/dashboard` checks `databaseAvailable()` before loading whenever `DATABASE=true` and answers `503` with `error: "database_unavailable"` and a named reason, so the client can state both remedies — correct the credentials, or run the import — rather than letting the failure surface inside whichever chart read it first. `POST /api/settings` is **refused with `403` whenever `isHosted()`**: a published build has no writable `.env` and no socket, so a change could not take effect and pretending otherwise would invite a real password into a page that cannot use it. An empty password field means "keep the stored one", because the dialog never receives the stored value to echo back. The static file branch is absent when `dashboard/dist` does not exist, which is what lets `npm run dev` serve the sources from Vite and proxy the API here; the server prints the command that builds it rather than serving nothing silently. Client routes resolve to one document, because the client routes on the hash.
+- Outputs: `createApp()`, a listening server when run directly, the existing dashboard/reload/settings routes, and `PUT`/`DELETE /api/master/:entityType/:entityId` for future-run master drafts.
+- Behavior contract: `GET /api/dashboard` checks database availability and returns a named `503` reason on failure. Master writes are refused outside database mode, validate the supported entity type and JSON object payload, and upsert or archive only `dashboard_master_object`; no route mutates generated observations. Hosted settings remain read-only. Static and development serving retain the existing behavior.
 - Dependencies: `express`, plus `server/config.js`, `server/data_source.js`, and `server/settings.js`.
 - Verification: Started with `./dashboard/run.sh` and driven in a real browser; the six views were rendered against both a live PostgreSQL instance and the committed files with no console error and no failed request.
 
@@ -173,7 +178,7 @@ Source: `dashboard/src/api/client.js`, `dashboard/src/lib/useDashboard.js`
 
 - Responsibility: Be the client's single route to the data, and hold the single shared copy of it.
 - Inputs: `/api/dashboard` in a local run, or `data/snapshot.json` in the published build.
-- Outputs: `IS_STATIC`, `fetchDashboard()`, `reloadData()`, `fetchSettings()`, `postSettings()`; and `useDashboard()`, returning `data`, `loading`, `error`, `loaded`, `ensureLoaded()`, and `reload()`.
+- Outputs: `IS_STATIC`, dashboard/reload/settings calls, `saveMasterObject()`, `archiveMasterObject()`; and `useDashboard()`, including an empty `simulationResearch` shape before loading.
 - Behavior contract: `IS_STATIC` is baked in at build time by `vite build --mode static`, and it is the only thing that decides which of the two sources is read; **no view branches on it.** The static path is relative because Pages serves a project site from a subdirectory. A response that is not JSON — a proxy page or a 404 — is reported by status rather than as a parse error naming character 0. In the static build `fetchSettings()` returns the hosted state directly and `postSettings()` refuses, rather than issuing requests that would 404. `useDashboard()` holds one module-level snapshot, so the six views that mount together share one in-flight request rather than issuing six, and two views can never show two different reads. An empty snapshot is exposed until the first load resolves, so a view renders its own empty state rather than crashing on a missing field.
 - Dependencies: Vue's reactivity.
 - Verification: Driven in a real browser against both the API and the static snapshot; both render the six views identically with no console error.

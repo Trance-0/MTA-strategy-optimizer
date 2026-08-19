@@ -723,25 +723,9 @@ class EndToEndSampleTests(unittest.TestCase):
                 "PARENT_AGGREGATE_DIVERGENCE",
                 "TOUCHPOINT_DIVERGENCE",
             }
-            allowed_reason_codes = {
-                "NO_OUTCOME",
-                "LONG_TAIL",
-                "LONG_TAIL_MODEL_SENSITIVE",
-                "ALIGNED",
-                "MODEL_REVIEW",
-                "ABSOLUTE_GAP",
-                "RELATIVE_AND_ABSOLUTE_GAP",
-            }
             for row in comparison_rows + summary_rows + recommended_rows:
                 self.assertTrue(forbidden_reason_codes.isdisjoint(row))
                 self.assertNotIn("reason_code", row)
-            expected_reasons = {
-                "NO_OUTCOME": {"NO_OUTCOME"},
-                "LONG_TAIL": {"LONG_TAIL", "LONG_TAIL_MODEL_SENSITIVE"},
-                "SMALL": {"ALIGNED"},
-                "MEDIUM": {"MODEL_REVIEW"},
-                "LARGE": {"ABSOLUTE_GAP", "RELATIVE_AND_ABSOLUTE_GAP"},
-            }
             self.assertTrue(all("difference_level" not in row for row in comparison_rows + summary_rows + recommended_rows))
             self.assertEqual(
                 len({(row["touchpoint"], row["outcome"]) for row in comparison_rows}),

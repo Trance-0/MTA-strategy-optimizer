@@ -43,6 +43,19 @@ export const STRATEGY_INPUT_DIR = resolve(STRATEGY_MODULE, "data", "simulated");
 export const STRATEGY_OUTPUT_DIR = resolve(STRATEGY_MODULE, "outputs");
 
 /**
+ * Return the optional MTA-SIM CSV run used by file-mode research views.
+ *
+ * When unset, the dashboard keeps using its committed module fixtures. The
+ * path is deliberately configuration rather than a cross-repository import:
+ * MTA-SIM and this project remain independently runnable.
+ */
+export function simulatorDataDirectory() {
+  loadEnv();
+  const configured = String(process.env.MTA_SIM_DATA_DIR ?? "").trim();
+  return configured ? resolve(configured) : null;
+}
+
+/**
  * Amazon Ads and path-report samples carry a Chinese field-description row
  * directly under the header. It is documentation, not data, and every reader
  * must drop it before parsing numbers.

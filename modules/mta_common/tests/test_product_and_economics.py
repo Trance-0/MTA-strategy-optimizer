@@ -42,6 +42,30 @@ class ProductIdentityTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             Product(product_id="  ")
 
+    def test_blank_provider_identifier_is_rejected(self) -> None:
+        with self.assertRaises(ValueError):
+            Product(
+                product_id="SKU-004",
+                provider_ad_identifiers={Provider.AMAZON_ADS: "  "},
+            )
+
+    def test_inventory_and_salable_missingness_are_preserved(self) -> None:
+        unspecified = Product(product_id="SKU-004")
+        unavailable = Product(
+            product_id="SKU-005",
+            sku_id="SELLER-005",
+            inventory_units=0,
+            salable=False,
+        )
+        self.assertIsNone(unspecified.inventory_units)
+        self.assertIsNone(unspecified.salable)
+        self.assertEqual(unavailable.inventory_units, 0)
+        self.assertFalse(unavailable.salable)
+
+    def test_negative_inventory_is_rejected(self) -> None:
+        with self.assertRaises(ValueError):
+            Product(product_id="SKU-006", inventory_units=-1)
+
 
 class ProductEconomicsMissingCogsTests(unittest.TestCase):
     def test_missing_cogs_stays_none_not_zero(self) -> None:
@@ -110,6 +134,50 @@ class ProductEconomicsMarginTests(unittest.TestCase):
                 unit_cogs=6.0,
                 unit_contribution_margin=999.0,
                 margin_source=MarginSource.EXPLICIT,
+            )
+
+    def test_variable_cost_is_included_in_margin(self) -> None:
+        economics = ProductEconomics(
+            product_id="SKU-001",
+            currency="USD",
+            unit_price=10.0,
+            unit_cogs=6.0,
+            variable_cost_per_unit=1.25,
+            unit_contribution_margin=2.75,
+            margin_source=MarginSource.DERIVED,
+        )
+        self.assertAlmostEqual(economics.unit_contribution_margin, 2.75)
+
+    def test_negative_variable_cost_is_rejected(self) -> None:
+        with self.assertRaises(ValueError):
+            ProductEconomics(
+                product_id="SKU-001",
+                currency="USD",
+                variable_cost_per_unit=-0.01,
+            )
+
+    def test_granular_variable_costs_are_included_in_margin(self) -> None:
+        economics = ProductEconomics(
+            product_id="SKU-001",
+            currency="USD",
+            unit_price=20.0,
+            unit_cogs=8.0,
+            variable_fulfillment_cost_per_unit=2.0,
+            variable_platform_fee_per_unit=1.5,
+            other_variable_cost_per_unit=0.5,
+            unit_contribution_margin=8.0,
+            margin_source=MarginSource.DERIVED,
+        )
+        self.assertEqual(economics.represented_variable_cost_per_unit, 4.0)
+
+    def test_aggregate_and_granular_costs_cannot_contradict(self) -> None:
+        with self.assertRaises(ValueError):
+            ProductEconomics(
+                product_id="SKU-001",
+                currency="USD",
+                variable_cost_per_unit=5.0,
+                variable_fulfillment_cost_per_unit=2.0,
+                variable_platform_fee_per_unit=1.0,
             )
 
 

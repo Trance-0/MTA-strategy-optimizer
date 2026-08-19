@@ -1,7 +1,7 @@
 ---
 title: Version Log
 description: Release history and material changes for the maintained project
-compact: "Index of all version pages with dates and one-line summaries. Read to locate when a change landed or to add a new version page; not a specification of current behavior."
+compact: "Index of all version pages with dates, one-line summaries, and outstanding follow-ups. Read to locate when a change landed or to add a version page; not a specification of current behavior."
 order: 1
 ---
 
@@ -10,6 +10,11 @@ order: 1
 The project version is recorded in the repository-root `VERSION` file. Each page here is one small patch description covering a coherent change set, rather than a reproduction of every commit message. Every patch keeps its own permanent page; older minor versions are grouped into a collapsed folder per minor version instead of being compacted away.
 
 This section records **what** changed. See the [work log](../worklog/) for **who** did the work and when.
+
+## [0.9.20](0.9.20.md)
+
+- Date: 2026-08-18
+- Summary: Integrated independent Multi-Touch Attribution Simulator (MTA-SIM) domain records through `mta_common`, adopted native five-segment interactions, added 10k CSV and 100k PostgreSQL research modes, and expanded the dashboard's canonical master-data and historical-analysis views
 
 ## [0.9.19](0.9.19.md)
 
@@ -107,7 +112,7 @@ These versions were reconstructed from first-parent Git history and the preserve
 
 Not yet started; recorded here so the next session can pick this up.
 
-- Done in 0.9.17: the canonical, provider-independent data-model foundation itself — `modules/mta_common/` — with a legacy-to-canonical compatibility bridge. See [Canonical Data Model](../en/introduction/data-models/index.md). Still not started: wiring `modules/mta_attribution`, `modules/mta_standard`, `modules/mta_strategy_recommendation`, `modules/mta_strategy_evaluation`, and the dashboard's database schema to actually consume it instead of their current native shapes — nothing outside `modules/mta_common`'s own test suite calls it yet.
+- Done in 0.9.20: native five-segment MTA-SIM loading, canonical runtime adaptation in `modules/mta_standard`, canonical touchpoint reuse in attribution and strategy boundaries, research-scale PostgreSQL persistence, and dashboard canonical-data/history views. Still not started: `modules/mta_strategy_evaluation` and a final response-based optimizer.
 - Move `dashboard/config.py` and `dashboard/models.py` into `modules/mta_standard`, and move `docs/en/dashboard/database-import.md` into `docs/en/attribution/standardized-interface/` to match.
 - Implement a full runnable optimizer module built on the consolidated data structures — would read `StrategyObjective`, `BudgetUsagePolicy`, and `CampaignEpisode` from `modules/mta_common`, none of which is consumed by an optimizer yet.
 

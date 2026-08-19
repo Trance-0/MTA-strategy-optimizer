@@ -239,7 +239,7 @@ A future strategy optimizer would read a campaign's [`CampaignEpisode`](/en/intr
 
 ## Current Availability <span class="status-label status-verified" aria-label="Verified"></span>
 
-Fully implemented and validated by 6 dedicated tests in `modules/mta_common/tests/test_campaign.py` (`CampaignTests`), with the `strategy_request.json` adapter path covered by `StrategyRequestAdapterTests` in `modules/mta_common/tests/test_legacy_adapters.py`. Part of the 96-test `modules/mta_common` suite, all passing. Nothing outside `modules/mta_common/tests/` constructs a `Campaign` yet — no current pipeline component imports `modules.mta_common`.
+Fully implemented and validated by dedicated tests in `modules/mta_common/tests/test_campaign.py`, with the legacy strategy-request path covered by `test_legacy_adapters.py`. The MTA-SIM research adapter also constructs canonical Campaigns from generated run snapshots and verifies their shared semantic fields.
 
 ## Known Limitations <span class="status-label status-verified" aria-label="Verified"></span>
 

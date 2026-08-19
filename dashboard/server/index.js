@@ -25,6 +25,8 @@ import {
   clearCaches,
   databaseAvailable,
   loadSnapshot,
+  archiveMasterObject,
+  saveMasterObject,
   sourceLabel,
 } from "./data_source.js";
 import {
@@ -86,6 +88,43 @@ export function createApp() {
     clearCaches();
     log("INFO", "data_source", "caches cleared by the reload control");
     response.json({ ok: true });
+  });
+
+  /**
+   * Save an editable master/configuration draft for a future simulator run.
+   * Generated delivery, budget, outcome, and path tables have no mutation
+   * route, which keeps historical experiments reproducible.
+   */
+  app.put("/api/master/:entityType/:entityId", async (request, response) => {
+    try {
+      const saved = await saveMasterObject(
+        request.params.entityType,
+        request.params.entityId,
+        request.body?.payload,
+      );
+      response.json({ ok: true, object: saved });
+    } catch (error) {
+      response.status(useDatabase() ? 400 : 403).json({
+        error: "master_write_rejected",
+        message: error.message,
+      });
+    }
+  });
+
+  /** Archive a future-run draft; this never deletes generated history. */
+  app.delete("/api/master/:entityType/:entityId", async (request, response) => {
+    try {
+      const archived = await archiveMasterObject(
+        request.params.entityType,
+        request.params.entityId,
+      );
+      response.json({ ok: true, object: archived });
+    } catch (error) {
+      response.status(useDatabase() ? 400 : 403).json({
+        error: "master_archive_rejected",
+        message: error.message,
+      });
+    }
   });
 
   app.get("/api/settings", async (request, response) => {

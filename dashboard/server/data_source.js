@@ -41,6 +41,7 @@ import {
   STRATEGY_OUTPUT_DIR,
   databaseSettings,
   safeSummary,
+  simulatorDataDirectory,
   useDatabase,
 } from "./config.js";
 import { readCsv } from "./csv.js";
@@ -251,9 +252,9 @@ async function getPool() {
 }
 
 /** Run a read-only query and return its rows. */
-async function query(sql) {
+async function query(sql, values = []) {
   const client = await getPool();
-  const result = await client.query(sql);
+  const result = await client.query(sql, values);
   return result.rows;
 }
 
@@ -276,7 +277,10 @@ export function activeMode() {
 
 /** Return a human-readable description of where data is being read from. */
 export function sourceLabel() {
-  if (!useDatabase()) return "modules/*/data and outputs";
+  if (!useDatabase()) {
+    const simulatorDirectory = simulatorDataDirectory();
+    return simulatorDirectory ?? "modules/*/data and outputs";
+  }
   try {
     return safeSummary();
   } catch (error) {
@@ -594,7 +598,14 @@ export function loadAdsDaily() {
         order by a.report_date
       `);
     } else {
-      rows = readCsv(resolve(SIMULATED_DIR, "amazon_ads_report_sample.csv")).map(
+      const simulatorDirectory = simulatorDataDirectory();
+      const sourcePath = simulatorDirectory
+        ? resolve(
+            simulatorDirectory,
+            "amazon_ads_daily_touchpoint_performance.csv",
+          )
+        : resolve(SIMULATED_DIR, "amazon_ads_report_sample.csv");
+      rows = readCsv(sourcePath).map(
         (row) => {
           const record = {};
           for (const [key, value] of Object.entries(row)) {
@@ -640,7 +651,12 @@ export function loadPathReport() {
         order by id
       `);
     } else {
-      rows = readCsv(resolve(SIMULATED_DIR, "amc_mta_path_report_raw_sample.csv"));
+      const simulatorDirectory = simulatorDataDirectory();
+      rows = readCsv(
+        simulatorDirectory
+          ? resolve(simulatorDirectory, "amc_path_report.csv")
+          : resolve(SIMULATED_DIR, "amc_mta_path_report_raw_sample.csv"),
+      );
       for (const row of rows) {
         row.path_length = String(row.path).split(">").length;
       }
@@ -950,6 +966,276 @@ export function loadCandidatePool() {
   });
 }
 
+// ---------------------------------------------------------------------------
+// MTA-SIM canonical research data
+// ---------------------------------------------------------------------------
+
+function availabilityFor(value, explicit) {
+  return explicit ?? (value === null || value === undefined ? "NOT_PROVIDED" : "AVAILABLE");
+}
+
+function localTouchpointConfigurations(configuration) {
+  return (configuration.touchpoints ?? []).map((item) => {
+    const format =
+      item.format ??
+      (item.ad_product === "AMAZON_DSP" ? item.inventory_type : item.ad_type);
+    const creative = item.creative ?? item.creative_type ?? null;
+    const availability = item.field_availability ?? {};
+    const interactions = [
+      ...(item.impression_enabled === false ? [] : ["IMPRESSION"]),
+      ...(item.click_enabled === false ? [] : ["CLICK"]),
+    ];
+    const base = [
+      item.ad_product,
+      format,
+      item.placement ?? "UNSPECIFIED",
+      creative ?? "UNSPECIFIED",
+    ].join(":");
+    return {
+      identifier: item.identifier,
+      provider: item.provider ?? "AMAZON_ADS",
+      ad_product: item.ad_product,
+      format,
+      placement: item.placement ?? null,
+      placement_availability: availabilityFor(
+        item.placement,
+        availability.placement,
+      ),
+      creative,
+      creative_availability: availabilityFor(
+        creative,
+        availability.creative,
+      ),
+      interaction_type_availability:
+        availability.interaction_type ?? "AVAILABLE",
+      supported_interactions: interactions,
+      impression_enabled: interactions.includes("IMPRESSION"),
+      click_enabled: interactions.includes("CLICK"),
+      billing_type:
+        item.billing_type ?? item.cost_type ??
+        (item.cost_per_click !== null && item.cost_per_click !== undefined
+          ? "CPC"
+          : "CPM"),
+      cost_per_click: item.cost_per_click ?? null,
+      cost_per_thousand_impressions:
+        item.cost_per_thousand_impressions ?? null,
+      base_impressions: item.base_impressions ?? null,
+      click_through_rate: item.click_through_rate ?? null,
+      platform_conversion_rate: item.platform_conversion_rate ?? null,
+      conversion_log_odds_effect: item.conversion_log_odds_effect ?? null,
+      compatibility_keys: interactions.map((interaction) => `${base}:${interaction}`),
+      active: true,
+    };
+  });
+}
+
+function flattenObservation(item) {
+  const scope = item.reporting_scope ?? {};
+  const touchpoint = item.touchpoint ?? {};
+  return {
+    ...item,
+    ...scope,
+    provider: touchpoint.provider ?? item.provider ?? null,
+    touchpoint: touchpoint.ad_product
+      ? [
+          touchpoint.ad_product,
+          touchpoint.format,
+          touchpoint.placement ?? "UNSPECIFIED",
+          touchpoint.creative ?? "UNSPECIFIED",
+          touchpoint.interaction_type,
+        ].join(":")
+      : item.touchpoint_key ?? null,
+    interaction_type: touchpoint.interaction_type ?? null,
+    placement_availability:
+      touchpoint.field_availability?.placement ?? item.placement_availability ?? null,
+    creative_availability:
+      touchpoint.field_availability?.creative ?? item.creative_availability ?? null,
+    interaction_type_availability:
+      touchpoint.field_availability?.interaction_type ??
+      item.interaction_type_availability ?? null,
+    report_date: scope.report_start_date ?? item.report_date ?? null,
+  };
+}
+
+function localSimulationResearch() {
+  const directory = simulatorDataDirectory();
+  if (!directory) return {
+    runs: [], providers: [], products: [], campaigns: [], adGroups: [],
+    touchpoints: [], productEconomics: [], campaignProductLinks: [],
+    history: [], delivery: [], generationConfigs: [], touchpointObservations: [],
+    masterObjects: [],
+  };
+  const research = readJson(resolve(directory, "simulation_research.json"));
+  const configuration = readJson(resolve(directory, "effective_configuration.json"));
+  const runs = research.simulation_runs ?? [];
+  const run = runs[0] ?? {};
+  const budget = research.budget_observations ?? [];
+  const evaluations = research.evaluation_outcome_observations ?? [];
+  const outcomes = new Map(
+    evaluations.map((item) => {
+      const scope = item.reporting_scope ?? {};
+      return [
+        [item.campaign_id, scope.marketplace, scope.report_start_date, item.budget_level].join("|"),
+        flattenObservation(item),
+      ];
+    }),
+  );
+  const history = budget.map((item) => {
+    const row = flattenObservation(item);
+    const outcome = outcomes.get(
+      [item.campaign_id, row.marketplace, row.report_date, item.budget_level].join("|"),
+    ) ?? {};
+    return { ...row, ...outcome, configured_budget: item.configured_budget,
+      actual_spend: item.actual_spend, budget_level: item.budget_level };
+  });
+  return {
+    runs,
+    providers: (run.providers ?? []).map((item) => ({ ...item, active: true })),
+    products: run.products ?? [],
+    campaigns: run.campaigns ?? [],
+    adGroups: run.ad_groups ?? [],
+    touchpoints: localTouchpointConfigurations(configuration),
+    productEconomics: run.product_economics ?? [],
+    campaignProductLinks: run.campaign_product_links ?? [],
+    history,
+    delivery: (research.delivery_observations ?? []).map(flattenObservation),
+    generationConfigs: runs.map((item) => ({
+      run_id: item.run_id,
+      seed: item.seed,
+      configuration_sha256: item.configuration_sha256,
+      effective_configuration: item.effective_configuration,
+    })),
+    touchpointObservations: research.touchpoint_observations ?? [],
+    masterObjects: [],
+  };
+}
+
+async function simulationTablesAvailable() {
+  const rows = await query(
+    "select to_regclass('public.mta_simulation_run')::text as table_name",
+  );
+  return Boolean(rows[0]?.table_name);
+}
+
+async function databaseSimulationResearch() {
+  if (!(await simulationTablesAvailable())) return localSimulationResearch();
+  const [runs, providers, products, campaigns, adGroups, touchpoints,
+    productEconomics, campaignProductLinks, history, delivery] = await Promise.all([
+    query("select run_id, seed, configuration_sha256, effective_configuration from mta_simulation_run order by run_id"),
+    query("select *, true as active from mta_sim_provider order by run_id, provider"),
+    query("select * from mta_sim_product order by run_id, product_id"),
+    query("select * from mta_sim_campaign order by run_id, campaign_id"),
+    query("select * from mta_sim_ad_group order by run_id, campaign_id, ad_group_id"),
+    query(`select *, array_remove(array[
+      case when impression_enabled then concat(ad_product, ':', format, ':', coalesce(placement, 'UNSPECIFIED'), ':', coalesce(creative, 'UNSPECIFIED'), ':IMPRESSION') end,
+      case when click_enabled then concat(ad_product, ':', format, ':', coalesce(placement, 'UNSPECIFIED'), ':', coalesce(creative, 'UNSPECIFIED'), ':CLICK') end
+    ], null) as compatibility_keys from mta_sim_touchpoint order by run_id, identifier`),
+    query("select * from mta_sim_product_economics order by run_id, product_id, currency"),
+    query("select * from mta_sim_campaign_product_link order by run_id, campaign_id, product_id"),
+    query(`select b.run_id, b.campaign_id, b.marketplace, b.advertiser_id,
+      b.currency, b.report_date, b.budget_level, b.configured_budget,
+      b.actual_spend, o.product_id, o.total_units, o.total_revenue,
+      o.expected_organic_units, o.expected_organic_revenue,
+      o.incremental_units, o.incremental_revenue, o.contribution_profit
+      from mta_sim_budget_observation b
+      left join mta_sim_outcome_observation o
+        on o.run_id = b.run_id and o.campaign_id = b.campaign_id
+       and o.marketplace = b.marketplace and o.report_date = b.report_date
+       and o.budget_level = b.budget_level and o.evaluation_only = true
+      order by b.run_id, b.report_date, b.campaign_id, b.budget_level`),
+    query("select * from mta_sim_delivery_observation order by run_id, report_date, campaign_id, id"),
+  ]);
+  toDateString(history, ["report_date"]);
+  toDateString(delivery, ["report_date"]);
+  for (const row of delivery) row.touchpoint = row.touchpoint_key;
+  splitTouchpoint(delivery);
+  toNumeric(history, ["budget_level", "configured_budget", "actual_spend",
+    "total_units", "total_revenue", "expected_organic_units",
+    "expected_organic_revenue", "incremental_units", "incremental_revenue",
+    "contribution_profit"]);
+  toNumeric(delivery, ["impressions", "clicks", "cost", "reported_purchases", "reported_sales"]);
+  const masterTable = await query(
+    "select to_regclass('public.dashboard_master_object')::text as table_name",
+  );
+  const masterObjects = masterTable[0]?.table_name
+    ? await query("select * from dashboard_master_object order by entity_type, entity_id")
+    : [];
+  return {
+    runs, providers, products, campaigns, adGroups, touchpoints,
+    productEconomics, campaignProductLinks, history, delivery,
+    generationConfigs: runs,
+    touchpointObservations: [],
+    masterObjects,
+  };
+}
+
+const MASTER_ENTITY_TYPES = new Set([
+  "provider", "product", "campaign", "ad_group", "touchpoint",
+  "product_economics", "generation_config",
+]);
+
+async function ensureMasterObjectTable() {
+  await query(`create table if not exists dashboard_master_object (
+    entity_type text not null,
+    entity_id text not null,
+    payload jsonb not null,
+    active boolean not null default true,
+    updated_at timestamptz not null default now(),
+    primary key (entity_type, entity_id),
+    check (entity_type in ('provider', 'product', 'campaign', 'ad_group',
+      'touchpoint', 'product_economics', 'generation_config'))
+  )`);
+}
+
+function validateMasterObject(entityType, entityId, payload) {
+  if (!MASTER_ENTITY_TYPES.has(entityType)) {
+    throw new Error(`unsupported master entity type: ${entityType}`);
+  }
+  if (!String(entityId ?? "").trim()) throw new Error("entity_id is required");
+  if (!payload || Array.isArray(payload) || typeof payload !== "object") {
+    throw new Error("payload must be a JSON object");
+  }
+}
+
+/** Save an editable future-run master object without mutating generated history. */
+export async function saveMasterObject(entityType, entityId, payload) {
+  if (!useDatabase()) throw new Error("Master editing requires DATABASE=true");
+  validateMasterObject(entityType, entityId, payload);
+  await ensureMasterObjectTable();
+  const rows = await query(
+    `insert into dashboard_master_object
+       (entity_type, entity_id, payload, active, updated_at)
+     values ($1, $2, $3::jsonb, true, now())
+     on conflict (entity_type, entity_id) do update
+       set payload = excluded.payload, active = true, updated_at = now()
+     returning *`,
+    [entityType, entityId, JSON.stringify(payload)],
+  );
+  clearCaches();
+  return rows[0];
+}
+
+/** Archive a future-run master object; generated observations remain immutable. */
+export async function archiveMasterObject(entityType, entityId) {
+  if (!useDatabase()) throw new Error("Master editing requires DATABASE=true");
+  validateMasterObject(entityType, entityId, {});
+  await ensureMasterObjectTable();
+  const rows = await query(
+    `update dashboard_master_object set active = false, updated_at = now()
+      where entity_type = $1 and entity_id = $2 returning *`,
+    [entityType, entityId],
+  );
+  clearCaches();
+  return rows[0] ?? null;
+}
+
+/** Load immutable MTA-SIM history and editable master/configuration entities. */
+export function loadSimulationResearch() {
+  return cached("simulation_research", async () =>
+    useDatabase() ? databaseSimulationResearch() : localSimulationResearch(),
+  );
+}
+
 /**
  * Every loader's result in one object: the payload `GET /api/dashboard`
  * returns and the static build writes to a file.
@@ -971,6 +1257,7 @@ export async function loadSnapshot() {
     budgetRecommendation,
     strategyRequest,
     candidatePool,
+    simulationResearch,
   ] = await Promise.all([
     loadAdsDaily(),
     loadAttributionResults(),
@@ -982,6 +1269,7 @@ export async function loadSnapshot() {
     loadBudgetRecommendation(),
     loadStrategyRequest(),
     loadCandidatePool(),
+    loadSimulationResearch(),
   ]);
 
   return {
@@ -997,5 +1285,6 @@ export async function loadSnapshot() {
     budgetRecommendation,
     strategyRequest,
     candidatePool,
+    simulationResearch,
   };
 }

@@ -1,7 +1,7 @@
 ---
 title: Product
 description: Business product identity, independent of any advertising platform or provider-specific advertising identifier
-compact: "Product's canonical business identity (product_id) separated from provider-specific advertising identifiers (provider_ad_identifiers, immutable, Provider-keyed, e.g. Amazon ASIN). No Amazon-specific ID required. No legacy source or adapter exists yet; tested in test_product_and_economics.py."
+compact: "Product's canonical business identity, optional sku_id, inventory/salable state, and immutable Provider-keyed advertising identifiers. MTA-SIM research snapshots populate this class through the market-simulation adapter; no Amazon-specific identifier is required."
 order: 10
 lang: en-US
 ---
@@ -10,7 +10,7 @@ lang: en-US
 
 ## Purpose <span class="status-label status-verified" aria-label="Verified"></span>
 
-`Product` represents a business product's identity independently of any advertising platform. It exists because no such concept exists anywhere in the currently implemented pipeline: the dashboard schema has no product-identity field at all, and `modules/mta_strategy_recommendation` explicitly forbids `sku_id`/`sku_ids` as output fields. `Product` separates a stable business identity (`product_id`) from zero or more provider-specific advertising identities (`provider_ad_identifiers`), since no current data ties the two together and a future advertising provider may use a different identifier scheme than the one Amazon Ads uses today.
+`Product` represents a business product independently of any advertising platform. It separates a stable business identity (`product_id`) from an optional Stock Keeping Unit (SKU) identifier (`sku_id`), provider-specific advertising identities, and optional inventory availability. MTA-SIM research snapshots are the first implemented source; their adapter constructs this canonical class without creating an optimizer-local product container.
 
 ## Ownership and Layer <span class="status-label status-verified" aria-label="Verified"></span>
 
@@ -60,7 +60,17 @@ An empty mapping means "this business product is known but has no advertising id
 
 #### Validation
 
-`__post_init__` rewraps whatever mapping the caller passed into `MappingProxyType(dict(...))` via `object.__setattr__` (required because the dataclass is frozen). This produces two effects, both directly tested: mutating the caller's original `dict` after construction does not change the stored value, because a defensive copy is made; and attempting item assignment on `product.provider_ad_identifiers` itself raises `TypeError`, because a `MappingProxyType` is read-only.
+Every supplied identifier value must be non-blank. `__post_init__` rewraps whatever mapping the caller passed into `MappingProxyType(dict(...))` via `object.__setattr__` (required because the dataclass is frozen). This produces two effects, both directly tested: mutating the caller's original `dict` after construction does not change the stored value, because a defensive copy is made; and attempting item assignment on `product.provider_ad_identifiers` itself raises `TypeError`, because a `MappingProxyType` is read-only.
+
+### sku_id
+
+#### Type
+
+`str | None`
+
+#### Meaning
+
+An optional Stock Keeping Unit identifier used by the business. It is not the canonical identity and need not equal any provider advertising identifier.
 
 ### name
 
@@ -150,11 +160,37 @@ Optional lifecycle status, for example `ACTIVE` or `DISCONTINUED`. No enum backs
 
 None.
 
+### inventory_units
+
+#### Type
+
+`int | None`
+
+#### Meaning
+
+Optional current inventory quantity. `None` means not supplied; zero means supplied and out of stock.
+
+#### Validation
+
+When present, it must not be negative.
+
+### salable
+
+#### Type
+
+`bool | None`
+
+#### Meaning
+
+Optional explicit eligibility to sell the product. `None` means the source did not make that assertion and is distinct from `False`.
+
 ## Invariants <span class="status-label status-verified" aria-label="Verified"></span>
 
 - `product_id` is always non-blank.
 - `provider_ad_identifiers` is always an immutable mapping, regardless of the mutability of whatever the caller passed at construction time.
+- A present provider advertising identifier is never blank.
 - `Product` imposes no advertising-platform identity requirement at all: `provider_ad_identifiers` may be empty, and no field on `Product` is Amazon-specific.
+- `inventory_units`, when supplied, is non-negative; `salable` preserves three states: true, false, and not supplied.
 
 ## Relationships <span class="status-label status-verified" aria-label="Verified"></span>
 
@@ -178,11 +214,11 @@ None.
 
 ### Current Source Fields
 
-None. `modules/mta_common/src/legacy_adapters.py` contains zero references to `Product` — no adapter function exists. No current pipeline component defines product identity at all: the dashboard schema has no price, cost-of-goods, margin, or inventory field naming a product; and `modules/mta_strategy_recommendation`'s `hierarchy_validator.FORBIDDEN_OUTPUT_FIELDS` explicitly forbids `sku_id`/`sku_ids` as output fields. The only identified-[Stock Keeping Unit (SKU)](/en/reference/definitions#sku-stock-keeping-unit)-adjacent field anywhere in the current pipeline is an anonymous integer count, `eligible_sku_count`, which counts eligible SKUs without identifying any of them.
+MTA-SIM research snapshots provide `product_id`, optional `sku_id`, provider advertising identifiers, display attributes, inventory units, and salable state. The market-simulation adapter maps those fields directly. The older strategy-request compatibility adapter still does not invent a product from anonymous `eligible_sku_count` values.
 
 ### Canonical Conversion
 
-Not implemented. A future product-data integration would construct `Product` instances directly from its own source; no adapter function derives one from any data this pipeline currently reads.
+Implemented for MTA-SIM research snapshots by `load_mta_sim_research_snapshot`. Legacy strategy-request input has no identified product source and therefore has no conversion.
 
 ### Information Loss
 
@@ -214,9 +250,9 @@ A future product-data integration would populate `Product` records, which a futu
 
 ## Current Availability <span class="status-label status-verified" aria-label="Verified"></span>
 
-Implemented in `modules/mta_common/src/product.py`. Validated by `modules/mta_common/tests/test_product_and_economics.py::ProductIdentityTests`: a product's identity is independent of its advertising identifiers, a product with no advertising identity is valid, `provider_ad_identifiers` is immutable against both external mutation and direct item assignment, and a blank `product_id` is rejected. No current pipeline component constructs a `Product` instance outside this test suite.
+Implemented in `modules/mta_common/src/product.py`. Validated by `modules/mta_common/tests/test_product_and_economics.py::ProductIdentityTests`, including identity independence, immutable provider identifiers, inventory validation, and preserved salable missingness. MTA-SIM snapshot conversion is verified by the market-simulation adapter tests.
 
 ## Known Limitations <span class="status-label status-verified" aria-label="Verified"></span>
 
-- No current data source supplies `Product` identity; every instance today is hand-constructed in tests.
-- `provider_ad_identifiers`'s `Provider`-keyed shape has only been exercised in tests with `Provider.AMAZON_ADS`; nothing here demonstrates a second provider populating it (that demonstration lives instead in [Provider Capabilities](/en/introduction/data-models/touchpoint-and-provider-contract/provider-capabilities.md)).
+- CSV-only MTA-SIM imports cannot reconstruct product identity because the unchanged legacy CSV schemas do not contain product master data; the research sidecar or database tables are required.
+- Inventory is a snapshot value and carries no warehouse, reservation, or replenishment model.

@@ -1,7 +1,7 @@
 """SimilarityReference: a presentation-only "similar items" pointer.
 
-Exists so a future similarity process (not implemented here) has somewhere
-to put its output for the dashboard to render, without that output being
+Defines the field contract used by the dashboard's transparent historical
+selector heuristic, without allowing that output to be
 mistaken for canonical model input. Nothing in ``modules/mta_common/src/``
 (outside this ``presentation`` subpackage) imports this module, and no
 canonical, model-facing dataclass has a field typed to accept it — a
@@ -15,8 +15,8 @@ Referenced entities are plain string ids (``subject_id``/``comparable_id``),
 not ``Campaign``/``Product`` object references, so this module does not need
 to import the core package at all and cannot participate in a cycle with it.
 
-Data flow: canonical product/campaign info (read elsewhere) feeds a future,
-separate similarity process; that process's output is a
+Data flow: canonical product/campaign info feeds the separate dashboard
+selector heuristic; that process's output is a
 ``SimilarityReference``, consumed only by the dashboard. It does not feed
 back into attribution, response modeling, or optimization.
 """

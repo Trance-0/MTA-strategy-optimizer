@@ -22,6 +22,8 @@ import math
 from collections import Counter, defaultdict
 from typing import Any, Iterable, Mapping
 
+from modules.mta_common.src.legacy_adapters import touchpoint_from_five_segment_key
+
 
 SUPPORTED_SAMPLE_VERSION = "4.0"
 SUPPORTED_AD_PRODUCTS = (
@@ -112,11 +114,14 @@ def _ceil_ratio(count: int, capacity: int) -> int:
 
 
 def _touchpoint_product(value: object, context: str) -> str:
-    touchpoint = _required_text(value, context)
-    segments = touchpoint.split(":")
-    if len(segments) != 5 or any(not segment for segment in segments):
-        raise BudgetRecommendationError(f"{context} must be a non-empty five-segment key")
-    product = segments[0]
+    touchpoint_key = _required_text(value, context)
+    try:
+        touchpoint = touchpoint_from_five_segment_key(touchpoint_key)
+    except ValueError as exc:
+        raise BudgetRecommendationError(
+            f"{context} must be a non-empty five-segment key: {exc}"
+        ) from exc
+    product = touchpoint.ad_product
     if product not in SUPPORTED_AD_PRODUCTS:
         raise BudgetRecommendationError(f"{context} uses unsupported ad product {product}")
     return product

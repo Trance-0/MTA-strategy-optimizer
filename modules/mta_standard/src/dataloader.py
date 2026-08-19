@@ -1,13 +1,14 @@
 """Load MTA-SIM tables into a model-facing dataset.
 
 Entry point of the standardized layer. Reads MTA-SIM's tables from any
-filesystem path, adapts their four-segment keys onto the repository's
-five-segment contract, and returns a dataset the models can consume.
+filesystem path, validates native five-segment keys, adapts historical
+four-segment fixtures only when given an explicit compatibility mapping, and
+returns a dataset the models can consume.
 
 Data flow:
-    amc_path_report (four-segment paths)
+    amc_path_report (native five-segment or historical four-segment paths)
       -> header and scope validation
-      -> `SimulatorConfig.adapt_path`      : five-segment paths
+      -> optional `SimulatorConfig.adapt_path` for legacy input
       -> `validate_amc_aggregated_row`     : existing path invariants
       -> `MtaSimDataset.path_rows`         : model-facing rows
     amazon_ads_daily_touchpoint_performance
@@ -33,6 +34,12 @@ from .touchpoint_adapter import (
     to_four_segment,
 )
 
+from modules.mta_common.src.enums import Provider
+from modules.mta_common.src.legacy_adapters import (
+    touchpoint_from_five_segment_key,
+)
+from modules.mta_common.src.touchpoint import Touchpoint
+
 from modules.mta_attribution.src.attribution_contract import (
     NULL,
     PATH_FIELD_DESCRIPTIONS,
@@ -40,6 +47,9 @@ from modules.mta_attribution.src.attribution_contract import (
     safe_float,
     safe_int,
     validate_amc_aggregated_row,
+)
+from modules.mta_attribution.src.touchpoint_key import (
+    canonicalize_touchpoint_key,
 )
 from modules.mta_attribution.src.attribution_model_comparison import read_amc_csv_strict
 
@@ -118,26 +128,28 @@ class MtaSimDataset:
             for the existing Markov and Shapley implementations.
         ads_rows: Daily performance rows kept for diagnostics and reporting.
             Empty when no performance table was supplied.
-        touchpoints: Sorted four-segment keys observed in the path report.
+        touchpoints: Sorted native five-segment keys observed in the path report.
+        canonical_touchpoints: The same keys parsed once into ``mta_common``.
         outcome_totals: Observed totals per outcome, used for conservation
             checks in the standard output contract.
-        config: The simulator configuration used to adapt keys.
+        config: Optional compatibility mapping used only for old four-segment input.
     """
 
     scope: ReportScope
     path_rows: tuple[Mapping[str, object], ...]
     ads_rows: tuple[Mapping[str, object], ...]
     touchpoints: tuple[str, ...]
+    canonical_touchpoints: tuple[Touchpoint, ...]
     outcome_totals: Mapping[str, float]
-    config: SimulatorConfig
+    config: SimulatorConfig | None
 
     def five_segment_touchpoints(self) -> tuple[str, ...]:
         """Return the sorted five-segment keys used by the wrapped models.
 
         Returns:
-            tuple[str, ...]: One five-segment key per four-segment touchpoint.
+            tuple[str, ...]: The native five-segment touchpoints.
         """
-        return tuple(sorted(self.config.to_five_segment(key) for key in self.touchpoints))
+        return tuple(sorted(self.touchpoints))
 
 
 def _reject_ground_truth_fields(fieldnames: Sequence[str], source: Path) -> None:
@@ -199,7 +211,7 @@ def parse_iso_date(value: str, context: str) -> date:
 
 
 def load_amc_path_report(
-    path_report: str | Path, *, config: SimulatorConfig
+    path_report: str | Path, *, config: SimulatorConfig | None = None
 ) -> tuple[ReportScope, tuple[Mapping[str, object], ...], tuple[str, ...]]:
     """Load ``amc_path_report`` from any location and adapt it to five segments.
 
@@ -209,9 +221,8 @@ def load_amc_path_report(
         config: Simulator configuration supplying each touchpoint's cost type.
 
     Returns:
-        tuple: ``(scope, path_rows, four_segment_touchpoints)`` where
-        ``path_rows`` carry five-segment paths and the touchpoints are sorted
-        canonical four-segment keys.
+        tuple: ``(scope, path_rows, five_segment_touchpoints)`` where
+        ``path_rows`` carry five-segment paths and the touchpoints are sorted.
 
     Raises:
         FileNotFoundError: if the CSV does not exist.
@@ -236,7 +247,9 @@ def load_amc_path_report(
 
     scopes: set[tuple[str, str, str, str]] = set()
     adapted_rows: list[dict] = []
-    four_segment_keys: set[str] = set()
+    five_segment_keys: set[str] = set()
+    legacy_four_segment_keys: set[str] = set()
+    observed_grains: set[int] = set()
     for row_number, row in enumerate(raw_rows, start=2):
         context = f"{source}: amc_path_report row {row_number}"
         start_text = required_text(row, "report_start_date", context)
@@ -253,11 +266,44 @@ def load_amc_path_report(
         for part in raw_path.split(">"):
             token = part.strip()
             if token and token != NULL:
-                four_segment_keys.add(canonicalize_four_segment_key(token))
+                segment_count = len(token.split(":"))
+                observed_grains.add(segment_count)
+                if segment_count == 5:
+                    five_segment_keys.add(canonicalize_touchpoint_key(token))
+                elif segment_count == 4:
+                    if config is None:
+                        raise ValueError(
+                            f"{context}: historical four-segment input requires "
+                            "an explicit SimulatorConfig"
+                        )
+                    legacy_four_segment_keys.add(
+                        canonicalize_four_segment_key(token)
+                    )
+                else:
+                    raise ValueError(
+                        f"{context}: touchpoint must contain four or five segments"
+                    )
+        if len(observed_grains) > 1:
+            raise ValueError(
+                f"{context}: native and legacy touchpoint grains cannot be mixed"
+            )
         try:
-            adapted_path = config.adapt_path(raw_path)
+            adapted_path = (
+                config.adapt_path(raw_path)
+                if observed_grains == {4}
+                else " > ".join(
+                    NULL
+                    if part.strip() == NULL
+                    else canonicalize_touchpoint_key(part.strip())
+                    for part in raw_path.split(">")
+                )
+            )
         except ValueError as exc:
             raise ValueError(f"{context}: {exc}") from exc
+        if observed_grains == {4}:
+            five_segment_keys.update(
+                config.to_five_segment(key) for key in legacy_four_segment_keys
+            )
 
         adapted = {**dict(row), "path": adapted_path}
         validate_amc_aggregated_row(adapted, row_number)
@@ -268,7 +314,9 @@ def load_amc_path_report(
             f"{source}: amc_path_report must contain exactly one report window, "
             f"marketplace, and advertiser_id; found {len(scopes)}"
         )
-    config.assert_reversible(four_segment_keys)
+    if legacy_four_segment_keys:
+        assert config is not None
+        config.assert_reversible(legacy_four_segment_keys)
     start_text, end_text, marketplace, advertiser_id = next(iter(scopes))
     scope = ReportScope(
         report_start_date=start_text,
@@ -276,14 +324,15 @@ def load_amc_path_report(
         marketplace=marketplace,
         advertiser_id=advertiser_id,
     )
-    return scope, tuple(adapted_rows), tuple(sorted(four_segment_keys))
+    return scope, tuple(adapted_rows), tuple(sorted(five_segment_keys))
 
 
 def load_amazon_ads_daily_touchpoint_performance(
     ads_performance: str | Path,
     *,
-    config: SimulatorConfig,
+    config: SimulatorConfig | None = None,
     scope: ReportScope | None = None,
+    provider: Provider = Provider.AMAZON_ADS,
 ) -> tuple[Mapping[str, object], ...]:
     """Load ``amazon_ads_daily_touchpoint_performance`` from any location.
 
@@ -298,7 +347,7 @@ def load_amazon_ads_daily_touchpoint_performance(
             path report's scope.
 
     Returns:
-        tuple: Rows annotated with ``touchpoint`` (four-segment),
+        tuple: Rows annotated with ``touchpoint`` (five-segment),
         ``five_segment_touchpoint``, ``cost_type``, and ``interaction_type``.
         ``unitsSold`` is preserved verbatim as an optional diagnostic.
 
@@ -333,24 +382,49 @@ def load_amazon_ads_daily_touchpoint_performance(
         context = (
             f"{source}: amazon_ads_daily_touchpoint_performance row {row_number}"
         )
-        derived = four_segment_key_from_ads_row(row, row_number=row_number)
-        stored = canonicalize_four_segment_key(
-            required_text(row, "normalizedTouchpoint", context)
-        )
-        if stored != derived:
+        derived_four = four_segment_key_from_ads_row(row, row_number=row_number)
+        stored_value = required_text(row, "normalizedTouchpoint", context)
+        segment_count = len(stored_value.split(":"))
+        if segment_count == 5:
+            stored = canonicalize_touchpoint_key(stored_value)
+            interaction_type = stored.rsplit(":", 1)[-1]
+            five_segment_touchpoint = stored
+            cost_type = (
+                None if config is None else config.cost_type_for(derived_four)
+            )
+        elif segment_count == 4:
+            if config is None:
+                raise ValueError(
+                    f"{context}: historical four-segment input requires an "
+                    "explicit SimulatorConfig"
+                )
+            stored = canonicalize_four_segment_key(stored_value)
+            interaction_type = config.interaction_type_for(stored)
+            five_segment_touchpoint = config.to_five_segment(stored)
+            cost_type = config.cost_type_for(stored)
+        else:
             raise ValueError(
-                f"{context}: normalizedTouchpoint mismatch; expected {derived}, "
+                f"{context}: normalizedTouchpoint must contain four or five segments"
+            )
+        stored_four = (
+            stored.rsplit(":", 1)[0] if segment_count == 5 else stored
+        )
+        if stored_four != derived_four:
+            raise ValueError(
+                f"{context}: normalizedTouchpoint mismatch; expected {derived_four}, "
                 f"actual {stored}"
             )
         parse_iso_date(required_text(row, "reportDate", context), context)
-        cost_type = config.cost_type_for(derived)
         annotated.append(
             {
                 **dict(row),
-                "touchpoint": derived,
-                "five_segment_touchpoint": config.to_five_segment(derived),
+                "touchpoint": five_segment_touchpoint,
+                "five_segment_touchpoint": five_segment_touchpoint,
                 "cost_type": cost_type,
-                "interaction_type": config.interaction_type_for(derived),
+                "interaction_type": interaction_type,
+                "canonical_touchpoint": touchpoint_from_five_segment_key(
+                    five_segment_touchpoint, provider=provider
+                ),
             }
         )
 
@@ -370,7 +444,8 @@ def load_mta_sim_dataset(
     path_report: str | Path,
     ads_performance: str | Path | None = None,
     *,
-    config: SimulatorConfig,
+    config: SimulatorConfig | None = None,
+    provider: Provider = Provider.AMAZON_ADS,
 ) -> MtaSimDataset:
     """Load a complete model-facing MTA-SIM dataset from external paths.
 
@@ -398,7 +473,7 @@ def load_mta_sim_dataset(
     ads_rows: tuple[Mapping[str, object], ...] = ()
     if ads_performance is not None:
         ads_rows = load_amazon_ads_daily_touchpoint_performance(
-            ads_performance, config=config, scope=scope
+            ads_performance, config=config, scope=scope, provider=provider
         )
 
     # Revenue is monetary and the two count outcomes are integral, so each is
@@ -419,21 +494,25 @@ def load_mta_sim_dataset(
         path_rows=path_rows,
         ads_rows=ads_rows,
         touchpoints=touchpoints,
+        canonical_touchpoints=tuple(
+            touchpoint_from_five_segment_key(key, provider=provider)
+            for key in touchpoints
+        ),
         outcome_totals=MappingProxyType(totals),
         config=config,
     )
 
 
-def four_segment_touchpoints_from_path_rows(
+def five_segment_touchpoints_from_path_rows(
     path_rows: Sequence[Mapping[str, object]],
 ) -> tuple[str, ...]:
-    """Collect sorted four-segment keys from five-segment path rows.
+    """Collect sorted canonical five-segment keys from model-facing paths.
 
     Args:
         path_rows: Rows whose ``path`` uses five-segment keys.
 
     Returns:
-        tuple[str, ...]: Sorted canonical four-segment keys, excluding ``Null``.
+        tuple[str, ...]: Sorted canonical five-segment keys, excluding ``Null``.
 
     Raises:
         ValueError: if a path contains a non-canonical five-segment key.
@@ -443,5 +522,15 @@ def four_segment_touchpoints_from_path_rows(
         for part in str(row.get("path", "")).split(">"):
             token = part.strip()
             if token and token != NULL:
-                keys.add(to_four_segment(token))
+                keys.add(canonicalize_touchpoint_key(token))
     return tuple(sorted(keys))
+
+
+def four_segment_touchpoints_from_path_rows(
+    path_rows: Sequence[Mapping[str, object]],
+) -> tuple[str, ...]:
+    """Return lossy four-segment projections for historical callers only."""
+
+    return tuple(
+        sorted(to_four_segment(key) for key in five_segment_touchpoints_from_path_rows(path_rows))
+    )

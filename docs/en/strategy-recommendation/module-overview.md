@@ -1,7 +1,7 @@
 ---
 title: MTA-Driven Ad Group Budget Initializer
 description: Deterministic Campaign and Ad Group budget seed derived from governed MTA evidence and capacity constraints
-compact: "Implemented strategy contract: evidence pinning, MTA-to-Campaign bridge, weighted Campaign scores, capacity-derived Ad Group counts, equal budget split, validation invariants, and source-file API reference."
+compact: "Implemented strategy contract: canonical touchpoint parsing, evidence pinning, MTA-to-Campaign bridge, weighted Campaign scores, capacity-derived Ad Group counts, equal budget split, validation invariants, and source-file API reference."
 lang: en-US
 source_files: modules/mta_strategy_recommendation/src/hierarchy_validator.py, modules/mta_strategy_recommendation/src/budget_recommender.py, script/generate_initial_budget.py, script/validate_simulated_hierarchy.py
 provenance:
@@ -166,7 +166,7 @@ The midpoint is a current implementation policy, not evidence that the center is
 
 ### 3. Bridge Touchpoints to Historical Entities and Campaigns
 
-Each MTA row is keyed by `AD_PRODUCT:FORMAT:PLACEMENT:CREATIVE:INTERACTION_TYPE`. `_touchpoint_product()` validates all five segments and reads the first segment to find the one Campaign for that ad product. `_bridge_campaign_scores()` then finds historical entity rows matching both touchpoint and Campaign.
+Each Multi-Touch Attribution (MTA) row is keyed by `AD_PRODUCT:FORMAT:PLACEMENT:CREATIVE:INTERACTION_TYPE`. `_touchpoint_product()` delegates five-segment validation and parsing to the canonical `mta_common` touchpoint adapter, then reads `ad_product` to find the one Campaign for that ad product. `_bridge_campaign_scores()` then finds historical entity rows matching both touchpoint and Campaign.
 
 For each touchpoint and Outcome, the bridge chooses an entity weighting field with `_entity_weight_method()`:
 
@@ -489,7 +489,7 @@ Returns zero for zero demand; otherwise calculates integer ceiling division for 
 
 ##### `_touchpoint_product()`
 
-Parses the first segment of the five-part touchpoint and requires one of the four supported Ad Products.
+Uses `mta_common.legacy_adapters.touchpoint_from_five_segment_key()` as the single five-part parser, reads the canonical touchpoint's `ad_product`, and requires one of the four supported Ad Products. Adapter validation failures become `BudgetRecommendationError` with the source-row context preserved.
 
 ##### `_recommended_point()`
 
@@ -603,7 +603,7 @@ Uses `math.fsum()` and explicit tolerances to check Campaign and Ad Group share 
 
 ##### `load_aligned_strategy_inputs()`
 
-Reads request and pool JSON plus attribution and entity CSVs; verifies hashes, row counts, sample version, report/advertiser/marketplace/Group scope, Campaign/product coverage, MTA Outcome completeness, and bridge compatibility.
+Reads request and pool JSON plus attribution and entity CSVs; verifies hashes, row counts, sample version, report/advertiser/marketplace/Group scope, Campaign/product coverage, MTA Outcome completeness, and bridge compatibility. Entity validation reuses `_touchpoint_product()` rather than maintaining a second touchpoint parser.
 
 ##### `validate_simulated_hierarchy()`
 
@@ -616,7 +616,7 @@ recommendation path and returns a summary containing Campaign and recommended
 Ad Group counts, evidence counts, normalization universe, budget-baseline state,
 recommendation type, and warnings.
 
-**Dependencies.** `budget_recommender.py` and Python standard library.
+**Dependencies.** `budget_recommender.py`, the canonical `mta_common` legacy adapter, and the Python standard library.
 
 **Verification.** `modules/mta_strategy_recommendation/tests/test_hierarchy_validator.py`.
 
@@ -696,4 +696,3 @@ Prints `INVALID: <reason>` to standard error and exits `1`.
 
 `main()` resolves current repository paths, delegates the complete contract to
 `validate_simulated_hierarchy()`, and writes no artifacts.
-

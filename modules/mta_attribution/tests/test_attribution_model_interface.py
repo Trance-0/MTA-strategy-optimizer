@@ -30,23 +30,23 @@ from modules.mta_standard.src.output_contract import (
     SUPPORTED_OUTCOMES,
     validate_standard_output,
 )
-from modules.mta_standard.src.touchpoint_adapter import SimulatorConfig, to_four_segment
+from modules.mta_standard.src.touchpoint_adapter import SimulatorConfig
 from modules.mta_standard.tests import mta_sim_fixtures as fixtures
 
 
 # Pinned expected shares. These are the values the existing five-segment
-# estimators produce for the fixture, recorded at the four-segment grain so a
+# estimators produce for the fixture, recorded at the native grain so a
 # change to Markov or Shapley mathematics fails here rather than silently
 # altering published attribution.
 EXPECTED_MARKOV_CONVERTED_USER_SHARES = {
-    fixtures.DISPLAY: 0.36666666666666664,
-    fixtures.BRAND: 0.1666666666666667,
-    fixtures.SEARCH: 0.46666666666666673,
+    f"{fixtures.DISPLAY}:IMPRESSION": 0.36666666666666664,
+    f"{fixtures.BRAND}:CLICK": 0.1666666666666667,
+    f"{fixtures.SEARCH}:CLICK": 0.46666666666666673,
 }
 EXPECTED_SHAPLEY_CONVERTED_USERS = {
-    fixtures.DISPLAY: 27.5,
-    fixtures.BRAND: 12.5,
-    fixtures.SEARCH: 45.0,
+    f"{fixtures.DISPLAY}:IMPRESSION": 27.5,
+    f"{fixtures.BRAND}:CLICK": 12.5,
+    f"{fixtures.SEARCH}:CLICK": 45.0,
 }
 
 
@@ -73,7 +73,7 @@ class InterfaceTest(ModelTestCase):
                     model_class.capabilities.supported_outcomes, SUPPORTED_OUTCOMES
                 )
                 self.assertEqual(
-                    model_class.capabilities.grain, "four_segment_touchpoint"
+                    model_class.capabilities.grain, "five_segment_touchpoint"
                 )
 
     def test_build_model_returns_an_unfitted_instance(self) -> None:
@@ -90,13 +90,13 @@ class InterfaceTest(ModelTestCase):
         self.assertIs(model.fit(self.dataset), model)
         self.assertEqual(model.fitted_scope["marketplace"], fixtures.MARKETPLACE)
 
-    def test_every_model_emits_four_segment_touchpoints(self) -> None:
+    def test_every_model_emits_five_segment_touchpoints(self) -> None:
         for model_id in MODEL_REGISTRY:
             with self.subTest(model_id=model_id):
                 rows = build_model(model_id).fit(self.dataset).attribute(self.dataset)
                 self.assertTrue(rows)
                 for row in rows:
-                    self.assertEqual(len(row.touchpoint.split(":")), 4)
+                    self.assertEqual(len(row.touchpoint.split(":")), 5)
                     self.assertIn(row.outcome, SUPPORTED_OUTCOMES)
 
 
@@ -110,11 +110,10 @@ class WrappedAlgorithmRegressionTest(ModelTestCase):
     def test_markov_matches_a_direct_call_exactly(self) -> None:
         standard = self._standard_shares(MarkovRemovalEffectModel())
         for result in run_markov_attribution(list(self.dataset.path_rows)):
-            four = to_four_segment(result.touchpoint)
             for outcome in SUPPORTED_OUTCOMES:
                 share_field, value_field = OUTCOME_FIELDS[outcome]
-                row = standard[(four, outcome)]
-                with self.subTest(touchpoint=four, outcome=outcome):
+                row = standard[(result.touchpoint, outcome)]
+                with self.subTest(touchpoint=result.touchpoint, outcome=outcome):
                     self.assertEqual(
                         row.attribution_share, getattr(result, share_field)
                     )
@@ -125,11 +124,10 @@ class WrappedAlgorithmRegressionTest(ModelTestCase):
     def test_shapley_matches_a_direct_call_exactly(self) -> None:
         standard = self._standard_shares(PathLevelShapleyModel())
         for result in run_shapley_attribution(list(self.dataset.path_rows)):
-            four = to_four_segment(result.touchpoint)
             for outcome in SUPPORTED_OUTCOMES:
                 share_field, value_field = OUTCOME_FIELDS[outcome]
-                row = standard[(four, outcome)]
-                with self.subTest(touchpoint=four, outcome=outcome):
+                row = standard[(result.touchpoint, outcome)]
+                with self.subTest(touchpoint=result.touchpoint, outcome=outcome):
                     self.assertEqual(
                         row.attribution_share, getattr(result, share_field)
                     )

@@ -1,7 +1,7 @@
 """Deep neural credit model, and the only model that generalizes.
 
 Markov and Shapley score a touchpoint by its identity, so neither can say
-anything about a touchpoint with no path history. This model scores the four
+anything about a touchpoint with no path history. This model scores the five
 contract segments instead, which is what makes prediction for an unlaunched
 campaign possible at all.
 
@@ -42,10 +42,7 @@ from modules.mta_standard.src.output_contract import (
     ZERO_OUTCOME_WARNING,
     StandardAttributionRow,
 )
-from modules.mta_standard.src.touchpoint_adapter import (
-    canonicalize_four_segment_key,
-    to_four_segment,
-)
+from modules.mta_attribution.src.touchpoint_key import canonicalize_touchpoint_key
 
 from .attribution_contract import NULL, safe_float
 from .attribution_model_interface import ModelCapabilities, MtaAttributionModel
@@ -53,7 +50,13 @@ from .attribution_model_comparison import OUTCOME_FIELDS
 from .shapley_attribution_model import run_shapley_attribution
 
 
-SEGMENT_NAMES: tuple[str, ...] = ("ad_product", "format", "placement", "creative")
+SEGMENT_NAMES: tuple[str, ...] = (
+    "ad_product",
+    "format",
+    "placement",
+    "creative",
+    "interaction_type",
+)
 NUMERIC_FEATURE_NAMES: tuple[str, ...] = (
     "appearance_ratio",
     "mean_relative_position",
@@ -70,11 +73,11 @@ DEFAULT_SEED = 20260803
 
 @dataclass(frozen=True)
 class TouchpointFeatures:
-    """Model-facing features for one four-segment touchpoint.
+    """Model-facing features for one five-segment touchpoint.
 
     Attributes:
-        touchpoint: Canonical four-segment key.
-        segments: The four segment values, in contract order.
+        touchpoint: Canonical five-segment key.
+        segments: The five segment values, in contract order.
         numeric: Path-derived numeric features, in
             :data:`NUMERIC_FEATURE_NAMES` order.
     """
@@ -96,7 +99,7 @@ def build_touchpoint_features(
         dataset: The model-facing dataset.
 
     Returns:
-        dict[str, TouchpointFeatures]: Features keyed by four-segment touchpoint.
+        dict[str, TouchpointFeatures]: Features keyed by five-segment touchpoint.
 
     Invariants:
         A single-touchpoint path reports a relative position of 0.5 so that a
@@ -112,7 +115,7 @@ def build_touchpoint_features(
     max_length = 1
     for row in dataset.path_rows:
         touchpoints = [
-            to_four_segment(part.strip())
+            canonicalize_touchpoint_key(part.strip())
             for part in str(row.get("path", "")).split(">")
             if part.strip() and part.strip() != NULL
         ]
@@ -151,7 +154,7 @@ def build_touchpoint_features(
 class _FeatureEncoder:
     """Turns segment values and numeric features into a fixed-width vector.
 
-    Each of the four contract segments gets its own vocabulary with index 0
+    Each of the five contract segments gets its own vocabulary with index 0
     reserved for an unseen value. A touchpoint from a campaign that did not
     exist during training therefore still encodes, which is what makes new
     campaign prediction possible at all.
@@ -205,7 +208,7 @@ class _FeatureEncoder:
         """Encode one touchpoint.
 
         Args:
-            segments: The four segment values.
+            segments: The five segment values.
             numeric: Path-derived features; the training means are substituted
                 when a touchpoint has no observed path history.
 
@@ -213,7 +216,7 @@ class _FeatureEncoder:
             list[float]: The encoded feature vector.
 
         Raises:
-            ValueError: if the segment count is not four.
+            ValueError: if the segment count is not five.
         """
         if len(segments) != len(SEGMENT_NAMES):
             raise ValueError(
@@ -407,7 +410,7 @@ class DeepNeuralAttributionModel(MtaAttributionModel):
     has, and leaves ``simulation_ground_truth`` for evaluation only.
 
     Unlike the two wrapped estimators, this model generalises beyond the
-    touchpoints it was trained on: it consumes the four contract segments rather
+    touchpoints it was trained on: it consumes the five contract segments rather
     than a touchpoint identity, so a campaign that has no historical path can
     still be scored through :meth:`predict_new_campaign`.
     """
@@ -472,7 +475,7 @@ class DeepNeuralAttributionModel(MtaAttributionModel):
                 continue
             share_field, _ = OUTCOME_FIELDS[outcome]
             targets[outcome] = {
-                to_four_segment(result.touchpoint): float(
+                canonicalize_touchpoint_key(result.touchpoint): float(
                     getattr(result, share_field)
                 )
                 for result in results
@@ -590,13 +593,13 @@ class DeepNeuralAttributionModel(MtaAttributionModel):
     ) -> dict[str, dict[str, float]]:
         """Predict credit shares for campaign touchpoints with no path history.
 
-        The network scores the four contract segments, so a touchpoint that
+        The network scores the five contract segments, so a touchpoint that
         never appeared in training still receives a prediction: unseen segment
         values fall into the reserved unknown bucket and the path-derived
         numeric features fall back to their training means.
 
         Args:
-            touchpoints: Four-segment keys of the planned campaign.
+            touchpoints: Five-segment interaction-aware keys of the planned campaign.
 
         Returns:
             dict: ``outcome -> {touchpoint: predicted share}``, each outcome
@@ -614,7 +617,7 @@ class DeepNeuralAttributionModel(MtaAttributionModel):
         encoder, network = self._require_trained()
         if not touchpoints:
             raise ValueError("predict_new_campaign requires at least one touchpoint")
-        canonical = [canonicalize_four_segment_key(key) for key in touchpoints]
+        canonical = [canonicalize_touchpoint_key(key) for key in touchpoints]
         if len(set(canonical)) != len(canonical):
             raise ValueError("predict_new_campaign requires distinct touchpoints")
 
@@ -636,7 +639,7 @@ class DeepNeuralAttributionModel(MtaAttributionModel):
             dataset: The model-facing dataset.
 
         Returns:
-            list[StandardAttributionRow]: Standard four-segment rows.
+            list[StandardAttributionRow]: Standard five-segment rows.
 
         Raises:
             RuntimeError: if the model was not fitted on this report scope.

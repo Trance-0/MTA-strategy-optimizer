@@ -180,8 +180,8 @@ Source: `modules/mta_common/src/campaign.py`
 
 Source: `modules/mta_common/src/product.py`
 
-- Responsibility: Define `Product` (business identity separated from provider-specific advertising identities), `ProductEconomics` (price and cost structure, with unfilled fields kept `None`), and `CampaignProductLink` (the explicit many-to-many relationship).
-- Inputs: A future product-data integration; no current data source populates any of the three.
+- Responsibility: Define `Product` (business identity, SKU, inventory/salable state, and provider-specific advertising identifiers), `ProductEconomics` (price, COGS, aggregate/granular variable costs, and contribution margin with unfilled fields kept `None`), and `CampaignProductLink` (the explicit many-to-many relationship).
+- Inputs: MTA-SIM research snapshots through the market-simulation adapter, or future provider/product integrations.
 - Outputs: `Product`, `ProductEconomics`, `CampaignProductLink`.
 - Dependencies: `enums.py`.
 - Verification: `modules/mta_common/tests/test_product_and_economics.py`.
@@ -282,7 +282,7 @@ A future response-prediction model would consume `CampaignEpisode` as its traini
 
 ## Current Availability <span class="status-label status-verified" aria-label="Verified"></span>
 
-Every class described here is implemented and tested: 96 tests across 9 files in `modules/mta_common/tests/` pass under `python -X utf8 -B -m unittest discover -s modules/mta_common/tests -t . -p "test_*.py"`. Nothing in `script/`, `modules/mta_attribution`, `modules/mta_standard`, `modules/mta_strategy_recommendation`, or the dashboard currently imports `modules.mta_common`; this is a foundation laid ahead of that integration, not a change to any running pipeline's behavior today.
+Every class described here is implemented and tested: 103 tests across 9 files in `modules/mta_common/tests/` pass under `python -X utf8 -B -m unittest discover -s modules/mta_common/tests -t . -p "test_*.py"`. `modules/mta_standard` now constructs canonical Touchpoints during normal loading and constructs the broader Campaign/Product/observation set from MTA-SIM research snapshots. Attribution and strategy mathematics remain independently owned and no predictive optimizer is introduced.
 
 ## Known Limitations <span class="status-label status-verified" aria-label="Verified"></span>
 

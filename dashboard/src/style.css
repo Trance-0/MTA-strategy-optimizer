@@ -784,6 +784,31 @@ input[type="range"] {
   border-bottom: 1px solid var(--line);
 }
 
+.detail-list {
+  display: grid;
+  gap: 10px;
+}
+
+.detail-list details {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 10px 12px;
+}
+
+.detail-list summary {
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.detail-list pre,
+.detail-list textarea,
+.modal-body textarea {
+  width: 100%;
+  box-sizing: border-box;
+  overflow: auto;
+  font: 11.5px/1.5 ui-monospace, SFMono-Regular, Consolas, monospace;
+}
+
 .tab {
   background: transparent;
   border: none;

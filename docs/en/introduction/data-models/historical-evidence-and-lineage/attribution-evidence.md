@@ -251,7 +251,7 @@ The two shapes this class adapts, `AttributionResult` and `StandardAttributionRo
 Two existing shapes carry this information today, defined in `modules/mta_attribution/src/attribution_contract.py` and `modules/mta_standard/src/output_contract.py`:
 
 - `AttributionResult`: one record per five-segment touchpoint, carrying all three outcomes at once — `converted_user_share`/`attributed_converted_users`, `purchase_count_share`/`attributed_purchase_count`, `revenue_share`/`attributed_revenue`.
-- `StandardAttributionRow`: one record per touchpoint per outcome, carrying `model_id`, `model_version`, `report_start_date`, `report_end_date`, `marketplace`, `touchpoint` (a four-segment MTA-SIM key), `outcome`, `attribution_share`, `attributed_value`, `valid`, `warnings`.
+- `StandardAttributionRow`: one record per touchpoint per outcome, carrying `model_id`, `model_version`, `report_start_date`, `report_end_date`, `marketplace`, `touchpoint` (a native five-segment interaction-aware key), `outcome`, `attribution_share`, `attributed_value`, `valid`, `warnings`.
 
 ### Canonical Conversion
 

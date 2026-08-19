@@ -52,6 +52,6 @@ The project-level `script/` directory contains the data-generation, attribution,
 
 The boundary between the attribution and strategy modules is: MTA Attribution outputs five-segment touchpoint evidence within Group scope; for four fixed Campaigns under one Campaign Group, the strategy initializer produces only the new Ad Group count and budget `INITIAL_SEED`. It does not assign specific candidates or perform later optimization.
 
-`MTA Standard` sits beside `MTA Attribution` rather than above it: it adapts MTA-SIM's four-segment contract onto the existing five-segment estimators, reproduces their numbers exactly, and adds a shared output and evaluation contract so a new model can be compared against them.
+`MTA Standard` sits beside `MTA Attribution` rather than above it: it validates MTA-SIM's native five-segment contract, retains an explicit bridge for historical four-segment fixtures, reproduces existing model numbers exactly, and adds shared output and evaluation contracts.
 
 The removed legacy general-purpose MTA module is outside the current project scope. It is not restored, assessed, or used as an entry point for new development.

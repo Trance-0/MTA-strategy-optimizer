@@ -5,6 +5,7 @@ from __future__ import annotations
 import tempfile
 import unittest
 from pathlib import Path
+from types import SimpleNamespace
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[3]
@@ -12,6 +13,7 @@ SUBMODULE_ROOT = PROJECT_ROOT / "external" / "mta_sim_dataset"
 
 from modules.mta_standard.src.evaluation import load_simulation_ground_truth
 from modules.mta_standard.src.mta_sim_generator_adapter import (
+    _simulator_config,
     generate_and_load_mta_sim_dataset,
 )
 
@@ -52,7 +54,9 @@ class MtaSimGeneratorAdapterTests(unittest.TestCase):
                 {"CLICK", "IMPRESSION"},
             )
             ground_truth = load_simulation_ground_truth(
-                generated.ground_truth, scope=generated.dataset.scope
+                generated.ground_truth,
+                scope=generated.dataset.scope,
+                config=generated.simulator_config,
             )
             self.assertEqual(
                 set(ground_truth.touchpoints), set(generated.dataset.touchpoints)
@@ -68,6 +72,38 @@ class MtaSimGeneratorAdapterTests(unittest.TestCase):
                     configuration_path=Path(directory) / "missing.json",
                     output_directory=Path(directory) / "output",
                 )
+
+    def test_provider_capabilities_are_forwarded_for_current_configs(self) -> None:
+        """A synthetic Provider must not receive Amazon's default profile."""
+
+        provider = object()
+        capabilities = SimpleNamespace(provider=provider)
+
+        class CurrentTouchpoint:
+            identifier = "limited-display"
+            cost_per_click = None
+            cost_per_thousand_impressions = 10.0
+
+            def __init__(self, provider_value):
+                self.provider = provider_value
+
+            def normalized_key(self, interaction, supplied_capabilities):
+                self.last_capabilities = supplied_capabilities
+                return f"DISPLAY:IMAGE:UNSPECIFIED:UNSPECIFIED:{interaction}"
+
+        touchpoint = CurrentTouchpoint(provider)
+        configuration = SimpleNamespace(
+            touchpoints=(touchpoint,),
+            provider_capabilities=(capabilities,),
+        )
+        adapted = _simulator_config(configuration)
+        self.assertIs(touchpoint.last_capabilities, capabilities)
+        self.assertEqual(
+            adapted.cost_type_by_touchpoint[
+                "DISPLAY:IMAGE:UNSPECIFIED:UNSPECIFIED"
+            ],
+            "CPM",
+        )
 
 
 if __name__ == "__main__":

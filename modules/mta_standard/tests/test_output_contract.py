@@ -1,6 +1,6 @@
 """Tests for the standard output row and its validation.
 
-Covers the four invariants and the zero-outcome rule, asserting that every
+Covers the standard invariants and the zero-outcome rule, asserting that every
 registered model satisfies the contract and that each individual violation is
 rejected with a specific message.
 """
@@ -125,12 +125,15 @@ class ValidationTest(OutputContractTestCase):
             validate_standard_output(rows, outcome_totals=self.dataset.outcome_totals)
 
     def test_non_canonical_touchpoint_is_rejected(self) -> None:
-        rows = self.replace(0, touchpoint=fixtures.DISPLAY.lower())
-        with self.assertRaisesRegex(ValueError, "canonical four-segment key"):
+        rows = self.replace(
+            0,
+            touchpoint=f"{fixtures.DISPLAY}:IMPRESSION".lower(),
+        )
+        with self.assertRaisesRegex(ValueError, "canonical five-segment key"):
             validate_standard_output(rows, outcome_totals=self.dataset.outcome_totals)
 
-    def test_five_segment_touchpoint_is_rejected(self) -> None:
-        rows = self.replace(0, touchpoint=f"{fixtures.DISPLAY}:IMPRESSION")
+    def test_four_segment_touchpoint_is_rejected(self) -> None:
+        rows = self.replace(0, touchpoint=fixtures.DISPLAY)
         with self.assertRaises(ValueError):
             validate_standard_output(rows, outcome_totals=self.dataset.outcome_totals)
 
@@ -153,7 +156,7 @@ class ValidationTest(OutputContractTestCase):
             validate_standard_output(
                 self.rows,
                 outcome_totals=self.dataset.outcome_totals,
-                expected_touchpoints=(fixtures.SEARCH,),
+                expected_touchpoints=(f"{fixtures.SEARCH}:CLICK",),
             )
 
 

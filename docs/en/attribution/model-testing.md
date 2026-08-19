@@ -185,10 +185,9 @@ The most load-bearing test asserts that standardizing a model changed none of it
 def test_markov_matches_a_direct_call_exactly(self) -> None:
     standard = self._standard_shares(MarkovRemovalEffectModel())
     for result in run_markov_attribution(list(self.dataset.path_rows)):
-        four = to_four_segment(result.touchpoint)
         for outcome in SUPPORTED_OUTCOMES:
             share_field, value_field = OUTCOME_FIELDS[outcome]
-            row = standard[(four, outcome)]
+            row = standard[(result.touchpoint, outcome)]
             self.assertEqual(row.attribution_share, getattr(result, share_field))
             self.assertEqual(row.attributed_value, getattr(result, value_field))
 ```
@@ -455,14 +454,14 @@ Source: `modules/mta_standard/src/evaluation.py`
 - Responsibility: Load simulation ground truth separately and score standard model output.
 - Inputs: Standard rows and evaluation-only ground truth.
 - Outputs: Error, rank, overlap, conservation, and runtime metrics.
-- Dependencies: Dataloader scope, output contract, and attribution Spearman calculation. Also `read_csv_normalized` from `attribution_contract.py`, `MtaAttributionModel` from `attribution_model_interface.py`, which `evaluate_model()` and `compare_models()` are typed against, and `canonicalize_four_segment_key` from `touchpoint_adapter.py`.
+- Dependencies: Dataloader scope, native touchpoint-key validation, output contract, attribution Spearman calculation, `read_csv_normalized` from `attribution_contract.py`, and `MtaAttributionModel` from `attribution_model_interface.py`.
 - Verification: `modules/mta_standard/tests/test_evaluation.py`.
 
 ### `mta_sim_generator_adapter.py`
 
 Source: `modules/mta_standard/src/mta_sim_generator_adapter.py`
 
-- Responsibility: Invoke the pinned ZheyuanWu generator and prepare framework-compatible model/evaluation views.
+- Responsibility: Invoke the pinned ZheyuanWu generator and prepare framework-compatible model/evaluation views. Current provider-aware configurations receive their matching ProviderCapabilities when compatibility keys are requested; historical configuration objects retain the no-argument key path.
 - Inputs: Submodule path, configuration, output directory, and generator variant.
 - Outputs: Generated manifest, model dataset, and evaluation-only ground truth path.
 - Dependencies: External generator, dataloader, and touchpoint adapter.

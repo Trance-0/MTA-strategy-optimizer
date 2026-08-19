@@ -27,11 +27,233 @@ import * as theme from "../theme.js";
 
 const { data } = useDashboard();
 
-const tab = ref("performance");
+const tab = ref("history");
 const TABS = [
+  { key: "history", label: "Generated history" },
   { key: "performance", label: "Daily performance" },
   { key: "bridge", label: "Campaign bridge" },
   { key: "paths", label: "Conversion paths" },
+];
+
+// ---------------------------------------------------------------------------
+// Generated Campaign history
+// ---------------------------------------------------------------------------
+
+const research = computed(() => data.value.simulationResearch ?? {});
+const historyProvider = ref("");
+const historyProduct = ref("");
+const historyCampaign = ref("");
+const historyAdProduct = ref("");
+const historyMarketplace = ref("");
+const historyRun = ref("");
+const historyFrom = ref("");
+const historyTo = ref("");
+const similarityOpen = ref(false);
+const similarityCampaign = ref("");
+const similarityProduct = ref("");
+const similarityProvider = ref("");
+const similarityAdProduct = ref("");
+const similarityBudget = ref("");
+const similarityThreshold = ref(0.6);
+
+const campaignById = computed(() => new Map(
+  (research.value.campaigns ?? []).map((item) => [item.campaign_id, item]),
+));
+
+const generatedHistory = computed(() =>
+  (research.value.history ?? []).map((row) => {
+    const campaign = campaignById.value.get(row.campaign_id) ?? {};
+    return {
+      ...row,
+      provider: row.provider ?? campaign.provider ?? null,
+      ad_product: row.ad_product ?? campaign.ad_product ?? null,
+      campaign_name: campaign.campaign_name ?? row.campaign_id,
+    };
+  }),
+);
+
+const historyDates = computed(() => distinct(generatedHistory.value, "report_date"));
+const historyProviders = computed(() => distinct(generatedHistory.value, "provider"));
+const historyProducts = computed(() => distinct(generatedHistory.value, "product_id"));
+const historyCampaigns = computed(() => distinct(generatedHistory.value, "campaign_id"));
+const historyAdProducts = computed(() => distinct(generatedHistory.value, "ad_product"));
+const historyMarketplaces = computed(() => distinct(generatedHistory.value, "marketplace"));
+const historyRuns = computed(() => distinct(generatedHistory.value, "run_id"));
+
+const scopedHistory = computed(() => generatedHistory.value.filter((row) => {
+  if (historyProvider.value && row.provider !== historyProvider.value) return false;
+  if (historyProduct.value && row.product_id !== historyProduct.value) return false;
+  if (historyCampaign.value && row.campaign_id !== historyCampaign.value) return false;
+  if (historyAdProduct.value && row.ad_product !== historyAdProduct.value) return false;
+  if (historyMarketplace.value && row.marketplace !== historyMarketplace.value) return false;
+  if (historyRun.value && row.run_id !== historyRun.value) return false;
+  if (historyFrom.value && row.report_date < historyFrom.value) return false;
+  if (historyTo.value && row.report_date > historyTo.value) return false;
+  return true;
+}));
+
+const productsByCampaign = computed(() => {
+  const values = new Map();
+  for (const link of research.value.campaignProductLinks ?? []) {
+    if (!values.has(link.campaign_id)) values.set(link.campaign_id, new Set());
+    values.get(link.campaign_id).add(link.product_id);
+  }
+  return values;
+});
+
+const scopedDelivery = computed(() => (research.value.delivery ?? []).filter((row) => {
+  const campaign = campaignById.value.get(row.campaign_id) ?? {};
+  if (historyProvider.value && row.provider !== historyProvider.value) return false;
+  if (historyProduct.value && !productsByCampaign.value.get(row.campaign_id)?.has(historyProduct.value)) return false;
+  if (historyCampaign.value && row.campaign_id !== historyCampaign.value) return false;
+  if (historyAdProduct.value && campaign.ad_product !== historyAdProduct.value) return false;
+  if (historyMarketplace.value && row.marketplace !== historyMarketplace.value) return false;
+  if (historyRun.value && row.run_id !== historyRun.value) return false;
+  if (historyFrom.value && row.report_date < historyFrom.value) return false;
+  if (historyTo.value && row.report_date > historyTo.value) return false;
+  return true;
+}));
+
+const historyTiles = computed(() => {
+  const spend = sum(scopedHistory.value, "actual_spend");
+  const impressions = sum(scopedDelivery.value, "impressions");
+  const clicks = sum(scopedDelivery.value, "clicks");
+  const deliveryCost = sum(scopedDelivery.value, "cost");
+  const economicsComplete = scopedHistory.value.length > 0 && scopedHistory.value.every(
+    (row) => row.contribution_profit !== null && row.contribution_profit !== undefined,
+  );
+  return [
+    { label: "Configured budget", value: theme.compactMoney(sum(scopedHistory.value, "configured_budget")) },
+    { label: "Actual spend", value: theme.compactMoney(spend) },
+    { label: "Impressions", value: theme.count(impressions) },
+    { label: "Clicks", value: theme.count(clicks) },
+    { label: "CTR", value: theme.percent(impressions ? clicks / impressions : 0) },
+    { label: "CPC", value: theme.money(clicks ? deliveryCost / clicks : 0) },
+    { label: "CPM", value: theme.money(impressions ? deliveryCost * 1000 / impressions : 0) },
+    { label: "Purchases", value: theme.count(sum(scopedDelivery.value, "reported_purchases")) },
+    { label: "Units", value: theme.count(sum(scopedHistory.value, "total_units")) },
+    { label: "Revenue", value: theme.compactMoney(sum(scopedHistory.value, "total_revenue")) },
+    { label: "Contribution profit", value: economicsComplete
+      ? theme.compactMoney(sum(scopedHistory.value, "contribution_profit"))
+      : "Unavailable" },
+  ];
+});
+
+const interactionHistoryTraces = computed(() => {
+  const rows = groupSum(scopedDelivery.value, "interaction_type", [
+    "impressions", "clicks", "cost", "reported_purchases", "reported_sales",
+  ]);
+  return [{
+    type: "bar",
+    x: rows.map((row) => row.key || "Unavailable"),
+    y: rows.map((row) => row.cost),
+    text: rows.map((row) => `${theme.count(row.impressions)} imp · ${theme.count(row.clicks)} clicks`),
+    textposition: "outside",
+    marker: { color: theme.SERIES[2] },
+    hovertemplate: "%{x}<br>Spend %{y:$,.2f}<br>%{text}<extra></extra>",
+  }];
+});
+const interactionHistoryLayout = computed(() => theme.layout({
+  height: 300, legend: false, yaxis: { title: { text: "Spend" } },
+}));
+
+const budgetHistoryTraces = computed(() => {
+  const rows = scopedHistory.value.slice(0, 80);
+  const labels = rows.map((row) => `${row.report_date} · ${row.campaign_id} · ${row.budget_level}×`);
+  return [
+    { type: "bar", name: "Configured budget", x: labels,
+      y: rows.map((row) => row.configured_budget), marker: { color: theme.SERIES[1] } },
+    { type: "bar", name: "Actual spend", x: labels,
+      y: rows.map((row) => row.actual_spend), marker: { color: theme.SERIES[0] } },
+  ];
+});
+const budgetHistoryLayout = computed(() => theme.layout({
+  height: 340, barmode: "group", xaxis: { visible: false },
+  yaxis: { title: { text: "Budget / spend" } },
+}));
+
+const historicalColumns = [
+  { key: "report_date", label: "Date" },
+  { key: "run_id", label: "Run" },
+  { key: "provider", label: "Provider" },
+  { key: "product_id", label: "Product" },
+  { key: "campaign_id", label: "Campaign" },
+  { key: "ad_product", label: "Ad product" },
+  { key: "marketplace", label: "Marketplace" },
+  { key: "budget_level", label: "Level", format: "number" },
+  { key: "configured_budget", label: "Budget", format: "money" },
+  { key: "actual_spend", label: "Spend", format: "money" },
+  { key: "total_units", label: "Units", format: "number" },
+  { key: "total_revenue", label: "Revenue", format: "money" },
+  { key: "contribution_profit", label: "Contribution profit", format: "money" },
+];
+
+const similarityMatches = computed(() => {
+  const selectedCampaign = campaignById.value.get(similarityCampaign.value) ?? {};
+  const profile = {
+    provider: similarityProvider.value || selectedCampaign.provider || null,
+    product_id: similarityProduct.value || null,
+    ad_product: similarityAdProduct.value || selectedCampaign.ad_product || null,
+    budget: Number(similarityBudget.value) || null,
+  };
+  const candidates = new Map();
+  for (const row of generatedHistory.value) {
+    const key = [row.run_id, row.campaign_id, row.product_id, row.report_date].join("|");
+    if (!candidates.has(key)) candidates.set(key, []);
+    candidates.get(key).push(row);
+  }
+  return [...candidates.values()].map((rows) => {
+    const first = rows[0];
+    const components = [];
+    if (profile.provider) components.push(first.provider === profile.provider ? 1 : 0);
+    if (profile.product_id) components.push(first.product_id === profile.product_id ? 1 : 0);
+    if (profile.ad_product) components.push(first.ad_product === profile.ad_product ? 1 : 0);
+    if (profile.budget) {
+      const distance = Math.abs(Number(first.configured_budget ?? 0) - profile.budget);
+      components.push(Math.max(0, 1 - distance / Math.max(profile.budget, 1)));
+    }
+    const score = components.length
+      ? components.reduce((total, value) => total + value, 0) / components.length
+      : 0;
+    const subjectId = similarityCampaign.value || similarityProduct.value || "temporary-profile";
+    const comparableId = similarityCampaign.value
+      ? first.campaign_id
+      : (first.product_id || first.campaign_id);
+    return {
+      subject_type: similarityCampaign.value ? "CAMPAIGN" : "PRODUCT",
+      subject_id: subjectId,
+      comparable_id: comparableId,
+      similarity_score: score,
+      rationale: `Equal-weight match across ${components.length} selected profile component(s).`,
+      generated_by: "dashboard-selector-profile-v1",
+      run_id: first.run_id,
+      provider: first.provider,
+      product_id: first.product_id,
+      campaign_id: first.campaign_id,
+      historical_period: first.report_date,
+      budget: sum(rows, "configured_budget"),
+      spend: sum(rows, "actual_spend"),
+      revenue: sum(rows, "total_revenue"),
+      contribution_profit: rows.every((row) => row.contribution_profit != null)
+        ? sum(rows, "contribution_profit") : null,
+      touchpoint_summary: `${first.ad_product ?? 'Unknown'} · ${rows.length} budget level(s)`,
+    };
+  }).filter((row) => row.subject_id !== row.comparable_id)
+    .filter((row) => row.similarity_score >= similarityThreshold.value)
+    .sort((left, right) => right.similarity_score - left.similarity_score);
+});
+
+const similarityColumns = [
+  { key: "similarity_score", label: "Similarity", format: "percent" },
+  { key: "provider", label: "Provider" },
+  { key: "product_id", label: "Product" },
+  { key: "campaign_id", label: "Campaign" },
+  { key: "historical_period", label: "Period" },
+  { key: "budget", label: "Budget", format: "money" },
+  { key: "spend", label: "Spend", format: "money" },
+  { key: "revenue", label: "Revenue", format: "money" },
+  { key: "contribution_profit", label: "Contribution profit", format: "money" },
+  { key: "touchpoint_summary", label: "Performance summary" },
 ];
 
 // ---------------------------------------------------------------------------
@@ -291,6 +513,57 @@ const pathColumns = [
       </button>
     </div>
 
+    <!-- Generated Campaign history -->
+    <template v-if="tab === 'history'">
+      <article class="card">
+        <div class="card-head">
+          <h2>Generated history filters</h2>
+          <button @click="similarityOpen = true">Find similar history</button>
+        </div>
+        <div class="card-body">
+          <div class="filter-row">
+            <div class="field"><label for="history-provider">Provider</label><select id="history-provider" v-model="historyProvider"><option value="">All</option><option v-for="value in historyProviders" :key="value">{{ value }}</option></select></div>
+            <div class="field"><label for="history-product">Product</label><select id="history-product" v-model="historyProduct"><option value="">All</option><option v-for="value in historyProducts" :key="value">{{ value }}</option></select></div>
+            <div class="field"><label for="history-campaign">Campaign</label><select id="history-campaign" v-model="historyCampaign"><option value="">All</option><option v-for="value in historyCampaigns" :key="value">{{ value }}</option></select></div>
+            <div class="field"><label for="history-ad-product">Ad product</label><select id="history-ad-product" v-model="historyAdProduct"><option value="">All</option><option v-for="value in historyAdProducts" :key="value">{{ pretty(value) }}</option></select></div>
+            <div class="field"><label for="history-marketplace">Marketplace</label><select id="history-marketplace" v-model="historyMarketplace"><option value="">All</option><option v-for="value in historyMarketplaces" :key="value">{{ value }}</option></select></div>
+            <div class="field"><label for="history-run">Simulation run</label><select id="history-run" v-model="historyRun"><option value="">All</option><option v-for="value in historyRuns" :key="value">{{ value }}</option></select></div>
+            <div class="field"><label for="history-from">From</label><select id="history-from" v-model="historyFrom"><option value="">Earliest</option><option v-for="value in historyDates" :key="value">{{ value }}</option></select></div>
+            <div class="field"><label for="history-to">To</label><select id="history-to" v-model="historyTo"><option value="">Latest</option><option v-for="value in historyDates" :key="value">{{ value }}</option></select></div>
+          </div>
+        </div>
+      </article>
+
+      <template v-if="scopedHistory.length">
+        <MetricRow :items="historyTiles" />
+        <article class="card">
+          <div class="card-head"><h2>Configured budget vs actual spend</h2><span class="sub">First 80 selected observations</span></div>
+          <div class="card-body">
+            <PlotlyChart :traces="budgetHistoryTraces" :layout="budgetHistoryLayout" label="Configured Campaign budget compared with actual spend" />
+            <TableView :label="`View all ${scopedHistory.length.toLocaleString()} historical observations`" :columns="historicalColumns" :rows="scopedHistory" />
+          </div>
+        </article>
+        <article class="card">
+          <div class="card-head"><h2>Interaction-aware delivery</h2><span class="sub">IMPRESSION and CLICK remain distinct</span></div>
+          <div class="card-body">
+            <PlotlyChart :traces="interactionHistoryTraces" :layout="interactionHistoryLayout" label="Spend and event counts split by interaction type" />
+            <p class="caption">Ordered path frequencies, path length, and transition evidence remain available in Conversion paths; no Multi-Touch Attribution is recomputed here.</p>
+          </div>
+        </article>
+        <article class="card">
+          <div class="card-head"><h2>Attribution evidence</h2></div>
+          <div class="card-body">
+            <p v-if="data.attributionResults.length">Existing attribution output is available in Campaign Optimizer; this explorer does not recompute it.</p>
+            <p v-else class="table-empty">Attribution not available.</p>
+          </div>
+        </article>
+      </template>
+      <article v-else class="card empty-card">
+        <h2>No generated Campaign history</h2>
+        <p>Set <code>MTA_SIM_DATA_DIR</code> to a local CSV run, or use a database populated by MTA-SIM.</p>
+      </article>
+    </template>
+
     <!-- Daily performance -->
     <template v-if="tab === 'performance'">
       <article class="card">
@@ -471,5 +744,23 @@ const pathColumns = [
         </div>
       </article>
     </template>
+
+    <div v-if="similarityOpen" class="modal-backdrop" @click.self="similarityOpen = false">
+      <section class="modal" role="dialog" aria-modal="true" aria-label="Historical similarity reference">
+        <div class="modal-head"><h2>Historical similarity reference</h2><button @click="similarityOpen = false">Close</button></div>
+        <div class="modal-body">
+          <p><b>Historical reference only. Not used by attribution or strategy optimization.</b></p>
+          <div class="filter-row">
+            <div class="field"><label for="similar-campaign">Query Campaign</label><select id="similar-campaign" v-model="similarityCampaign"><option value="">Temporary profile</option><option v-for="value in historyCampaigns" :key="value">{{ value }}</option></select></div>
+            <div class="field"><label for="similar-product">Product</label><select id="similar-product" v-model="similarityProduct"><option value="">Any</option><option v-for="value in historyProducts" :key="value">{{ value }}</option></select></div>
+            <div class="field"><label for="similar-provider">Provider</label><select id="similar-provider" v-model="similarityProvider"><option value="">From Campaign / any</option><option v-for="value in historyProviders" :key="value">{{ value }}</option></select></div>
+            <div class="field"><label for="similar-ad-product">Ad product</label><select id="similar-ad-product" v-model="similarityAdProduct"><option value="">From Campaign / any</option><option v-for="value in historyAdProducts" :key="value">{{ value }}</option></select></div>
+            <div class="field"><label for="similar-budget">Configured budget</label><input id="similar-budget" v-model="similarityBudget" type="number" min="0" step="1" /></div>
+            <div class="field"><label for="similar-threshold">Threshold {{ Number(similarityThreshold).toFixed(2) }}</label><input id="similar-threshold" v-model.number="similarityThreshold" type="range" min="0" max="1" step="0.05" /></div>
+          </div>
+          <DataTable :columns="similarityColumns" :rows="similarityMatches" empty="No historical references meet this threshold." />
+        </div>
+      </section>
+    </div>
   </section>
 </template>

@@ -20,7 +20,7 @@ lang: en-US
 
 ### `modules/mta_standard/`
 
-- Project responsibility: Run the pinned ZheyuanWu generator, load MTA-SIM tables, adapt four-segment keys, run any model through one interface, and score results against ground truth
+- Project responsibility: Run the pinned ZheyuanWu generator, load native five-segment MTA-SIM tables, bridge historical four-segment fixtures when explicitly configured, run any model through one interface, and score results against ground truth
 - Key entry point: `src/mta_sim_generator_adapter.py`, `src/model_registry.py`
 
 ### `modules/mta_strategy_recommendation/`
@@ -78,13 +78,13 @@ lang: en-US
 ### Synthetic generation
 
 - Input: Pinned ZheyuanWu source and caller configuration
-- Processing: Simulate, validate, and store four-segment MTA tables
+- Processing: Simulate native interaction events, validate them, and store unchanged CSV schemas with five-segment values
 - Output: Original path, performance, ground-truth, manifest, and validation files
 
 ### Standard adaptation
 
 - Input: Generated daily-window path and performance tables
-- Processing: Aggregate one model scope and add interaction type from explicit billing configuration
+- Processing: Aggregate one model scope and preserve native interaction identity; use explicit compatibility mapping only for old four-segment input
 - Output: `MtaSimDataset`; ground truth remains evaluation-only
 
 ### Path preparation

@@ -10,8 +10,8 @@ artifact and is never attached to the model-facing dataset.
 Data flow:
     pinned submodule + caller configuration
       -> ZheyuanWu validated generator
-      -> four-segment CSV tables
-      -> ``SimulatorConfig`` four-to-five-segment adapter
+      -> native five-segment CSV tables, or historical four-segment tables
+      -> optional ``SimulatorConfig`` legacy adapter
       -> ``MtaSimDataset`` for registered local models
 """
 
@@ -51,7 +51,8 @@ class GeneratedMtaSimRun:
         performance_report: Generated Amazon Ads daily performance report.
         source_ground_truth: Unmodified generated ground-truth table.
         ground_truth: Single-scope ground-truth view for evaluation only.
-        simulator_config: Explicit four-to-five-segment billing adapter.
+        simulator_config: Explicit billing map retained for legacy input and
+            interaction-specific performance annotation.
         dataset: Model-facing dataset that structurally excludes ground truth.
     """
 
@@ -148,13 +149,17 @@ def _simulator_config(configuration: object) -> SimulatorConfig:
         configuration: Baseline or regional configuration returned by ZheyuanWu.
 
     Returns:
-        SimulatorConfig: Canonical four-segment keys mapped to CPC or CPM.
+        SimulatorConfig: Advertising-object keys mapped to CPC or CPM.
 
     Raises:
         ValueError: If a touchpoint does not have exactly one billing basis.
     """
 
     baseline = getattr(configuration, "baseline_configuration", configuration)
+    capabilities_by_provider = {
+        capabilities.provider: capabilities
+        for capabilities in getattr(baseline, "provider_capabilities", ())
+    }
     mapping: dict[str, str] = {}
     for touchpoint in baseline.touchpoints:
         has_cpc = touchpoint.cost_per_click is not None
@@ -164,7 +169,18 @@ def _simulator_config(configuration: object) -> SimulatorConfig:
                 "each generated touchpoint must define exactly one billing basis: "
                 f"{touchpoint.identifier}"
             )
-        mapping[touchpoint.normalized_key()] = "CPC" if has_cpc else "CPM"
+        try:
+            key = touchpoint.normalized_key()
+        except TypeError:
+            interaction = "CLICK" if has_cpc else "IMPRESSION"
+            capabilities = capabilities_by_provider.get(touchpoint.provider)
+            if capabilities is None:
+                key = touchpoint.normalized_key(interaction).rsplit(":", 1)[0]
+            else:
+                key = touchpoint.normalized_key(
+                    interaction, capabilities
+                ).rsplit(":", 1)[0]
+        mapping[key] = "CPC" if has_cpc else "CPM"
     return SimulatorConfig.from_mapping(mapping)
 
 

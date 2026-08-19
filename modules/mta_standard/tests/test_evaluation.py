@@ -43,7 +43,7 @@ class EvaluationTestCase(unittest.TestCase):
             self.paths["path_report"], self.paths["ads_performance"], config=self.config
         )
         self.ground_truth = load_simulation_ground_truth(
-            self.paths["ground_truth"], scope=self.dataset.scope
+            self.paths["ground_truth"], scope=self.dataset.scope, config=self.config
         )
 
 
@@ -52,29 +52,51 @@ class GroundTruthLoadingTest(EvaluationTestCase):
         self.assertEqual(self.ground_truth.row_count, 3)
         self.assertEqual(
             dict(self.ground_truth.credit_share),
-            {fixtures.DISPLAY: 0.30, fixtures.SEARCH: 0.50, fixtures.BRAND: 0.20},
+            {
+                self.config.to_five_segment(fixtures.DISPLAY): 0.30,
+                self.config.to_five_segment(fixtures.SEARCH): 0.50,
+                self.config.to_five_segment(fixtures.BRAND): 0.20,
+            },
         )
 
     def test_path_grain_table_is_aggregated_and_renormalised(self) -> None:
         path = fixtures.write_ground_truth(
             self.directory / "per_path", per_path=True
         )
-        truth = load_simulation_ground_truth(path, scope=self.dataset.scope)
+        truth = load_simulation_ground_truth(
+            path, scope=self.dataset.scope, config=self.config
+        )
         self.assertEqual(truth.row_count, 7)
         self.assertAlmostEqual(sum(truth.credit_share.values()), 1.0, places=12)
         # DISPLAY 0.30 + 0.10 of a 1.50 total.
-        self.assertAlmostEqual(truth.credit_share[fixtures.DISPLAY], 0.4 / 1.5, places=12)
-        self.assertAlmostEqual(truth.credit_share[fixtures.SEARCH], 0.9 / 1.5, places=12)
-        self.assertAlmostEqual(truth.credit_share[fixtures.BRAND], 0.2 / 1.5, places=12)
+        self.assertAlmostEqual(
+            truth.credit_share[self.config.to_five_segment(fixtures.DISPLAY)],
+            0.4 / 1.5,
+            places=12,
+        )
+        self.assertAlmostEqual(
+            truth.credit_share[self.config.to_five_segment(fixtures.SEARCH)],
+            0.9 / 1.5,
+            places=12,
+        )
+        self.assertAlmostEqual(
+            truth.credit_share[self.config.to_five_segment(fixtures.BRAND)],
+            0.2 / 1.5,
+            places=12,
+        )
 
     def test_causal_increment_is_summed_but_not_normalised(self) -> None:
         self.assertAlmostEqual(
-            self.ground_truth.causal_increment[fixtures.SEARCH], 0.20, places=12
+            self.ground_truth.causal_increment[
+                self.config.to_five_segment(fixtures.SEARCH)
+            ],
+            0.20,
+            places=12,
         )
 
-    def test_touchpoints_are_four_segment(self) -> None:
+    def test_touchpoints_are_five_segment(self) -> None:
         for touchpoint in self.ground_truth.touchpoints:
-            self.assertEqual(len(touchpoint.split(":")), 4)
+            self.assertEqual(len(touchpoint.split(":")), 5)
 
     def test_missing_file_raises_file_not_found(self) -> None:
         with self.assertRaises(FileNotFoundError):
@@ -95,7 +117,9 @@ class GroundTruthLoadingTest(EvaluationTestCase):
             config=self.config,
         )
         with self.assertRaisesRegex(ValueError, "does not match dataset scope"):
-            load_simulation_ground_truth(self.paths["ground_truth"], scope=other.scope)
+            load_simulation_ground_truth(
+                self.paths["ground_truth"], scope=other.scope, config=self.config
+            )
 
 
 class GroundTruthIsolationTest(EvaluationTestCase):
@@ -203,7 +227,7 @@ class MetricsTest(EvaluationTestCase):
             for row in build_model("path_level_shapley")
             .fit(self.dataset)
             .attribute(self.dataset)
-            if row.touchpoint != fixtures.BRAND
+            if row.touchpoint != self.config.to_five_segment(fixtures.BRAND)
         ]
         # Re-conserve the remaining rows so the contract check still passes and
         # the metrics, not the validator, register the omission.
@@ -224,7 +248,10 @@ class MetricsTest(EvaluationTestCase):
                     )
                 )
         report = evaluate_standard_output(rebalanced, self.dataset, self.ground_truth)
-        self.assertEqual(report.missing_in_model, (fixtures.BRAND,))
+        self.assertEqual(
+            report.missing_in_model,
+            (self.config.to_five_segment(fixtures.BRAND),),
+        )
         self.assertEqual(report.missing_in_ground_truth, ())
         for metrics in report.metrics.values():
             self.assertEqual(metrics.touchpoint_count, 3)

@@ -23,13 +23,13 @@ lang: en-US
 - The current strategy module is a deterministic budget initializer with `is_optimized=false`.
 - New Ad Groups within one Campaign do not have distinguishable candidate-entity features, so the budget can only be split equally.
 - MTA shares describe historical credit allocation; they are not marginal revenue from a budget increase.
-- MTA-SIM's four-segment normalized touchpoints and this project's five-segment interaction-aware touchpoints are not directly interchangeable. `modules/mta_standard/` now bridges them through an explicit simulator configuration, but the fifth segment still cannot be recovered from four-segment data alone and must be supplied.
+- Current MTA-SIM and this project share native five-segment interaction-aware values. Historical four-segment fixtures remain supported only through an explicit `SimulatorConfig`; their missing interaction still cannot be inferred from delivery metrics.
 - `dnn_credit` is trained on path-level Shapley shares, so it is a learned surrogate of an observational method rather than an independent estimate, and its new-campaign prediction is a relative split rather than an outcome forecast.
 - There is currently no rolling-window stability analysis, response curve, offline policy evaluation, or online experiment feedback loop.
 
 ## Next-Stage Todos <span class="status-label status-recommendation" aria-label="Recommendation"></span>
 
-1. ~~**Build a data adapter layer**~~ — delivered in `modules/mta_standard/`: `SimulatorConfig` maps each four-segment key onto `CPC`/`CPM` and therefore onto `CLICK`/`IMPRESSION`, rejecting missing, ambiguous, and colliding mappings instead of guessing `INTERACTION_TYPE`. See [the standardized MTA interface](../attribution/standardized-interface/).
+1. ~~**Build a data adapter layer**~~ — delivered in `modules/mta_standard/`: native five-segment values pass through unchanged; `SimulatorConfig` remains only for historical four-segment input and rejects missing, ambiguous, and colliding mappings. See [the standardized MTA interface](../attribution/standardized-interface/).
 2. **Create an Ad Group feature table**: add candidate Keyword, SKU, Target, Audience, price, margin, inventory, historical Spend, and budget-limited status.
 3. **Define one response model**: predict `expected_revenue(ad_group, budget)`. Start with one supervised model as an auditable baseline; do not introduce a multi-model agent workflow.
 4. **Implement a constrained optimizer**: maximize expected revenue subject to total-budget, minimum-budget, capacity, and business-eligibility constraints.

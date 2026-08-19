@@ -13,9 +13,8 @@ Contents:
   report it was not prepared for.
 - ``_JsonPersistedModel`` — persistence for models whose only state is identity
   and fitted scope.
-- ``standard_rows_from_attribution_results`` — the output half of the key
-  adaptation boundary, converting five-segment estimator results back to
-  MTA-SIM's four-segment grain.
+- ``standard_rows_from_attribution_results`` — converts estimator results to
+  the shared native five-segment output contract without changing grain.
 
 Data flow: ``MtaSimDataset`` -> ``fit`` -> ``attribute`` -> list of
 ``StandardAttributionRow`` -> ``output_contract.validate_standard_output``.
@@ -35,7 +34,6 @@ from modules.mta_standard.src.output_contract import (
     ZERO_OUTCOME_WARNING,
     StandardAttributionRow,
 )
-from modules.mta_standard.src.touchpoint_adapter import to_four_segment
 
 from .attribution_contract import AttributionResult
 from .attribution_model_comparison import OUTCOME_FIELDS
@@ -59,7 +57,7 @@ class ModelCapabilities:
     supports_persistence: bool
     deterministic: bool
     supported_outcomes: tuple[str, ...] = SUPPORTED_OUTCOMES
-    grain: str = "four_segment_touchpoint"
+    grain: str = "five_segment_touchpoint"
 
 
 class MtaAttributionModel(ABC):
@@ -137,7 +135,7 @@ class MtaAttributionModel(ABC):
             dataset: The model-facing dataset.
 
         Returns:
-            list[StandardAttributionRow]: Standard rows at the four-segment
+            list[StandardAttributionRow]: Standard rows at the five-segment
             grain, ordered by touchpoint then outcome.
         """
 
@@ -235,11 +233,10 @@ def standard_rows_from_attribution_results(
     dataset: MtaSimDataset,
     results: Sequence[AttributionResult],
 ) -> list[StandardAttributionRow]:
-    """Convert five-segment results back to the standard four-segment grain.
+    """Convert estimator results to native five-segment standard rows.
 
-    This is the output half of the adaptation boundary. The wrapped algorithms
-    keep working in five-segment keys; nothing outside this function and the
-    loader sees that grain.
+    Native interaction-aware identity remains intact from the loader through
+    the estimators and standard output.
 
     Args:
         model: The model whose identity is stamped onto each row.
@@ -251,24 +248,9 @@ def standard_rows_from_attribution_results(
         list[StandardAttributionRow]: Rows ordered by touchpoint then by the
         declared outcome order.
 
-    Raises:
-        ValueError: if two five-segment results reduce to the same four-segment
-            key, which would silently merge two distinct touchpoints.
     """
-    by_four_segment: dict[str, AttributionResult] = {}
-    for result in results:
-        four = to_four_segment(result.touchpoint)
-        if four in by_four_segment:
-            raise ValueError(
-                "colliding output adaptation; "
-                f"{by_four_segment[four].touchpoint} and {result.touchpoint} both "
-                f"reduce to {four}"
-            )
-        by_four_segment[four] = result
-
     rows: list[StandardAttributionRow] = []
-    for four in sorted(by_four_segment):
-        result = by_four_segment[four]
+    for result in sorted(results, key=lambda item: item.touchpoint):
         for outcome in SUPPORTED_OUTCOMES:
             share_field, value_field = OUTCOME_FIELDS[outcome]
             total = float(dataset.outcome_totals[outcome])
@@ -279,7 +261,7 @@ def standard_rows_from_attribution_results(
                     report_start_date=dataset.scope.report_start_date,
                     report_end_date=dataset.scope.report_end_date,
                     marketplace=dataset.scope.marketplace,
-                    touchpoint=four,
+                    touchpoint=result.touchpoint,
                     outcome=outcome,
                     attribution_share=float(getattr(result, share_field)),
                     attributed_value=float(getattr(result, value_field)),

@@ -268,17 +268,14 @@ def attribution_evidence_from_standard_row(
     """Adapt one StandardAttributionRow into one AttributionEvidence.
 
     Args:
-        row: The standardized row, whose ``touchpoint`` is a four-segment
-            MTA-SIM key.
+        row: The standardized row, normally carrying a native five-segment
+            MTA-SIM interaction key.
         reporting_scope: The scope to attach. ``row`` carries no
             ``advertiser_id`` or ``currency``, so this cannot be derived
             from ``row`` alone; it is cross-checked, not filled in, against
             ``row.marketplace`` and ``row``'s report window.
-        simulator_config: When given, expands ``row.touchpoint`` to a
-            five-segment key first, so the resulting ``Touchpoint`` carries
-            a real ``interaction_type``. When omitted, the touchpoint is
-            adapted directly from four segments and ``interaction_type``
-            stays ``None`` — see :func:`touchpoint_from_four_segment_key`.
+        simulator_config: Compatibility mapping used only when a historical
+            caller supplies a four-segment row.
         provider: The provider ``row.touchpoint`` was reported by.
 
     Returns:
@@ -296,12 +293,19 @@ def attribution_evidence_from_standard_row(
     ):
         raise ValueError("row report window does not match reporting_scope window")
 
-    if simulator_config is not None:
+    segment_count = len(row.touchpoint.split(":"))
+    if segment_count == 5:
+        touchpoint = touchpoint_from_five_segment_key(
+            row.touchpoint, provider=provider
+        )
+    elif segment_count == 4 and simulator_config is not None:
         touchpoint = touchpoint_from_five_segment_key(
             simulator_config.to_five_segment(row.touchpoint), provider=provider
         )
-    else:
+    elif segment_count == 4:
         touchpoint = touchpoint_from_four_segment_key(row.touchpoint, provider=provider)
+    else:
+        raise ValueError("row.touchpoint must contain four or five segments")
 
     return AttributionEvidence(
         model_id=row.model_id,

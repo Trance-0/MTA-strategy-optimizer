@@ -34,6 +34,21 @@ const EMPTY = {
   budgetRecommendation: {},
   strategyRequest: {},
   candidatePool: {},
+  simulationResearch: {
+    runs: [],
+    providers: [],
+    products: [],
+    campaigns: [],
+    adGroups: [],
+    touchpoints: [],
+    productEconomics: [],
+    campaignProductLinks: [],
+    history: [],
+    delivery: [],
+    generationConfigs: [],
+    touchpointObservations: [],
+    masterObjects: [],
+  },
 };
 
 async function load() {

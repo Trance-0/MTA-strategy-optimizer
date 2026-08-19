@@ -223,7 +223,7 @@ class AdsDailyPerformance(Base):
 class PathReport(Base):
     """One anonymous aggregated conversion path.
 
-    `path` is a `>`-joined sequence of four-segment touchpoints. Rows are
+    `path` is a `>`-joined sequence of five-segment touchpoints. Rows are
     already aggregated to satisfy privacy thresholds; no user-level detail is
     stored or implied.
     """

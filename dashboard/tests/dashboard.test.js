@@ -28,13 +28,28 @@ process.env.DASHBOARD_HOSTED = "";
 const { parseCsv, readCsv } = await import("../server/csv.js");
 const { ENV_KEYS, RingBuffer, writeEnv, applyLogging, log, logState, clearLog } =
   await import("../server/settings.js");
-const { formatDate, loadSnapshot, TOUCHPOINT_SEGMENTS } = await import(
+const {
+  clearCaches,
+  formatDate,
+  loadSimulationResearch,
+  loadSnapshot,
+  TOUCHPOINT_SEGMENTS,
+} = await import(
   "../server/data_source.js"
 );
+const { createApp } = await import("../server/index.js");
 const { PAGES, PAGE_GROUPS, PAGE_KEYS, DEFAULT_PAGE } = await import("../src/pages.js");
 
 const HERE = resolve(import.meta.dirname);
 const APP_VUE = readFileSync(resolve(HERE, "..", "src", "App.vue"), "utf8");
+const BUDGET_MANAGER = readFileSync(
+  resolve(HERE, "..", "src", "views", "BudgetManager.vue"),
+  "utf8",
+);
+const CAMPAIGNS = readFileSync(
+  resolve(HERE, "..", "src", "views", "Campaigns.vue"),
+  "utf8",
+);
 
 // ---------------------------------------------------------------------------
 // CSV
@@ -317,4 +332,132 @@ test("the snapshot survives JSON serialisation unchanged", async () => {
   // and what a view receives.
   const snapshot = await loadSnapshot();
   assert.deepEqual(JSON.parse(JSON.stringify(snapshot)), snapshot);
+});
+
+test("a simulator sidecar becomes canonical file-mode research data", async () => {
+  const directory = mkdtempSync(join(tmpdir(), "mta-sim-dashboard-"));
+  writeFileSync(
+    join(directory, "effective_configuration.json"),
+    JSON.stringify({
+      seed: 7,
+      touchpoints: [{
+        identifier: "search",
+        ad_product: "SPONSORED_PRODUCTS",
+        ad_type: "PRODUCT_AD",
+        creative_type: null,
+        placement: "TOP_OF_SEARCH",
+        cost_per_click: 1.2,
+        cost_per_thousand_impressions: null,
+        base_impressions: 100,
+        click_through_rate: 0.1,
+        platform_conversion_rate: 0.2,
+        conversion_log_odds_effect: 0.4,
+      }],
+    }),
+  );
+  const scope = {
+    marketplace: "US",
+    advertiser_id: "adv",
+    currency: "USD",
+    report_start_date: "2026-01-01",
+    report_end_date: "2026-01-01",
+  };
+  writeFileSync(
+    join(directory, "simulation_research.json"),
+    JSON.stringify({
+      simulation_runs: [{
+        run_id: "sim-test",
+        seed: 7,
+        configuration_sha256: "a".repeat(64),
+        providers: [{ provider: "AMAZON_ADS", supported_ad_products: ["SPONSORED_PRODUCTS"] }],
+        products: [{ product_id: "p1" }],
+        campaigns: [{ campaign_id: "c1", provider: "AMAZON_ADS", ad_product: "SPONSORED_PRODUCTS" }],
+        ad_groups: [{ ad_group_id: "g1", campaign_id: "c1" }],
+        campaign_product_links: [{ campaign_id: "c1", product_id: "p1" }],
+        product_economics: [{ product_id: "p1", currency: "USD", unit_cogs: null }],
+        effective_configuration: { seed: 7 },
+      }],
+      budget_observations: [{ campaign_id: "c1", reporting_scope: scope,
+        configured_budget: 100, actual_spend: 80, budget_level: 1 }],
+      evaluation_outcome_observations: [{ campaign_id: "c1", product_id: "p1",
+        reporting_scope: scope, total_units: 4, total_revenue: 40,
+        contribution_profit: null, budget_level: 1 }],
+      delivery_observations: [],
+      touchpoint_observations: [],
+    }),
+  );
+  process.env.MTA_SIM_DATA_DIR = directory;
+  clearCaches();
+  const research = await loadSimulationResearch();
+  assert.equal(research.history.length, 1);
+  assert.equal(research.history[0].actual_spend, 80);
+  assert.equal(research.history[0].total_revenue, 40);
+  assert.equal(research.touchpoints[0].compatibility_keys.length, 2);
+  assert.equal(research.productEconomics[0].unit_cogs, null);
+  delete process.env.MTA_SIM_DATA_DIR;
+  clearCaches();
+});
+
+test("the dashboard server starts and protects generated observations", async () => {
+  const server = createApp().listen(0);
+  await new Promise((resolvePromise) => server.once("listening", resolvePromise));
+  const { port } = server.address();
+  try {
+    const dashboard = await fetch(`http://127.0.0.1:${port}/api/dashboard`);
+    assert.equal(dashboard.status, 200);
+    const master = await fetch(
+      `http://127.0.0.1:${port}/api/master/product/p1`,
+      { method: "PUT", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ payload: { product_id: "p1" } }) },
+    );
+    assert.equal(master.status, 403);
+    const historyMutation = await fetch(
+      `http://127.0.0.1:${port}/api/history/delivery/1`,
+      { method: "DELETE" },
+    );
+    assert.equal(historyMutation.status, 404);
+  } finally {
+    await new Promise((resolvePromise) => server.close(resolvePromise));
+  }
+});
+
+test("Budget Manager exposes progressive canonical entity sections", () => {
+  for (const label of ["Overview", "Ad Providers", "Products", "Campaigns",
+    "Ad Groups", "Touchpoints", "Product Economics", "Generation Configs"]) {
+    assert.match(BUDGET_MANAGER, new RegExp(label));
+  }
+  for (const field of ["placement_availability", "creative_availability",
+    "interaction_type_availability", "billing_type", "click_through_rate"]) {
+    assert.match(BUDGET_MANAGER, new RegExp(field));
+  }
+  for (const field of ["sku_id", "variable_fulfillment_cost_per_unit",
+    "variable_platform_fee_per_unit", "other_variable_cost_per_unit"]) {
+    assert.match(BUDGET_MANAGER, new RegExp(field));
+  }
+  for (const behavior of ["Upload and validate JSON", "Download snapshot",
+    "Edit as future-run draft", "Archive draft", "Validate and save"]) {
+    assert.match(BUDGET_MANAGER, new RegExp(behavior));
+  }
+  assert.match(BUDGET_MANAGER, /missing COGS is not treated as zero/);
+  assert.match(BUDGET_MANAGER, /Generated observations are read-only/);
+});
+
+test("Campaigns exposes generated filters and presentation-only similarity", () => {
+  for (const label of ["Provider", "Product", "Campaign", "Ad product",
+    "Marketplace", "Simulation run", "Configured budget vs actual spend",
+    "Interaction-aware delivery"]) {
+    assert.match(CAMPAIGNS, new RegExp(label, "i"));
+  }
+  assert.match(
+    CAMPAIGNS,
+    /Historical reference only\. Not used by attribution or strategy optimization\./,
+  );
+  for (const field of ["subject_type", "subject_id", "comparable_id",
+    "similarity_score", "rationale", "generated_by"]) {
+    assert.match(CAMPAIGNS, new RegExp(field));
+  }
+  assert.match(CAMPAIGNS, /row\.similarity_score >= similarityThreshold\.value/);
+  assert.match(CAMPAIGNS, /type="range" min="0" max="1" step="0\.05"/);
+  assert.match(CAMPAIGNS, /row\.subject_id !== row\.comparable_id/);
+  assert.match(CAMPAIGNS, /Attribution not available\./);
 });

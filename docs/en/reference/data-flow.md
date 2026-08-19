@@ -37,7 +37,7 @@ Dependencies are explicit Python package imports. `mta_standard` owns loading an
 
 ## Layer 0 — Simulated data generation <span class="status-label status-verified" aria-label="Verified"></span>
 
-The primary path runs `script/generate_mta_sim_dataset.py`. It invokes the pinned `external/mta_sim_dataset/ZheyuanWu` generator, keeps its original four-segment tables, aggregates the generated daily path windows into one report scope, and loads the result through `modules/mta_standard/src/mta_sim_generator_adapter.py`. Ground truth remains separate for evaluation.
+The primary path runs `script/generate_mta_sim_dataset.py`. It invokes the pinned `external/mta_sim_dataset/ZheyuanWu` generator, preserves the original CSV schemas with native five-segment values, aggregates the generated daily path windows into one report scope, and loads the result through `modules/mta_standard/src/mta_sim_generator_adapter.py`. Ground truth remains separate for evaluation.
 
 The following event pipeline is retained only to reproduce the repository's committed historical five-segment fixture and the entity bridge required by the current strategy example.
 
@@ -224,26 +224,26 @@ Inside `tempfile.TemporaryDirectory()`, `build_path_report()` creates a temporar
 
 The standardization sequence is:
 
-1. `dataloader.load_amc_path_report` validates the four-segment report header and scope.
-2. `SimulatorConfig.adapt_path` maps paths to five segments, and `validate_amc_aggregated_row` validates every aggregate.
+1. `dataloader.load_amc_path_report` validates the unchanged report header, scope, and native five-segment path values.
+2. Native paths pass unchanged; only a historical four-segment fixture uses `SimulatorConfig.adapt_path`. `validate_amc_aggregated_row` validates every aggregate.
 3. The validated rows become `MtaSimDataset.path_rows`.
 4. `run_registered_models(dataset)` calls each attribution model's `fit(dataset)` and `attribute(dataset)` methods.
-5. `standard_rows_from_attribution_results` maps the result back to four segments, and `validate_standard_output` enforces the output contract.
+5. `standard_rows_from_attribution_results` preserves five-segment results, and `validate_standard_output` enforces the output contract.
 
-The key grain changes twice and only at the edges:
+The normal key grain does not change:
 
 ### Load
 
-- **Direction:** four → five segments
-- **Owner:** `SimulatorConfig.to_five_segment`
+- **Direction:** five → five segments
+- **Owner:** `dataloader` validation
 
 ### Output
 
-- **Direction:** five → four segments
-- **Owner:** `to_four_segment`
+- **Direction:** five → five segments
+- **Owner:** `standard_rows_from_attribution_results`
 
 > [!CAUTION]
-> `IMPRESSION` versus `CLICK` **cannot** be recovered from four-segment MTA-SIM data. It is supplied by explicit `SimulatorConfig` mapping (`CPC → CLICK`, `CPM → IMPRESSION`), and missing, ambiguous, or colliding mappings are rejected. Inferring it from impression or click counts would invent a contract the data never stated.
+> `IMPRESSION` versus `CLICK` **cannot** be recovered from historical four-segment MTA-SIM data. That compatibility-only input requires explicit `SimulatorConfig` mapping (`CPC → CLICK`, `CPM → IMPRESSION`), and missing, ambiguous, or colliding mappings are rejected. Native current MTA-SIM output already carries the interaction.
 
 > [!NOTE]
 > The Ads performance table is loaded and validated but never enters `path_rows`. The standard output row carries no spend or efficiency column, so feeding delivery metrics into the model interface would add a dependency the contract does not need.

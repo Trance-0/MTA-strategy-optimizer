@@ -91,7 +91,7 @@ This table is the source of spend and of the report window itself: the pipeline 
 
 ### `PathReport`
 
-Table `path_report`. One anonymous aggregated conversion path, where `path` is a `>`-joined sequence of touchpoints and `path_length` is its step count, with `users`, `converted_users`, `purchase_count`, and `revenue`. Rows arrive already aggregated to satisfy privacy thresholds; no user-level detail is stored or implied.
+Table `path_report`. One anonymous aggregated conversion path, where `path` is a `>`-joined sequence of native five-segment interaction-aware touchpoints and `path_length` is its step count, with `users`, `converted_users`, `purchase_count`, and `revenue`. Rows arrive already aggregated to satisfy privacy thresholds; no user-level detail is stored or implied.
 
 ### `TouchpointEntityBridge`
 

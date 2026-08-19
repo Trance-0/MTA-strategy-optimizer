@@ -17,8 +17,8 @@ The adapter flow is:
 
 1. read the `external/mta_sim_dataset/ZheyuanWu` configuration;
 2. run the ZheyuanWu baseline or regional generator;
-3. receive the original four-segment path, performance, and ground-truth tables;
-4. adapt them through `mta_sim_generator_adapter` into a single-scope path report with explicit CPC/CPM interaction mapping; and
+3. receive the original CSV schemas carrying native five-segment path, performance, and ground-truth values;
+4. preserve the interaction-aware values through `mta_sim_generator_adapter` while aggregating a single-scope path report; and
 5. load the result as `MtaSimDataset` for the locally registered models.
 
 Simulation ground truth remains evaluation-only. It is normalized into a compatible reporting scope but is never attached to `MtaSimDataset` or passed to `fit()` or `attribute()`.
@@ -57,7 +57,7 @@ uv run python -X utf8 -B script/generate_mta_sim_dataset.py \
 
 ### `amc_path_report.csv`
 
-Owner: ZheyuanWu. Role: Original daily-window four-segment path report.
+Owner: ZheyuanWu. Role: Original daily-window path report with native five-segment values and unchanged columns.
 
 ### `amazon_ads_daily_touchpoint_performance.csv`
 

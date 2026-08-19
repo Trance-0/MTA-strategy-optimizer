@@ -204,7 +204,7 @@ A future constrained optimizer, described in [Strategy Optimization Model](/en/s
 
 ## Current Availability <span class="status-label status-verified" aria-label="Verified"></span>
 
-Fully implemented and validated by 7 dedicated tests in `modules/mta_common/tests/test_campaign.py` (`AdGroupTests`), with the `initial_budget_recommendation.json` adapter path covered by `StrategyRequestAdapterTests` in `modules/mta_common/tests/test_legacy_adapters.py`. Part of the 96-test `modules/mta_common` suite, all passing. Nothing outside `modules/mta_common/tests/` constructs an `AdGroup` yet.
+Fully implemented and validated by dedicated tests in `modules/mta_common/tests/test_campaign.py`, with the legacy initial-budget path covered by `test_legacy_adapters.py`. The MTA-SIM research adapter constructs canonical Ad Groups while retaining simulator-only display name/status in parallel context.
 
 ## Known Limitations <span class="status-label status-verified" aria-label="Verified"></span>
 

@@ -23,7 +23,7 @@ from typing import Mapping, Sequence
 
 from modules.mta_attribution.src.attribution_model_comparison import OUTCOME_FIELDS
 
-from .touchpoint_adapter import canonicalize_four_segment_key
+from modules.mta_attribution.src.touchpoint_key import canonicalize_touchpoint_key
 
 
 # The standardized contract reports the same three outcomes the existing
@@ -81,7 +81,7 @@ class StandardAttributionRow:
         report_start_date: Inclusive ISO start date of the report scope.
         report_end_date: Inclusive ISO end date of the report scope.
         marketplace: Advertising marketplace code.
-        touchpoint: Canonical four-segment MTA-SIM touchpoint key.
+        touchpoint: Canonical five-segment interaction-aware touchpoint key.
         outcome: One of :data:`SUPPORTED_OUTCOMES`.
         attribution_share: Share of the outcome credited to the touchpoint.
         attributed_value: Absolute outcome credited to the touchpoint.
@@ -179,7 +179,7 @@ def validate_standard_output(
         outcome_totals: Observed totals per outcome for the report scope, as
             carried by :class:`dataloader.MtaSimDataset`.
         expected_touchpoints: When given, every model/outcome group must report
-            exactly this set of four-segment touchpoints.
+            exactly this set of five-segment touchpoints.
 
     Returns:
         dict: ``{"row_count", "group_count", "models"}`` describing what passed.
@@ -205,7 +205,7 @@ def validate_standard_output(
     expected_keys = (
         None
         if expected_touchpoints is None
-        else {canonicalize_four_segment_key(key) for key in expected_touchpoints}
+        else {canonicalize_touchpoint_key(key) for key in expected_touchpoints}
     )
 
     seen: set[tuple] = set()
@@ -222,10 +222,10 @@ def validate_standard_output(
                 f"{context}: outcome must be one of {list(SUPPORTED_OUTCOMES)}; "
                 f"got {row.outcome!r}"
             )
-        canonical = canonicalize_four_segment_key(row.touchpoint)
+        canonical = canonicalize_touchpoint_key(row.touchpoint)
         if canonical != row.touchpoint:
             raise ValueError(
-                f"{context}: touchpoint must be a canonical four-segment key; "
+                f"{context}: touchpoint must be a canonical five-segment key; "
                 f"got {row.touchpoint!r}"
             )
         if not isinstance(row.valid, bool):
