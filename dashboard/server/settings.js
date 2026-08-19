@@ -19,6 +19,7 @@ import { resolve } from "node:path";
 
 import {
   REPO_ROOT,
+  configReadOnly,
   databaseSettings,
   isHosted,
   safeSummary,
@@ -183,10 +184,14 @@ export function writeEnv(updates, path = ENV_PATH) {
 
 /** Return the `{ label, colour, detail }` triple the rail displays. */
 export async function status() {
+  // The dot colours match the deployment accents in `src/lib/deployment.js`:
+  // green wherever the dashboard is reading committed files and cannot write,
+  // and the brand tint only where a database is actually connected. The rail
+  // and the theme therefore cannot disagree about which deployment this is.
   if (isHosted()) {
     return {
       label: "Sample data",
-      colour: "#9db7e8",
+      colour: "#7ed6a4",
       detail: "Published build, reading the repository's committed samples.",
     };
   }
@@ -200,8 +205,8 @@ export async function status() {
   }
   return {
     label: "Local files",
-    colour: "#9db7e8",
-    detail: "Reading committed CSV and JSON artifacts.",
+    colour: "#7ed6a4",
+    detail: "Reading committed CSV and JSON artifacts. Read-only.",
   };
 }
 
@@ -268,6 +273,7 @@ export async function settingsState() {
   const values = readEnv();
   const state = {
     hosted: isHosted(),
+    readOnly: configReadOnly(),
     useDatabase: useDatabase(),
     connection: {
       PG_HOST: values.PG_HOST ?? "",

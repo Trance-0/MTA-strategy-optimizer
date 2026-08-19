@@ -94,6 +94,11 @@ export function isHosted() {
   return flag("DASHBOARD_HOSTED");
 }
 
+/** Return true when deployment configuration may be read but not rewritten. */
+export function configReadOnly() {
+  return flag("DASHBOARD_CONFIG_READ_ONLY");
+}
+
 /** Return true when the dashboard should read from PostgreSQL. */
 export function useDatabase() {
   if (isHosted()) return false;
@@ -143,4 +148,10 @@ export function safeSummary(settings = databaseSettings()) {
 export function serverPort() {
   loadEnv();
   return Number.parseInt(process.env.DASHBOARD_PORT || "8501", 10);
+}
+
+/** The interface the API and built client bind to. Loopback is the safe default. */
+export function serverHost() {
+  loadEnv();
+  return String(process.env.DASHBOARD_HOST || "127.0.0.1").trim();
 }

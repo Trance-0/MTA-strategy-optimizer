@@ -12,10 +12,22 @@
  * settings modal, and the log stream.
  */
 
+/*
+ * The four accent tokens below are the defaults. `App.vue` overrides them per
+ * deployment from `src/lib/deployment.js`: brand blue where a database is
+ * connected, Microsoft Excel's green where the dashboard is reading committed
+ * files and cannot write. Because every rule in this sheet reads the token
+ * rather than a literal, that one override repaints the whole interface and no
+ * component needs a variant class. The chart series palette is deliberately
+ * not themed -- a series colour follows its entity, so the same Campaign must
+ * keep its colour across both deployments.
+ */
+
 :root {
   --navy: #071a3d;
   --blue: #2456a6;
   --blue2: #eaf1fb;
+  --blue-strong: #1e488c;
   --bg: #f5f6f8;
   --line: #dfe3ea;
   --line2: #c8cfda;
@@ -659,12 +671,48 @@ code {
 }
 
 .btn.primary:hover:not(:disabled) {
-  background: #1e488c;
+  background: var(--blue-strong);
+}
+
+/*
+ * Destructive actions are the one place colour leads, because the cost of
+ * misreading one is not symmetric with the cost of misreading anything else.
+ * The word is always "Delete" or "Archive", so the colour remains a second
+ * encoding rather than the only one.
+ */
+.btn.danger {
+  background: var(--red);
+  border-color: var(--red);
+  color: #fff;
+  font-weight: 700;
+}
+
+.btn.danger:hover:not(:disabled) {
+  background: #97180f;
 }
 
 .btn.small {
   padding: 6px 9px;
   font-size: 11px;
+}
+
+/*
+ * A file input styled as a button. The native control is replaced rather than
+ * hidden with `display: none`, which would take it out of the tab order.
+ */
+.button-like {
+  position: relative;
+  overflow: hidden;
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+.button-like input[type="file"] {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
 }
 
 .btn.link {
@@ -886,6 +934,159 @@ td.num {
   padding: 18px 12px;
   margin: 0;
   text-align: center;
+}
+
+/* ---------------------------------------------------------------------------
+   The entity list: toolbar, selection, row actions, pager
+   --------------------------------------------------------------------------- */
+
+.entity-table {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+}
+
+.entity-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.entity-search {
+  flex: 1 1 220px;
+  min-width: 180px;
+  max-width: 340px;
+}
+
+.entity-count {
+  font-size: 11.5px;
+  color: var(--muted);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* Pushed to the right so the destructive control never sits under the cursor
+   that was aiming for the search field. */
+.entity-batch {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--blue);
+  background: var(--blue2);
+  border-radius: 6px;
+  padding: 5px 9px;
+}
+
+.entity-page-size {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+}
+
+.entity-page-size select {
+  width: auto;
+  padding: 5px 24px 5px 8px;
+}
+
+/* The batch bar takes the right slot when present; otherwise the page size
+   does, so the toolbar has no gap that moves as rows are selected. */
+.entity-toolbar > .entity-page-size:nth-child(3) {
+  margin-left: auto;
+}
+
+.select-cell {
+  width: 34px;
+  text-align: center;
+  padding-left: 10px;
+  padding-right: 0;
+}
+
+.select-cell input {
+  width: 14px;
+  height: 14px;
+  accent-color: var(--blue);
+  cursor: pointer;
+  vertical-align: middle;
+}
+
+tbody tr.selected {
+  background: var(--blue2);
+}
+
+tbody tr.selected:hover {
+  background: var(--blue2);
+}
+
+.row-actions-head {
+  text-align: right;
+  width: 1%;
+}
+
+.row-actions {
+  display: flex;
+  gap: 6px;
+  justify-content: flex-end;
+  white-space: nowrap;
+}
+
+.entity-pager {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.entity-range {
+  font-size: 11.5px;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.entity-pager-controls {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.entity-page-of {
+  font-size: 11.5px;
+  color: var(--muted);
+  font-weight: 600;
+  padding: 0 4px;
+  white-space: nowrap;
+}
+
+/* The deployment banner, stated once above every view. */
+.deployment-notice {
+  border-color: var(--blue);
+  background: var(--blue2);
+}
+
+/* The confirmation is narrower than the settings modal: it asks one question
+   and a wide dialog would suggest there is more to read. */
+.confirm-modal {
+  width: min(520px, 100%);
+}
+
+.confirm-list {
+  margin: 0;
+  padding-left: 18px;
+  max-height: 220px;
+  overflow-y: auto;
+  font-size: 12px;
+  line-height: 1.7;
 }
 
 .table-view {

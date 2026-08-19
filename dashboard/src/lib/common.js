@@ -9,6 +9,8 @@
  *     the snapshot -> here -> the six views
  */
 
+import { count, money, percent, ratio } from "../theme.js";
+
 /** Outcome keys as the pipeline writes them, and how they are shown. */
 export const OUTCOME_LABELS = {
   converted_users: "Converted users",
@@ -29,6 +31,55 @@ export const OUTCOME_VALUE_COLUMNS = {
   purchase_count: "attributed_purchase_count",
   revenue: "attributed_revenue",
 };
+
+/**
+ * The formats that are read right-aligned, so a column of numbers lines up on
+ * its digits rather than on its first character.
+ */
+export const NUMERIC_FORMATS = new Set([
+  "number",
+  "money",
+  "percent",
+  "ratio",
+  "share",
+]);
+
+/**
+ * Render one cell of a declared column.
+ *
+ * Shared by every table in the dashboard, so the same declaration produces the
+ * same text wherever it is mounted and a new format cannot mean two things in
+ * two places. An absent value is `--` rather than blank, so a missing number is
+ * visibly missing.
+ *
+ * An array or an object is flattened here rather than at each call site: the
+ * canonical entity records carry both — a Provider's supported ad products, a
+ * Product's per-Provider identifiers — and `String(value)` renders the first as
+ * a comma-joined list only by accident and the second as `[object Object]`.
+ */
+export function renderCell(column, row) {
+  const value = row[column.key];
+  if (typeof column.format === "function") return column.format(value, row);
+  if (value === null || value === undefined || value === "") return "--";
+  switch (column.format) {
+    case "number":
+      return count(value, column.digits ?? 0);
+    case "money":
+      return money(value, column.currency ?? "$");
+    case "percent":
+      return percent(value, column.digits ?? 2);
+    case "share":
+      return Number(value).toFixed(column.digits ?? 4);
+    case "ratio":
+      return ratio(value, column.digits ?? 2);
+    case "flag":
+      return value ? "Yes" : "No";
+    default:
+      if (Array.isArray(value)) return value.length ? value.join(", ") : "--";
+      if (typeof value === "object") return JSON.stringify(value);
+      return String(value);
+  }
+}
 
 const CURRENCY_SYMBOLS = { USD: "$", EUR: "€", GBP: "£", JPY: "¥" };
 

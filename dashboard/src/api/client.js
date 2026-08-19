@@ -105,8 +105,11 @@ export async function fetchSettings() {
       useDatabase: false,
       connection: null,
       status: {
+        // The rail dot matches the read-only deployment accent in
+        // `src/lib/deployment.js`, so the rail and the theme cannot disagree
+        // about which deployment this is.
         label: "Sample data",
-        colour: "#9db7e8",
+        colour: "#7ed6a4",
         detail: "Published build, reading the repository's committed samples.",
       },
       logging: { enabled: false, level: "INFO", capacity: 0, records: [] },

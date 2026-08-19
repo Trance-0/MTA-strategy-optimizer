@@ -1,6 +1,6 @@
 ---
 title: Navigation Rail and Settings
-compact: "The rail's structure (OVERVIEW/PLANNING/INSIGHTS groups, hash-based routing) and the settings module it pins to its foot: the DATABASE toggle, PostgreSQL fields, Test connection, Save to .env, the write-only password, and the bounded logging ring buffer. Specifies `pages.js`, `App.vue`, `main.js`, `server/settings.js`."
+compact: "Navigation rail and settings: grouped hash routing, DATABASE/PostgreSQL controls, protected server read-only mode, write-only passwords, and the bounded logging ring buffer. Specifies pages.js, App.vue, main.js, and server/settings.js."
 lang: en-US
 source_files: dashboard/src/pages.js, dashboard/src/App.vue, dashboard/src/main.js, dashboard/server/settings.js
 ---
@@ -20,6 +20,8 @@ The rail writes the selected page into the location hash, so a view is linkable 
 ### The settings module
 
 Everything about the dashboard's own plumbing is pinned to the foot of the rail, ruled off from the view navigation above it, so it never reads as a seventh place to navigate to. It shows the active source, a status dot, and whether logging is on, and opens a modal with two tabs:
+
+When `DASHBOARD_CONFIG_READ_ONLY=true`, the server continues to report its configured source but rejects every settings mutation. The modal replaces its connection form with the server-configuration instruction and disables logging controls, so a team-server visitor cannot rewrite protected credentials or process state through the browser.
 
 #### Data source
 
@@ -50,7 +52,7 @@ Source: `dashboard/server/settings.js`
 - Responsibility: Back the settings module in the foot of the rail — edit the credentials this dashboard connects with, and capture the data access log while it streams.
 - Inputs: `.env` at the repository root, the live environment as a fallback, and the reader's entries in the modal.
 - Outputs: `readEnv()`, `writeEnv()`, `status()`, `testConnection()`, `applyLogging()`, `loggingEnabled()`, `logState()`, `log()`, `clearLog()`, `settingsState()`, and `RingBuffer`.
-- Behavior contract: **No credential is written to a tracked file, to the API response, or to the log.** `.env` is git-ignored, `sample.env` is the tracked template and holds no real value, and the password is rendered only through `config.safeSummary()`, which omits it by construction. `writeEnv()` rewrites the file rather than appending to it, preserving comments and unrelated keys and replacing a key in place, so one key cannot end up with two values and the winner decided by read order; it does not accumulate a trailing blank line on repeated saves; and it then clears the loader caches and disposes the pool, because both would otherwise survive the edit. `testConnection()` connects with the values just typed rather than the values saved, and closes the client whether or not the probe succeeded, so a failed test cannot leave a socket open on a shared instance. The log is a fixed-capacity ring buffer, not a file, so an open dashboard cannot fill a disk; each message is truncated so one record cannot dominate it; and a record below the active level is dropped rather than stored and filtered on display. Logging is off by default because it costs time on every request.
+- Behavior contract: **No credential is written to a tracked file, to the API response, or to the log.** `.env` is git-ignored, `sample.env` is the tracked template and holds no real value, and the password is rendered only through `config.safeSummary()`, which omits it by construction. `settingsState()` carries the read-only flag that lets the modal distinguish a protected server from an editable checkout. `writeEnv()` rewrites the file rather than appending to it, preserving comments and unrelated keys and replacing a key in place, so one key cannot end up with two values and the winner decided by read order; it does not accumulate a trailing blank line on repeated saves; and it then clears the loader caches and disposes the pool, because both would otherwise survive the edit. `testConnection()` connects with the values just typed rather than the values saved, and closes the client whether or not the probe succeeded, so a failed test cannot leave a socket open on a shared instance. The log is a fixed-capacity ring buffer, not a file, so an open dashboard cannot fill a disk; each message is truncated so one record cannot dominate it; and a record below the active level is dropped rather than stored and filtered on display. Logging is off by default because it costs time on every request.
 - Dependencies: `pg` for the connection test, plus `server/config.js` and `server/data_source.js`.
 - Verification: `dashboard/tests/dashboard.test.js`, which asserts `writeEnv()` preserves comments and unrelated keys, appends a missing key exactly once, does not grow a blank line on repeated saves, and writes every key the dialog sends; and that the buffer stays bounded, starts disabled, honours its level, and truncates. The tests redirect the path to a temporary file, so the real `.env` is never touched.
 

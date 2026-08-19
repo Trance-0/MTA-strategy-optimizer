@@ -37,6 +37,45 @@ export const TEXT = "#161a22";
 export const MUTED = "#667085";
 export const SUBTLE = "#8a94a6";
 
+/**
+ * The two deployment accents.
+ *
+ * The dashboard ships in two deployments, and which one a reader is looking at
+ * governs how every number on the page may be used, so it is carried by the
+ * whole interface rather than by one badge. Brand blue where a database is
+ * connected and data operations work; Microsoft Excel's own green (`#217346`)
+ * where the dashboard is reading a table of committed values and cannot write,
+ * which is the association a reader already has for a spreadsheet.
+ *
+ * `App.vue` applies the selected set by overriding the custom properties
+ * `style.css` reads, so one override repaints everything.
+ *
+ * These live here because they are colours, but they are deliberately kept out
+ * of `SERIES`: a series colour follows its entity, so the same Campaign must
+ * keep its colour across both deployments. `tests/dashboard.test.js` asserts
+ * the two sets never intersect.
+ */
+export const DEPLOYMENT_THEMES = {
+  read_only: {
+    key: "read_only",
+    accent: "#217346",
+    accentSoft: "#e6f2ea",
+    accentStrong: "#1a5c38",
+    rail: "#10331f",
+    railActive: "#1c5c39",
+    dot: "#7ed6a4",
+  },
+  writable: {
+    key: "writable",
+    accent: BLUE,
+    accentSoft: PALE_BLUE,
+    accentStrong: "#1e488c",
+    rail: NAVY,
+    railActive: "#143a79",
+    dot: "#7ee0b0",
+  },
+};
+
 /** Reliability states. Each is shown with its word, never colour alone. */
 export const GREEN = "#18794e";
 export const AMBER = "#946200";

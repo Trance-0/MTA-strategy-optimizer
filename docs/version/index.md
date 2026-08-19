@@ -11,6 +11,11 @@ The project version is recorded in the repository-root `VERSION` file. Each page
 
 This section records **what** changed. See the [work log](../worklog/) for **who** did the work and when.
 
+## [0.9.22](0.9.22.md)
+
+- Date: 2026-08-19
+- Summary: Derived write capability from the snapshot's data source rather than the build flag, themed the read-only and database-connected deployments apart, and replaced Budget Manager's detail lists with paged, selectable entity tables carrying row edit and confirmed deletion
+
 ## [0.9.21](0.9.21.md)
 
 - Date: 2026-08-19
@@ -26,7 +31,7 @@ This section records **what** changed. See the [work log](../worklog/) for **who
 - Date: 2026-08-18
 - Summary: Grouped the canonical data-model class reference into eight ordered subsections and added a vertical topological Draw.io dependency map with arrows reserved for foreign-key-style identifiers
 
-## [0.9.18](0.9.18.md)
+## [0.9.18](0.9/0.9.18.md)
 
 - Date: 2026-08-18
 - Summary: Added a project-wide documentation table-usage rule to `AGENTS.md` and decomposed 135 non-comparison tables into sub-level headings across 45 files under `docs/en`, `docs/version`, and `docs/worklog`

@@ -10,13 +10,16 @@
  */
 import { computed, ref } from "vue";
 
+import ConfirmDialog from "../components/ConfirmDialog.vue";
 import DataTable from "../components/DataTable.vue";
+import EntityTable from "../components/EntityTable.vue";
 import KeyValuePanel from "../components/KeyValuePanel.vue";
 import MetricRow from "../components/MetricRow.vue";
 import PlotlyChart from "../components/PlotlyChart.vue";
 import ReliabilityBanner from "../components/ReliabilityBanner.vue";
 import { OUTCOME_LABELS, currencySymbol, sortBy } from "../lib/common.js";
 import { useDashboard } from "../lib/useDashboard.js";
+import { useDeployment } from "../lib/deployment.js";
 import {
   archiveMasterObject,
   saveMasterObject,
@@ -24,6 +27,7 @@ import {
 import * as theme from "../theme.js";
 
 const { data, reload } = useDashboard();
+const { writable, readOnlyReason } = useDeployment();
 const research = computed(() => data.value.simulationResearch ?? {});
 const section = ref("overview");
 const SECTIONS = [
@@ -59,12 +63,195 @@ const editorText = ref("");
 const editorError = ref("");
 const uploadedConfig = ref(null);
 
-const databaseEditing = computed(() => data.value.mode === "database");
+/**
+ * Editing is allowed only where there is a database to write to. The published
+ * build and a local file-mode run are both read-only, for the same reason.
+ */
+const databaseEditing = writable;
+
 const sectionDrafts = computed(() =>
   (research.value.masterObjects ?? []).filter(
     (item) => item.entity_type === entityTypes[section.value],
   ),
 );
+
+// ---------------------------------------------------------------------------
+// The row abstracts
+// ---------------------------------------------------------------------------
+
+/**
+ * The summary columns for each entity section.
+ *
+ * A row is an abstract, not the record: these are the fields a reader scans a
+ * list by. Everything else about a record is behind that row's Edit control,
+ * which shows the whole object. The detail formerly rendered as stacked
+ * paragraphs is therefore still reachable, but it no longer competes with the
+ * list for the page.
+ */
+const SECTION_COLUMNS = {
+  providers: [
+    { key: "provider", label: "Provider" },
+    { key: "supported_ad_products", label: "Supported ad products" },
+    { key: "format_availability", label: "Format" },
+    { key: "placement_availability", label: "Placement" },
+    { key: "creative_availability", label: "Creative" },
+    { key: "interaction_type_availability", label: "Interaction" },
+    {
+      key: "active",
+      label: "State",
+      format: (value) => (value === false ? "Archived" : "Active"),
+      tone: (value) => (value === false ? "gray" : "green"),
+    },
+  ],
+  products: [
+    { key: "product_id", label: "Product" },
+    { key: "name", label: "Name" },
+    { key: "sku_id", label: "SKU" },
+    { key: "category", label: "Category" },
+    { key: "brand", label: "Brand" },
+    { key: "inventory_units", label: "Inventory", format: "number" },
+    { key: "salable", label: "Salable", format: "flag" },
+    { key: "status", label: "Status" },
+  ],
+  campaigns: [
+    { key: "campaign_id", label: "Campaign" },
+    { key: "campaign_name", label: "Name" },
+    { key: "provider", label: "Provider" },
+    { key: "ad_product", label: "Ad product" },
+    {
+      key: "baseline_daily_budget",
+      label: "Baseline daily budget",
+      format: "money",
+    },
+    { key: "product_count", label: "Products", format: "number" },
+    { key: "ad_group_count", label: "Ad Groups", format: "number" },
+    { key: "status", label: "Status" },
+  ],
+  adGroups: [
+    { key: "ad_group_id", label: "Ad Group" },
+    { key: "name", label: "Name" },
+    { key: "campaign_id", label: "Campaign" },
+    {
+      key: "initial_daily_budget",
+      label: "Initial daily budget",
+      format: "money",
+    },
+    { key: "status", label: "Status" },
+  ],
+  touchpoints: [
+    { key: "identifier", label: "Identifier" },
+    { key: "provider", label: "Provider" },
+    { key: "ad_product", label: "Ad product" },
+    { key: "format", label: "Format" },
+    { key: "placement", label: "Placement" },
+    { key: "creative", label: "Creative" },
+    { key: "supported_interactions", label: "Interactions" },
+    { key: "billing_type", label: "Billing" },
+    { key: "cost_per_click", label: "CPC", format: "money" },
+    { key: "cost_per_thousand_impressions", label: "CPM", format: "money" },
+    { key: "click_through_rate", label: "CTR", format: "percent" },
+  ],
+  productEconomics: [
+    { key: "product_id", label: "Product" },
+    { key: "currency", label: "Currency" },
+    { key: "unit_price", label: "Price", format: "money" },
+    { key: "unit_cogs", label: "COGS", format: "money" },
+    {
+      key: "variable_cost_per_unit",
+      label: "Variable cost",
+      format: "money",
+    },
+    {
+      key: "unit_contribution_margin",
+      label: "Contribution margin",
+      // Missing economics stay missing. `renderCell` shows `--` for null, and
+      // treating it as zero here would invent a margin the data does not have.
+      format: "money",
+    },
+    { key: "margin_source", label: "Source" },
+  ],
+  generationConfigs: [
+    { key: "run_id", label: "Run" },
+    { key: "seed", label: "Seed", format: "number" },
+    { key: "configuration_sha256", label: "Configuration SHA-256" },
+  ],
+};
+
+/** The rows behind each section, with the counts a summary column needs. */
+const SECTION_ROWS = {
+  providers: () => research.value.providers ?? [],
+  products: () => research.value.products ?? [],
+  campaigns: () =>
+    (research.value.campaigns ?? []).map((item) => ({
+      ...item,
+      product_count: (research.value.campaignProductLinks ?? []).filter(
+        (link) => link.campaign_id === item.campaign_id,
+      ).length,
+      ad_group_count: (research.value.adGroups ?? []).filter(
+        (group) => group.campaign_id === item.campaign_id,
+      ).length,
+    })),
+  adGroups: () => research.value.adGroups ?? [],
+  touchpoints: () => research.value.touchpoints ?? [],
+  productEconomics: () => research.value.productEconomics ?? [],
+  generationConfigs: () => research.value.generationConfigs ?? [],
+};
+
+const sectionColumns = computed(() => SECTION_COLUMNS[section.value] ?? []);
+const sectionRows = computed(() => SECTION_ROWS[section.value]?.() ?? []);
+
+/**
+ * Why a section is empty, rather than only that it is.
+ *
+ * These records come from a generated MTA-SIM run, which the committed sample
+ * artifacts do not include. A deployment reading those files therefore shows
+ * every section empty, and "No records loaded" alone reads as a fault. Naming
+ * the cause is what separates "nothing to show here" from "something broke".
+ */
+const emptyMessage = computed(() => {
+  const label = SECTIONS.find(([key]) => key === section.value)?.[1] ?? "record";
+  if (writable.value) {
+    return `No ${label} records in the connected database. Populate it with ` +
+      `script/import_to_database.py, or generate a simulator run.`;
+  }
+  return `No ${label} records in this deployment. These come from a generated ` +
+    `MTA-SIM run, which the committed sample artifacts do not carry. Point ` +
+    `MTA_SIM_DATA_DIR at a generated run, or connect a populated database.`;
+});
+
+/**
+ * A row's stable identity.
+ *
+ * Composed with the run identifier where one record is unique only within its
+ * run, which is exactly the keying the old `v-for` used. Selection and paging
+ * both depend on this being stable across a reload.
+ */
+function rowKeyFor(sectionKey, row) {
+  const idField = entityIds[sectionKey];
+  const base = String(row[idField] ?? "");
+  if (sectionKey === "generationConfigs") return base;
+  if (sectionKey === "productEconomics") {
+    return [row.run_id, base, row.currency].filter(Boolean).join(":");
+  }
+  return [row.run_id, base].filter(Boolean).join(":");
+}
+
+const rowKey = (row) => rowKeyFor(section.value, row);
+
+const draftColumns = [
+  { key: "entity_id", label: "Identifier" },
+  {
+    key: "active",
+    label: "State",
+    format: (value) => (value ? "Active draft" : "Archived draft"),
+    tone: (value) => (value ? "green" : "gray"),
+  },
+  { key: "updated_at", label: "Updated" },
+];
+
+// ---------------------------------------------------------------------------
+// Editing
+// ---------------------------------------------------------------------------
 
 function openEditor(sectionKey, item = {}) {
   const idField = entityIds[sectionKey];
@@ -72,9 +259,19 @@ function openEditor(sectionKey, item = {}) {
     sectionKey,
     entityType: entityTypes[sectionKey],
     entityId: item[idField] ?? "",
+    /** A new draft has no identifier yet; the modal titles itself from this. */
+    creating: !item[idField],
   };
   editorText.value = JSON.stringify(item, null, 2);
   editorError.value = "";
+}
+
+/** Open the editor on a row, dropping the columns the table added for display. */
+function editRow(row) {
+  const record = { ...row };
+  delete record.product_count;
+  delete record.ad_group_count;
+  openEditor(section.value, record);
 }
 
 async function persistEditor() {
@@ -91,12 +288,81 @@ async function persistEditor() {
   }
 }
 
-async function archiveDraft(sectionKey, item) {
-  const entityId = typeof item === "string"
-    ? item
-    : String(item[entityIds[sectionKey]] ?? "");
-  await archiveMasterObject(entityTypes[sectionKey], entityId);
-  await reload();
+// ---------------------------------------------------------------------------
+// Deletion, always behind a confirmation
+// ---------------------------------------------------------------------------
+
+/**
+ * The pending deletion: which section, and which identifiers.
+ *
+ * Held as identifiers rather than as rows, because the confirmation is what
+ * the reader checks and the request is what the server receives, and both are
+ * expressed in identifiers.
+ */
+const pendingDelete = ref(null);
+const deleteBusy = ref(false);
+const deleteError = ref("");
+
+function identifierOf(sectionKey, row) {
+  return String(row[entityIds[sectionKey]] ?? "");
+}
+
+function requestDelete(row) {
+  deleteError.value = "";
+  pendingDelete.value = {
+    sectionKey: section.value,
+    ids: [identifierOf(section.value, row)],
+  };
+}
+
+function requestBatchDelete(rows) {
+  deleteError.value = "";
+  pendingDelete.value = {
+    sectionKey: section.value,
+    ids: rows.map((row) => identifierOf(section.value, row)),
+  };
+}
+
+const entityTable = ref(null);
+
+/**
+ * Archive every pending identifier, then reload once.
+ *
+ * Sequential rather than concurrent: each archive clears the server's caches,
+ * and a batch fired in parallel would have them racing each other. A failure
+ * stops the run and reports which identifier failed, leaving the dialog open —
+ * reporting "done" after a partial batch would be a false statement about what
+ * is now in the database.
+ */
+async function confirmDelete() {
+  if (!pendingDelete.value) return;
+  deleteBusy.value = true;
+  deleteError.value = "";
+  const { sectionKey, ids } = pendingDelete.value;
+  try {
+    for (const [index, id] of ids.entries()) {
+      try {
+        await archiveMasterObject(entityTypes[sectionKey], id);
+      } catch (error) {
+        throw new Error(
+          `${error.message} — archived ${index} of ${ids.length}; ` +
+            `stopped at ${id}.`,
+        );
+      }
+    }
+    pendingDelete.value = null;
+    entityTable.value?.clearSelection();
+    await reload();
+  } catch (error) {
+    deleteError.value = error.message;
+  } finally {
+    deleteBusy.value = false;
+  }
+}
+
+function cancelDelete() {
+  pendingDelete.value = null;
+  deleteError.value = "";
 }
 
 async function uploadConfiguration(event) {
@@ -463,136 +729,134 @@ const slotColumns = [
     </article>
     </div>
 
-    <article v-if="section === 'providers'" class="card">
-      <div class="card-head">
-        <h2>Ad Providers</h2>
-        <button v-if="databaseEditing" @click="openEditor('providers')">Add Provider draft</button>
-      </div>
-      <div class="card-body detail-list">
-        <details v-for="item in research.providers ?? []" :key="`${item.run_id}:${item.provider}`">
-          <summary>{{ item.provider }} <span class="sub">{{ item.active === false ? 'Archived' : 'Active' }}</span></summary>
-          <p><b>Supported ad products:</b> {{ (item.supported_ad_products ?? []).join(', ') || 'None declared' }}</p>
-          <p><b>Field capabilities:</b> format {{ item.format_availability }}, placement {{ item.placement_availability }}, creative {{ item.creative_availability }}, interaction {{ item.interaction_type_availability }}</p>
-          <p v-if="item.provider !== 'AMAZON_ADS'" class="caption">Synthetic research Provider; it is not a claim about a commercial API.</p>
-          <button v-if="databaseEditing" @click="openEditor('providers', item)">Create editable draft</button>
-        </details>
-        <p v-if="!(research.providers ?? []).length" class="table-empty">No simulator Provider configuration loaded.</p>
-      </div>
-    </article>
+    <!--
+      Every entity section is one paged table. The section decides the columns,
+      the rows, and the identity of a row; the table itself is identical in all
+      seven, so a reader learns one list and reads them all.
+    -->
+    <template v-if="section !== 'overview'">
+      <article class="card">
+        <div class="card-head">
+          <h2>{{ SECTIONS.find(([key]) => key === section)?.[1] }}</h2>
+          <span class="sub">
+            {{ databaseEditing
+              ? "Editing writes a future-run draft; generated history is immutable."
+              : "Read-only in this deployment." }}
+          </span>
+        </div>
+        <div class="card-body">
+          <div v-if="!databaseEditing" class="notice">
+            {{ readOnlyReason }}
+          </div>
 
-    <article v-if="section === 'products'" class="card">
-      <div class="card-head"><h2>Products</h2><button v-if="databaseEditing" @click="openEditor('products')">Add Product draft</button></div>
-      <div class="card-body detail-list">
-        <details v-for="item in research.products ?? []" :key="`${item.run_id}:${item.product_id}`">
-          <summary>{{ item.name || item.product_id }} <span class="sub">{{ item.sku_id || 'SKU unavailable' }}</span></summary>
-          <p><b>Category / brand:</b> {{ item.category || 'Unavailable' }} / {{ item.brand || 'Unavailable' }}</p>
-          <p><b>Inventory:</b> {{ item.inventory_units ?? 'Unavailable' }} · <b>Salable:</b> {{ item.salable ?? 'Unavailable' }} · <b>Status:</b> {{ item.status || 'Unavailable' }}</p>
-          <p><b>Provider identifiers:</b> {{ JSON.stringify(item.provider_ad_identifiers ?? {}) }}</p>
-          <button v-if="databaseEditing" @click="openEditor('products', item)">Create editable draft</button>
-        </details>
-        <p v-if="!(research.products ?? []).length" class="table-empty">No simulator Products loaded.</p>
-      </div>
-    </article>
+          <div v-if="databaseEditing" class="rec-actions">
+            <button class="btn primary" @click="openEditor(section)">
+              Add {{ SECTIONS.find(([key]) => key === section)?.[1] }} draft
+            </button>
+          </div>
 
-    <article v-if="section === 'campaigns'" class="card">
-      <div class="card-head"><h2>Campaign master configuration</h2><button v-if="databaseEditing" @click="openEditor('campaigns')">Add Campaign draft</button></div>
-      <div class="card-body detail-list">
-        <details v-for="item in research.campaigns ?? []" :key="`${item.run_id}:${item.campaign_id}`">
-          <summary>{{ item.campaign_name || item.campaign_id }} <span class="sub">{{ item.status }}</span></summary>
-          <p><b>Provider / ad product:</b> {{ item.provider }} / {{ item.ad_product }}</p>
-          <p><b>Baseline daily budget:</b> {{ item.baseline_daily_budget ?? 'Unavailable' }}</p>
-          <p><b>Products:</b> {{ (research.campaignProductLinks ?? []).filter((link) => link.campaign_id === item.campaign_id).map((link) => link.product_id).join(', ') || 'None' }}</p>
-          <p><b>Ad Groups:</b> {{ (research.adGroups ?? []).filter((group) => group.campaign_id === item.campaign_id).map((group) => group.ad_group_id).join(', ') || 'None' }}</p>
-          <p><b>Touchpoint configs:</b> {{ (item.touchpoint_identifiers ?? []).join(', ') || 'None' }}</p>
-          <button v-if="databaseEditing" @click="openEditor('campaigns', item)">Create editable draft</button>
-        </details>
-        <p v-if="!(research.campaigns ?? []).length" class="table-empty">No simulator Campaigns loaded.</p>
-      </div>
-    </article>
+          <template v-if="section === 'generationConfigs'">
+            <p class="caption">
+              Uploaded or edited configurations apply only to a future run.
+              Existing historical records retain their immutable run snapshot.
+            </p>
+            <div class="rec-actions">
+              <label class="btn button-like">
+                Upload and validate JSON
+                <input
+                  type="file"
+                  accept="application/json,.json"
+                  @change="uploadConfiguration"
+                />
+              </label>
+              <button
+                v-if="uploadedConfig"
+                class="btn"
+                @click="downloadConfiguration(uploadedConfig)"
+              >
+                Download uploaded config
+              </button>
+            </div>
+          </template>
 
-    <article v-if="section === 'adGroups'" class="card">
-      <div class="card-head"><h2>Ad Groups</h2><button v-if="databaseEditing" @click="openEditor('adGroups')">Add Ad Group draft</button></div>
-      <div class="card-body detail-list">
-        <details v-for="item in research.adGroups ?? []" :key="`${item.run_id}:${item.ad_group_id}`">
-          <summary>{{ item.name || item.ad_group_id }} <span class="sub">Campaign {{ item.campaign_id }}</span></summary>
-          <p><b>Status:</b> {{ item.status || 'Unavailable' }} · <b>Initial daily budget:</b> {{ item.initial_daily_budget ?? 'Unavailable' }}</p>
-          <button v-if="databaseEditing" @click="openEditor('adGroups', item)">Create editable draft</button>
-        </details>
-        <p v-if="!(research.adGroups ?? []).length" class="table-empty">No simulator Ad Groups loaded.</p>
-      </div>
-    </article>
+          <EntityTable
+            ref="entityTable"
+            :key="section"
+            :columns="sectionColumns"
+            :rows="sectionRows"
+            :row-key="rowKey"
+            :selectable="databaseEditing"
+            :editable="databaseEditing"
+            :deletable="databaseEditing"
+            :noun="section === 'generationConfigs' ? 'config' : 'record'"
+            :empty="emptyMessage"
+            @edit="editRow"
+            @delete="requestDelete"
+            @delete-many="requestBatchDelete"
+          />
 
-    <article v-if="section === 'touchpoints'" class="card">
-      <div class="card-head"><h2>Structured Touchpoints</h2><button v-if="databaseEditing" @click="openEditor('touchpoints')">Add Touchpoint draft</button></div>
-      <div class="card-body detail-list">
-        <details v-for="item in research.touchpoints ?? []" :key="`${item.run_id}:${item.identifier}`">
-          <summary>{{ item.identifier }} <span class="sub">{{ item.provider }} · {{ item.ad_product }}</span></summary>
-          <p><b>Format:</b> {{ item.format }} · <b>Placement:</b> {{ item.placement ?? 'Unavailable' }} ({{ item.placement_availability }}) · <b>Creative:</b> {{ item.creative ?? 'Unavailable' }} ({{ item.creative_availability }})</p>
-          <p><b>Interactions:</b> {{ (item.supported_interactions ?? [item.impression_enabled && 'IMPRESSION', item.click_enabled && 'CLICK'].filter(Boolean)).join(', ') }} · availability {{ item.interaction_type_availability }}</p>
-          <p><b>Billing:</b> {{ item.billing_type }} · CPC {{ item.cost_per_click ?? 'N/A' }} · CPM {{ item.cost_per_thousand_impressions ?? 'N/A' }}</p>
-          <p><b>Generation:</b> base impressions {{ item.base_impressions }}, CTR {{ item.click_through_rate }}, platform conversion rate {{ item.platform_conversion_rate }}, conversion effect {{ item.conversion_log_odds_effect }}</p>
-          <p><b>Five-segment display keys:</b> <code>{{ (item.compatibility_keys ?? []).join(' · ') }}</code></p>
-          <button v-if="databaseEditing" @click="openEditor('touchpoints', item)">Create editable draft</button>
-        </details>
-        <p v-if="!(research.touchpoints ?? []).length" class="table-empty">No simulator Touchpoint configuration loaded.</p>
-      </div>
-    </article>
+          <p v-if="section === 'productEconomics'" class="caption">
+            A blank contribution margin means the economics are incomplete;
+            missing Cost of Goods Sold is never treated as zero.
+          </p>
+          <p v-if="editorError && !editor" class="error-detail">{{ editorError }}</p>
+        </div>
+      </article>
 
-    <article v-if="section === 'productEconomics'" class="card">
-      <div class="card-head"><h2>Product Economics</h2><button v-if="databaseEditing" @click="openEditor('productEconomics')">Add economics draft</button></div>
-      <div class="card-body detail-list">
-        <details v-for="item in research.productEconomics ?? []" :key="`${item.run_id}:${item.product_id}:${item.currency}`">
-          <summary>{{ item.product_id }} · {{ item.currency }}</summary>
-          <p><b>Price:</b> {{ item.unit_price ?? 'Unavailable' }} · <b>COGS:</b> {{ item.unit_cogs ?? 'Unavailable' }} · <b>Aggregate variable cost:</b> {{ item.variable_cost_per_unit ?? 'Unavailable' }}</p>
-          <p><b>Fulfillment:</b> {{ item.variable_fulfillment_cost_per_unit ?? 'Unavailable' }} · <b>Platform fee:</b> {{ item.variable_platform_fee_per_unit ?? 'Unavailable' }} · <b>Other variable cost:</b> {{ item.other_variable_cost_per_unit ?? 'Unavailable' }}</p>
-          <p><b>Contribution margin:</b> {{ item.unit_contribution_margin ?? 'Unavailable — economics incomplete' }} · {{ item.margin_source || 'No source' }}</p>
-          <button v-if="databaseEditing" @click="openEditor('productEconomics', item)">Create editable draft</button>
-        </details>
-        <p v-if="!(research.productEconomics ?? []).length" class="table-empty">Product economics are unavailable; missing COGS is not treated as zero.</p>
-      </div>
-    </article>
-
-    <article v-if="section === 'generationConfigs'" class="card">
-      <div class="card-head"><h2>Generation Configs</h2></div>
-      <div class="card-body detail-list">
-        <p class="caption">Uploaded or edited configurations apply only to a future run. Existing historical records retain their immutable run snapshot.</p>
-        <label class="button-like">Upload and validate JSON <input type="file" accept="application/json,.json" @change="uploadConfiguration" /></label>
-        <button v-if="uploadedConfig" @click="downloadConfiguration(uploadedConfig)">Download uploaded config</button>
-        <details v-for="item in research.generationConfigs ?? []" :key="item.run_id">
-          <summary>{{ item.run_id }} <span class="sub">seed {{ item.seed }}</span></summary>
-          <p><b>Configuration SHA-256:</b> <code>{{ item.configuration_sha256 }}</code></p>
-          <pre><code>{{ JSON.stringify(item.effective_configuration, null, 2) }}</code></pre>
-          <button @click="downloadConfiguration(item.effective_configuration)">Download snapshot</button>
-          <button v-if="databaseEditing" @click="openEditor('generationConfigs', { run_id: `${item.run_id}-future`, ...item.effective_configuration })">Edit as future-run draft</button>
-        </details>
-        <p v-if="editorError" class="error-detail">{{ editorError }}</p>
-      </div>
-    </article>
-
-    <article
-      v-if="databaseEditing && section !== 'overview' && sectionDrafts.length"
-      class="card"
-    >
-      <div class="card-head"><h2>Editable future-run drafts</h2></div>
-      <div class="card-body detail-list">
-        <details v-for="draft in sectionDrafts" :key="`${draft.entity_type}:${draft.entity_id}`">
-          <summary>{{ draft.entity_id }} <span class="sub">{{ draft.active ? 'Active draft' : 'Archived draft' }}</span></summary>
-          <pre><code>{{ JSON.stringify(draft.payload, null, 2) }}</code></pre>
-          <button v-if="draft.active" @click="archiveDraft(section, draft.entity_id)">Archive draft</button>
-        </details>
-      </div>
-    </article>
+      <article v-if="databaseEditing && sectionDrafts.length" class="card">
+        <div class="card-head">
+          <h2>Editable future-run drafts</h2>
+          <span class="sub">{{ sectionDrafts.length }} in this section</span>
+        </div>
+        <div class="card-body">
+          <DataTable :columns="draftColumns" :rows="sectionDrafts" />
+          <p class="caption">
+            A draft applies to a future run. Archiving one never removes a
+            generated observation.
+          </p>
+        </div>
+      </article>
+    </template>
 
     <div v-if="editor" class="modal-backdrop" @click.self="editor = null">
       <section class="modal" role="dialog" aria-modal="true" aria-label="Master configuration editor">
-        <div class="modal-head"><h2>Future-run {{ editor.entityType }} draft</h2><button @click="editor = null">Close</button></div>
+        <div class="modal-head">
+          <h2>
+            {{ editor.creating ? "New" : "Edit" }} future-run
+            {{ editor.entityType }} draft
+          </h2>
+          <button class="btn small" @click="editor = null">Close</button>
+        </div>
         <div class="modal-body">
-          <p>Generated observations are read-only. Saving this object creates or updates a separate future-run draft.</p>
+          <p>
+            Generated observations are read-only. Saving this object creates or
+            updates a separate future-run draft.
+          </p>
           <textarea v-model="editorText" rows="20" spellcheck="false"></textarea>
           <p v-if="editorError" class="error-detail">{{ editorError }}</p>
-          <button @click="persistEditor">Validate and save</button>
+          <div class="rec-actions">
+            <button class="btn" @click="editor = null">Cancel</button>
+            <button class="btn primary" @click="persistEditor">
+              Validate and save
+            </button>
+          </div>
         </div>
       </section>
     </div>
+
+    <ConfirmDialog
+      :open="Boolean(pendingDelete)"
+      :title="
+        pendingDelete && pendingDelete.ids.length > 1
+          ? `Archive ${pendingDelete.ids.length} drafts?`
+          : 'Archive this draft?'
+      "
+      :items="pendingDelete?.ids ?? []"
+      :busy="deleteBusy"
+      :error="deleteError"
+      confirm-label="Archive"
+      @confirm="confirmDelete"
+      @cancel="cancelDelete"
+    />
   </section>
 </template>

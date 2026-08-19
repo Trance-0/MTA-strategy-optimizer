@@ -1,7 +1,7 @@
 ---
 title: Dashboard
 description: The Vue dashboard's architecture, its dual data source contract, and where each topic is documented
-compact: "Vue/Express dashboard: one normalized snapshot covers file/database modes, canonical master/config records, immutable generated history, simulator runs/configs, filters, and presentation-only similarity. `server/data_source.js` owns source branching; views never issue SQL or recompute attribution."
+compact: "Vue/Express dashboard: normalized file/database snapshots, loopback server binding, protected deployment configuration, canonical master/config records, immutable generated history, simulator research, and presentation-only similarity. `server/data_source.js` owns source branching; views never issue SQL or recompute attribution."
 lang: en-US
 source_files: dashboard/server/config.js, dashboard/server/csv.js, dashboard/server/data_source.js, dashboard/server/index.js, dashboard/src/api/client.js, dashboard/src/lib/useDashboard.js, dashboard/tests/dashboard.test.js, script/verify_dashboard_parity.mjs
 ---
@@ -132,10 +132,10 @@ The code-level specification for the files this page describes. Each entry state
 
 Source: `dashboard/server/config.js`
 
-- Responsibility: Read `.env` at the repository root and expose the one switch that decides the data source, the PostgreSQL settings, and the artifact paths every other server module resolves against.
-- Inputs: `.env` at the repository root, loaded without overriding real environment variables so a shell export or a container secret wins. `DATABASE` is true for any of `1`, `true`, `yes`, `on`, case-insensitively; anything else, including absence, is false. `DASHBOARD_HOSTED` uses the same vocabulary and is set only by the published build.
-- Outputs: `useDatabase()`, `isHosted()`, `databaseSettings()`, `safeSummary()`, `serverPort()`, `simulatorDataDirectory()`; the legacy artifact path constants; and `DESCRIPTION_ROW_MARKERS`.
-- Behavior contract: `databaseSettings()` throws naming **every** missing variable and pointing at `sample.env`, rather than failing later at connection time with a misleading network error. `safeSummary()` returns a display string that never contains the password, omitted by construction rather than masked, so no future edit can accidentally widen it. `useDatabase()` returns false whenever `isHosted()` is true, regardless of the switch — a static host has no socket to open, so the hosted flag decides before the switch is read. `.env` is read once and cached, so the mode is fixed for the life of the process; this is why `verify_dashboard_parity.mjs` probes the two modes in separate processes.
+- Responsibility: Read `.env` at the repository root and expose the switches that decide the data source, deployment mutability, server listener, PostgreSQL settings, and artifact paths every other server module resolves against.
+- Inputs: `.env` at the repository root, loaded without overriding real environment variables so a shell export, `systemd` environment file, or container secret wins. `DATABASE`, `DASHBOARD_HOSTED`, and `DASHBOARD_CONFIG_READ_ONLY` accept `1`, `true`, `yes`, or `on`, case-insensitively. `DASHBOARD_HOST` and `DASHBOARD_PORT` configure the listener.
+- Outputs: `useDatabase()`, `isHosted()`, `configReadOnly()`, `databaseSettings()`, `safeSummary()`, `serverHost()`, `serverPort()`, `simulatorDataDirectory()`; the legacy artifact path constants; and `DESCRIPTION_ROW_MARKERS`.
+- Behavior contract: `databaseSettings()` throws naming **every** missing variable and pointing at `sample.env`, rather than failing later at connection time with a misleading network error. `safeSummary()` returns a display string that never contains the password, omitted by construction rather than masked, so no future edit can accidentally widen it. `useDatabase()` returns false whenever `isHosted()` is true, regardless of the switch — a static host has no socket to open, so the hosted flag decides before the switch is read. `serverHost()` defaults to `127.0.0.1`, so running the Node server does not expose settings or mutation routes on every interface by accident. `.env` is read once and cached, so the mode is fixed for the life of the process; this is why `verify_dashboard_parity.mjs` probes the two modes in separate processes.
 - Dependencies: `dotenv`. Installed with `npm install` in `dashboard/`.
 - Verification: `node script/verify_dashboard_parity.mjs`, which exercises both modes.
 
@@ -168,7 +168,7 @@ Source: `dashboard/server/index.js`
 - Responsibility: Serve the JSON API and the built client from one process.
 - Inputs: HTTP requests. The client build in `dashboard/dist`, when one exists.
 - Outputs: `createApp()`, a listening server when run directly, the existing dashboard/reload/settings routes, and `PUT`/`DELETE /api/master/:entityType/:entityId` for future-run master drafts.
-- Behavior contract: `GET /api/dashboard` checks database availability and returns a named `503` reason on failure. Master writes are refused outside database mode, validate the supported entity type and JSON object payload, and upsert or archive only `dashboard_master_object`; no route mutates generated observations. Hosted settings remain read-only. Static and development serving retain the existing behavior.
+- Behavior contract: `GET /api/dashboard` checks database availability and returns a named `503` reason on failure. Master writes are refused outside database mode, validate the supported entity type and JSON object payload, and upsert or archive only `dashboard_master_object`; no route mutates generated observations. Hosted settings remain read-only, and `DASHBOARD_CONFIG_READ_ONLY=true` makes every settings mutation return the named `read_only_configuration` error while retaining the live server and its configured data source. When run directly, the server binds the configured host and port and prints that exact address.
 - Dependencies: `express`, plus `server/config.js`, `server/data_source.js`, and `server/settings.js`.
 - Verification: Started with `./dashboard/run.sh` and driven in a real browser; the six views were rendered against both a live PostgreSQL instance and the committed files with no console error and no failed request.
 
@@ -190,9 +190,9 @@ Source: `dashboard/tests/dashboard.test.js`
 - Responsibility: Verify the contracts a clean checkout can check without a database.
 - Inputs: The committed artifacts, and temporary files for the `.env` tests.
 - Outputs: Pass or fail per test. Run with `npm test` in `dashboard/`.
-- Behavior contract: The suite pins file mode **before** anything imports `server/config.js`, which caches the mode on first read, so a test run can never touch the operator's real database. It covers the CSV parser's quoting, line endings, byte-order mark, description row, and trailing newline; `writeEnv()`'s in-place replacement, single append, and stable output; the log buffer's bound, default-off state, level filtering, and truncation; the navigation registration contract; and the snapshot invariants — real booleans rather than the string `"false"`, dates as `YYYY-MM-DD`, absent text as `null` rather than `""`, finite numbers rather than strings, the five touchpoint segments, and that the whole snapshot survives JSON serialisation unchanged. `formatDate()` is tested directly against a `Date` object, because file mode never produces one and the database's shape would otherwise be unverifiable without a connection.
+- Behavior contract: The suite pins file mode **before** anything imports `server/config.js`, which caches the mode on first read, so a test run can never touch the operator's real database. It covers the CSV parser's quoting, line endings, byte-order mark, description row, and trailing newline; `writeEnv()`'s in-place replacement, single append, and stable output; the log buffer's bound, default-off state, level filtering, and truncation; loopback as the default server host; rejection of settings writes in protected deployment mode; the navigation registration contract; and the snapshot invariants — real booleans rather than the string `"false"`, dates as `YYYY-MM-DD`, absent text as `null` rather than `""`, finite numbers rather than strings, the five touchpoint segments, and that the whole snapshot survives JSON serialisation unchanged. `formatDate()` is tested directly against a `Date` object, because file mode never produces one and the database's shape would otherwise be unverifiable without a connection.
 - Dependencies: Node's built-in test runner. No database.
-- Verification: `npm test` in `dashboard/`. Twenty-seven tests pass against the committed artifacts.
+- Verification: `npm test` in `dashboard/`. Thirty-four tests pass against the committed artifacts.
 
 ### `verify_dashboard_parity.mjs`
 

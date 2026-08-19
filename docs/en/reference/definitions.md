@@ -1,7 +1,7 @@
 ---
 title: Terms and Abbreviations
 description: Attribution, advertising hierarchy, data, and optimization terminology
-compact: "Canonical glossary for AMC, MTA, MTA-SIM, touchpoint, Outcome, Campaign Group hierarchy, ROAS, CPA, TVD, and similar terms. Every abbreviation used anywhere in the docs must have an entry here."
+compact: "Canonical glossary for attribution, advertising, optimization, data, and deployment terms including AMC, MTA, ROAS, TVD, HMAC, HTTPS, TLS, SSH, TCP, and DNS. Every documentation abbreviation must have an entry here."
 lang: en-US
 ---
 
@@ -152,6 +152,30 @@ The primary time standard by which the world regulates clocks. All timestamps in
 ### SHA-256 (Secure Hash Algorithm 256-bit)
 
 A cryptographic hash function that produces a 256-bit (32-byte) fingerprint of any data. The strategy module uses SHA-256 digests to verify that the AMC attribution and entity evidence files have not changed since the strategy request was created.
+
+### HMAC (Hash-based Message Authentication Code)
+
+A keyed digest used to prove that a message came from a party holding the shared secret and was not changed in transit. The team-server deployment validates GitHub's SHA-256 webhook HMAC before queueing a requested commit.
+
+### HTTPS (Hypertext Transfer Protocol Secure)
+
+The encrypted form of HTTP carried over Transport Layer Security. The deployment bundle requires credential-free HTTPS repository addresses when a Gitea access token supplies authentication, and recommends HTTPS for every externally reachable webhook and dashboard address.
+
+### TLS (Transport Layer Security)
+
+The protocol that encrypts an HTTPS connection and authenticates the server certificate. A public team-server deployment terminates TLS at its reverse proxy and keeps certificate verification enabled for GitHub webhook delivery.
+
+### SSH (Secure Shell)
+
+An encrypted remote-access protocol also used by Git transports. The deployment bundle accepts SSH-based Gitea access only with a dedicated private key and a pinned known-hosts file.
+
+### TCP (Transmission Control Protocol)
+
+The reliable network transport used by the dashboard and webhook listening sockets. A free local TCP port is available for a process to bind; it does not by itself prove that a firewall or reverse proxy permits external access.
+
+### DNS (Domain Name System)
+
+The naming system that maps a server name to network addresses. The deployment installer reports configured public names but does not infer or modify DNS records.
 
 ### DNN (Deep Neural Network)
 

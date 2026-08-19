@@ -74,6 +74,7 @@ marketing-roi-analysis/
 │   └── mta_strategy_recommendation/  # Campaign Group and Ad Group count/budget initializer
 ├── external/
 │   └── mta_sim_dataset/              # Pinned MTA-SIM-dataset Git submodule and ZheyuanWu generator
+├── deploy/                            # Self-contained interactive Linux server deployment bundle
 ├── script/                            # All maintained project command-line entry points
 ├── docs/
 │   ├── en/                           # Active published English documentation
@@ -221,6 +222,23 @@ npm run build
 ```
 
 English is the active published language. Detailed Chinese sources under `docs/zh/` are preserved but excluded from the current site build.
+
+## Deploy the dashboard to a team server
+
+The ignored `deploy/.env` in this checkout has been populated from the project-root `.env`. The existing Gitea repository username and password were mapped to `GITEA_USERNAME` and `GITEA_TOKEN`, the PostgreSQL settings were copied, and a new GitHub webhook secret was generated. Review the non-secret addresses and ports before transfer. For the strongest Gitea setup, replace an account password with a repository-scoped, read-only access token.
+
+Transfer the complete `deploy/` directory, including its hidden `.env`, to an `apt`- or `dnf`-based Linux server over Secure Copy Protocol (SCP), Secure File Transfer Protocol (SFTP), or another protected administrative channel. Do not commit the real file or send it through chat or email. Then run:
+
+```bash
+cd /path/to/uploaded/deploy
+sudo bash run.sh
+```
+
+The interface requires only Up, Down, and Enter. Choose **Install or update** for the first deployment. The same menu can show status, start or restart the services, stop them without disabling automatic startup, terminate stale processes proven to belong to this deployment, remove only the `systemd` definitions while preserving data, or perform a separately confirmed full uninstall. Cleanup never kills by port or generic process name. The full uninstall removes `/etc/mta-dashboard`, `/opt/mta-dashboard`, `/var/lib/mta-dashboard`, and the service account; it deliberately retains shared Git, Node.js, and `adnanh/webhook` installations and the uploaded bundle.
+
+Installation detects occupied ports above 8000, displays progress while downloading pinned prerequisites, pulls the configured Gitea branch with a bounded timeout and actionable errors, builds and tests the dashboard, enables three `systemd` services, health-checks the result, and prints the dashboard address plus exact GitHub webhook settings. Configure the GitHub repository webhook only after an HTTPS reverse proxy or other secure ingress makes the webhook listener reachable. Use `application/json`, the printed endpoint, push events only, and the protected secret stored at `/etc/mta-dashboard/github_webhook_secret`.
+
+GitHub supplies the event while Gitea supplies the code. The worker tolerates the expected mirror delay but will not build merely because the commit exists somewhere in Gitea: it fetches the configured Gitea branch and requires its resolved tip to equal the queued GitHub `after` commit exactly. See [Running Locally and Publishing](docs/en/dashboard/deployment.md) for the security, rollback, and lifecycle contract.
 
 ## Runtime outputs
 

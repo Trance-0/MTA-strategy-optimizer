@@ -24,6 +24,8 @@ import test from "node:test";
 // first read. A test run must never touch the operator's real database.
 process.env.DATABASE = "false";
 process.env.DASHBOARD_HOSTED = "";
+process.env.DASHBOARD_CONFIG_READ_ONLY = "";
+process.env.DASHBOARD_HOST = "";
 
 const { parseCsv, readCsv } = await import("../server/csv.js");
 const { ENV_KEYS, RingBuffer, writeEnv, applyLogging, log, logState, clearLog } =
@@ -38,6 +40,7 @@ const {
   "../server/data_source.js"
 );
 const { createApp } = await import("../server/index.js");
+const { configReadOnly, serverHost } = await import("../server/config.js");
 const { PAGES, PAGE_GROUPS, PAGE_KEYS, DEFAULT_PAGE } = await import("../src/pages.js");
 
 const HERE = resolve(import.meta.dirname);
@@ -50,6 +53,19 @@ const CAMPAIGNS = readFileSync(
   resolve(HERE, "..", "src", "views", "Campaigns.vue"),
   "utf8",
 );
+const ENTITY_TABLE = readFileSync(
+  resolve(HERE, "..", "src", "components", "EntityTable.vue"),
+  "utf8",
+);
+const CONFIRM_DIALOG = readFileSync(
+  resolve(HERE, "..", "src", "components", "ConfirmDialog.vue"),
+  "utf8",
+);
+const TOP_BAR = readFileSync(
+  resolve(HERE, "..", "src", "components", "TopBar.vue"),
+  "utf8",
+);
+const STYLE_CSS = readFileSync(resolve(HERE, "..", "src", "style.css"), "utf8");
 const OPTIMIZATION_LOG = readFileSync(
   resolve(HERE, "..", "src", "views", "OptimizationLog.vue"),
   "utf8",
@@ -465,6 +481,32 @@ test("the dashboard server starts and protects generated observations", async ()
   }
 });
 
+test("server deployment defaults to loopback and can lock configuration", async () => {
+  assert.equal(serverHost(), "127.0.0.1");
+  assert.equal(configReadOnly(), false);
+  process.env.DASHBOARD_CONFIG_READ_ONLY = "true";
+  assert.equal(configReadOnly(), true);
+
+  const server = createApp().listen(0, "127.0.0.1");
+  await new Promise((resolvePromise) => server.once("listening", resolvePromise));
+  const { port } = server.address();
+  try {
+    const state = await fetch(`http://127.0.0.1:${port}/api/settings`);
+    assert.equal(state.status, 200);
+    assert.equal((await state.json()).readOnly, true);
+    const save = await fetch(`http://127.0.0.1:${port}/api/settings`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "save", useDatabase: false }),
+    });
+    assert.equal(save.status, 403);
+    assert.equal((await save.json()).error, "read_only_configuration");
+  } finally {
+    process.env.DASHBOARD_CONFIG_READ_ONLY = "";
+    await new Promise((resolvePromise) => server.close(resolvePromise));
+  }
+});
+
 test("Budget Manager exposes progressive canonical entity sections", () => {
   for (const label of ["Overview", "Ad Providers", "Products", "Campaigns",
     "Ad Groups", "Touchpoints", "Product Economics", "Generation Configs"]) {
@@ -474,16 +516,230 @@ test("Budget Manager exposes progressive canonical entity sections", () => {
     "interaction_type_availability", "billing_type", "click_through_rate"]) {
     assert.match(BUDGET_MANAGER, new RegExp(field));
   }
-  for (const field of ["sku_id", "variable_fulfillment_cost_per_unit",
-    "variable_platform_fee_per_unit", "other_variable_cost_per_unit"]) {
-    assert.match(BUDGET_MANAGER, new RegExp(field));
-  }
-  for (const behavior of ["Upload and validate JSON", "Download snapshot",
-    "Edit as future-run draft", "Archive draft", "Validate and save"]) {
+  assert.match(BUDGET_MANAGER, /sku_id/);
+  // The economics fields that are not summary columns remain reachable through
+  // the row's own editor, which renders the whole record.
+  assert.match(BUDGET_MANAGER, /variable_cost_per_unit/);
+  assert.match(BUDGET_MANAGER, /unit_contribution_margin/);
+  for (const behavior of ["Upload and validate JSON", "Validate and save"]) {
     assert.match(BUDGET_MANAGER, new RegExp(behavior));
   }
-  assert.match(BUDGET_MANAGER, /missing COGS is not treated as zero/);
+  // Missing economics stay missing; `renderCell` shows `--` for null rather
+  // than letting a blank read as zero.
+  assert.match(BUDGET_MANAGER, /missing Cost of Goods Sold is never treated as zero/i);
   assert.match(BUDGET_MANAGER, /Generated observations are read-only/);
+});
+
+// ---------------------------------------------------------------------------
+// Deployment capability and theme
+// ---------------------------------------------------------------------------
+
+// The themes are read from `src/theme.js` rather than from `src/lib/deployment.js`,
+// which re-exports them: `deployment.js` reaches `src/api/client.js` through
+// `useDashboard.js`, and that module reads `import.meta.env`, which exists only
+// under Vite. `theme.js` imports nothing, so it loads in the Node runner.
+const { DEPLOYMENT_THEMES: THEMES } = await import("../src/theme.js");
+
+test("write capability follows the snapshot's mode, not the build flag", async () => {
+  const source = readFileSync(
+    resolve(HERE, "..", "src", "lib", "deployment.js"),
+    "utf8",
+  );
+
+  // A local file-mode run is read-only for the same reason the published build
+  // is: there is no database behind it. Deriving `writable` from `IS_STATIC`
+  // would wrongly offer editing controls to that run.
+  assert.match(source, /mode === "database"/);
+  assert.doesNotMatch(source, /writable\s*=\s*computed\(\(\)\s*=>\s*!isStaticBuild/);
+  // The build flag decides only how a read-only deployment names itself, never
+  // whether it may write.
+  assert.match(source, /isStaticBuild\(\) \? "Published build" : "Local files"/);
+
+  // The two accents are distinct, or the deployments would be indistinguishable
+  // at a glance, which is the whole point of theming them apart.
+  assert.notEqual(THEMES.read_only.accent, THEMES.writable.accent);
+  assert.equal(THEMES.writable.accent, "#2456a6");
+  // Microsoft Excel's own green, for the deployment that reads a table of
+  // committed values rather than a database.
+  assert.equal(THEMES.read_only.accent, "#217346");
+});
+
+test("the deployment theme repaints tokens but never the chart series", async () => {
+  const { SERIES, MODEL_COLORS, OUTCOME_COLORS } = await import("../src/theme.js");
+  const APP = readFileSync(resolve(HERE, "..", "src", "App.vue"), "utf8");
+
+  // The accents are applied by overriding the custom properties the stylesheet
+  // already reads, so one override repaints everything and no component needs
+  // a deployment variant class.
+  for (const token of ["--blue", "--blue2", "--navy", "--rail-active"]) {
+    assert.match(APP, new RegExp(`"${token}"`), `${token} is not themed`);
+  }
+
+  // A series colour follows its entity, so the same Campaign must keep its
+  // colour across both deployments. A deployment accent leaking into the
+  // categorical palette would break that.
+  const accents = Object.values(THEMES).flatMap((entry) => [
+    entry.accent,
+    entry.accentStrong,
+  ]);
+  for (const colour of [...SERIES, ...Object.values(MODEL_COLORS),
+    ...Object.values(OUTCOME_COLORS)]) {
+    assert.ok(
+      !accents.includes(colour),
+      `${colour} is both a series colour and a deployment accent`,
+    );
+  }
+});
+
+test("a read-only deployment states why, and names its remedy", () => {
+  const APP = readFileSync(resolve(HERE, "..", "src", "App.vue"), "utf8");
+  const source = readFileSync(
+    resolve(HERE, "..", "src", "lib", "deployment.js"),
+    "utf8",
+  );
+
+  // Stated once at the top of every view rather than at each absent control:
+  // a reader should learn this from the page, not from a missing button.
+  assert.match(APP, /deployment-notice/);
+  assert.match(APP, /readOnlyReason/);
+
+  // Each read-only deployment names the remedy that actually applies to it.
+  assert.match(source, /DATABASE=true/);
+  assert.match(source, /Run the dashboard locally/);
+
+  // The two are named apart: a reader can act on one of them and not the other.
+  assert.match(source, /"Published build"/);
+  assert.match(source, /"Local files"/);
+  assert.match(TOP_BAR, /deploymentLabel/);
+});
+
+test("the rail's status dot agrees with the deployment accent", async () => {
+  const settings = readFileSync(
+    resolve(HERE, "..", "server", "settings.js"),
+    "utf8",
+  );
+  const client = readFileSync(resolve(HERE, "..", "src", "api", "client.js"), "utf8");
+
+  // The rail and the theme must not disagree about which deployment this is.
+  // The published build's dot is set in the client, the local one on the server.
+  assert.match(client, new RegExp(THEMES.read_only.dot));
+  assert.match(settings, new RegExp(THEMES.read_only.dot));
+});
+
+// ---------------------------------------------------------------------------
+// The entity list
+// ---------------------------------------------------------------------------
+
+test("the entity list pages, and offers the four documented page sizes", () => {
+  assert.match(ENTITY_TABLE, /PAGE_SIZES = \[15, 30, 50, 100\]/);
+  // 15 is the default, so a section opens at one screen rather than at 100 rows.
+  assert.match(ENTITY_TABLE, /pageSize = ref\(PAGE_SIZES\[0\]\)/);
+});
+
+test("selection is keyed by identity, so it survives paging", () => {
+  // Keyed by index, a batch action would act on whatever sits at that index
+  // after the page turns, which is a different record.
+  assert.match(ENTITY_TABLE, /rowKey: \{ type: Function, required: true \}/);
+  assert.match(ENTITY_TABLE, /selected\.value\.has\(props\.rowKey\(row\)\)/);
+
+  // A Set mutated in place is the same object, so Vue's reactivity would not
+  // see the change and no checkbox would repaint.
+  assert.match(ENTITY_TABLE, /const next = new Set\(selected\.value\)/);
+  assert.doesNotMatch(ENTITY_TABLE, /selected\.value\.add\(/);
+  assert.doesNotMatch(ENTITY_TABLE, /selected\.value\.delete\(/);
+});
+
+test("deletion always passes through a confirmation that names its rows", () => {
+  // A count alone is not something a reader can check, and a batch selected
+  // across several pages is exactly the case where they cannot see their pick.
+  assert.match(CONFIRM_DIALOG, /items: \{ type: Array/);
+  assert.match(CONFIRM_DIALOG, /const LISTED = 12/);
+  // A capped list states its remainder rather than dropping it silently.
+  assert.match(CONFIRM_DIALOG, /remainder/);
+  assert.match(CONFIRM_DIALOG, /role="alertdialog"/);
+
+  // Both row and batch deletion route through the same pending state, so
+  // neither can reach the server without the dialog.
+  assert.match(BUDGET_MANAGER, /function requestDelete/);
+  assert.match(BUDGET_MANAGER, /function requestBatchDelete/);
+  assert.match(BUDGET_MANAGER, /pendingDelete\.value = \{/);
+  assert.match(BUDGET_MANAGER, /@confirm="confirmDelete"/);
+});
+
+test("a partial batch archive reports where it stopped", () => {
+  // Sequential rather than concurrent: each archive clears the server's caches,
+  // so a parallel batch would have them racing.
+  assert.match(BUDGET_MANAGER, /for \(const \[index, id\] of ids\.entries\(\)\)/);
+  // Reporting success after a partial batch would be a false statement about
+  // what is now in the database.
+  assert.match(BUDGET_MANAGER, /archived \$\{index\} of \$\{ids\.length\}/);
+});
+
+test("Budget Manager renders entity sections as paged tables, not detail lists", () => {
+  // The previous view stacked every field of every record as `<details>`
+  // paragraphs, which put hundreds of lines of prose on one page and left no
+  // way to scan a column.
+  assert.doesNotMatch(BUDGET_MANAGER, /<details/);
+  assert.match(BUDGET_MANAGER, /<EntityTable/);
+  assert.match(BUDGET_MANAGER, /SECTION_COLUMNS/);
+
+  // Every section the rail offers has both columns and rows behind it.
+  const { BUDGET_SECTIONS } = { BUDGET_SECTIONS: ["providers", "products",
+    "campaigns", "adGroups", "touchpoints", "productEconomics",
+    "generationConfigs"] };
+  for (const key of BUDGET_SECTIONS) {
+    assert.match(BUDGET_MANAGER, new RegExp(`${key}: \\[`), `${key} has no columns`);
+    assert.match(BUDGET_MANAGER, new RegExp(`${key}: \\(\\) =>`), `${key} has no rows`);
+  }
+});
+
+test("an empty section names its cause rather than reading as a fault", () => {
+  // These records come from a generated MTA-SIM run, which the committed
+  // samples do not carry — so the published build shows every section empty.
+  // "No records loaded" alone would read as a broken deployment.
+  assert.match(BUDGET_MANAGER, /MTA_SIM_DATA_DIR/);
+  assert.match(BUDGET_MANAGER, /import_to_database\.py/);
+  assert.match(BUDGET_MANAGER, /emptyMessage/);
+});
+
+test("one cell renderer serves every table", () => {
+  const dataTable = readFileSync(
+    resolve(HERE, "..", "src", "components", "DataTable.vue"),
+    "utf8",
+  );
+  // Two renderers would let the same column declaration mean two things in two
+  // places. `DataTable` and `EntityTable` both read the shared helper.
+  assert.match(dataTable, /renderCell/);
+  assert.match(ENTITY_TABLE, /renderCell/);
+  assert.match(dataTable, /NUMERIC_FORMATS/);
+  assert.match(ENTITY_TABLE, /NUMERIC_FORMATS/);
+});
+
+test("renderCell flattens the shapes the canonical records actually carry", async () => {
+  const { renderCell } = await import("../src/lib/common.js");
+
+  // A Provider's supported ad products are an array and a Product's provider
+  // identifiers an object. `String(value)` renders the first as a comma-joined
+  // list only by accident and the second as "[object Object]".
+  assert.equal(
+    renderCell({ key: "list" }, { list: ["SPONSORED_PRODUCTS", "AMAZON_DSP"] }),
+    "SPONSORED_PRODUCTS, AMAZON_DSP",
+  );
+  assert.equal(renderCell({ key: "list" }, { list: [] }), "--");
+  assert.equal(renderCell({ key: "map" }, { map: { a: 1 } }), '{"a":1}');
+
+  // A missing number stays visibly missing rather than becoming zero.
+  assert.equal(renderCell({ key: "n", format: "money" }, { n: null }), "--");
+  assert.equal(renderCell({ key: "n", format: "money" }, { n: 12.5 }), "$12.50");
+  assert.equal(renderCell({ key: "b", format: "flag" }, { b: false }), "No");
+});
+
+test("the destructive control is styled apart and never colour alone", () => {
+  assert.match(STYLE_CSS, /\.btn\.danger/);
+  // The cost of misreading a deletion is not symmetric with anything else, so
+  // colour leads here — but the word is always present beside it.
+  assert.match(ENTITY_TABLE, /btn small danger[\s\S]{0,80}Delete/);
+  assert.match(CONFIRM_DIALOG, /btn danger/);
 });
 
 test("Campaigns exposes generated filters and presentation-only similarity", () => {

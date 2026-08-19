@@ -23,6 +23,7 @@ import KnowledgeBase from "./views/KnowledgeBase.vue";
 import OptimizationLog from "./views/OptimizationLog.vue";
 import { IS_STATIC, fetchSettings } from "./api/client.js";
 import { useDashboard } from "./lib/useDashboard.js";
+import { useDeployment } from "./lib/deployment.js";
 import { DEFAULT_PAGE, DOCS_URL, PAGES, PAGE_KEYS, REPO_URL } from "./pages.js";
 
 const VIEWS = {
@@ -35,6 +36,12 @@ const VIEWS = {
 };
 
 const { data, loading, error, loaded, ensureLoaded, reload } = useDashboard();
+const {
+  writable,
+  theme: deploymentTheme,
+  label: deploymentLabel,
+  readOnlyReason,
+} = useDeployment();
 
 const page = ref(DEFAULT_PAGE);
 const settingsOpen = ref(false);
@@ -105,6 +112,24 @@ async function onSettingsChanged() {
 
 const meta = computed(() => PAGES[page.value]);
 
+/**
+ * The deployment's accent, applied as the custom properties `style.css`
+ * already reads.
+ *
+ * Overriding the tokens rather than adding a second set of rules is what keeps
+ * one stylesheet: every `var(--blue)` in the sheet follows the deployment, and
+ * no component needs a variant class. The chart series palette is deliberately
+ * not included — a series colour follows its entity, so the same Campaign must
+ * not change colour between the two sites.
+ */
+const themeStyle = computed(() => ({
+  "--blue": deploymentTheme.value.accent,
+  "--blue2": deploymentTheme.value.accentSoft,
+  "--blue-strong": deploymentTheme.value.accentStrong,
+  "--navy": deploymentTheme.value.rail,
+  "--rail-active": deploymentTheme.value.railActive,
+}));
+
 /** The report window, read from the data rather than fixed in the header. */
 const reportWindow = computed(() => {
   const summary = data.value.comparisonSummary?.[0];
@@ -128,7 +153,11 @@ const docsHref = computed(() => (IS_STATIC ? "./docs/" : `${DOCS_URL}/`));
 </script>
 
 <template>
-  <div class="app-shell">
+  <div
+    class="app-shell"
+    :class="`deployment-${deploymentTheme.key}`"
+    :style="themeStyle"
+  >
     <SidebarNav
       :current="page"
       :status="status"
@@ -146,9 +175,19 @@ const docsHref = computed(() => (IS_STATIC ? "./docs/" : `${DOCS_URL}/`));
         :crumb="meta.crumb"
         :window="reportWindow"
         :marketplace="marketplace"
+        :deployment-label="deploymentLabel"
+        :writable="writable"
       />
 
       <div class="content">
+        <!--
+          Stated once, at the top of every view, rather than at each control it
+          governs. A reader who cannot edit should learn that from the page,
+          not by hunting for a button that is not there.
+        -->
+        <div v-if="loaded && !writable" class="notice deployment-notice">
+          <b>Read-only deployment.</b> {{ readOnlyReason }}
+        </div>
         <div v-if="loading && !loaded" class="card empty-card">
           <h2>Loading the pipeline's artifacts…</h2>
           <p>Reading the attribution outputs, the budget seed, and the history.</p>

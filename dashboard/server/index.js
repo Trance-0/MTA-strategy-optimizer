@@ -20,7 +20,14 @@ import { fileURLToPath } from "node:url";
 
 import express from "express";
 
-import { DASHBOARD_ROOT, isHosted, serverPort, useDatabase } from "./config.js";
+import {
+  DASHBOARD_ROOT,
+  configReadOnly,
+  isHosted,
+  serverHost,
+  serverPort,
+  useDatabase,
+} from "./config.js";
 import {
   clearCaches,
   databaseAvailable,
@@ -151,6 +158,16 @@ export function createApp() {
       return;
     }
 
+    if (configReadOnly()) {
+      response.status(403).json({
+        error: "read_only_configuration",
+        message:
+          "This server reads protected deployment configuration. Change it " +
+          "through the server deployment environment, then restart the service.",
+      });
+      return;
+    }
+
     const { action, connection, logging } = request.body ?? {};
 
     if (action === "logging") {
@@ -237,7 +254,9 @@ function openBrowser(url) {
 // Started directly rather than imported by a test.
 if (process.argv[1] && resolve(process.argv[1]) === resolve(here, "index.js")) {
   const port = Number.parseInt(process.argv[2] ?? "", 10) || serverPort();
-  const url = `http://localhost:${port}`;
+  const host = serverHost();
+  const displayHost = host.includes(":") ? `[${host}]` : host;
+  const url = `http://${displayHost}:${port}`;
 
   /**
    * `listen()` is called with no callback and the two outcomes are handled as
@@ -250,7 +269,7 @@ if (process.argv[1] && resolve(process.argv[1]) === resolve(here, "index.js")) {
    * an arrow function taking none silently drops. On an occupied port that
    * prints "Listening on …" and then the EADDRINUSE report below it.
    */
-  const server = createApp().listen(port);
+  const server = createApp().listen(port, host);
 
   server.on("listening", () => {
     if (!existsSync(clientDist)) {

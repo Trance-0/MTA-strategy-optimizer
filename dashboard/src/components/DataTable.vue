@@ -8,7 +8,7 @@
  */
 import { computed } from "vue";
 
-import { count, money, percent, ratio } from "../theme.js";
+import { NUMERIC_FORMATS, renderCell } from "../lib/common.js";
 
 const props = defineProps({
   /**
@@ -22,29 +22,8 @@ const props = defineProps({
   empty: { type: String, default: "No rows to show." },
 });
 
-const numericFormats = new Set(["number", "money", "percent", "ratio", "share"]);
-
-function render(column, row) {
-  const value = row[column.key];
-  if (typeof column.format === "function") return column.format(value, row);
-  if (value === null || value === undefined || value === "") return "--";
-  switch (column.format) {
-    case "number":
-      return count(value, column.digits ?? 0);
-    case "money":
-      return money(value, column.currency ?? "$");
-    case "percent":
-      return percent(value, column.digits ?? 2);
-    case "share":
-      return Number(value).toFixed(column.digits ?? 4);
-    case "ratio":
-      return ratio(value, column.digits ?? 2);
-    case "flag":
-      return value ? "Yes" : "No";
-    default:
-      return String(value);
-  }
-}
+const numericFormats = NUMERIC_FORMATS;
+const render = renderCell;
 
 const hasRows = computed(() => props.rows.length > 0);
 </script>

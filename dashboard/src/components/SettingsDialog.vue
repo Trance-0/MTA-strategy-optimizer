@@ -42,6 +42,7 @@ const SSL_MODES = ["disable", "allow", "prefer", "require", "verify-ca", "verify
 const LOG_LEVELS = ["DEBUG", "INFO", "WARNING", "ERROR"];
 
 const hosted = computed(() => state.value?.hosted ?? false);
+const readOnly = computed(() => hosted.value || (state.value?.readOnly ?? false));
 
 async function refresh() {
   state.value = await fetchSettings();
@@ -175,6 +176,15 @@ cp sample.env .env      # set DATABASE=true and the PG_* values
             </p>
           </template>
 
+          <template v-else-if="state?.readOnly">
+            <div class="notice">
+              <b>This server reads protected deployment configuration.</b>
+              Change the data-source values in the server's deployment
+              environment and restart the dashboard service. Credentials cannot
+              be tested or rewritten from this page.
+            </div>
+          </template>
+
           <template v-else-if="state">
             <label class="toggle">
               <input v-model="form.useDatabase" type="checkbox" />
@@ -264,7 +274,7 @@ cp sample.env .env      # set DATABASE=true and the PG_* values
                 <input
                   type="checkbox"
                   :checked="state.logging.enabled"
-                  :disabled="hosted"
+                  :disabled="readOnly"
                   @change="toggleLogging($event.target.checked)"
                 />
                 <span>Enable logging</span>
@@ -274,7 +284,7 @@ cp sample.env .env      # set DATABASE=true and the PG_* values
                 <select
                   id="log-level"
                   :value="state.logging.level"
-                  :disabled="hosted"
+                  :disabled="readOnly"
                   @change="setLevel($event.target.value)"
                 >
                   <option v-for="level in LOG_LEVELS" :key="level" :value="level">
@@ -282,7 +292,7 @@ cp sample.env .env      # set DATABASE=true and the PG_* values
                   </option>
                 </select>
               </div>
-              <button class="btn small" :disabled="hosted" @click="send('clearLog')">
+              <button class="btn small" :disabled="readOnly" @click="send('clearLog')">
                 Clear captured records
               </button>
             </div>
