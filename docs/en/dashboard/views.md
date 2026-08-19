@@ -9,7 +9,9 @@ source_files: dashboard/src/theme.js, dashboard/src/style.css, dashboard/src/vie
 
 The six views are listed on [Dashboard](./index.md#the-six-views). This page specifies what they share beyond the question each one answers: how the two prototype views without backing data were repointed, the reliability rule every view honors, and the colour, chart, and formatting system every one of them draws from.
 
-Two of the prototype's views had no backing data in this project. Rather than ship placeholder content, each was pointed at the real record that answers the same question: Optimization Log shows run provenance and pipeline stage state, including the fact that the optimisation stage has **not** run; Knowledge Base is populated from the data in use, so it cannot drift from the charts beside it.
+Two of the prototype's views had no backing data in this project. Rather than ship placeholder content, each was pointed at the real record that answers the same question: Optimization Log shows run provenance and pipeline stage state; Knowledge Base is populated from the data in use, so it cannot drift from the charts beside it.
+
+Optimization Log's fifth stage now reports the [Campaign budget optimizer](/en/strategy-recommendation/campaign-budget-optimizer.md) from its artifact rather than from a constant. When `outputs/campaign_strategy.json` is absent — the state of any checkout that has not run the research command — the stage reads `NOT RUN` and the initializer's seed remains the current recommendation. When the artifact is present the view shows the optimized allocation beside its evidence, and when the optimizer refused it shows the refusal and its reasons instead of an allocation. Every Campaign optimized outside the budget range its fit observed, and every Campaign whose curve was pooled from comparable Campaigns rather than its own history, is named rather than left implicit in a number.
 
 ## Reliability is never a footnote <span class="status-label status-verified" aria-label="Verified"></span>
 
@@ -83,7 +85,9 @@ Markov against Shapley per touchpoint, the governed recommendation, and the budg
 
 #### `OptimizationLog.vue`
 
-Run identifiers, the report window, the input digests, the pipeline stage trail, and the per-touchpoint reliability flags.
+Run identifiers, the report window, the input digests, the pipeline stage trail, the optimized Campaign budget plan, and the per-touchpoint reliability flags.
+
+Reads `campaignStrategy.optimized_strategy` from the snapshot. The optimized-budget card renders only when the artifact carries a `recommendation_type`, so an absent artifact produces no empty card. A plan with `is_optimized=true` shows the authorized, allocated, and expected-revenue tiles, one row per Campaign with its initial and optimized budget, expected revenue and delta, marginal return, evidence label, and extrapolation flag, followed by named warnings for extrapolated and pooled Campaigns and the two Ad Group disclosure fields. A plan with `is_optimized=false` shows its `recommendation_type` and every `infeasibility_reasons` entry in place of an allocation. Expected revenue is labelled a model estimate, never a realized or guaranteed uplift.
 
 #### `KnowledgeBase.vue`
 

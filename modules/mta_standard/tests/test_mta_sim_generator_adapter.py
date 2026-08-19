@@ -43,7 +43,15 @@ class MtaSimGeneratorAdapterTests(unittest.TestCase):
             self.assertTrue(generated.ground_truth.is_file())
             self.assertGreater(len(generated.dataset.path_rows), 0)
             self.assertGreater(len(generated.dataset.ads_rows), 0)
-            self.assertEqual(len(generated.dataset.touchpoints), 2)
+            # The toy fixture declares two Touchpoints, each able to realize an
+            # IMPRESSION and a CLICK, so the observed five-segment keys are a
+            # subset of four and must cover both configured Touchpoints.
+            self.assertGreaterEqual(len(generated.dataset.touchpoints), 2)
+            self.assertLessEqual(len(generated.dataset.touchpoints), 4)
+            self.assertEqual(
+                {key.split(":", 1)[0] for key in generated.dataset.touchpoints},
+                {"AMAZON_DSP", "SPONSORED_PRODUCTS"},
+            )
             self.assertFalse(hasattr(generated.dataset, "ground_truth"))
             self.assertEqual(
                 set(generated.simulator_config.cost_type_by_touchpoint.values()),

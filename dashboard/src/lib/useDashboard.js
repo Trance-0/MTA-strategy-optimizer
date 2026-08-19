@@ -32,6 +32,7 @@ const EMPTY = {
   entityBridge: [],
   pathReport: [],
   budgetRecommendation: {},
+  campaignStrategy: {},
   strategyRequest: {},
   candidatePool: {},
   simulationResearch: {

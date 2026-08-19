@@ -50,6 +50,10 @@ const CAMPAIGNS = readFileSync(
   resolve(HERE, "..", "src", "views", "Campaigns.vue"),
   "utf8",
 );
+const OPTIMIZATION_LOG = readFileSync(
+  resolve(HERE, "..", "src", "views", "OptimizationLog.vue"),
+  "utf8",
+);
 
 // ---------------------------------------------------------------------------
 // CSV
@@ -237,6 +241,46 @@ test("the file-mode snapshot carries every loader", async () => {
   for (const key of ["budgetRecommendation", "strategyRequest", "candidatePool"]) {
     assert.ok(Object.keys(snapshot[key]).length > 0, `${key} is empty`);
   }
+  // The optimizer's artifact is produced by a research command rather than by
+  // the import pipeline, so a checkout that has not run it must still load.
+  assert.ok("campaignStrategy" in snapshot, "campaignStrategy is absent");
+  assert.equal(typeof snapshot.campaignStrategy, "object");
+});
+
+test("an unrun optimizer yields an empty plan rather than a failure", async () => {
+  const { campaignStrategy } = await loadSnapshot();
+  // `readJson` returns `{}` for a missing file, so the key is always an object
+  // and the view's `hasPlan` guard is what decides whether stage 5 ran.
+  assert.notEqual(campaignStrategy, null);
+  if (Object.keys(campaignStrategy).length === 0) return;
+
+  const plan = campaignStrategy.optimized_strategy;
+  assert.ok(plan, "an artifact exists but carries no optimized_strategy");
+  assert.equal(typeof plan.is_optimized, "boolean");
+  assert.ok(plan.recommendation_type, "the plan states no recommendation type");
+  // A plan that claims optimization must never be labelled with the
+  // initializer's own type: the two are different recommendations.
+  if (plan.is_optimized) {
+    assert.equal(plan.recommendation_type, "OPTIMIZED_CAMPAIGN_BUDGET");
+    assert.notEqual(plan.recommendation_type, "INITIAL_SEED");
+  }
+});
+
+test("the Optimization Log reports stage 5 from the plan, not a constant", () => {
+  // The view previously hard-coded "NOT RUN", which would keep reading NOT RUN
+  // after the optimizer had in fact produced a plan.
+  assert.doesNotMatch(OPTIMIZATION_LOG, /count: 0,\s*status: "NOT RUN"/);
+  assert.match(OPTIMIZATION_LOG, /data\.value\.campaignStrategy/);
+  assert.match(OPTIMIZATION_LOG, /strategy\.value\.optimized_strategy/);
+
+  // Every claim the plan must disclose rather than let a number stand alone.
+  for (const field of ["is_extrapolated", "response_support",
+    "ad_group_optimization_claim", "ad_group_projection_basis",
+    "infeasibility_reasons", "excluded_campaign_ids"]) {
+    assert.match(OPTIMIZATION_LOG, new RegExp(field));
+  }
+  assert.match(OPTIMIZATION_LOG, /Attribution is not an input here/);
+  assert.match(OPTIMIZATION_LOG, /POOLED_TRANSFER/);
 });
 
 test("reliability flags are real booleans, not the string 'false'", async () => {

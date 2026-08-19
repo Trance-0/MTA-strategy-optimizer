@@ -13,8 +13,16 @@ import { computed, ref } from "vue";
 
 import DataTable from "../components/DataTable.vue";
 import KeyValuePanel from "../components/KeyValuePanel.vue";
-import { OUTCOME_LABELS, distinct, statusTone } from "../lib/common.js";
+import MetricRow from "../components/MetricRow.vue";
+import {
+  OUTCOME_LABELS,
+  currencySymbol,
+  distinct,
+  pretty,
+  statusTone,
+} from "../lib/common.js";
 import { useDashboard } from "../lib/useDashboard.js";
+import { money } from "../theme.js";
 
 const { data } = useDashboard();
 
@@ -22,6 +30,100 @@ const budget = computed(() => data.value.budgetRecommendation ?? {});
 const request = computed(() => data.value.strategyRequest ?? {});
 const summary = computed(() => data.value.comparisonSummary);
 const comparison = computed(() => data.value.comparisonTouchpoints);
+
+// ---------------------------------------------------------------------------
+// Stage 5: the optimized Campaign budget plan
+// ---------------------------------------------------------------------------
+
+const strategy = computed(() => data.value.campaignStrategy ?? {});
+
+/** The optimizer's plan, present only once the research command has run. */
+const plan = computed(() => strategy.value.optimized_strategy ?? {});
+
+const hasPlan = computed(() => Boolean(plan.value.recommendation_type));
+
+const isOptimized = computed(() => Boolean(plan.value.is_optimized));
+
+const allocations = computed(() => plan.value.allocations ?? []);
+
+const symbol = computed(() => currencySymbol(strategy.value.currency));
+
+/**
+ * Whether any allocation sits outside the budget range its fit observed.
+ *
+ * An extrapolated budget is still the solver's answer, but it rests on the
+ * curve's shape beyond the evidence, so the view says so rather than letting
+ * the number stand unqualified.
+ */
+const extrapolated = computed(() =>
+  allocations.value.filter((row) => row.is_extrapolated),
+);
+
+/** Campaigns whose curve was borrowed from comparable Campaigns, not their own. */
+const pooled = computed(() =>
+  allocations.value.filter((row) => row.response_support === "POOLED_TRANSFER"),
+);
+
+const planMetrics = computed(() => [
+  {
+    label: "Authorized",
+    value: money(plan.value.authorized_budget ?? 0, symbol.value),
+    note: pretty(plan.value.budget_usage_policy),
+  },
+  {
+    label: "Allocated",
+    value: money(plan.value.allocated_budget ?? 0, symbol.value),
+    note: `${allocations.value.length} Campaigns`,
+  },
+  {
+    label: "Expected revenue",
+    value: money(plan.value.expected_optimized_revenue ?? 0, symbol.value),
+    note: `Initial ${money(plan.value.expected_initial_revenue ?? 0, symbol.value)}`,
+    help: "Estimated by the fitted response model, not a realized result.",
+  },
+  {
+    label: "Expected change",
+    value: money(plan.value.expected_revenue_increase ?? 0, symbol.value),
+    note: "Model estimate",
+    help: "The difference between the two estimates above. It is not a guaranteed uplift.",
+  },
+]);
+
+const allocationColumns = computed(() => [
+  { key: "campaign_id", label: "Campaign", width: "22%" },
+  { key: "initial_budget", label: "Initial", format: "money", currency: symbol.value },
+  {
+    key: "optimized_budget",
+    label: "Optimized",
+    format: "money",
+    currency: symbol.value,
+  },
+  {
+    key: "expected_revenue_at_optimized",
+    label: "Expected revenue",
+    format: "money",
+    currency: symbol.value,
+  },
+  {
+    key: "expected_revenue_delta",
+    label: "Change",
+    format: "money",
+    currency: symbol.value,
+  },
+  {
+    key: "marginal_expected_revenue",
+    label: "Marginal return",
+    format: "share",
+    digits: 4,
+  },
+  {
+    key: "response_support",
+    label: "Evidence",
+    format: (value) => pretty(value),
+    tone: (value) => (value === "TARGET_HISTORY" ? "green" : "amber"),
+  },
+  { key: "is_extrapolated", label: "Extrapolated", format: "flag" },
+]);
 
 const snapshot = computed(
   () => budget.value.mta_source_snapshot ?? request.value.mta_source ?? {},
@@ -102,9 +204,13 @@ const stages = computed(() => {
     },
     {
       stage: "5. Optimisation",
-      produced: "Optimised allocation",
-      count: 0,
-      status: "NOT RUN",
+      produced: "Campaign budgets from fitted response curves",
+      count: allocations.value.length,
+      status: hasPlan.value
+        ? isOptimized.value
+          ? "COMPLETE"
+          : plan.value.recommendation_type
+        : "NOT RUN",
     },
   ];
 });
@@ -184,11 +290,20 @@ const flagColumns = [
       <div class="card-body">
         <DataTable :columns="stageColumns" :rows="stages" />
         <p class="caption">
-          Stage 5 has not run: <code>is_optimized</code> is
-          <b>{{ String(budget.is_optimized ?? false) }}</b>. The current
-          allocation across {{ (budget.campaigns ?? []).length }} Campaigns and
-          {{ slotCount }} Ad Group slots is a deterministic seed derived from
-          historical attribution.
+          Stage 4 produced the seed: an allocation across
+          {{ (budget.campaigns ?? []).length }} Campaigns and
+          {{ slotCount }} Ad Group slots derived from historical attribution,
+          with <code>is_optimized</code> =
+          <b>{{ String(budget.is_optimized ?? false) }}</b>.
+          <template v-if="hasPlan">
+            Stage 5 then reallocated at the Campaign level from fitted budget
+            response, which does not read attribution at all.
+          </template>
+          <template v-else>
+            Stage 5 has not run. Run
+            <code>script/generate_campaign_strategy.py</code> to fit the
+            response models and optimize.
+          </template>
         </p>
 
         <div v-if="warnings.length" class="notice warn">
@@ -199,6 +314,86 @@ const flagColumns = [
         </div>
         <div v-else class="notice good">
           The budget run completed with no warnings.
+        </div>
+      </div>
+    </article>
+
+    <article v-if="hasPlan" class="card">
+      <div class="card-head">
+        <h2>Optimized Campaign budget</h2>
+      </div>
+      <div class="card-body">
+        <template v-if="isOptimized">
+          <MetricRow :items="planMetrics" />
+
+          <DataTable
+            :columns="allocationColumns"
+            :rows="allocations"
+            empty="No Campaign received an optimized budget."
+          />
+          <p class="caption">
+            Each Campaign's budget comes from its own fitted budget-to-spend and
+            spend-to-revenue response, allocated so that the marginal return of
+            the last unit of budget is equal across every unconstrained
+            Campaign. Attribution is not an input here: it divides credit for
+            what already happened, which is a different question from how
+            revenue responds when a budget changes.
+          </p>
+
+          <div v-if="extrapolated.length" class="notice warn">
+            <b>Outside observed range</b>
+            <ul>
+              <li v-for="row in extrapolated" :key="row.campaign_id">
+                {{ row.campaign_id }} is optimized to
+                {{ money(row.optimized_budget, symbol) }}, outside the
+                {{ money(row.observed_budget_range[0], symbol) }} to
+                {{ money(row.observed_budget_range[1], symbol) }} range its fit
+                observed.
+              </li>
+            </ul>
+          </div>
+
+          <div v-if="pooled.length" class="notice warn">
+            <b>Borrowed response</b>
+            <ul>
+              <li v-for="row in pooled" :key="row.campaign_id">
+                {{ row.campaign_id }} has too little budget variation of its
+                own, so its curve was pooled from comparable Campaigns. The
+                estimate is legitimate but is not this Campaign's observed
+                behavior.
+              </li>
+            </ul>
+          </div>
+
+          <p class="caption">
+            Budgets are optimized at the Campaign level only
+            (<code>{{ plan.ad_group_optimization_claim }}</code>). Any split
+            below a Campaign is
+            <code>{{ plan.ad_group_projection_basis }}</code>, a projection
+            rather than an optimization, because the candidate pool carries
+            counts rather than features that would distinguish one new Ad Group
+            from another.
+          </p>
+        </template>
+
+        <template v-else>
+          <div class="notice warn">
+            <b>{{ pretty(plan.recommendation_type) }}</b>
+            <ul>
+              <li v-for="reason in plan.infeasibility_reasons ?? []" :key="reason">
+                {{ reason }}
+              </li>
+            </ul>
+          </div>
+          <p class="caption">
+            The optimizer returned no allocation rather than a fabricated one.
+            The seed above remains the current recommendation.
+          </p>
+        </template>
+
+        <div v-if="(plan.excluded_campaign_ids ?? []).length" class="notice">
+          Excluded from optimization:
+          {{ (plan.excluded_campaign_ids ?? []).join(", ") }}
         </div>
       </div>
     </article>

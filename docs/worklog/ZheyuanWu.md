@@ -11,11 +11,23 @@ lang: en-US
 > Project: Marketing ROI Analysis
 > Handle: `Trance-0`
 > Role: Project manager — pipeline development, data simulation and integration, algorithm testing
-> Last updated: 2026-08-18
+> Last updated: 2026-08-19
 
 Entries are reconstructed from Git history. They record the change set behind each commit, not a separate narrative.
 
 ---
+
+## 2026-08-19
+
+### Completed
+
+- Built out the Campaign budget optimizer to a documented, verified state: the response dataset with its enforced attribution and ground-truth exclusion, the two-stage saturating budget-to-spend-to-revenue fit with target-history, pooled-transfer, and insufficient-support labelling, the shadow-price solver that equalizes marginal expected revenue under both budget usage policies, and the structured refusals it returns instead of a fabricated optimum. Verified end to end against freshly generated MTA-SIM output: 40 observations, 2 fitted Campaigns, full budget allocated, marginal returns equal to seven decimal places.
+- Wrote `docs/en/strategy-recommendation/campaign-budget-optimizer.md` as the owning specification, including the code-level contract for all five source files, and corrected every page that still described the optimizer as unimplemented — the strategy index, module inventory, data-flow reference (new Layer 9), and five canonical data-model pages whose "no optimizer exists yet" claims had become false. Added six supporting definitions, and taught the Draw.io exporter to skip `-human` sources so a hand-authored diagram can sit beside its agent-authored counterpart without the site publishing two pictures of one subject.
+- Surfaced the plan in the dashboard by reusing the existing loader pattern rather than adding a parallel one: `loadCampaignStrategy()` beside `loadBudgetRecommendation()`, mode-independent because the artifact is command-produced, and replaced the Optimization Log's hard-coded `NOT RUN` fifth stage with the real allocation, its evidence, and named extrapolation and pooled-transfer warnings. 476 Python and 33 dashboard tests pass.
+
+### Next
+
+- Extend the response model below the Campaign once an Ad Group feature table exists; the optimizer deliberately reports `NOT_AD_GROUP_OPTIMIZED` until candidate features can distinguish one new Ad Group from another.
 
 ## 2026-08-18
 

@@ -305,7 +305,9 @@ BudgetObservation(
 
 ## Downstream Usage <span class="status-label status-recommendation" aria-label="Recommendation"></span>
 
-A future strategy optimizer would compare `actual_spend` against `configured_budget` across a campaign's `BudgetObservation` history to judge whether past allocations were well-used before recommending a new one. A future intervention study would populate and read the five reserved fields (`intervention_id`, `baseline_budget`, `budget_delta`, `assignment_type`, `randomized`) to estimate the causal effect of deliberate budget changes. Neither the optimizer nor the intervention-study analysis exists yet.
+The [Campaign budget optimizer](/en/strategy-recommendation/campaign-budget-optimizer.md) compares `actual_spend` against `configured_budget` across a campaign's `BudgetObservation` history to judge whether past allocations were well-used before recommending a new one. It fits that comparison as an explicit budget-to-spend stage, so a campaign that cannot spend what it is given is not mistaken for one that spends it poorly, and it reads the five reserved fields (`intervention_id`, `baseline_budget`, `budget_delta`, `assignment_type`, `randomized`) as the record of which budget decision each period carried.
+
+A future intervention study would read those same five fields to estimate the causal effect of deliberate budget changes. That analysis does not exist yet: the optimizer estimates a budget response, which is an association between budget and revenue, and not a causal incrementality claim.
 
 ## Current Availability <span class="status-label status-verified" aria-label="Verified"></span>
 

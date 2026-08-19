@@ -417,6 +417,7 @@ Without `--check-output`, the generator writes its result to standard output so 
 
 - [Overall model plan](model-plan.md)
 - [Detailed current Ad Group initial-budget calculation](current-budget-calculation.md)
+- [Campaign budget response model and optimizer](campaign-budget-optimizer.md)
 - [Problem definition and research plan from MTA to Ad Group budget](optimization-plan.md)
 - [Output data contract](output-data-contract.md)
 - [Budget strategy output contract](strategy-output-contract.md)

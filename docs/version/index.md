@@ -11,6 +11,11 @@ The project version is recorded in the repository-root `VERSION` file. Each page
 
 This section records **what** changed. See the [work log](../worklog/) for **who** did the work and when.
 
+## [0.9.21](0.9.21.md)
+
+- Date: 2026-08-19
+- Summary: Specified the implemented Campaign budget response model and constrained optimizer, corrected the pages that still called them unimplemented, and surfaced the optimized plan in the dashboard's Optimization Log
+
 ## [0.9.20](0.9.20.md)
 
 - Date: 2026-08-18

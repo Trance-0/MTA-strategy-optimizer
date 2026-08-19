@@ -1,7 +1,7 @@
 ---
 title: Strategy Optimization Model
 description: Current budget initializer and future Ad Group revenue-optimization model
-compact: "Landing page for the strategy module: short summary of the IMPLEMENTED `generate_budget_recommendation()` in `src/budget_recommender.py` plus PROPOSED, unimplemented Ad Group response model, constrained optimizer, and validation baselines. Read for orientation, not for field-level detail."
+compact: "Landing page for the strategy module: the IMPLEMENTED `generate_budget_recommendation()` seed in `src/budget_recommender.py`, the IMPLEMENTED Campaign response model and constrained optimizer in campaign-budget-optimizer.md, and still-PROPOSED Ad Group-level response and validation baselines. Read for orientation, not field detail."
 lang: en-US
 ---
 
@@ -62,9 +62,48 @@ File: `outputs/initial_budget_recommendation.json`
 
 File: `src/hierarchy_validator.py`
 
+## Current: Campaign Response Model and Optimizer <span class="status-label status-verified" aria-label="Verified"></span>
+
+Where a Campaign's budget has already been varied and observed, the seed above is no longer the best available answer. A supervised, auditable response model is fitted per Campaign and a deterministic optimizer allocates against it, solving:
+
+$$
+\max_{b_c}
+\sum_c \widehat{\text{expected revenue}}(c,b_c)
+$$
+
+subject to the authorized total budget and each Campaign's floor and ceiling. Because each fitted response is concave, the solution equalizes marginal expected revenue across every unconstrained Campaign at a single shadow price on budget.
+
+The model is fitted in two stages — configured budget to actual spend, then actual spend to revenue — so a Campaign that cannot spend its budget is not confused with one that spends it poorly. Attribution is not an input to either stage: it divides credit for what already happened, which is a different question from how revenue responds to a budget change.
+
+The optimization variable is the **Campaign**. Ad Group budgets are not optimized, because the candidate pool carries counts rather than features that would distinguish one new Ad Group from another; every plan discloses this as `NOT_AD_GROUP_OPTIMIZED`.
+
+Read [Campaign Budget Response Model and Optimizer](campaign-budget-optimizer.md) for the fitted forms, the solver, the structured refusals, and the output contract.
+
+Related files:
+
+### Response dataset
+
+File: `src/response_dataset.py`
+
+### Fitted response model
+
+File: `src/response_model.py`
+
+### Constrained optimizer
+
+File: `src/budget_optimizer.py`
+
+### Generation entry point
+
+File: `script/generate_campaign_strategy.py`
+
+### Current output
+
+File: `outputs/campaign_strategy.json`
+
 ## Next Stage: One Ad Group Response Model <span class="status-label status-recommendation" aria-label="Recommendation"></span>
 
-The first optimization version should use one supervised, auditable response model rather than orchestrating multiple Agents or generative models. Model inputs must be available at decision time:
+Extending the response model below the Campaign requires inputs the current data does not carry. Model inputs must be available at decision time:
 
 - historical MTA contribution and reliability;
 - Campaign, Ad Product, and Ad Group attributes;
@@ -73,7 +112,7 @@ The first optimization version should use one supervised, auditable response mod
 - price, margin, inventory, budget-limited status, and pacing;
 - candidate budget values and temporal features.
 
-The model output should be expected revenue for each Ad Group under candidate budget (b):
+The model output would be expected revenue for each Ad Group under candidate budget (b):
 
 $$
 \widehat{\text{expected revenue}}(g,b)
@@ -81,24 +120,7 @@ $$
 
 MTA results should be used as a historical prior or feature, not treated as budget response directly.
 
-## Constrained Optimizer <span class="status-label status-recommendation" aria-label="Recommendation"></span>
-
-After the model produces budget–revenue responses, a separate deterministic optimizer solves:
-
-$$
-\max_{b_g}
-\sum_g \widehat{\text{expected revenue}}(g,b_g)
-$$
-
-subject to:
-
-$$
-\sum_g b_g \le \text{total campaign budget},
-\qquad
-\text{minimum budget}(g) \le b_g \le \text{maximum budget}(g)
-$$
-
-It should also include inventory, activation eligibility, budget increments, and business guardrails. If the true business objective is profit rather than revenue, change the objective to expected gross margin instead of mixing Revenue, Return on Ad Spend (ROAS), and unit sales.
+The optimizer would then extend to inventory, activation eligibility, budget increments, and business guardrails. If the true business objective is profit rather than revenue, change the objective to expected gross margin instead of mixing Revenue, Return on Ad Spend (ROAS), and unit sales; the current optimizer refuses a `MAXIMIZE_PROFIT` request rather than answering it with a revenue model.
 
 ## Validation Criteria <span class="status-label status-recommendation" aria-label="Recommendation"></span>
 

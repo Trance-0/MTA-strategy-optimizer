@@ -29,9 +29,9 @@ Dependencies are explicit Python package imports. `mta_standard` owns loading an
 
 ### `mta_strategy_recommendation`
 
-- **Receives:** Recommended attribution, entity bridge, request, candidate pool
-- **Produces:** `initial_budget_recommendation.json`
-- **Consumer:** Downstream planning
+- **Receives:** Recommended attribution, entity bridge, request, and candidate pool for the seed; the MTA-SIM research snapshot for the optimizer
+- **Produces:** `initial_budget_recommendation.json` and `campaign_strategy.json`
+- **Consumer:** Downstream planning and the dashboard's Optimization Log
 
 ---
 
@@ -278,6 +278,22 @@ The strategy module combines `amc_mta_recommended_attribution.csv` and `amc_touc
 
 ---
 
+## Layer 9 — Campaign budget optimization <span class="status-label status-verified" aria-label="Verified"></span>
+
+The seed above allocates where no response evidence exists. Where a Campaign's budget has been varied and observed, a separate chain allocates from that evidence instead, and it does not read attribution at all.
+
+`episode_bridge` joins the research snapshot's observed records into `CampaignEpisode` values; `response_dataset` aggregates them into one row per Campaign-period; `response_model` fits a two-stage budget-to-spend-to-revenue curve per Campaign; and `budget_optimizer` allocates by equalizing marginal expected revenue at a single shadow price on budget. `script/generate_campaign_strategy.py` runs the chain and writes `campaign_strategy.json`, which the dashboard's Optimization Log reads.
+
+See [Campaign Budget Response Model and Optimizer](../strategy-recommendation/campaign-budget-optimizer.md) for the fitted forms, the solver, and the output contract.
+
+> [!NOTE]
+> Attribution is an input to the seed and never to the optimizer. Attribution divides credit for outcomes that already happened; budget response answers what changes when a budget changes. `response_dataset.FORBIDDEN_RESPONSE_FEATURES` enforces the boundary in code, and an `EvaluationEpisode` carrying simulator ground truth is rejected outright.
+
+> [!WARNING]
+> The optimizer's expected revenue is an estimate from a fitted model, not a guaranteed uplift, and it optimizes Campaign budgets only — every plan states `NOT_AD_GROUP_OPTIMIZED`. When no responsible allocation exists it returns a structured refusal with its reasons rather than a fabricated optimum.
+
+---
+
 ## File Reference <span class="status-label status-verified" aria-label="Verified"></span>
 
 Every file states its own role and position in its module docstring. The headings below are the index.
@@ -408,9 +424,29 @@ Input consistency and evidence lineage.
 
 Ad Group count and budget seed.
 
+#### `src/episode_bridge.py`
+
+Research snapshot to Campaign episodes.
+
+#### `src/response_dataset.py`
+
+Campaign-period response rows, and the forbidden-feature boundary.
+
+#### `src/response_model.py`
+
+Two-stage fitted budget response per Campaign.
+
+#### `src/budget_optimizer.py`
+
+Constrained Campaign budget allocation.
+
 #### `script/generate_initial_budget.py`
 
 Budget JSON CLI, with `--check-output`.
+
+#### `script/generate_campaign_strategy.py`
+
+Response fitting and optimization CLI, writing `campaign_strategy.json`.
 
 #### `script/validate_simulated_hierarchy.py`
 

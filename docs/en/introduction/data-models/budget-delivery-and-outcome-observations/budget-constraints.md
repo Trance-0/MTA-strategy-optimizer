@@ -1,7 +1,7 @@
 ---
 title: Budget Constraints
 description: Forward-looking budget bounds and usage policy for one campaign
-compact: "BudgetConstraints (modules/mta_common/src/budget.py): campaign_id, budget_usage_policy, optional minimum/maximum_daily_budget for a future optimizer. No adapter populates maximum_daily_budget or infers budget_usage_policy — the caller must supply it explicitly."
+compact: "BudgetConstraints (modules/mta_common/src/budget.py): campaign_id, budget_usage_policy, optional minimum/maximum_daily_budget read by the Campaign budget optimizer as hard bounds. No adapter populates maximum_daily_budget or infers budget_usage_policy — the caller must supply it explicitly."
 order: 10
 lang: en-US
 ---
@@ -125,11 +125,11 @@ Rejected when negative. Rejected when it is smaller than `minimum_daily_budget`,
 
 ### Relationship to Strategy Objective and Budget Usage Policy
 
-`budget_usage_policy` is one of the two orthogonal axes — alongside [Strategy Objective](/en/introduction/data-models/vocabularies/strategy-objective.md) — that a future optimizer would read together. Neither this class nor either enum implements the optimizer itself.
+`budget_usage_policy` is one of the two orthogonal axes — alongside [Strategy Objective](/en/introduction/data-models/vocabularies/strategy-objective.md) — that an optimizer reads together. Neither this class nor either enum implements the optimizer itself; the [Campaign budget optimizer](/en/strategy-recommendation/campaign-budget-optimizer.md) in `modules/mta_strategy_recommendation` is the implemented reader of both, and it honors `SPEND_FULL_BUDGET` and `SPEND_UP_TO_BUDGET` as distinct allocation constraints.
 
 ### Relationship to Campaign Episode
 
-A future [Campaign Episode](/en/introduction/data-models/composed-episodes-and-evaluation-isolation/campaign-episode.md) composed for a response model or optimizer would carry a campaign's `BudgetConstraints` alongside its `BudgetObservation` history, though `episode.py` does not yet include a `BudgetConstraints` field — see Known Limitations.
+A [Campaign Episode](/en/introduction/data-models/composed-episodes-and-evaluation-isolation/campaign-episode.md) composed for a response model or optimizer would carry a campaign's `BudgetConstraints` alongside its `BudgetObservation` history, though `episode.py` does not yet include a `BudgetConstraints` field — see Known Limitations. The implemented optimizer works around this by taking constraints on its own request object rather than reading them from the episode.
 
 ## Legacy Mapping <span class="status-label status-verified" aria-label="Verified"></span>
 
@@ -180,7 +180,7 @@ BudgetConstraints(
 
 ## Downstream Usage <span class="status-label status-recommendation" aria-label="Recommendation"></span>
 
-A future strategy optimizer would read `BudgetConstraints` together with [Strategy Objective](/en/introduction/data-models/vocabularies/strategy-objective.md) to decide how much to allocate to a campaign, respecting `minimum_daily_budget`/`maximum_daily_budget` as hard bounds and `budget_usage_policy` as a spend-exhaustion rule. No optimizer exists yet; this class only declares the shape it would read.
+A strategy optimizer reads `BudgetConstraints` together with [Strategy Objective](/en/introduction/data-models/vocabularies/strategy-objective.md) to decide how much to allocate to a campaign, respecting `minimum_daily_budget`/`maximum_daily_budget` as hard bounds and `budget_usage_policy` as a spend-exhaustion rule. The [Campaign budget optimizer](/en/strategy-recommendation/campaign-budget-optimizer.md) in `modules/mta_strategy_recommendation` is that reader: it treats an absent minimum as zero and an absent maximum as unbounded, refuses a request whose minimum exceeds its maximum, and re-checks every returned allocation against both bounds before reporting it. This class declares the shape; it does not itself enforce it.
 
 ## Current Availability <span class="status-label status-verified" aria-label="Verified"></span>
 

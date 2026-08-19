@@ -339,29 +339,63 @@ def _campaign_product_link(item: Mapping[str, Any]) -> CampaignProductLink:
 def _budget_observation(
     item: Mapping[str, Any], campaign_baselines: Mapping[str, Any]
 ) -> BudgetObservation:
+    """Adapt one simulator budget record, preferring its own intervention data.
+
+    The simulator now assigns one intervention per Campaign and period and
+    records it directly. Older snapshots carry only ``budget_level``, so the
+    intervention identity is reconstructed from it and the Campaign's
+    configured baseline for backward compatibility.
+    """
+
     campaign_id = str(item["campaign_id"])
     configured = _optional_float(item.get("configured_budget"))
-    baseline = _optional_float(campaign_baselines.get(campaign_id))
     budget_level = _optional_float(item.get("budget_level"))
+    baseline = _optional_float(
+        item.get("baseline_budget", campaign_baselines.get(campaign_id))
+    )
+    delta = _optional_float(item.get("budget_delta"))
+    if delta is None and configured is not None and baseline is not None:
+        delta = configured - baseline
+    intervention_id = _optional_string(item.get("intervention_id"))
+    if intervention_id is None and budget_level is not None:
+        intervention_id = f"MTA_SIM_BUDGET_LEVEL:{budget_level:g}"
     return BudgetObservation(
         campaign_id=campaign_id,
         reporting_scope=_scope(_required_object(item, "reporting_scope")),
         configured_budget=configured,
         actual_spend=_optional_float(item.get("actual_spend")),
-        intervention_id=(
-            None
-            if budget_level is None
-            else f"MTA_SIM_BUDGET_LEVEL:{budget_level:g}"
-        ),
+        intervention_id=intervention_id,
         baseline_budget=baseline,
-        budget_delta=(
-            None if configured is None or baseline is None else configured - baseline
-        ),
-        assignment_type=(
-            None if budget_level is None else AssignmentType.RULE_BASED
-        ),
-        randomized=(None if budget_level is None else False),
+        budget_delta=delta,
+        assignment_type=_assignment_type(item, budget_level),
+        randomized=_randomized(item, budget_level),
     )
+
+
+def _assignment_type(
+    item: Mapping[str, Any], budget_level: float | None
+) -> AssignmentType | None:
+    """Map the simulator's assignment mode onto the canonical vocabulary.
+
+    The simulator's ``SCHEDULED`` and ``NONE`` modes are both deterministic
+    rules, which the canonical vocabulary calls ``RULE_BASED``.
+    """
+
+    value = item.get("assignment_type")
+    if value is None:
+        return None if budget_level is None else AssignmentType.RULE_BASED
+    if str(value) == "RANDOMIZED":
+        return AssignmentType.RANDOMIZED
+    return AssignmentType.RULE_BASED
+
+
+def _randomized(item: Mapping[str, Any], budget_level: float | None) -> bool | None:
+    """Return whether the simulator randomized this budget assignment."""
+
+    value = item.get("randomized")
+    if value is None:
+        return None if budget_level is None else False
+    return bool(value)
 
 
 def _delivery_observation(item: Mapping[str, Any]) -> DeliveryObservation:

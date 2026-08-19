@@ -197,6 +197,26 @@ Expected additional revenue from one added unit of budget. Budget optimization m
 
 A rule that an optimized plan must satisfy, such as total budget, minimum budget, inventory, activation eligibility, or budget increment.
 
+### Concavity
+
+The property of a [Response Curve](#response-curve) whose marginal return falls as budget rises: each added unit of budget buys less than the one before it. It is what makes an allocation equalizing [Marginal Revenue](#marginal-revenue) across Campaigns a true maximum rather than one of several local answers, so this project's fitted curves are constrained to keep it.
+
+### Shadow Price of Budget
+
+The value of one additional unit of the total budget at the optimum. When every Campaign's [Response Curve](#response-curve) is concave, there is exactly one price at which each unconstrained Campaign's marginal expected revenue is equal and the authorized budget is exactly exhausted; Campaigns whose floor or ceiling binds sit at that bound. This project's optimizer finds that price by bisection rather than by a general-purpose solver.
+
+### Budget Response
+
+How much actual Spend and then revenue change when a Campaign's configured budget changes. It is a different quantity from [Attribution Share](#attribution-share), which divides credit for outcomes that already occurred, and from [Causal Incrementality](#causal-incrementality), which requires an assignment that supports a causal claim.
+
+### Extrapolation
+
+Reading a fitted [Response Curve](#response-curve) at a budget outside the range the fit observed. The estimate rests on the curve's assumed shape rather than on evidence, so this project flags every extrapolated allocation rather than letting the number stand unqualified.
+
+### Pooled Transfer
+
+Fitting a Campaign's [Response Curve](#response-curve) from comparable Campaigns because it lacks sufficient budget variation of its own. The estimate is legitimate but is not that Campaign's observed behavior, so it is labelled wherever it appears.
+
 ### ROAS (Return on Ad Spend)
 
 Attributed revenue divided by advertising Spend. ROAS is a ratio and must not be confused with maximizing total revenue or profit as though they were the same objective.

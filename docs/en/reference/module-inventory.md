@@ -22,9 +22,9 @@ lang: en-US
 
 ## MTA Strategy Recommendation (`modules/mta_strategy_recommendation/`)
 
-- **Purpose:** Generate the new Ad Group count and initial budget using Campaign Group as the top level
-- **Status:** Runnable generator, canonical output, and validator are implemented
-- **Entry point:** [Strategy initializer](../strategy-recommendation/module-overview.md)
+- **Purpose:** Generate the new Ad Group count and initial budget using Campaign Group as the top level, and optimize Campaign budgets against fitted response curves where budget variation has been observed
+- **Status:** Runnable generator, canonical output, and validator are implemented; the Campaign response model and constrained budget optimizer are implemented, and Ad Group-level optimization is not
+- **Entry point:** [Strategy initializer](../strategy-recommendation/module-overview.md) and [Campaign budget optimizer](../strategy-recommendation/campaign-budget-optimizer.md)
 
 ## Directory Convention
 

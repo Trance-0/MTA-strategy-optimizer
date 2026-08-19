@@ -1,7 +1,7 @@
 ---
 title: Strategy Objective
 description: What a future budget optimizer would maximize, declared independently of how the budget must be used
-compact: "StrategyObjective StrEnum (MAXIMIZE_REVENUE, MAXIMIZE_PROFIT) in modules/mta_common/src/enums.py — a future optimizer's objective, orthogonal to BudgetUsagePolicy. Not referenced by any dataclass field anywhere in modules/mta_common/src/; no optimizer reads it yet. Pure declaration."
+compact: "StrategyObjective StrEnum (MAXIMIZE_REVENUE, MAXIMIZE_PROFIT) in modules/mta_common/src/enums.py — an optimizer's objective, orthogonal to BudgetUsagePolicy. Not referenced by any dataclass field in modules/mta_common/src/; the Campaign budget optimizer reads it and refuses MAXIMIZE_PROFIT."
 order: 30
 lang: en-US
 ---
@@ -44,11 +44,13 @@ A future optimizer configured with this objective would maximize profit: attribu
 
 ### Relationship to Budget Usage Policy
 
-[Budget Usage Policy](/en/introduction/data-models/vocabularies/budget-usage-policy.md) is the orthogonal vocabulary a future optimizer would read alongside `StrategyObjective`: one names what to maximize, the other names whether the authorized budget must be exhausted while doing so. Neither enum's docstring frames the other as a precondition or a special case.
+[Budget Usage Policy](/en/introduction/data-models/vocabularies/budget-usage-policy.md) is the orthogonal vocabulary an optimizer reads alongside `StrategyObjective`: one names what to maximize, the other names whether the authorized budget must be exhausted while doing so. Neither enum's docstring frames the other as a precondition or a special case.
 
 ### Relationship to Canonical Data Model
 
-[Canonical Data Model](/en/introduction/data-models/index.md)'s Scope and Non-Goals section names "a budget optimizer that reads `StrategyObjective` and `BudgetUsagePolicy` and produces an allocation" as something this module deliberately does not implement.
+[Canonical Data Model](/en/introduction/data-models/index.md)'s Scope and Non-Goals section names "a budget optimizer that reads `StrategyObjective` and `BudgetUsagePolicy` and produces an allocation" as something this module deliberately does not implement. That optimizer is implemented in `modules/mta_strategy_recommendation`, which is exactly the separation the non-goal describes: this module supplies the vocabulary, another module supplies the mathematics.
+
+The [Campaign budget optimizer](/en/strategy-recommendation/campaign-budget-optimizer.md) models `MAXIMIZE_REVENUE` only. A `MAXIMIZE_PROFIT` request is refused with `PROFIT_OBJECTIVE_NOT_MODELED` rather than answered with a revenue model, because the fitted response predicts revenue and carries no margin.
 
 ## Legacy Mapping <span class="status-label status-verified" aria-label="Verified"></span>
 

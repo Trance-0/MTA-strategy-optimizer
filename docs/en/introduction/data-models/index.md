@@ -1,7 +1,7 @@
 ---
 title: Canonical Data Model
 description: Provider-independent domain model foundation shared across attribution, strategy, and dashboard modules
-compact: "Provider-independent canonical dataclasses and their relationship diagram, grouped into vocabularies, provider/touchpoint contracts, identities, observations, evidence, episodes, and presentation-only types. Covers the legacy compatibility bridge; no optimizer, incrementality estimation, or similarity calculation is implemented."
+compact: "Provider-independent canonical dataclasses and their relationship diagram, grouped into vocabularies, provider/touchpoint contracts, identities, observations, evidence, episodes, and presentation-only types. Covers the legacy compatibility bridge; this module implements no optimizer, incrementality estimation, or similarity calculation of its own."
 lang: en-US
 source_files: modules/mta_common/src/enums.py, modules/mta_common/src/provider_capabilities.py, modules/mta_common/src/touchpoint.py, modules/mta_common/src/reporting_scope.py, modules/mta_common/src/campaign.py, modules/mta_common/src/product.py, modules/mta_common/src/budget.py, modules/mta_common/src/delivery.py, modules/mta_common/src/outcome.py, modules/mta_common/src/attribution_evidence.py, modules/mta_common/src/lineage.py, modules/mta_common/src/episode.py, modules/mta_common/src/evaluation_only.py, modules/mta_common/src/presentation/similarity.py, modules/mta_common/src/legacy_adapters.py
 ---
@@ -278,15 +278,17 @@ Source: `modules/mta_common/src/legacy_adapters.py`
 
 ## Downstream Usage <span class="status-label status-recommendation" aria-label="Recommendation"></span>
 
-A future response-prediction model would consume `CampaignEpisode` as its training and inference row shape. A future strategy optimizer would read `StrategyObjective`, `BudgetUsagePolicy`, and `BudgetConstraints` to decide an allocation, and `CampaignEpisode` to evaluate one. A future evaluation harness would consume `EvaluationEpisode` to compare a model's decision against simulator ground truth without that ground truth ever reaching the model itself. None of these consumers exist yet.
+Two of these consumers now exist, in `modules/mta_strategy_recommendation` rather than here. Its response model consumes `CampaignEpisode` as its training row shape, and its budget optimizer reads `StrategyObjective`, `BudgetUsagePolicy`, and `BudgetConstraints` to decide a Campaign allocation. See [Campaign Budget Response Model and Optimizer](/en/strategy-recommendation/campaign-budget-optimizer.md).
+
+A future evaluation harness would consume `EvaluationEpisode` to compare a model's decision against simulator ground truth without that ground truth ever reaching the model itself. That consumer does not exist yet.
 
 ## Current Availability <span class="status-label status-verified" aria-label="Verified"></span>
 
-Every class described here is implemented and tested: 103 tests across 9 files in `modules/mta_common/tests/` pass under `python -X utf8 -B -m unittest discover -s modules/mta_common/tests -t . -p "test_*.py"`. `modules/mta_standard` now constructs canonical Touchpoints during normal loading and constructs the broader Campaign/Product/observation set from MTA-SIM research snapshots. Attribution and strategy mathematics remain independently owned and no predictive optimizer is introduced.
+Every class described here is implemented and tested: 103 tests across 9 files in `modules/mta_common/tests/` pass under `python -X utf8 -B -m unittest discover -s modules/mta_common/tests -t . -p "test_*.py"`. `modules/mta_standard` now constructs canonical Touchpoints during normal loading and constructs the broader Campaign/Product/observation set from MTA-SIM research snapshots. Attribution and strategy mathematics remain independently owned: this module introduces no optimizer of its own, and the Campaign budget optimizer that reads these classes lives in `modules/mta_strategy_recommendation`.
 
 ## Known Limitations <span class="status-label status-verified" aria-label="Verified"></span>
 
 - No real second-provider adapter exists; `Provider.GENERIC` and `GENERIC_CAPABILITIES` demonstrate the contract's shape, not a working integration.
-- No optimizer, incrementality-estimation source, or similarity calculation is implemented; the classes that would carry their output (`OutcomeObservation`'s incremental fields, `SimilarityReference`) exist and stay unpopulated.
+- No incrementality-estimation source or similarity calculation is implemented; the classes that would carry their output (`OutcomeObservation`'s incremental fields, `SimilarityReference`) exist and stay unpopulated. The Campaign budget optimizer is implemented, but in `modules/mta_strategy_recommendation` rather than here, and it estimates budget response rather than causal incrementality.
 - `enums.py` uses `enum.StrEnum` for its seven vocabularies, a deliberate deviation from this repository's otherwise near-total avoidance of the `Enum` family, chosen so `Provider`, `FieldAvailability`, and the rest are not restatable as five different ad-hoc string conventions across the classes that reference them.
 - No current pipeline component calls `legacy_adapters.py`; it is exercised only by its own test suite until a future change wires a real caller to it.

@@ -846,6 +846,27 @@ function rebuildBudgetDocument(run, campaigns, slots) {
 }
 
 /**
+ * The optimized Campaign budget plan and the response evidence behind it.
+ *
+ * Written by `script/generate_campaign_strategy.py`, which fits one response
+ * model per Campaign and solves the constrained allocation. The artifact is
+ * read in its own shape, exactly as `loadBudgetRecommendation` reads the
+ * initializer's, so a view reaches `optimized_strategy.allocations` without
+ * branching on mode.
+ *
+ * This artifact has no database representation. It is produced by a research
+ * command rather than by the import pipeline, so a database-mode run finds no
+ * table for it and returns the same empty object an absent file returns. The
+ * Optimization Log treats that as "the optimizer has not run" and keeps
+ * showing the initializer's seed, which is the honest reading in both modes.
+ */
+export function loadCampaignStrategy() {
+  return cached("campaign_strategy", async () =>
+    readJson(resolve(STRATEGY_OUTPUT_DIR, "campaign_strategy.json")),
+  );
+}
+
+/**
  * The Campaign Group, its Campaigns, weights, and capacity rules.
  *
  * Capacity rules are pipeline configuration rather than observed data, so no
@@ -1255,6 +1276,7 @@ export async function loadSnapshot() {
     entityBridge,
     pathReport,
     budgetRecommendation,
+    campaignStrategy,
     strategyRequest,
     candidatePool,
     simulationResearch,
@@ -1267,6 +1289,7 @@ export async function loadSnapshot() {
     loadEntityBridge(),
     loadPathReport(),
     loadBudgetRecommendation(),
+    loadCampaignStrategy(),
     loadStrategyRequest(),
     loadCandidatePool(),
     loadSimulationResearch(),
@@ -1283,6 +1306,7 @@ export async function loadSnapshot() {
     entityBridge,
     pathReport,
     budgetRecommendation,
+    campaignStrategy,
     strategyRequest,
     candidatePool,
     simulationResearch,
