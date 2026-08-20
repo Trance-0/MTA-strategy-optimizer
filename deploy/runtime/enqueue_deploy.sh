@@ -5,7 +5,11 @@
 
 set -Eeuo pipefail
 
-readonly STATE_ROOT="${MTA_DASHBOARD_STATE_ROOT:-/var/lib/mta-dashboard}"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+readonly SCRIPT_DIR
+DEFAULT_INSTALLATION_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+readonly DEFAULT_INSTALLATION_ROOT
+readonly STATE_ROOT="${MTA_DASHBOARD_STATE_ROOT:-${DEFAULT_INSTALLATION_ROOT}/state}"
 readonly QUEUE_DIR="${STATE_ROOT}/queue"
 readonly DELIVERY_DIR="${STATE_ROOT}/deliveries"
 readonly QUEUE_FILE="${QUEUE_DIR}/pending"

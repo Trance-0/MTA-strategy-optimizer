@@ -1,7 +1,7 @@
 ---
 title: Terms and Abbreviations
 description: Attribution, advertising hierarchy, data, and optimization terminology
-compact: "Canonical glossary for attribution, advertising, optimization, data, and deployment terms including AMC, MTA, ROAS, TVD, HMAC, HTTPS, TLS, SSH, TCP, and DNS. Every documentation abbreviation must have an entry here."
+compact: "Canonical glossary for attribution, advertising, optimization, data, and deployment terms including AMC, MTA, ROAS, TVD, HMAC, HTTPS, TLS, SSH, ACL, TCP, and DNS. Every documentation abbreviation must have an entry here."
 lang: en-US
 ---
 
@@ -168,6 +168,10 @@ The protocol that encrypts an HTTPS connection and authenticates the server cert
 ### SSH (Secure Shell)
 
 An encrypted remote-access protocol also used by Git transports. The deployment bundle accepts SSH-based Gitea access only with a dedicated private key and a pinned known-hosts file.
+
+### ACL (Access Control List)
+
+A filesystem permission list that grants a named user narrowly scoped access in addition to the file owner, group, and general mode bits. The deployment installer uses execute-only ACL entries so `mta-dashboard` can traverse private parent directories without listing or reading their other contents.
 
 ### TCP (Transmission Control Protocol)
 

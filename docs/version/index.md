@@ -11,6 +11,11 @@ The project version is recorded in the repository-root `VERSION` file. Each page
 
 This section records **what** changed. See the [work log](../worklog/) for **who** did the work and when.
 
+## [0.9.24](0.9.24.md)
+
+- Date: 2026-08-20
+- Summary: Restructured the Linux deploy bundle so a single `run.sh` uploaded beside `.env` embeds and checksum-verifies its runtime helpers and consolidates install paths under `deploy/installation/`, and fixed a stale embedded worker payload that would have reintroduced the 0.9.23 health-check bug
+
 ## [0.9.23](0.9.23.md)
 
 - Date: 2026-08-20

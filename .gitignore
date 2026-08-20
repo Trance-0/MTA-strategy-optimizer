@@ -110,6 +110,7 @@ coverage/
 .env
 .env.*
 !.env.example
+/deploy/installation/
 
 # Generated model outputs
 modules/*/outputs/

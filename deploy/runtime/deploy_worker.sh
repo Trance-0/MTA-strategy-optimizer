@@ -5,17 +5,38 @@
 
 set -Eeuo pipefail
 
-readonly STATE_ROOT="${MTA_DASHBOARD_STATE_ROOT:-/var/lib/mta-dashboard}"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+readonly SCRIPT_DIR
+DEFAULT_APP_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
+readonly DEFAULT_APP_ROOT
+DEFAULT_INSTALLATION_ROOT="$(cd "${DEFAULT_APP_ROOT}/.." && pwd)"
+readonly DEFAULT_INSTALLATION_ROOT
+readonly STATE_ROOT="${MTA_DASHBOARD_STATE_ROOT:-${DEFAULT_INSTALLATION_ROOT}/state}"
 readonly QUEUE_FILE="${STATE_ROOT}/queue/pending"
 readonly QUEUE_LOCK="${STATE_ROOT}/queue/queue.lock"
 readonly DEPLOY_LOCK="${STATE_ROOT}/deploy.lock"
 readonly ACTIVE_COMMIT_FILE="${STATE_ROOT}/active_commit"
-readonly INSTALL_ROOT="${MTA_DASHBOARD_INSTALL_ROOT:-/opt/mta-dashboard}"
+readonly PROGRESS_FILE="${STATE_ROOT}/deploy_progress"
+readonly INSTALL_ROOT="${MTA_DASHBOARD_INSTALL_ROOT:-${DEFAULT_APP_ROOT}}"
 readonly RELEASES_ROOT="${INSTALL_ROOT}/releases"
 readonly CURRENT_LINK="${INSTALL_ROOT}/current"
 readonly SYSTEMCTL_BIN="${SYSTEMCTL_BIN:-/usr/bin/systemctl}"
 
 log() { printf '%s [deploy-worker] %s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$*"; }
+
+write_progress() {
+  local phase="$1" lower="$2" upper="$3" typical_seconds="$4" eta_seconds="$5" message="$6"
+  local temporary="${PROGRESS_FILE}.tmp.$$"
+  if (umask 077 && printf '%s\n%s\n%s\n%s\n%s\n%s\n%s\n' \
+      "$phase" "$lower" "$upper" "$(date +%s)" "$typical_seconds" "$eta_seconds" "$message" \
+      >"$temporary" && mv -f -- "$temporary" "$PROGRESS_FILE"); then
+    :
+  else
+    rm -f -- "$temporary"
+    log "WARNING: could not update the operator progress record."
+  fi
+  return 0
+}
 
 positive_integer() {
   local name="$1" value="$2"
@@ -208,9 +229,11 @@ deploy_commit() {
      [[ "$(tr -d '\r\n' <"$ACTIVE_COMMIT_FILE")" == "$target" ]] &&
      [[ "$(readlink -f "$CURRENT_LINK" 2>/dev/null || true)" == "$release" ]] &&
      [[ -f "$release/.ready" ]]; then
+    write_progress health 95 99 40 40 "Checking the already-built release at / and /api/dashboard"
     restart_dashboard || true
     if dashboard_healthy; then
       remove_matching_queue_entry "$target" || true
+      write_progress complete 100 100 1 0 "Release ${target:0:12} is active and healthy; no rebuild was needed"
       log "Commit $target is already active and healthy; no rebuild is needed."
       return 0
     fi
@@ -220,42 +243,57 @@ deploy_commit() {
 
   rm -rf -- "$build"
   mkdir -p "$build"
+  write_progress clone 5 20 60 500 "Pulling Gitea branch $GITEA_BRANCH into an isolated release checkout"
   log "Fetching Gitea branch $GITEA_BRANCH for exact-commit verification."
   if fetch_exact_branch "$target" "$build"; then
     :
   else
     fetch_status=$?
+    if ((fetch_status == 75)); then
+      write_progress mirror 2 5 "$MIRROR_POLL_SECONDS" 510 "Fetched branch changed before verification; checking the mirrored tip again"
+    else
+      write_progress retry 2 5 "$MIRROR_RETRY_SECONDS" "$((MIRROR_RETRY_SECONDS + 500))" "Gitea pull failed; preserving the active release before retry"
+    fi
     rm -rf -- "$build"
     return "$fetch_status"
   fi
   if ! queue_still_targets "$target"; then
+    write_progress mirror 2 5 "$MIRROR_POLL_SECONDS" 510 "A newer GitHub push superseded the fetched checkout"
     log "Commit $target was superseded during fetch; skipping its build."
     rm -rf -- "$build"
     return 75
   fi
 
+  write_progress verify 20 22 5 440 "Fetched branch tip matches queued GitHub SHA ${target:0:12}"
   log "Installing locked dashboard dependencies for $target."
+  write_progress npm_ci 22 55 180 435 "Installing locked npm dependencies with npm ci"
   if ! (cd "$build/dashboard" && "${clean_build_environment[@]}" npm ci --no-audit --no-fund); then
+    write_progress retry 2 5 "$MIRROR_RETRY_SECONDS" "$((MIRROR_RETRY_SECONDS + 500))" "npm ci failed; preserving the active release before retry"
     log "npm ci failed for $target; the current release is unchanged."
     rm -rf -- "$build"
     return 1
   fi
 
   log "Running dashboard tests for $target."
+  write_progress tests 55 70 90 255 "Running the dashboard npm test suite"
   if ! (cd "$build/dashboard" && "${clean_build_environment[@]}" npm test); then
+    write_progress retry 2 5 "$MIRROR_RETRY_SECONDS" "$((MIRROR_RETRY_SECONDS + 500))" "Dashboard tests failed; preserving the active release before retry"
     log "Dashboard tests failed for $target; the current release is unchanged."
     rm -rf -- "$build"
     return 1
   fi
 
   log "Building dashboard release $target."
+  write_progress build 70 90 120 165 "Running the dashboard production build"
   if ! (cd "$build/dashboard" && "${clean_build_environment[@]}" npm run build) || [[ ! -f "$build/dashboard/dist/index.html" ]]; then
+    write_progress retry 2 5 "$MIRROR_RETRY_SECONDS" "$((MIRROR_RETRY_SECONDS + 500))" "Production build failed; preserving the active release before retry"
     log "Dashboard build failed for $target; the current release is unchanged."
     rm -rf -- "$build"
     return 1
   fi
 
   if ! queue_still_targets "$target"; then
+    write_progress mirror 2 5 "$MIRROR_POLL_SECONDS" 510 "A newer GitHub push superseded the completed build"
     log "Commit $target was superseded during its build; it will not be activated."
     rm -rf -- "$build"
     return 75
@@ -269,26 +307,35 @@ deploy_commit() {
   ln -sfn "$release" "${CURRENT_LINK}.new"
   mv -Tf "${CURRENT_LINK}.new" "$CURRENT_LINK"
 
+  write_progress activate 90 95 10 50 "Activating immutable release ${target:0:12} and restarting the dashboard"
   log "Activated $target; restarting the dashboard."
-  if restart_dashboard && dashboard_healthy; then
-    printf '%s\n' "$target" >"$ACTIVE_COMMIT_FILE"
-    remove_matching_queue_entry "$target" || true
-    prune_releases "$previous"
-    log "Deployment $target is healthy."
-    return 0
+  if restart_dashboard; then
+    write_progress health 95 99 40 40 "Checking dashboard endpoints / and /api/dashboard"
+    if dashboard_healthy; then
+      printf '%s\n' "$target" >"$ACTIVE_COMMIT_FILE"
+      remove_matching_queue_entry "$target" || true
+      prune_releases "$previous"
+      write_progress complete 100 100 1 0 "Release ${target:0:12} is active and healthy"
+      log "Deployment $target is healthy."
+      return 0
+    fi
   fi
 
+  write_progress rollback 90 95 60 60 "Health check failed; restoring and checking the preceding release"
   log "Health check failed for $target; restoring the preceding release."
   if [[ -n "$previous" && "$previous" == "${RELEASES_ROOT}/"* && -d "$previous" ]]; then
     ln -sfn "$previous" "${CURRENT_LINK}.rollback"
     mv -Tf "${CURRENT_LINK}.rollback" "$CURRENT_LINK"
     if restart_dashboard && dashboard_healthy; then
       printf '%s\n' "$(basename "$previous")" >"$ACTIVE_COMMIT_FILE"
+      write_progress retry 2 5 "$MIRROR_RETRY_SECONDS" "$((MIRROR_RETRY_SECONDS + 500))" "Rollback is healthy; failed release remains queued for retry"
       log "Rollback to $(basename "$previous") is healthy."
     else
+      write_progress failed 0 1 1 0 "Deployment and rollback health checks failed; inspect the worker journal"
       log "CRITICAL: rollback health check also failed."
     fi
   else
+    write_progress retry 2 5 "$MIRROR_RETRY_SECONDS" "$((MIRROR_RETRY_SECONDS + 500))" "First deployment failed its health check and remains queued for retry"
     log "No preceding release exists; the failed first deployment remains inactive."
   fi
   return 1
@@ -314,6 +361,7 @@ if [[ "${1:-}" == "--verify-exact" ]]; then
 fi
 
 log "Worker started; waiting for GitHub requests and the delayed Gitea mirror."
+write_progress idle 0 2 1 510 "Worker started; waiting for a queued GitHub commit"
 
 while true; do
   pending="$(read_pending 2>/dev/null || true)"
@@ -325,6 +373,7 @@ while true; do
   target="${pending%% *}"
   started="$(date +%s)"
   last_observed=""
+  write_progress mirror 2 5 15 510 "Checking Gitea branch $GITEA_BRANCH for queued GitHub SHA ${target:0:12}"
   log "Waiting for Gitea branch $GITEA_BRANCH to reach GitHub commit $target."
 
   while true; do
@@ -336,6 +385,7 @@ while true; do
     if [[ "$latest_target" != "$target" ]]; then
       target="$latest_target"
       started="$(date +%s)"
+      write_progress mirror 2 5 15 510 "Newer push queued; checking Gitea for GitHub SHA ${target:0:12}"
       log "A newer push superseded the target; now waiting for $target."
     fi
 
@@ -362,6 +412,7 @@ while true; do
 
     now="$(date +%s)"
     if (( now - started >= MIRROR_WAIT_SECONDS )); then
+      write_progress retry 2 5 "$MIRROR_RETRY_SECONDS" "$((MIRROR_RETRY_SECONDS + MIRROR_WAIT_SECONDS + 500))" "Gitea mirror window expired; active release preserved before retry"
       log "Mirror wait expired for $target; current release remains active. Retrying in ${MIRROR_RETRY_SECONDS}s."
       sleep "$MIRROR_RETRY_SECONDS"
       break

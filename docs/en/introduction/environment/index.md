@@ -1,7 +1,7 @@
 ---
 title: Environment Setup
 description: Local execution, documentation development, and directory responsibilities
-compact: "Setup and toolchain: Python/Node prerequisites, local verification, documentation, GitHub Pages, repository mirrors, and the deploy/.env transfer plus arrow-key Linux service lifecycle. Read before running the project, deploying the dashboard, or changing automation."
+compact: "Setup and toolchain: Python/Node prerequisites, verification, documentation, mirrors, and the deploy/.env transfer plus arrow-key Linux lifecycle whose generated config, releases, helpers, and state remain under deploy/installation/."
 lang: en-US
 ---
 
@@ -90,14 +90,14 @@ Plain-text `http://` addresses, embedded credentials, query strings, fragments, 
 
 The self-contained `deploy/` directory is the dashboard's Linux server transfer bundle. Its real `deploy/.env` is ignored by Git. For this checkout it is generated from the project-root `.env`: the PostgreSQL (`PG_*`) settings are copied, `GITEA_REPO_USERNAME` maps to `GITEA_USERNAME`, `GITEA_REPO_USER_PASSWORD` maps to `GITEA_TOKEN`, the GitHub repository and current branch are recorded, and a new webhook secret is generated without displaying it. A repository-scoped, read-only Gitea access token is safer than reusing an account password and should replace the mapped value before production use.
 
-Transfer the whole directory, including the hidden `.env`, through Secure Copy Protocol (SCP), Secure File Transfer Protocol (SFTP), or another protected administrative channel. On an `apt`- or `dnf`-based Linux server whose process 1 is `systemd`, run:
+Transfer only `run.sh` and the hidden `.env` into the same server directory through Secure Copy Protocol (SCP), Secure File Transfer Protocol (SFTP), or another protected administrative channel. `run.sh` embeds and generates all runtime helpers and directories. On an `apt`- or `dnf`-based Linux server whose process 1 is `systemd`, run:
 
 ```bash
 cd /path/to/uploaded/deploy
 sudo bash run.sh
 ```
 
-The interactive interface accepts only Up, Down, and Enter. It can install or update, report status, start or restart services, stop services, terminate stale processes proven to belong to the dedicated account and fixed project paths, remove only the service definitions while preserving configuration and releases, or perform a separately confirmed full uninstall. Stale cleanup never selects by port or generic process name. A full uninstall removes only the fixed application paths and service account. It retains the uploaded bundle and shared Git, Node.js, and `adnanh/webhook` installations.
+The interactive interface accepts only Up, Down, and Enter. It can install or update, report status, start or restart services, stop services, terminate stale processes proven to belong to the dedicated account and project paths, remove only the service definitions while preserving configuration and releases, or perform a separately confirmed full uninstall. Generated configuration, runtime helpers, releases, and state all live below `deploy/installation/`. Stale cleanup never selects by port or generic process name. A full uninstall removes that generated directory, recorded traversal access, system integrations, and the service account. It retains the uploaded sources, `.env`, and shared Git, Node.js, and `adnanh/webhook` installations.
 
 The install path detects occupied ports above 8000, installs dependencies with visible download progress, deploys the current Gitea branch, enables the three `systemd` services, exercises a signed local webhook, and prints the GitHub webhook fields. Each Gitea request has a bounded timeout and actionable credential-free error output. The operator must still provide a Transport Layer Security (TLS) reverse proxy or equivalent secure ingress, Domain Name System (DNS), firewall rules, and GitHub reachability. GitHub sends the event, Gitea supplies the code, and the deployment worker waits through mirror delay until a newly fetched Gitea branch tip equals the queued GitHub commit exactly. See [Running Locally and Publishing](/en/dashboard/deployment) for the full security, queue, rollback, and lifecycle contract.
 
