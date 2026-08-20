@@ -11,11 +11,22 @@ lang: en-US
 > Project: Marketing ROI Analysis
 > Handle: `Trance-0`
 > Role: Project manager — pipeline development, data simulation and integration, algorithm testing
-> Last updated: 2026-08-19
+> Last updated: 2026-08-20
 
 Entries are reconstructed from Git history. They record the change set behind each commit, not a separate narrative.
 
 ---
+
+## 2026-08-20
+
+### Completed
+
+- Gave Budget Manager's Add/Edit modal a Form view beside the existing JSON editor: `masterObjectFields.js` declares each section's fields against the canonical vocabulary in `mta_common`, and `MasterObjectForm.vue` renders one row per field — plain input for free text, three-way select for a boolean, chip list for a multiselect, and a search-filterable `<datalist>` combobox for every enum-backed or suggested field, the one pattern a non-technical reader already knows from a country selector. Also fixed both views opening a new record on a bare `{}` by merging it over a full field template first.
+- Diagnosed a production deploy where a freshly activated release and the rollback to the previously active one failed the identical health check — impossible from a per-release code difference, since the rollback restores code that was already running. Found `dashboard_healthy()` was gating activation on `GET /api/dashboard`, which returns `503` whenever the host's configured database is unreachable or empty; that setting is shared across every release on the host, so it fails every release alike. Added a `GET /api/health` liveness route independent of database state and repointed the health check at it, verified locally against a real PostgreSQL instance with 47 dashboard tests passing.
+
+### Next
+
+- Confirm on the target host whether the database configured in `${ETC_ROOT}/dashboard.env` is actually reachable now that activation no longer blocks on it; the earlier `503`s may point to a network or credential problem worth fixing independently.
 
 ## 2026-08-19
 

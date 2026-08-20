@@ -128,13 +128,20 @@ restart_dashboard() {
 }
 
 dashboard_healthy() {
+  # Checks liveness only (the process is up and Express is routing), not
+  # whether PostgreSQL is reachable or `attribution_result` has rows yet.
+  # `/api/dashboard` depends on both and is a business-data readiness check,
+  # not a deploy-succeeded check: gating releases on it meant a first deploy
+  # against an empty database could never go healthy, and a rollback to a
+  # perfectly good prior release would fail its health check the same way,
+  # for a reason the deployed code had no part in.
   local host="$DASHBOARD_HOST"
   [[ "$host" == "0.0.0.0" || "$host" == "::" ]] && host="127.0.0.1"
   local base="http://${host}:${DASHBOARD_PORT}"
   local attempts=30
   while ((attempts > 0)); do
     if curl --fail --silent --show-error --max-time 5 "${base}/" >/dev/null 2>&1 &&
-       curl --fail --silent --show-error --max-time 15 "${base}/api/dashboard" >/dev/null 2>&1; then
+       curl --fail --silent --show-error --max-time 15 "${base}/api/health" >/dev/null 2>&1; then
       return 0
     fi
     attempts=$((attempts - 1))

@@ -11,6 +11,11 @@ The project version is recorded in the repository-root `VERSION` file. Each page
 
 This section records **what** changed. See the [work log](../worklog/) for **who** did the work and when.
 
+## [0.9.23](0.9.23.md)
+
+- Date: 2026-08-20
+- Summary: Added Budget Manager's Form/JSON dual-mode master-object editor with template pre-fill, and decoupled the deploy worker's activation health check from database readiness by adding `GET /api/health`
+
 ## [0.9.22](0.9.22.md)
 
 - Date: 2026-08-19

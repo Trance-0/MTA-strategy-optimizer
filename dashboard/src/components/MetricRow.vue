@@ -12,7 +12,7 @@ defineProps({
 </script>
 
 <template>
-  <div class="metrics" :style="{ '--metric-count': items.length }">
+  <div class="metrics">
     <div v-for="item in items" :key="item.label" class="metric">
       <label :title="item.help">{{ item.label }}</label>
       <b>{{ item.value }}</b>

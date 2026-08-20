@@ -53,6 +53,19 @@ export function createApp() {
   app.use(express.json({ limit: "256kb" }));
 
   /**
+   * Liveness only: the Node process is up and Express is routing requests.
+   *
+   * Deliberately independent of `DATABASE`/`PG_*` and of `attribution_result`
+   * having rows, unlike `/api/dashboard`. A release with no data loaded yet is
+   * still a successfully deployed release; conflating the two meant a deploy
+   * could never go healthy until the database was seeded, and a rollback to a
+   * perfectly good prior release would fail the exact same way.
+   */
+  app.get("/api/health", (request, response) => {
+    response.json({ ok: true });
+  });
+
+  /**
    * The whole snapshot in one response.
    *
    * A database that is configured but unreachable is reported as a page-level

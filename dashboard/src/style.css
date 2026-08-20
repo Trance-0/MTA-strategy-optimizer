@@ -430,23 +430,29 @@ code {
    Metric tiles
    --------------------------------------------------------------------------- */
 
+/*
+ * Tiles wrap onto as many rows as a row needs rather than squeezing every
+ * tile into one: a row with a dozen entries (the data model summary) used to
+ * divide its width by the count and force each label and value into a sliver
+ * too narrow to hold them, so long labels and "Unavailable" values overlapped
+ * their neighbours instead of wrapping inside their own tile. The 1px gap on
+ * the line-coloured background draws the seams between tiles in both
+ * directions, including between wrapped rows, without per-tile border logic.
+ */
 .metrics {
   display: grid;
-  grid-template-columns: repeat(var(--metric-count, 4), minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 1px;
+  background: var(--line);
   border: 1px solid var(--line);
   border-radius: 9px;
   overflow: hidden;
-  background: #fff;
 }
 
 .metric {
+  background: #fff;
   padding: 13px 15px;
-  border-right: 1px solid var(--line);
   min-width: 0;
-}
-
-.metric:last-child {
-  border-right: 0;
 }
 
 .metric label {
@@ -960,17 +966,18 @@ td.num {
   max-width: 340px;
 }
 
+/* Its trailing auto margin claims all slack in the toolbar, so whatever comes
+   after it -- the batch bar, the page size -- sits flush at the right edge
+   regardless of what (an Add control, nothing) sits before the search field. */
 .entity-count {
+  margin-right: auto;
   font-size: 11.5px;
   color: var(--muted);
   font-weight: 600;
   white-space: nowrap;
 }
 
-/* Pushed to the right so the destructive control never sits under the cursor
-   that was aiming for the search field. */
 .entity-batch {
-  margin-left: auto;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -997,12 +1004,6 @@ td.num {
 .entity-page-size select {
   width: auto;
   padding: 5px 24px 5px 8px;
-}
-
-/* The batch bar takes the right slot when present; otherwise the page size
-   does, so the toolbar has no gap that moves as rows are selected. */
-.entity-toolbar > .entity-page-size:nth-child(3) {
-  margin-left: auto;
 }
 
 .select-cell {
@@ -1171,7 +1172,7 @@ tbody tr.selected:hover {
 
 .modal-body pre {
   margin: 0;
-  background: #0f1c34;
+  background: var(--navy);
   color: #dbe6ff;
   border-radius: 8px;
   padding: 12px 14px;
@@ -1183,6 +1184,71 @@ tbody tr.selected:hover {
 .modal-body pre code {
   background: transparent;
   color: inherit;
+  padding: 0;
+}
+
+.editor-mode-tabs {
+  padding: 0;
+  margin-bottom: 2px;
+}
+
+.master-object-form {
+  display: grid;
+  gap: 11px;
+  max-height: 52vh;
+  overflow-y: auto;
+  padding-right: 2px;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: minmax(150px, 210px) 1fr;
+  align-items: center;
+  gap: 12px;
+}
+
+.form-row label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.required-mark {
+  color: var(--red);
+  margin-left: 2px;
+}
+
+.form-multiselect {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.chip-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--blue);
+  background: var(--blue2);
+  border-radius: 6px;
+  padding: 4px 6px 4px 9px;
+}
+
+.chip-remove {
+  background: transparent;
+  border: none;
+  color: inherit;
+  font-size: 13px;
+  line-height: 1;
+  cursor: pointer;
   padding: 0;
 }
 
@@ -1324,9 +1390,7 @@ tbody tr.selected:hover {
   }
 
   .nav {
-    flex-direction: row;
-    flex-wrap: wrap;
-    justify-content: center;
+    flex-direction: column;
   }
 
   .nav-label {
@@ -1334,16 +1398,16 @@ tbody tr.selected:hover {
   }
 
   .nav-item {
-    width: auto;
-    min-width: 96px;
+    width: 100%;
+    flex-direction: row;
+    justify-content: flex-start;
+    text-align: left;
+    min-height: 44px;
+    padding: 8px 12px;
   }
 
   .side-foot {
     margin-top: 0;
-  }
-
-  .metrics {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 

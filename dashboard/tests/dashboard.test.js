@@ -463,6 +463,9 @@ test("the dashboard server starts and protects generated observations", async ()
   await new Promise((resolvePromise) => server.once("listening", resolvePromise));
   const { port } = server.address();
   try {
+    const health = await fetch(`http://127.0.0.1:${port}/api/health`);
+    assert.equal(health.status, 200);
+    assert.deepEqual(await health.json(), { ok: true });
     const dashboard = await fetch(`http://127.0.0.1:${port}/api/dashboard`);
     assert.equal(dashboard.status, 200);
     const master = await fetch(
@@ -630,9 +633,9 @@ test("the rail's status dot agrees with the deployment accent", async () => {
 // The entity list
 // ---------------------------------------------------------------------------
 
-test("the entity list pages, and offers the four documented page sizes", () => {
-  assert.match(ENTITY_TABLE, /PAGE_SIZES = \[15, 30, 50, 100\]/);
-  // 15 is the default, so a section opens at one screen rather than at 100 rows.
+test("the entity list pages, and offers the five documented page sizes", () => {
+  assert.match(ENTITY_TABLE, /PAGE_SIZES = \[10, 15, 30, 50, 100\]/);
+  // 10 is the default, so a section opens at one screen rather than at 100 rows.
   assert.match(ENTITY_TABLE, /pageSize = ref\(PAGE_SIZES\[0\]\)/);
 });
 

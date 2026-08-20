@@ -42,7 +42,7 @@ const props = defineProps({
 
 const emit = defineEmits(["edit", "delete", "delete-many"]);
 
-const PAGE_SIZES = [15, 30, 50, 100];
+const PAGE_SIZES = [10, 15, 30, 50, 100];
 
 const pageSize = ref(PAGE_SIZES[0]);
 const page = ref(1);
@@ -142,6 +142,8 @@ defineExpose({ clearSelection });
 <template>
   <div class="entity-table">
     <div class="entity-toolbar">
+      <slot name="toolbar-start" />
+
       <div class="field entity-search">
         <input v-model="search" type="search" :placeholder="`Search ${noun}s`" />
       </div>

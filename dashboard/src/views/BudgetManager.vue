@@ -14,10 +14,12 @@ import ConfirmDialog from "../components/ConfirmDialog.vue";
 import DataTable from "../components/DataTable.vue";
 import EntityTable from "../components/EntityTable.vue";
 import KeyValuePanel from "../components/KeyValuePanel.vue";
+import MasterObjectForm from "../components/MasterObjectForm.vue";
 import MetricRow from "../components/MetricRow.vue";
 import PlotlyChart from "../components/PlotlyChart.vue";
 import ReliabilityBanner from "../components/ReliabilityBanner.vue";
 import { OUTCOME_LABELS, currencySymbol, sortBy } from "../lib/common.js";
+import { buildTemplate } from "../lib/masterObjectFields.js";
 import { useDashboard } from "../lib/useDashboard.js";
 import { useDeployment } from "../lib/deployment.js";
 import {
@@ -59,6 +61,8 @@ const entityIds = {
   generationConfigs: "run_id",
 };
 const editor = ref(null);
+const editorMode = ref("form");
+const editorRecord = ref({});
 const editorText = ref("");
 const editorError = ref("");
 const uploadedConfig = ref(null);
@@ -262,8 +266,32 @@ function openEditor(sectionKey, item = {}) {
     /** A new draft has no identifier yet; the modal titles itself from this. */
     creating: !item[idField],
   };
-  editorText.value = JSON.stringify(item, null, 2);
+  // Every recognized field is present from the start, blank rather than
+  // absent, so the Form editor never has to explain a missing row and the
+  // JSON editor never starts a new draft from a bare `{}`.
+  const record = { ...buildTemplate(sectionKey), ...item };
+  editorRecord.value = record;
+  editorText.value = JSON.stringify(record, null, 2);
+  editorMode.value = "form";
   editorError.value = "";
+}
+
+/** Bring the JSON view up to date with whatever the Form view holds. */
+function switchToJsonMode() {
+  editorText.value = JSON.stringify(editorRecord.value, null, 2);
+  editorMode.value = "json";
+  editorError.value = "";
+}
+
+/** Parse the JSON view back into the Form view, refusing to lose edits. */
+function switchToFormMode() {
+  try {
+    editorRecord.value = JSON.parse(editorText.value);
+    editorMode.value = "form";
+    editorError.value = "";
+  } catch (error) {
+    editorError.value = `Fix the JSON before switching to the Form view: ${error.message}`;
+  }
 }
 
 /** Open the editor on a row, dropping the columns the table added for display. */
@@ -276,7 +304,8 @@ function editRow(row) {
 
 async function persistEditor() {
   try {
-    const payload = JSON.parse(editorText.value);
+    const payload =
+      editorMode.value === "json" ? JSON.parse(editorText.value) : editorRecord.value;
     const idField = entityIds[editor.value.sectionKey];
     const entityId = String(payload[idField] ?? editor.value.entityId ?? "").trim();
     if (!entityId) throw new Error(`${idField} is required`);
@@ -749,12 +778,6 @@ const slotColumns = [
             {{ readOnlyReason }}
           </div>
 
-          <div v-if="databaseEditing" class="rec-actions">
-            <button class="btn primary" @click="openEditor(section)">
-              Add {{ SECTIONS.find(([key]) => key === section)?.[1] }} draft
-            </button>
-          </div>
-
           <template v-if="section === 'generationConfigs'">
             <p class="caption">
               Uploaded or edited configurations apply only to a future run.
@@ -793,7 +816,13 @@ const slotColumns = [
             @edit="editRow"
             @delete="requestDelete"
             @delete-many="requestBatchDelete"
-          />
+          >
+            <template v-if="databaseEditing" #toolbar-start>
+              <button class="btn primary" @click="openEditor(section)">
+                Add {{ SECTIONS.find(([key]) => key === section)?.[1] }} draft
+              </button>
+            </template>
+          </EntityTable>
 
           <p v-if="section === 'productEconomics'" class="caption">
             A blank contribution margin means the economics are incomplete;
@@ -832,7 +861,42 @@ const slotColumns = [
             Generated observations are read-only. Saving this object creates or
             updates a separate future-run draft.
           </p>
-          <textarea v-model="editorText" rows="20" spellcheck="false"></textarea>
+
+          <div class="tabs editor-mode-tabs" role="tablist" aria-label="Editor mode">
+            <button
+              class="tab"
+              role="tab"
+              type="button"
+              :aria-selected="editorMode === 'form'"
+              :class="{ active: editorMode === 'form' }"
+              @click="editorMode === 'json' ? switchToFormMode() : null"
+            >
+              Form
+            </button>
+            <button
+              class="tab"
+              role="tab"
+              type="button"
+              :aria-selected="editorMode === 'json'"
+              :class="{ active: editorMode === 'json' }"
+              @click="editorMode === 'form' ? switchToJsonMode() : null"
+            >
+              JSON
+            </button>
+          </div>
+
+          <MasterObjectForm
+            v-if="editorMode === 'form'"
+            v-model="editorRecord"
+            :section-key="editor.sectionKey"
+          />
+          <textarea
+            v-else
+            v-model="editorText"
+            rows="20"
+            spellcheck="false"
+          ></textarea>
+
           <p v-if="editorError" class="error-detail">{{ editorError }}</p>
           <div class="rec-actions">
             <button class="btn" @click="editor = null">Cancel</button>
