@@ -91,3 +91,43 @@
   font-size: 0.875rem;
   color: var(--vp-c-text-2);
 }
+
+/*
+ * Home hero: the pipeline diagram fills VPHero's image slot. It is a flow
+ * chart, not the circular logo the slot was designed for, so the decorative
+ * blurred circle, fixed square sizing, and bleed margins are turned off in
+ * favor of a full-width diagram that sits on the left of the hero text.
+ */
+.VPHero .image-bg {
+  display: none !important;
+}
+
+.VPHero .image {
+  margin: 0 !important;
+}
+
+.VPHero .image-container {
+  width: 100% !important;
+  height: auto !important;
+  max-width: 360px;
+  transform: none !important;
+}
+
+.VPHero .image-container .drawio-diagram {
+  margin: 0;
+  width: 100%;
+}
+
+@media (min-width: 960px) {
+  .VPHero .main {
+    order: 2 !important;
+  }
+
+  .VPHero .image {
+    order: 1 !important;
+  }
+
+  .VPHero .image-container {
+    max-width: none;
+  }
+}

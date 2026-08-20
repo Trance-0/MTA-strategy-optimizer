@@ -11,6 +11,11 @@ The project version is recorded in the repository-root `VERSION` file. Each page
 
 This section records **what** changed. See the [work log](../worklog/) for **who** did the work and when.
 
+## [0.9.25](0.9.25.md)
+
+- Date: 2026-08-20
+- Summary: Added a pipeline architecture diagram to the English documentation homepage hero, replacing VitePress's default circular logo slot on that page only
+
 ## [0.9.24](0.9.24.md)
 
 - Date: 2026-08-20
