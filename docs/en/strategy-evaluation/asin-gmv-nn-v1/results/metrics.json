@@ -1,0 +1,179 @@
+{
+  "n_features": 27,
+  "feature_set": "extended_27",
+  "hidden": [
+    32,
+    16
+  ],
+  "inputs": [
+    "log1p_budget_sp",
+    "log1p_budget_sb",
+    "log1p_budget_sd",
+    "log1p_budget_dsp",
+    "share_sp",
+    "share_sb",
+    "share_sd",
+    "share_dsp",
+    "has_ad",
+    "is_weekend",
+    "dow",
+    "marketplace",
+    "share_cost_top_of_search",
+    "share_cost_product_page",
+    "share_cost_sb_headline",
+    "share_cost_sp_product_ad",
+    "share_cost_dsp_video",
+    "share_cost_dsp_image",
+    "share_cost_dsp_unspecified_creative",
+    "n_placement_types"
+  ],
+  "label": "SK-II attributed sales (no ASIN)",
+  "product": "SK-II",
+  "baselines_removed": [
+    "persistence_lag1",
+    "ridge_log_elastic",
+    "asin",
+    "baseline_19"
+  ],
+  "type_elasticities_prior": {
+    "sp": 0.4,
+    "sb": 0.22,
+    "sd": 0.16,
+    "dsp": 0.12
+  },
+  "split_rows": {
+    "train": 342,
+    "val": 40,
+    "test": 42
+  },
+  "split_synthetic": {
+    "train_synth": 342,
+    "val_real": 20,
+    "test_real": 42
+  },
+  "epochs_mlp": 400,
+  "epochs_multitask": 400,
+  "val": {
+    "mlp": {
+      "MAE": 539.1244,
+      "RMSE": 703.4421,
+      "MedAE": 428.9299,
+      "sMAPE": 0.0805,
+      "MAPE_gmv>=10": 0.0802,
+      "R2": 0.7528,
+      "R2_log1p": 0.7457,
+      "n": 40,
+      "n_gmv_ge_10": 40
+    },
+    "multitask": {
+      "MAE": 588.8506,
+      "RMSE": 791.2817,
+      "MedAE": 464.8219,
+      "sMAPE": 0.0869,
+      "MAPE_gmv>=10": 0.0857,
+      "R2": 0.6873,
+      "R2_log1p": 0.6991,
+      "n": 40,
+      "n_gmv_ge_10": 40
+    }
+  },
+  "test": {
+    "mlp": {
+      "MAE": 611.9814,
+      "RMSE": 750.1272,
+      "MedAE": 529.2668,
+      "sMAPE": 0.0938,
+      "MAPE_gmv>=10": 0.0908,
+      "R2": 0.4617,
+      "R2_log1p": 0.4926,
+      "n": 42,
+      "n_gmv_ge_10": 42
+    },
+    "multitask": {
+      "MAE": 703.9015,
+      "RMSE": 873.138,
+      "MedAE": 722.802,
+      "sMAPE": 0.1075,
+      "MAPE_gmv>=10": 0.1032,
+      "R2": 0.2706,
+      "R2_log1p": 0.3314,
+      "n": 42,
+      "n_gmv_ge_10": 42
+    }
+  },
+  "test_aux_multitask": {
+    "type_impressions_sum": {
+      "MAE": 26327.6616,
+      "RMSE": 32665.0504,
+      "MedAE": 28833.1712,
+      "sMAPE": 0.1238,
+      "MAPE_gmv>=10": 0.1149,
+      "R2": -3.0532,
+      "R2_log1p": -3.7717,
+      "n": 42,
+      "n_gmv_ge_10": 42
+    },
+    "sales_ad": {
+      "MAE": 3.403,
+      "RMSE": 4.3561,
+      "MedAE": 2.8156,
+      "sMAPE": 0.103,
+      "MAPE_gmv>=10": 0.1045,
+      "R2": 0.2739,
+      "R2_log1p": 0.288,
+      "n": 42,
+      "n_gmv_ge_10": 42
+    }
+  },
+  "monotonicity_all_types_plus10pct": {
+    "mlp": {
+      "n": 42,
+      "share_pred_up": 1.0,
+      "share_pred_flat": 0.0,
+      "median_delta_gmv": 589.9403,
+      "mean_delta_gmv": 583.3757
+    },
+    "multitask": {
+      "n": 42,
+      "share_pred_up": 1.0,
+      "share_pred_flat": 0.0,
+      "median_delta_gmv": 564.323,
+      "mean_delta_gmv": 576.7329
+    }
+  },
+  "whatif_test_multitask_plus_prior": {
+    "all_types_plus10pct": {
+      "scenario": "四类预算同时+10%",
+      "mean_pred_base": 6356.4006,
+      "mean_pred_new": 6933.1336,
+      "mean_delta": 576.7329,
+      "median_delta": 564.323,
+      "share_up": 1.0
+    },
+    "sp_only_plus10pct": {
+      "scenario": "仅 SP +10%",
+      "mean_pred_base": 6356.4006,
+      "mean_pred_new": 6676.1367,
+      "mean_delta": 319.7361,
+      "median_delta": 316.8782,
+      "share_up": 1.0
+    },
+    "shift_20pct_sp_to_sb": {
+      "scenario": "SP 的 20% 改投 SB（总额不变）",
+      "mean_pred_base": 6356.4006,
+      "mean_pred_new": 6079.2578,
+      "mean_delta": -277.1429,
+      "median_delta": -318.9707,
+      "share_up": 0.1429
+    },
+    "shift_20pct_sp_to_sb_nn_only": {
+      "scenario": "同上但不用先验弹性（纯网络）",
+      "mean_pred_base": 6356.4006,
+      "mean_pred_new": 6340.9677,
+      "mean_delta": -15.4329,
+      "median_delta": -51.326,
+      "share_up": 0.3571
+    }
+  },
+  "caveat": "Extended-27 主口径。训练含 Jan–Jun 模拟日；测试段含真实 July 后半。无 ASIN。"
+}

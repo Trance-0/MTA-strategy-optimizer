@@ -1,0 +1,54 @@
+{
+  "product": "SK-II",
+  "source_file": "/Users/qianqie/_bmad/amazonTestData/amazon_ads_report_sk2.csv",
+  "n_features": 27,
+  "feature_set": "extended_27",
+  "n_panel_rows": 424,
+  "n_real": 62,
+  "n_synthetic": 362,
+  "date_min": "2025-01-01",
+  "date_max": "2025-07-31",
+  "split_counts": {
+    "train": 342,
+    "val": 40,
+    "test": 42
+  },
+  "country_counts": {
+    "CA": 212,
+    "US": 212
+  },
+  "mean_revenue": 6807.06952066292,
+  "mean_cost": 11088.508615967374,
+  "struct_stats": {
+    "n_day_market": 62,
+    "mean_n_placement_types": 3.0,
+    "mean_shares": {
+      "share_cost_top_of_search": 0.2775036643230675,
+      "share_cost_product_page": 0.012591512625817161,
+      "share_cost_sb_headline": 0.2775036643230675,
+      "share_cost_sp_product_ad": 0.25547625383001205,
+      "share_cost_dsp_video": 0.1574981589318995,
+      "share_cost_dsp_image": 0.2969304102892037,
+      "share_cost_dsp_unspecified_creative": 0.0
+    }
+  },
+  "generator": {
+    "rev_coef": [
+      0.03781851308233011,
+      0.3842991737369411,
+      0.45281156233121406,
+      0.13813448314207638,
+      0.1689283092223399,
+      -0.026088776954144383,
+      -0.012492801440930493
+    ],
+    "rev_sigma": 0.10574280943000867,
+    "note": "log1p(R)~a+Σβlog1p(B)+weekend+CA；合成日仅用于扩训；结构份额按市场×星期采样"
+  },
+  "time_split": {
+    "train": "<= 2025-06-20",
+    "val": "2025-06-21 .. 2025-07-10",
+    "test": ">= 2025-07-11"
+  },
+  "note": "真实 July 62 行 + 模拟 Jan–Jun；Extended 27 维（含 P0 结构）；无 ASIN。"
+}

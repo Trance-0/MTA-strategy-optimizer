@@ -1,0 +1,193 @@
+{
+  "struct_stats": {
+    "n_day_market": 62,
+    "mean_n_placement_types": 3.0,
+    "mean_shares": {
+      "share_cost_top_of_search": 0.2775036643230675,
+      "share_cost_product_page": 0.012591512625817161,
+      "share_cost_sb_headline": 0.2775036643230675,
+      "share_cost_sp_product_ad": 0.25547625383001205,
+      "share_cost_dsp_video": 0.1574981589318995,
+      "share_cost_dsp_image": 0.2969304102892037,
+      "share_cost_dsp_unspecified_creative": 0.0
+    }
+  },
+  "panel_stats": {
+    "n_panel_rows": 424,
+    "n_real": 62,
+    "n_synthetic": 362,
+    "split_counts": {
+      "train": 342,
+      "val": 40,
+      "test": 42
+    }
+  },
+  "struct_cols": [
+    "share_cost_top_of_search",
+    "share_cost_product_page",
+    "share_cost_sb_headline",
+    "share_cost_sp_product_ad",
+    "share_cost_dsp_video",
+    "share_cost_dsp_image",
+    "share_cost_dsp_unspecified_creative",
+    "n_placement_types"
+  ],
+  "baseline": {
+    "feature_set": "baseline_19",
+    "n_features": 19,
+    "feature_names": [
+      "log1p_budget_sp",
+      "log1p_budget_sb",
+      "log1p_budget_sd",
+      "log1p_budget_dsp",
+      "share_sp",
+      "share_sb",
+      "share_sd",
+      "share_dsp",
+      "has_ad",
+      "is_weekend",
+      "dow_0",
+      "dow_1",
+      "dow_2",
+      "dow_3",
+      "dow_4",
+      "dow_5",
+      "dow_6",
+      "country_CA",
+      "country_US"
+    ],
+    "epochs_mlp": 139,
+    "epochs_multitask": 164,
+    "val": {
+      "mlp": {
+        "MAE": 2149.452,
+        "RMSE": 2455.2023,
+        "MedAE": 1693.3357,
+        "sMAPE": 0.34,
+        "MAPE_gmv>=10": 0.312,
+        "R2": -2.0109,
+        "R2_log1p": -2.3525,
+        "n": 40,
+        "n_gmv_ge_10": 40
+      },
+      "multitask": {
+        "MAE": 1523.631,
+        "RMSE": 1946.6315,
+        "MedAE": 1375.1675,
+        "sMAPE": 0.2337,
+        "MAPE_gmv>=10": 0.2197,
+        "R2": -0.8927,
+        "R2_log1p": -0.8216,
+        "n": 40,
+        "n_gmv_ge_10": 40
+      }
+    },
+    "test": {
+      "mlp": {
+        "MAE": 2114.8251,
+        "RMSE": 2360.4667,
+        "MedAE": 2201.6582,
+        "sMAPE": 0.3741,
+        "MAPE_gmv>=10": 0.3052,
+        "R2": -4.3306,
+        "R2_log1p": -6.1436,
+        "n": 42,
+        "n_gmv_ge_10": 42
+      },
+      "multitask": {
+        "MAE": 1683.6124,
+        "RMSE": 1971.2935,
+        "MedAE": 1669.3075,
+        "sMAPE": 0.2889,
+        "MAPE_gmv>=10": 0.2428,
+        "R2": -2.7178,
+        "R2_log1p": -3.5927,
+        "n": 42,
+        "n_gmv_ge_10": 42
+      }
+    }
+  },
+  "extended": {
+    "feature_set": "extended_27",
+    "n_features": 27,
+    "feature_names": [
+      "log1p_budget_sp",
+      "log1p_budget_sb",
+      "log1p_budget_sd",
+      "log1p_budget_dsp",
+      "share_sp",
+      "share_sb",
+      "share_sd",
+      "share_dsp",
+      "has_ad",
+      "is_weekend",
+      "dow_0",
+      "dow_1",
+      "dow_2",
+      "dow_3",
+      "dow_4",
+      "dow_5",
+      "dow_6",
+      "country_CA",
+      "country_US",
+      "share_cost_top_of_search",
+      "share_cost_product_page",
+      "share_cost_sb_headline",
+      "share_cost_sp_product_ad",
+      "share_cost_dsp_video",
+      "share_cost_dsp_image",
+      "share_cost_dsp_unspecified_creative",
+      "n_placement_types"
+    ],
+    "epochs_mlp": 400,
+    "epochs_multitask": 400,
+    "val": {
+      "mlp": {
+        "MAE": 539.1244,
+        "RMSE": 703.4421,
+        "MedAE": 428.9299,
+        "sMAPE": 0.0805,
+        "MAPE_gmv>=10": 0.0802,
+        "R2": 0.7528,
+        "R2_log1p": 0.7457,
+        "n": 40,
+        "n_gmv_ge_10": 40
+      },
+      "multitask": {
+        "MAE": 588.8506,
+        "RMSE": 791.2817,
+        "MedAE": 464.8219,
+        "sMAPE": 0.0869,
+        "MAPE_gmv>=10": 0.0857,
+        "R2": 0.6873,
+        "R2_log1p": 0.6991,
+        "n": 40,
+        "n_gmv_ge_10": 40
+      }
+    },
+    "test": {
+      "mlp": {
+        "MAE": 611.9814,
+        "RMSE": 750.1272,
+        "MedAE": 529.2668,
+        "sMAPE": 0.0938,
+        "MAPE_gmv>=10": 0.0908,
+        "R2": 0.4617,
+        "R2_log1p": 0.4926,
+        "n": 42,
+        "n_gmv_ge_10": 42
+      },
+      "multitask": {
+        "MAE": 703.9015,
+        "RMSE": 873.138,
+        "MedAE": 722.802,
+        "sMAPE": 0.1075,
+        "MAPE_gmv>=10": 0.1032,
+        "R2": 0.2706,
+        "R2_log1p": 0.3314,
+        "n": 42,
+        "n_gmv_ge_10": 42
+      }
+    }
+  }
+}
