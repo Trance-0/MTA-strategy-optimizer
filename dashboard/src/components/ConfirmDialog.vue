@@ -48,8 +48,8 @@ const remainder = computed(() => Math.max(0, props.items.length - LISTED));
       <div class="modal-body">
         <p>
           This archives
-          {{ items.length === 1 ? "this draft" : `these ${items.length} drafts` }}.
-          Generated historical observations are never removed.
+          {{ items.length === 1 ? "this planned change" : `these ${items.length} planned changes` }}.
+          Reported performance is never removed.
         </p>
 
         <ul v-if="shown.length" class="confirm-list">

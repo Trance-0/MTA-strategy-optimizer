@@ -8,7 +8,7 @@
  * link, because a budget number without its basis invites the reader to trust
  * it blindly.
  */
-import { computed, ref } from "vue";
+import { computed, ref, watch } from "vue";
 
 import ConfirmDialog from "../components/ConfirmDialog.vue";
 import DataTable from "../components/DataTable.vue";
@@ -22,6 +22,7 @@ import { OUTCOME_LABELS, currencySymbol, sortBy } from "../lib/common.js";
 import { buildTemplate } from "../lib/masterObjectFields.js";
 import { useDashboard } from "../lib/useDashboard.js";
 import { useDeployment } from "../lib/deployment.js";
+import { useDiagnostics } from "../lib/diagnostics.js";
 import {
   archiveMasterObject,
   saveMasterObject,
@@ -30,9 +31,19 @@ import * as theme from "../theme.js";
 
 const { data, reload } = useDashboard();
 const { writable, readOnlyReason } = useDeployment();
+const { diagnosticsOn } = useDiagnostics();
 const research = computed(() => data.value.simulationResearch ?? {});
 const section = ref("overview");
-const SECTIONS = [
+
+/**
+ * The catalogue sections, in the order a reader works down the account.
+ *
+ * `generationConfigs` describes how a data run was produced, which is a
+ * diagnostic concern rather than a marketing one, so it appears only when
+ * diagnostics are switched on in Settings. A reader planning budget never
+ * meets it.
+ */
+const BASE_SECTIONS = [
   ["overview", "Overview"],
   ["providers", "Ad Providers"],
   ["products", "Products"],
@@ -40,8 +51,18 @@ const SECTIONS = [
   ["adGroups", "Ad Groups"],
   ["touchpoints", "Touchpoints"],
   ["productEconomics", "Product Economics"],
-  ["generationConfigs", "Generation Configs"],
 ];
+const SECTIONS = computed(() =>
+  diagnosticsOn.value
+    ? [...BASE_SECTIONS, ["generationConfigs", "Data Run Diagnostics"]]
+    : BASE_SECTIONS,
+);
+
+// Switching diagnostics off while its section is open would otherwise leave
+// the reader on a tab that no longer has a button, with no way back.
+watch(SECTIONS, (sections) => {
+  if (!sections.some(([key]) => key === section.value)) section.value = "overview";
+});
 const entityTypes = {
   providers: "provider",
   products: "product",
@@ -111,6 +132,7 @@ const SECTION_COLUMNS = {
     { key: "product_id", label: "Product" },
     { key: "name", label: "Name" },
     { key: "sku_id", label: "SKU" },
+    { key: "advertised_asin", label: "ASIN" },
     { key: "category", label: "Category" },
     { key: "brand", label: "Brand" },
     { key: "inventory_units", label: "Inventory", format: "number" },
@@ -127,6 +149,7 @@ const SECTION_COLUMNS = {
       label: "Baseline daily budget",
       format: "money",
     },
+    { key: "observed_cost", label: "Reported spend", format: "money" },
     { key: "product_count", label: "Products", format: "number" },
     { key: "ad_group_count", label: "Ad Groups", format: "number" },
     { key: "status", label: "Status" },
@@ -135,6 +158,9 @@ const SECTION_COLUMNS = {
     { key: "ad_group_id", label: "Ad Group" },
     { key: "name", label: "Name" },
     { key: "campaign_id", label: "Campaign" },
+    { key: "keyword_count", label: "Keywords", format: "number" },
+    { key: "target_count", label: "Targets", format: "number" },
+    { key: "audience_count", label: "Audiences", format: "number" },
     {
       key: "initial_daily_budget",
       label: "Initial daily budget",
@@ -153,11 +179,15 @@ const SECTION_COLUMNS = {
     { key: "billing_type", label: "Billing" },
     { key: "cost_per_click", label: "CPC", format: "money" },
     { key: "cost_per_thousand_impressions", label: "CPM", format: "money" },
-    { key: "click_through_rate", label: "CTR", format: "percent" },
+    { key: "observed_impressions", label: "Impressions", format: "number" },
+    { key: "observed_clicks", label: "Clicks", format: "number" },
+    { key: "observed_cost", label: "Spend", format: "money" },
   ],
   productEconomics: [
     { key: "product_id", label: "Product" },
     { key: "currency", label: "Currency" },
+    { key: "observed_purchases", label: "Purchases", format: "number" },
+    { key: "observed_revenue", label: "Revenue", format: "money" },
     { key: "unit_price", label: "Price", format: "money" },
     { key: "unit_cogs", label: "COGS", format: "money" },
     {
@@ -207,20 +237,18 @@ const sectionRows = computed(() => SECTION_ROWS[section.value]?.() ?? []);
 /**
  * Why a section is empty, rather than only that it is.
  *
- * These records come from a generated MTA-SIM run, which the committed sample
- * artifacts do not include. A deployment reading those files therefore shows
- * every section empty, and "No records loaded" alone reads as a fault. Naming
- * the cause is what separates "nothing to show here" from "something broke".
+ * The catalogue is read from the account's own reports, so a section stands
+ * empty only when those reports carry no record of that kind -- not because
+ * the dashboard failed to load. Naming the cause is what separates "nothing
+ * to show here" from "something broke".
  */
 const emptyMessage = computed(() => {
-  const label = SECTIONS.find(([key]) => key === section.value)?.[1] ?? "record";
+  const label = SECTIONS.value.find(([key]) => key === section.value)?.[1] ?? "record";
   if (writable.value) {
-    return `No ${label} records in the connected database. Populate it with ` +
-      `script/import_to_database.py, or generate a simulator run.`;
+    return `No ${label} records in the connected database. The reporting ` +
+      `window may predate this part of the account.`;
   }
-  return `No ${label} records in this deployment. These come from a generated ` +
-    `MTA-SIM run, which the committed sample artifacts do not carry. Point ` +
-    `MTA_SIM_DATA_DIR at a generated run, or connect a populated database.`;
+  return `No ${label} records in the current reporting window.`;
 });
 
 /**
@@ -415,7 +443,7 @@ function downloadConfiguration(configuration) {
   });
   const anchor = document.createElement("a");
   anchor.href = URL.createObjectURL(blob);
-  anchor.download = "mta-sim-configuration.json";
+  anchor.download = "data-run-configuration.json";
   anchor.click();
   URL.revokeObjectURL(anchor.href);
 }
@@ -662,8 +690,8 @@ const slotColumns = [
       <template v-if="(research.history ?? []).length">
         <MetricRow :items="researchTiles" />
         <p class="caption">
-          Historical observations are immutable. Change a future-run
-          configuration and regenerate data to alter these values.
+          Reported performance is a record of what the account already
+          delivered, so it is read-only. Plan changes apply to future spend.
         </p>
       </template>
 
@@ -769,7 +797,7 @@ const slotColumns = [
           <h2>{{ SECTIONS.find(([key]) => key === section)?.[1] }}</h2>
           <span class="sub">
             {{ databaseEditing
-              ? "Editing writes a future-run draft; generated history is immutable."
+              ? "Editing writes a planned change; reported performance is immutable."
               : "Read-only in this deployment." }}
           </span>
         </div>
@@ -780,8 +808,9 @@ const slotColumns = [
 
           <template v-if="section === 'generationConfigs'">
             <p class="caption">
-              Uploaded or edited configurations apply only to a future run.
-              Existing historical records retain their immutable run snapshot.
+              Diagnostic only: how the current data run was produced. Uploading
+              a configuration affects future runs; records already loaded keep
+              the snapshot they were read under.
             </p>
             <div class="rec-actions">
               <label class="btn button-like">
@@ -834,14 +863,14 @@ const slotColumns = [
 
       <article v-if="databaseEditing && sectionDrafts.length" class="card">
         <div class="card-head">
-          <h2>Editable future-run drafts</h2>
+          <h2>Planned changes</h2>
           <span class="sub">{{ sectionDrafts.length }} in this section</span>
         </div>
         <div class="card-body">
           <DataTable :columns="draftColumns" :rows="sectionDrafts" />
           <p class="caption">
-            A draft applies to a future run. Archiving one never removes a
-            generated observation.
+            A planned change applies to future spend. Archiving one never
+            alters reported performance.
           </p>
         </div>
       </article>
@@ -851,15 +880,15 @@ const slotColumns = [
       <section class="modal" role="dialog" aria-modal="true" aria-label="Master configuration editor">
         <div class="modal-head">
           <h2>
-            {{ editor.creating ? "New" : "Edit" }} future-run
-            {{ editor.entityType }} draft
+            {{ editor.creating ? "New" : "Edit" }} planned
+            {{ editor.entityType }} change
           </h2>
           <button class="btn small" @click="editor = null">Close</button>
         </div>
         <div class="modal-body">
           <p>
-            Generated observations are read-only. Saving this object creates or
-            updates a separate future-run draft.
+            Reported performance is read-only. Saving this object records a
+            separate planned change that applies to future spend.
           </p>
 
           <div class="tabs editor-mode-tabs" role="tablist" aria-label="Editor mode">

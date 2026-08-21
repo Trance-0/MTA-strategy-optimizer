@@ -44,6 +44,14 @@ import {
   testConnection,
   writeEnv,
 } from "./settings.js";
+import {
+  jobsState,
+  normalizeOptions,
+  STAGE_KEYS,
+  startJob,
+  startRefusal,
+  stopJob,
+} from "./jobs.js";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const clientDist = resolve(DASHBOARD_ROOT, "dist");
@@ -145,6 +153,87 @@ export function createApp() {
         message: error.message,
       });
     }
+  });
+
+  /**
+   * Every stage's current run, its log, and what it is allowed to do.
+   *
+   * Polled by the Campaign Optimizer while a stage runs. All three stages come
+   * back in one response because the view shows three tabs at once.
+   */
+  app.get("/api/jobs", (request, response) => {
+    response.json(jobsState());
+  });
+
+  /**
+   * Start one pipeline stage.
+   *
+   * Returns as soon as the child process is spawned; the client polls
+   * `GET /api/jobs` for progress. Running a stage writes new outputs under
+   * `modules/`, so it is refused in every read-only deployment — the published
+   * build has no server at all, and a protected server deployment must not
+   * rewrite the configuration it was given.
+   */
+  app.post("/api/jobs/:stage", async (request, response) => {
+    const { stage } = request.params;
+
+    if (isHosted() || configReadOnly()) {
+      response.status(403).json({
+        error: "read_only_deployment",
+        message:
+          "This deployment cannot run pipeline stages. Run the dashboard " +
+          "locally against a PostgreSQL mirror to run them.",
+      });
+      return;
+    }
+
+    let options;
+    try {
+      options = normalizeOptions(request.body ?? {});
+    } catch (error) {
+      response.status(400).json({ error: "invalid_options", message: error.message });
+      return;
+    }
+
+    const refusal = startRefusal(stage, { writable: useDatabase() });
+    if (refusal) {
+      response.status(refusal.code === "already_running" ? 409 : 400).json({
+        error: refusal.code,
+        message: refusal.message,
+      });
+      return;
+    }
+
+    const job = startJob(stage, options, {
+      // A stage that succeeded rewrote what the dashboard reads, so the cached
+      // snapshot is stale the moment it finishes.
+      onFinish: () => {
+        clearCaches();
+        log("INFO", "jobs", `${stage} finished; caches cleared`);
+      },
+    });
+    log("INFO", "jobs", `${stage} started: ${job.command}`);
+    response.status(202).json(jobsState());
+  });
+
+  /**
+   * Stop a running stage.
+   *
+   * A name that is not a stage is a 404 rather than a 409: "nothing is running"
+   * and "no such stage" are different faults, and answering both the same way
+   * would let a typo read as an idle stage.
+   */
+  app.delete("/api/jobs/:stage", (request, response) => {
+    const { stage } = request.params;
+    if (!STAGE_KEYS.includes(stage)) {
+      response.status(404).json({
+        error: "unknown_stage",
+        message: `Unknown stage: ${stage}.`,
+      });
+      return;
+    }
+    const stopped = stopJob(stage);
+    response.status(stopped ? 200 : 409).json(jobsState());
   });
 
   app.get("/api/settings", async (request, response) => {

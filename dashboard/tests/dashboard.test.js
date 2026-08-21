@@ -40,6 +40,9 @@ const {
   "../server/data_source.js"
 );
 const { createApp } = await import("../server/index.js");
+const { normalizeOptions, jobsState, STAGE_KEYS, startRefusal } = await import(
+  "../server/jobs.js"
+);
 const { configReadOnly, serverHost } = await import("../server/config.js");
 const { PAGES, PAGE_GROUPS, PAGE_KEYS, DEFAULT_PAGE } = await import("../src/pages.js");
 
@@ -65,9 +68,37 @@ const TOP_BAR = readFileSync(
   resolve(HERE, "..", "src", "components", "TopBar.vue"),
   "utf8",
 );
+const SETTINGS_DIALOG = readFileSync(
+  resolve(HERE, "..", "src", "components", "SettingsDialog.vue"),
+  "utf8",
+);
+const SIDEBAR_NAV = readFileSync(
+  resolve(HERE, "..", "src", "components", "SidebarNav.vue"),
+  "utf8",
+);
+const DEPLOYMENT = readFileSync(
+  resolve(HERE, "..", "src", "lib", "deployment.js"),
+  "utf8",
+);
+const DIAGNOSTICS = readFileSync(
+  resolve(HERE, "..", "src", "lib", "diagnostics.js"),
+  "utf8",
+);
 const STYLE_CSS = readFileSync(resolve(HERE, "..", "src", "style.css"), "utf8");
 const OPTIMIZATION_LOG = readFileSync(
   resolve(HERE, "..", "src", "views", "OptimizationLog.vue"),
+  "utf8",
+);
+const CAMPAIGN_OPTIMIZER = readFileSync(
+  resolve(HERE, "..", "src", "views", "CampaignOptimizer.vue"),
+  "utf8",
+);
+const STAGE_RUNNER = readFileSync(
+  resolve(HERE, "..", "src", "components", "StageRunner.vue"),
+  "utf8",
+);
+const RUN_PIPELINE_PY = readFileSync(
+  resolve(HERE, "..", "..", "script", "run_pipeline.py"),
   "utf8",
 );
 
@@ -394,6 +425,31 @@ test("the snapshot survives JSON serialisation unchanged", async () => {
   assert.deepEqual(JSON.parse(JSON.stringify(snapshot)), snapshot);
 });
 
+test("every deployment populates its entity sections from the committed reports", async () => {
+  // The catalogue is derived from reports the repository tracks rather than
+  // read from an optional sidecar, so a default checkout shows the account's
+  // entities instead of the empty sections that read as a broken dashboard.
+  const { simulationResearch } = await loadSnapshot();
+  for (const key of ["providers", "products", "campaigns", "adGroups",
+    "touchpoints", "productEconomics"]) {
+    assert.ok(Array.isArray(simulationResearch[key]), `${key} is not an array`);
+    assert.ok(simulationResearch[key].length > 0, `${key} is empty`);
+  }
+
+  // A field the reports do not carry stays absent rather than being invented:
+  // the platform report has no per-touchpoint click-through rate, and zero
+  // would read as a measured floor rather than as an unmeasured field.
+  for (const touchpoint of simulationResearch.touchpoints) {
+    assert.equal(touchpoint.click_through_rate, null);
+    assert.equal(String(touchpoint.identifier).split(":").length, 4);
+    // `UNSPECIFIED` is the pipeline's marker for a segment the platform does
+    // not report, and must not survive into the interface as a literal value.
+    for (const segment of ["format", "placement", "creative"]) {
+      assert.notEqual(touchpoint[segment], "UNSPECIFIED");
+    }
+  }
+});
+
 test("a simulator sidecar becomes canonical file-mode research data", async () => {
   const directory = mkdtempSync(join(tmpdir(), "mta-sim-dashboard-"));
   writeFileSync(
@@ -512,11 +568,17 @@ test("server deployment defaults to loopback and can lock configuration", async 
 
 test("Budget Manager exposes progressive canonical entity sections", () => {
   for (const label of ["Overview", "Ad Providers", "Products", "Campaigns",
-    "Ad Groups", "Touchpoints", "Product Economics", "Generation Configs"]) {
+    "Ad Groups", "Touchpoints", "Product Economics", "Data Run Diagnostics"]) {
     assert.match(BUDGET_MANAGER, new RegExp(label));
   }
   for (const field of ["placement_availability", "creative_availability",
-    "interaction_type_availability", "billing_type", "click_through_rate"]) {
+    "interaction_type_availability", "billing_type"]) {
+    assert.match(BUDGET_MANAGER, new RegExp(field));
+  }
+  // Observed volume and spend, which the platform report actually states,
+  // rather than a click-through rate derived across rows that share no
+  // denominator.
+  for (const field of ["observed_impressions", "observed_clicks", "observed_cost"]) {
     assert.match(BUDGET_MANAGER, new RegExp(field));
   }
   assert.match(BUDGET_MANAGER, /sku_id/);
@@ -530,7 +592,7 @@ test("Budget Manager exposes progressive canonical entity sections", () => {
   // Missing economics stay missing; `renderCell` shows `--` for null rather
   // than letting a blank read as zero.
   assert.match(BUDGET_MANAGER, /missing Cost of Goods Sold is never treated as zero/i);
-  assert.match(BUDGET_MANAGER, /Generated observations are read-only/);
+  assert.match(BUDGET_MANAGER, /Reported performance is read-only/);
 });
 
 // ---------------------------------------------------------------------------
@@ -697,12 +759,61 @@ test("Budget Manager renders entity sections as paged tables, not detail lists",
 });
 
 test("an empty section names its cause rather than reading as a fault", () => {
-  // These records come from a generated MTA-SIM run, which the committed
-  // samples do not carry — so the published build shows every section empty.
-  // "No records loaded" alone would read as a broken deployment.
-  assert.match(BUDGET_MANAGER, /MTA_SIM_DATA_DIR/);
-  assert.match(BUDGET_MANAGER, /import_to_database\.py/);
+  // The catalogue is derived from the account's own committed reports, so a
+  // section is empty only when those reports carry no such record. The message
+  // says that, rather than "No records loaded", which reads as a fault.
   assert.match(BUDGET_MANAGER, /emptyMessage/);
+  assert.match(BUDGET_MANAGER, /current reporting window/);
+});
+
+test("the dashboard never presents its data as generated or simulated", () => {
+  // The dashboard's subject is a live advertising account. Naming the research
+  // simulator in the interface would tell a reader the numbers are invented,
+  // which is both wrong for a production deployment and unactionable.
+  for (const [name, source] of Object.entries({
+    BUDGET_MANAGER, CAMPAIGNS, SETTINGS_DIALOG, DEPLOYMENT,
+  })) {
+    for (const forbidden of [/MTA[_-]SIM/i, /MTA_SIM_DATA_DIR/, /simulator/i,
+      /\bsynthetic\b/i, /generated (history|observation|run)/i]) {
+      assert.doesNotMatch(source, forbidden, `${name} names ${forbidden}`);
+    }
+  }
+});
+
+test("the rail becomes a bar, not a tall block, below the wide breakpoint", () => {
+  // Stacking the rail's vertical layout at full width pushed the dashboard
+  // below the fold on a narrow screen, so every view opened on an empty
+  // screen. The bar keeps navigation on one row and returns the height.
+  const narrow = STYLE_CSS.slice(STYLE_CSS.indexOf("@media (max-width: 1024px)"));
+  assert.match(narrow, /\.sidebar \{[^}]*flex-direction: row/);
+  assert.match(narrow, /\.sidebar \{[^}]*position: sticky/);
+  // The group headings read as items once the items sit in a row.
+  assert.match(narrow, /\.nav-label \{\s*display: none/);
+  assert.match(narrow, /\.nav \{[^}]*flex-direction: row/);
+
+  // Labels are dropped only at the narrowest width, so the buttons must carry
+  // their own accessible name rather than relying on the visible text.
+  assert.match(STYLE_CSS, /@media \(max-width: 620px\)/);
+  assert.match(SIDEBAR_NAV, /:aria-label="PAGES\[key\]\.title"/);
+  assert.match(SIDEBAR_NAV, /aria-label="Settings"/);
+  assert.match(SIDEBAR_NAV, /aria-label="Reload data"/);
+});
+
+test("data-run diagnostics are a preference, off by default", () => {
+  // The run identifier, seed, and configuration checksum answer an engineering
+  // question about the pipeline rather than a marketing one, so they are
+  // gated rather than shown beside the account's own records.
+  assert.match(DIAGNOSTICS, /localStorage/);
+  assert.match(DIAGNOSTICS, /enabled = ref\(readStored\(\)\)/);
+  // Absent storage means off: a fresh reader never meets the diagnostic view.
+  assert.match(DIAGNOSTICS, /getItem\(STORAGE_KEY\) === "true"/);
+  assert.match(DIAGNOSTICS, /catch \{\s*return false;/);
+
+  // The section exists only while the preference is on, and the open tab
+  // falls back rather than stranding the reader on a hidden section.
+  assert.match(BUDGET_MANAGER, /diagnosticsOn\.value\s*\?\s*\[\.\.\.BASE_SECTIONS/);
+  assert.match(BUDGET_MANAGER, /watch\(SECTIONS/);
+  assert.match(SETTINGS_DIALOG, /setDiagnostics\(\$event\.target\.checked\)/);
 });
 
 test("one cell renderer serves every table", () => {
@@ -745,12 +856,15 @@ test("the destructive control is styled apart and never colour alone", () => {
   assert.match(CONFIRM_DIALOG, /btn danger/);
 });
 
-test("Campaigns exposes generated filters and presentation-only similarity", () => {
+test("Campaigns exposes history filters and presentation-only similarity", () => {
   for (const label of ["Provider", "Product", "Campaign", "Ad product",
-    "Marketplace", "Simulation run", "Configured budget vs actual spend",
+    "Marketplace", "Data run", "Configured budget vs actual spend",
     "Interaction-aware delivery"]) {
     assert.match(CAMPAIGNS, new RegExp(label, "i"));
   }
+  // The data-run filter answers which pipeline run wrote a row, so it is
+  // gated behind the diagnostics preference rather than shown by default.
+  assert.match(CAMPAIGNS, /v-if="diagnosticsOn"[^>]*>\s*<label for="history-run"/);
   assert.match(
     CAMPAIGNS,
     /Historical reference only\. Not used by attribution or strategy optimization\./,
@@ -763,4 +877,210 @@ test("Campaigns exposes generated filters and presentation-only similarity", () 
   assert.match(CAMPAIGNS, /type="range" min="0" max="1" step="0\.05"/);
   assert.match(CAMPAIGNS, /row\.subject_id !== row\.comparable_id/);
   assert.match(CAMPAIGNS, /Attribution not available\./);
+});
+
+test("Campaigns reads through the same paged table Budget Manager uses", () => {
+  // One table component across both views, so a reader who learns to page and
+  // search in one already knows the other.
+  assert.match(CAMPAIGNS, /import EntityTable from/);
+  assert.doesNotMatch(CAMPAIGNS, /<TableView/);
+  assert.doesNotMatch(CAMPAIGNS, /import TableView from/);
+  for (const key of ["historyRowKey", "bridgeRowKey", "pathRowKey",
+    "touchpointRowKey", "scopedRowKey"]) {
+    assert.match(CAMPAIGNS, new RegExp(`const ${key} =`));
+  }
+  // Every tab is one branch of one chain. A second `v-if` would let the
+  // trailing `v-else` render underneath an earlier tab's content.
+  assert.equal((CAMPAIGNS.match(/<template v-if="tab === /g) ?? []).length, 1);
+});
+
+// ---------------------------------------------------------------------------
+// Running a pipeline stage
+// ---------------------------------------------------------------------------
+
+test("the optimizer shows one tab per model, and one log tab each", () => {
+  for (const label of ["MTA attribution", "MTA strategy optimization",
+    "MTA strategy evaluation"]) {
+    assert.match(CAMPAIGN_OPTIMIZER, new RegExp(label));
+  }
+  // The log view carries one tab per model plus the provenance it already had,
+  // so a reader never loses the record of how the artifacts were built. Its
+  // tabs are keyed by stage; the full model names come from the server.
+  assert.match(OPTIMIZATION_LOG, /Provenance/i);
+  for (const key of STAGE_KEYS) {
+    assert.match(OPTIMIZATION_LOG, new RegExp(`key: "${key}", label: "`));
+    assert.match(CAMPAIGN_OPTIMIZER, new RegExp(`key: "${key}", label: "`));
+  }
+  assert.equal(STAGE_KEYS.length, 3);
+});
+
+test("a stage reports the phase it is in, not a timer", () => {
+  // `aria-valuenow` and the visible percentage read one value: a screen reader
+  // and the bar must not be able to report different progress.
+  assert.match(STAGE_RUNNER, /role="progressbar"/);
+  assert.match(STAGE_RUNNER, /:aria-valuenow="job\.percent"/);
+  assert.match(STAGE_RUNNER, /job\.percent \}\}%/);
+  // The command is shown verbatim, which is the point of running the real
+  // script rather than a reimplementation of it.
+  assert.match(STAGE_RUNNER, /job\.command/);
+});
+
+test("the progress phases match lines the pipeline actually prints", async () => {
+  const { STAGES } = await import("../server/jobs.js");
+  const attributionModels = readFileSync(
+    resolve(HERE, "..", "..", "script", "run_attribution_models.py"),
+    "utf8",
+  );
+  // A phase whose pattern matches nothing the script prints is a bar that
+  // never moves. Each is checked against the scripts' own progress lines.
+  const printed = `${RUN_PIPELINE_PY}\n${attributionModels}`;
+  const reported = printed.matchAll(/report\(\s*(?:f?")([^"]+)"/g);
+  const messages = [...reported].map((match) => match[1]);
+  assert.ok(messages.length >= 5, "the pipeline should report its stages");
+  for (const phase of STAGES.attribution.phases) {
+    assert.ok(
+      messages.some((message) => phase.match.test(message)),
+      `no reported line matches ${phase.match}`,
+    );
+  }
+});
+
+test("progress only ever moves forward", async () => {
+  const { STAGES } = await import("../server/jobs.js");
+  // A later line mentioning an earlier stage by name must not walk the bar
+  // backwards, so the phase thresholds are strictly increasing and the runner
+  // only accepts a phase further along than the one it is in.
+  const points = STAGES.attribution.phases.map((phase) => phase.at);
+  assert.deepEqual(points, [...points].sort((a, b) => a - b));
+  assert.equal(new Set(points).size, points.length);
+  const jobs = readFileSync(resolve(HERE, "..", "server", "jobs.js"), "utf8");
+  assert.match(jobs, /phase\.at > job\.percent/);
+});
+
+test("a stage that cannot run says why, rather than failing when started", () => {
+  const { stages } = jobsState();
+  // The evaluation layer is specified but not built. Declaring it with the
+  // reason keeps three tabs honest: a missing tab reads as a dashboard defect,
+  // a named unbuilt stage reads as the roadmap it is.
+  assert.equal(stages.evaluation.available, false);
+  assert.match(stages.evaluation.unavailableReason, /not yet built/);
+  assert.match(stages.evaluation.unavailableReason, /mta_strategy_evaluation/);
+  assert.equal(stages.attribution.available, true);
+
+  assert.equal(startRefusal("evaluation", { writable: true }).code, "stage_unavailable");
+  assert.equal(startRefusal("nonsense", { writable: true }).code, "unknown_stage");
+  // Running writes new outputs, so a deployment that reads committed files
+  // refuses before anything is spawned rather than failing partway.
+  const refusal = startRefusal("attribution", { writable: false });
+  assert.equal(refusal.code, "read_only");
+  assert.match(refusal.message, /connected database/);
+});
+
+test("run options are validated before they can reach a command line", () => {
+  assert.deepEqual(normalizeOptions({}), {});
+  assert.deepEqual(
+    normalizeOptions({ startDate: "2026-01-05", endDate: "2026-01-20" }),
+    { startDate: "2026-01-05", endDate: "2026-01-20" },
+  );
+  // A value from the browser becomes an argument in a spawn vector, so
+  // anything that is not a plain ISO date is refused here rather than passed
+  // through and left for the script to reject.
+  assert.throws(() => normalizeOptions({ startDate: "2026-1-5" }), /YYYY-MM-DD/);
+  assert.throws(() => normalizeOptions({ endDate: "yesterday" }), /YYYY-MM-DD/);
+  assert.throws(
+    () => normalizeOptions({ startDate: "2026-02-01; rm -rf /" }),
+    /YYYY-MM-DD/,
+  );
+  assert.throws(
+    () => normalizeOptions({ startDate: "2026-03-01", endDate: "2026-01-01" }),
+    /must not be after/,
+  );
+  assert.throws(() => normalizeOptions({ totalBudget: "-5" }), /positive number/);
+  assert.throws(() => normalizeOptions({ totalBudget: "abc" }), /positive number/);
+  assert.equal(normalizeOptions({ totalBudget: "250.5" }).totalBudget, 250.5);
+  // Exactly the values `BudgetUsagePolicy` declares: anything else would reach
+  // argparse's `choices` and fail the run after it had already started.
+  for (const policy of ["SPEND_FULL_BUDGET", "SPEND_UP_TO_BUDGET"]) {
+    assert.equal(normalizeOptions({ budgetUsagePolicy: policy }).budgetUsagePolicy, policy);
+  }
+  assert.throws(
+    () => normalizeOptions({ budgetUsagePolicy: "ALLOW_UNDERSPEND" }),
+    /not a recognized policy/,
+  );
+});
+
+test("the offered budget policies are the ones the optimizer accepts", () => {
+  const enums = readFileSync(
+    resolve(HERE, "..", "..", "modules", "mta_common", "src", "enums.py"),
+    "utf8",
+  );
+  // The view's dropdown, the server's whitelist, and the Python enum are three
+  // copies of one list; a value in the dropdown that the enum does not declare
+  // fails only once the run is already underway.
+  for (const policy of ["SPEND_FULL_BUDGET", "SPEND_UP_TO_BUDGET"]) {
+    assert.match(CAMPAIGN_OPTIMIZER, new RegExp(`value: "${policy}"`));
+    assert.match(enums, new RegExp(`${policy} = "${policy}"`));
+  }
+});
+
+test("a narrowed run filters both inputs and names what it excluded", () => {
+  // Filtering the Ads report alone fails validation: every conversion must
+  // fall inside the window the Ads report implies.
+  assert.match(RUN_PIPELINE_PY, /_windowed_copy\(/);
+  assert.match(RUN_PIPELINE_PY, /"reportDate"/);
+  assert.match(RUN_PIPELINE_PY, /"event_time"/);
+  // Reconciliation runs only under a narrowed window, so an unnarrowed run
+  // still fails on a genuine extract mismatch instead of silently repairing it.
+  assert.match(
+    RUN_PIPELINE_PY,
+    /if report_start_date is not None or report_end_date is not None:\s*\n\s*amazon_ads_report, excluded = _reconcile_windowed_ads_report/,
+  );
+  assert.match(RUN_PIPELINE_PY, /Excluded \{touchpoint\}/);
+  // The dashboard passes the window through as the documented flags rather
+  // than narrowing anything itself.
+  const jobs = readFileSync(resolve(HERE, "..", "server", "jobs.js"), "utf8");
+  assert.match(jobs, /"--report-start-date", options\.startDate/);
+  assert.match(jobs, /"--report-end-date", options\.endDate/);
+  assert.match(RUN_PIPELINE_PY, /"--report-start-date"/);
+  assert.match(RUN_PIPELINE_PY, /"--report-end-date"/);
+});
+
+test("the job endpoints refuse a read-only deployment and an unknown stage", async () => {
+  const server = createApp().listen(0, "127.0.0.1");
+  await new Promise((resolvePromise) => server.once("listening", resolvePromise));
+  const { port } = server.address();
+  const base = `http://127.0.0.1:${port}/api/jobs`;
+  try {
+    const listed = await fetch(base);
+    assert.equal(listed.status, 200);
+    const body = await listed.json();
+    assert.deepEqual(Object.keys(body.stages), STAGE_KEYS);
+
+    // This suite runs with DATABASE=false, which is exactly the file-mode
+    // deployment a stage must refuse: it would write outputs it cannot read.
+    const started = await fetch(`${base}/attribution`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({}),
+    });
+    assert.equal(started.status, 400);
+    assert.equal((await started.json()).error, "read_only");
+
+    const badDate = await fetch(`${base}/attribution`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ startDate: "not-a-date" }),
+    });
+    assert.equal(badDate.status, 400);
+    assert.equal((await badDate.json()).error, "invalid_options");
+
+    // "No such stage" and "nothing is running" are different faults, so a typo
+    // cannot read as an idle stage.
+    const unknown = await fetch(`${base}/nonsense`, { method: "DELETE" });
+    assert.equal(unknown.status, 404);
+    const idle = await fetch(`${base}/attribution`, { method: "DELETE" });
+    assert.equal(idle.status, 409);
+  } finally {
+    await new Promise((resolvePromise) => server.close(resolvePromise));
+  }
 });

@@ -10,9 +10,9 @@
 import { computed, ref } from "vue";
 
 import DataTable from "../components/DataTable.vue";
+import EntityTable from "../components/EntityTable.vue";
 import MetricRow from "../components/MetricRow.vue";
 import PlotlyChart from "../components/PlotlyChart.vue";
-import TableView from "../components/TableView.vue";
 import {
   distinct,
   groupSum,
@@ -23,20 +23,22 @@ import {
   sum,
 } from "../lib/common.js";
 import { useDashboard } from "../lib/useDashboard.js";
+import { useDiagnostics } from "../lib/diagnostics.js";
 import * as theme from "../theme.js";
 
 const { data } = useDashboard();
+const { diagnosticsOn } = useDiagnostics();
 
 const tab = ref("history");
 const TABS = [
-  { key: "history", label: "Generated history" },
+  { key: "history", label: "Budget history" },
   { key: "performance", label: "Daily performance" },
   { key: "bridge", label: "Campaign bridge" },
   { key: "paths", label: "Conversion paths" },
 ];
 
 // ---------------------------------------------------------------------------
-// Generated Campaign history
+// Campaign budget and spend history
 // ---------------------------------------------------------------------------
 
 const research = computed(() => data.value.simulationResearch ?? {});
@@ -60,7 +62,7 @@ const campaignById = computed(() => new Map(
   (research.value.campaigns ?? []).map((item) => [item.campaign_id, item]),
 ));
 
-const generatedHistory = computed(() =>
+const budgetHistory = computed(() =>
   (research.value.history ?? []).map((row) => {
     const campaign = campaignById.value.get(row.campaign_id) ?? {};
     return {
@@ -72,15 +74,15 @@ const generatedHistory = computed(() =>
   }),
 );
 
-const historyDates = computed(() => distinct(generatedHistory.value, "report_date"));
-const historyProviders = computed(() => distinct(generatedHistory.value, "provider"));
-const historyProducts = computed(() => distinct(generatedHistory.value, "product_id"));
-const historyCampaigns = computed(() => distinct(generatedHistory.value, "campaign_id"));
-const historyAdProducts = computed(() => distinct(generatedHistory.value, "ad_product"));
-const historyMarketplaces = computed(() => distinct(generatedHistory.value, "marketplace"));
-const historyRuns = computed(() => distinct(generatedHistory.value, "run_id"));
+const historyDates = computed(() => distinct(budgetHistory.value, "report_date"));
+const historyProviders = computed(() => distinct(budgetHistory.value, "provider"));
+const historyProducts = computed(() => distinct(budgetHistory.value, "product_id"));
+const historyCampaigns = computed(() => distinct(budgetHistory.value, "campaign_id"));
+const historyAdProducts = computed(() => distinct(budgetHistory.value, "ad_product"));
+const historyMarketplaces = computed(() => distinct(budgetHistory.value, "marketplace"));
+const historyRuns = computed(() => distinct(budgetHistory.value, "run_id"));
 
-const scopedHistory = computed(() => generatedHistory.value.filter((row) => {
+const scopedHistory = computed(() => budgetHistory.value.filter((row) => {
   if (historyProvider.value && row.provider !== historyProvider.value) return false;
   if (historyProduct.value && row.product_id !== historyProduct.value) return false;
   if (historyCampaign.value && row.campaign_id !== historyCampaign.value) return false;
@@ -197,7 +199,7 @@ const similarityMatches = computed(() => {
     budget: Number(similarityBudget.value) || null,
   };
   const candidates = new Map();
-  for (const row of generatedHistory.value) {
+  for (const row of budgetHistory.value) {
     const key = [row.run_id, row.campaign_id, row.product_id, row.report_date].join("|");
     if (!candidates.has(key)) candidates.set(key, []);
     candidates.get(key).push(row);
@@ -431,17 +433,13 @@ const bridgeColumns = [
 // Conversion paths
 // ---------------------------------------------------------------------------
 
-const search = ref("");
-
 const paths = computed(() => data.value.pathReport);
 
-const listedPaths = computed(() => {
-  const needle = search.value.trim().toLowerCase();
-  const rows = needle
-    ? paths.value.filter((row) => String(row.path).toLowerCase().includes(needle))
-    : paths.value;
-  return sortBy(rows, "revenue", "desc");
-});
+/**
+ * Highest revenue first. Filtering used to live here too; `EntityTable` owns it
+ * now, so this only decides the order the table pages through.
+ */
+const sortedPaths = computed(() => sortBy(paths.value, "revenue", "desc"));
 
 const pathTiles = computed(() => [
   { label: "Distinct paths", value: theme.count(paths.value.length) },
@@ -490,6 +488,35 @@ const pathColumns = [
   { key: "purchase_count", label: "Purchases", format: "number" },
   { key: "revenue", label: "Revenue", format: "money" },
 ];
+
+// ---------------------------------------------------------------------------
+// Row identity
+// ---------------------------------------------------------------------------
+
+/**
+ * These lists are read-only, so a row key exists for paging and rendering
+ * rather than for selection: `EntityTable` keys its rows by it, and a key that
+ * collides would make two distinct rows share one DOM node. Each is therefore
+ * composed from the fields that actually distinguish a record, not from its
+ * index.
+ */
+const historyRowKey = (row) =>
+  [row.run_id, row.campaign_id, row.product_id, row.report_date, row.budget_level]
+    .filter((part) => part !== null && part !== undefined && part !== "")
+    .join(":");
+
+const bridgeRowKey = (row) =>
+  [row.campaign_id, row.ad_group_id, row.touchpoint, row.sku_id, row.target_id,
+    row.audience_id, row.keyword_id]
+    .filter(Boolean)
+    .join(":");
+
+const pathRowKey = (row) => String(row.path);
+
+const touchpointRowKey = (row) => String(row.key ?? row.touchpoint);
+
+const scopedRowKey = (row) =>
+  [row.report_date, row.touchpoint, row.interaction_type].filter(Boolean).join(":");
 </script>
 
 <template>
@@ -513,11 +540,11 @@ const pathColumns = [
       </button>
     </div>
 
-    <!-- Generated Campaign history -->
+    <!-- Campaign budget and spend history -->
     <template v-if="tab === 'history'">
       <article class="card">
         <div class="card-head">
-          <h2>Generated history filters</h2>
+          <h2>Budget history filters</h2>
           <button @click="similarityOpen = true">Find similar history</button>
         </div>
         <div class="card-body">
@@ -527,7 +554,7 @@ const pathColumns = [
             <div class="field"><label for="history-campaign">Campaign</label><select id="history-campaign" v-model="historyCampaign"><option value="">All</option><option v-for="value in historyCampaigns" :key="value">{{ value }}</option></select></div>
             <div class="field"><label for="history-ad-product">Ad product</label><select id="history-ad-product" v-model="historyAdProduct"><option value="">All</option><option v-for="value in historyAdProducts" :key="value">{{ pretty(value) }}</option></select></div>
             <div class="field"><label for="history-marketplace">Marketplace</label><select id="history-marketplace" v-model="historyMarketplace"><option value="">All</option><option v-for="value in historyMarketplaces" :key="value">{{ value }}</option></select></div>
-            <div class="field"><label for="history-run">Simulation run</label><select id="history-run" v-model="historyRun"><option value="">All</option><option v-for="value in historyRuns" :key="value">{{ value }}</option></select></div>
+            <div v-if="diagnosticsOn" class="field"><label for="history-run">Data run</label><select id="history-run" v-model="historyRun"><option value="">All</option><option v-for="value in historyRuns" :key="value">{{ value }}</option></select></div>
             <div class="field"><label for="history-from">From</label><select id="history-from" v-model="historyFrom"><option value="">Earliest</option><option v-for="value in historyDates" :key="value">{{ value }}</option></select></div>
             <div class="field"><label for="history-to">To</label><select id="history-to" v-model="historyTo"><option value="">Latest</option><option v-for="value in historyDates" :key="value">{{ value }}</option></select></div>
           </div>
@@ -540,7 +567,13 @@ const pathColumns = [
           <div class="card-head"><h2>Configured budget vs actual spend</h2><span class="sub">First 80 selected observations</span></div>
           <div class="card-body">
             <PlotlyChart :traces="budgetHistoryTraces" :layout="budgetHistoryLayout" label="Configured Campaign budget compared with actual spend" />
-            <TableView :label="`View all ${scopedHistory.length.toLocaleString()} historical observations`" :columns="historicalColumns" :rows="scopedHistory" />
+            <EntityTable
+              :columns="historicalColumns"
+              :rows="scopedHistory"
+              :row-key="historyRowKey"
+              noun="observation"
+              empty="No observations match the current filters."
+            />
           </div>
         </article>
         <article class="card">
@@ -559,13 +592,20 @@ const pathColumns = [
         </article>
       </template>
       <article v-else class="card empty-card">
-        <h2>No generated Campaign history</h2>
-        <p>Set <code>MTA_SIM_DATA_DIR</code> to a local CSV run, or use a database populated by MTA-SIM.</p>
+        <h2>No Campaign budget history</h2>
+        <p>
+          No Campaign has a recorded budget-versus-spend history in the current
+          reporting window. Budget planning is available in Budget Manager.
+        </p>
       </article>
     </template>
 
-    <!-- Daily performance -->
-    <template v-if="tab === 'performance'">
+    <!--
+      Daily performance. This has to be `v-else-if`, not a second `v-if`: the
+      chain ends in a `v-else` for Conversion paths, and a fresh chain here
+      would let that `v-else` render underneath the Budget history tab.
+    -->
+    <template v-else-if="tab === 'performance'">
       <article class="card">
         <div class="card-head">
           <h2>Filters</h2>
@@ -648,15 +688,28 @@ const pathColumns = [
               label="Spend by touchpoint, highest first"
             />
             <p class="caption">The table below carries every touchpoint.</p>
-            <TableView
-              label="View all touchpoints as a table"
+            <EntityTable
               :columns="touchpointColumns"
               :rows="byTouchpoint"
+              :row-key="touchpointRowKey"
+              noun="touchpoint"
+              empty="No touchpoints match the current filters."
             />
-            <TableView
-              :label="`View all ${scoped.length.toLocaleString()} filtered rows as a table`"
+          </div>
+        </article>
+
+        <article class="card">
+          <div class="card-head">
+            <h2>Daily rows</h2>
+            <span class="sub">{{ scoped.length.toLocaleString() }} filtered</span>
+          </div>
+          <div class="card-body">
+            <EntityTable
               :columns="scopedColumns"
               :rows="scoped"
+              :row-key="scopedRowKey"
+              noun="row"
+              empty="No rows match the current filters."
             />
           </div>
         </article>
@@ -701,7 +754,13 @@ const pathColumns = [
               so they sum to more than the reported total. They apportion, not
               add.
             </p>
-            <DataTable :columns="bridgeColumns" :rows="bridge" />
+            <EntityTable
+              :columns="bridgeColumns"
+              :rows="bridge"
+              :row-key="bridgeRowKey"
+              noun="bridge row"
+              empty="No rows match the current filters."
+            />
           </template>
         </div>
       </article>
@@ -726,21 +785,19 @@ const pathColumns = [
             attribution understates the touchpoints that open a journey.
           </p>
 
-          <div class="field">
-            <label for="path-search">Search paths</label>
-            <input
-              id="path-search"
-              v-model="search"
-              type="search"
-              placeholder="e.g. SPONSORED_PRODUCTS, or CLICK"
-            />
-          </div>
-
-          <DataTable :columns="pathColumns" :rows="listedPaths" />
-          <p class="caption">
-            {{ listedPaths.length.toLocaleString() }} of
-            {{ paths.length.toLocaleString() }} paths shown.
-          </p>
+          <!--
+            The table's own search replaces the separate field this panel used
+            to carry: `EntityTable` filters across the rendered text of every
+            declared column, which is a superset of what searching the path
+            string alone matched.
+          -->
+          <EntityTable
+            :columns="pathColumns"
+            :rows="sortedPaths"
+            :row-key="pathRowKey"
+            noun="path"
+            empty="No conversion paths available."
+          />
         </div>
       </article>
     </template>

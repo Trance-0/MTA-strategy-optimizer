@@ -327,6 +327,17 @@ uv run python -X utf8 -B script/validate_data_alignment.py
 
 Update the events and Amazon Ads input files, then run directly. The canonical pipeline determines its window automatically from the earliest through latest Ads `reportDate`; it supports any duration, cross-year windows, and leap days without changing configuration dates. Aggregated paths and all five model results are published together only after every artifact passes validation. On failure, the previous six derived artifacts remain in place, and raw inputs are not overwritten. See [running the module](../introduction/environment/amc-mta-usage.md) for custom file locations and complete validation rules.
 
+To attribute a narrower period, pass a report date range:
+
+```bash
+uv run python -X utf8 -B script/run_pipeline.py \
+  --report-start-date 2026-01-05 --report-end-date 2026-01-20
+```
+
+This narrows which rows are read, not how the window is established: the window is still inferred from whatever survives the filter, so the published window can never disagree with the delivery data it came from. Both inputs are filtered into the temporary workspace — the Ads report by `reportDate` and the touchpoint events by `event_time` — because filtering the Ads report alone would leave conversions outside the window it implies, which fails validation. The committed reports are read, never rewritten.
+
+A narrowed run also reconciles the two inputs against each other. Validation requires the Ads report and the assembled paths to describe exactly the same touchpoint set; over the full window they do, but inside a narrower one a touchpoint can take delivery every day while the journeys that touch it convert outside the window. That unmatched delivery is a property of the chosen window rather than a fault in the data, so those Ads rows are dropped and the excluded touchpoints are named in the output. Dropping delivery rather than inventing events narrows what the run claims to cover instead of attributing outcomes to a touchpoint that recorded none. Against the current 90-day sample, every window shorter than about three weeks excludes at least one touchpoint this way.
+
 Default canonical outputs:
 
 - `modules/mta_attribution/outputs/attribution/amc_markov_attribution_results.csv`

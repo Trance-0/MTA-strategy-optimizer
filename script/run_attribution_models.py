@@ -21,6 +21,7 @@ from __future__ import annotations
 
 import argparse
 import sys
+from collections.abc import Callable
 from pathlib import Path
 
 
@@ -95,7 +96,17 @@ def run_attribution_models(
     amazon_ads_report: Path = AMAZON_ADS_REPORT_FILE,
     *,
     max_touchpoint_gap_days: int = MAX_TOUCHPOINT_GAP_DAYS,
+    progress: Callable[[str], None] | None = None,
 ) -> list[Path]:
+    """Fit both attribution models and write their comparison.
+
+    `progress` receives a line as each model starts. It defaults to None so an
+    importing caller sees no output it did not ask for. The two fits are the
+    slow part of the pipeline, and they are what a caller watching stdout needs
+    to distinguish -- without this, a multi-minute Shapley fit is indisting-
+    uishable from a hung process.
+    """
+    report = progress or (lambda _message: None)
     output_dir.mkdir(parents=True, exist_ok=True)
     amc_rows = read_amc_csv_strict(amc_report)
     amazon_ads_rows = read_csv(amazon_ads_report)
@@ -104,12 +115,15 @@ def run_attribution_models(
     # the same account, dates, and complete touchpoint set.
     validate_data_alignment_rows(amc_rows, amazon_ads_rows)
 
+    report("Running Markov removal-effect attribution.")
     markov_results = run_markov_attribution(amc_rows)
+    report("Running path-level Shapley attribution.")
     shapley_results = run_shapley_attribution(amc_rows)
     spend_by_touchpoint = aggregate_spend_by_touchpoint(amazon_ads_rows)
 
     markov_rows = result_rows("markov", markov_results, spend_by_touchpoint)
     shapley_rows = result_rows("shapley", shapley_results, spend_by_touchpoint)
+    report("Comparing models and judging reliability.")
     comparison = compare_attribution_models(
         markov_rows,
         shapley_rows,
@@ -144,6 +158,7 @@ def main() -> None:
         args.output_dir,
         args.amazon_ads_report,
         max_touchpoint_gap_days=args.max_touchpoint_gap_days,
+        progress=lambda message: print(message, flush=True),
     )
 
     for path in output_files:

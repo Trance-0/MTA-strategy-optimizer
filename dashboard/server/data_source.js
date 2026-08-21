@@ -45,6 +45,7 @@ import {
   useDatabase,
 } from "./config.js";
 import { readCsv } from "./csv.js";
+import { deriveMasterData } from "./master_data.js";
 
 const CACHE_TTL_MS = 600_000;
 
@@ -1078,11 +1079,27 @@ function flattenObservation(item) {
   };
 }
 
-function localSimulationResearch() {
+/**
+ * The master catalogue implied by the committed platform reports.
+ *
+ * Read whenever no research sidecar is configured, which is every default
+ * deployment. The reports are tracked, so the entity sections describe the
+ * account in every deployment rather than standing empty and inviting the
+ * reader to believe the dashboard is broken.
+ */
+async function derivedMasterData() {
+  const [adsRows, bridgeRows, strategyRequest] = await Promise.all([
+    loadAdsDaily(),
+    loadEntityBridge(),
+    loadStrategyRequest(),
+  ]);
+  return deriveMasterData(adsRows, bridgeRows, strategyRequest);
+}
+
+async function localSimulationResearch() {
   const directory = simulatorDataDirectory();
   if (!directory) return {
-    runs: [], providers: [], products: [], campaigns: [], adGroups: [],
-    touchpoints: [], productEconomics: [], campaignProductLinks: [],
+    runs: [], ...(await derivedMasterData()),
     history: [], delivery: [], generationConfigs: [], touchpointObservations: [],
     masterObjects: [],
   };

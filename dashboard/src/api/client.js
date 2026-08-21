@@ -93,6 +93,69 @@ export async function archiveMasterObject(entityType, entityId) {
 }
 
 /**
+ * The three pipeline stages, their current run, and their logs.
+ *
+ * The static build has no server to run anything, so it answers with three
+ * stages that are all unavailable rather than issuing a request that would
+ * 404. The view then renders its three tabs from one shape in both
+ * deployments, and the reason a stage cannot run is the deployment's own.
+ */
+export async function fetchJobs() {
+  if (IS_STATIC) {
+    const unavailable =
+      "The published build runs as static assets with no server behind it, " +
+      "so it cannot run a pipeline stage. Run the dashboard locally against " +
+      "a PostgreSQL mirror to run them.";
+    const stages = {};
+    for (const [key, label] of [
+      ["attribution", "MTA attribution"],
+      ["optimization", "MTA strategy optimization"],
+      ["evaluation", "MTA strategy evaluation"],
+    ]) {
+      stages[key] = {
+        key,
+        label,
+        script: null,
+        available: false,
+        unavailableReason: unavailable,
+        requiresResearchSnapshot: false,
+        current: null,
+      };
+    }
+    return { stages, history: [] };
+  }
+  const response = await fetch("/api/jobs");
+  return readJson(response);
+}
+
+/** Start one pipeline stage. Throws with the server's reason when refused. */
+export async function startJob(stage, options = {}) {
+  if (IS_STATIC) {
+    throw new Error(
+      "The published build cannot run a pipeline stage. Run the dashboard " +
+        "locally against a PostgreSQL mirror.",
+    );
+  }
+  const response = await fetch(`/api/jobs/${encodeURIComponent(stage)}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(options),
+  });
+  const result = await readJson(response);
+  if (!response.ok) throw new Error(result.message ?? "The stage was not started.");
+  return result;
+}
+
+/** Stop a running stage. */
+export async function stopJob(stage) {
+  if (IS_STATIC) return null;
+  const response = await fetch(`/api/jobs/${encodeURIComponent(stage)}`, {
+    method: "DELETE",
+  });
+  return readJson(response);
+}
+
+/**
  * The settings state.
  *
  * The static build has no server to ask, so it returns the hosted state

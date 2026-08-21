@@ -1,8 +1,8 @@
 ---
 title: Dashboard Views and Visual Contract
-compact: "Six Vue views and shared components: deployment capability drives accent and data operations, canonical entities render as paged selectable tables with confirmed deletion, generated-history filters, presentation-only similarity, read-only attribution, chart/table accessibility, and SettingsDialog behavior."
+compact: "Six Vue views and shared components: deployment capability drives accent and data operations, canonical entities render as paged selectable tables with confirmed deletion, the entity catalogue derived from committed reports, market-performance wording with diagnostics behind a preference, per-model tabs that run the real pipeline scripts with streamed logs and phase progress, presentation-only similarity, read-only attribution, chart/table accessibility, and SettingsDialog behavior."
 lang: en-US
-source_files: dashboard/src/theme.js, dashboard/src/style.css, dashboard/src/lib/deployment.js, dashboard/src/views/CommandCenter.vue, dashboard/src/views/BudgetManager.vue, dashboard/src/views/Campaigns.vue, dashboard/src/views/CampaignOptimizer.vue, dashboard/src/views/OptimizationLog.vue, dashboard/src/views/KnowledgeBase.vue, dashboard/src/components/SidebarNav.vue, dashboard/src/components/TopBar.vue, dashboard/src/components/SettingsDialog.vue, dashboard/src/components/PlotlyChart.vue, dashboard/src/components/DataTable.vue, dashboard/src/components/EntityTable.vue, dashboard/src/components/ConfirmDialog.vue, dashboard/src/components/TableView.vue, dashboard/src/components/MetricRow.vue, dashboard/src/components/KeyValuePanel.vue, dashboard/src/components/ReliabilityBanner.vue, dashboard/src/lib/common.js
+source_files: dashboard/src/theme.js, dashboard/src/style.css, dashboard/src/lib/deployment.js, dashboard/src/lib/diagnostics.js, dashboard/src/lib/useJobs.js, dashboard/server/jobs.js, dashboard/server/master_data.js, dashboard/src/views/CommandCenter.vue, dashboard/src/views/BudgetManager.vue, dashboard/src/views/Campaigns.vue, dashboard/src/views/CampaignOptimizer.vue, dashboard/src/views/OptimizationLog.vue, dashboard/src/views/KnowledgeBase.vue, dashboard/src/components/SidebarNav.vue, dashboard/src/components/TopBar.vue, dashboard/src/components/SettingsDialog.vue, dashboard/src/components/StageRunner.vue, dashboard/src/components/PlotlyChart.vue, dashboard/src/components/DataTable.vue, dashboard/src/components/EntityTable.vue, dashboard/src/components/ConfirmDialog.vue, dashboard/src/components/TableView.vue, dashboard/src/components/MetricRow.vue, dashboard/src/components/KeyValuePanel.vue, dashboard/src/components/ReliabilityBanner.vue, dashboard/src/lib/common.js
 ---
 
 # Dashboard Views and Visual Contract
@@ -53,11 +53,51 @@ Every deletion — one row or a batch — routes through one confirmation that l
 
 A batch archives sequentially rather than concurrently, because each archive clears the server's caches and a parallel batch would have them racing. **A failure stops the run and reports which identifier it stopped at**, leaving the dialog open: reporting success after a partial batch would be a false statement about what is now in the database.
 
-Deletion archives a future-run draft. It never removes a generated historical observation, which no route mutates in either mode.
+Deletion archives a planned change. It never removes reported performance, which no route mutates in either mode.
 
-### An empty section names its cause
+### Every deployment populates its entity sections
 
-These records come from a generated MTA-SIM run, which the committed sample artifacts do not carry. The published build therefore shows every entity section empty, and this is the expected state rather than a fault. Each empty section says so and names the remedy — `MTA_SIM_DATA_DIR` for a file-mode run, `script/import_to_database.py` for a database — because "No records loaded" alone reads as a broken deployment.
+These records were previously read only from an optional research sidecar, so every default and published deployment showed all seven sections empty. `server/master_data.js` now derives the catalogue — Ad Providers, Products, Campaigns, Ad Groups, touchpoints, product economics, and Campaign-Product links — from the Amazon Ads report, entity bridge, and strategy request the repository already tracks. A sidecar, when one is configured, still takes precedence.
+
+Derivation rather than a second committed catalogue file: a tracked catalogue sitting beside the reports can drift from them, while one read out of them cannot.
+
+**Only what the reports support is reported.** A touchpoint's impressions and clicks arrive as separate per-interaction rows sharing no denominator, so `click_through_rate` is `null` and the observed impressions, clicks, and cost are reported instead — dividing one by the other yielded rates between 0.98 and 1.15. A rate is reported only where both its cost and its denominator are above zero, so a touchpoint whose impression rows carry no cost shows no CPM rather than a CPM of exactly zero. Unit COGS and contribution margin stay `null` rather than becoming zero, since no committed report carries them. Four touchpoints bill CPC on clicks and CPM on impressions at once; cost is accumulated per billing type and the billing type reported as `CPC + CPM`.
+
+A section that is genuinely empty still names its cause — no records in the current reporting window — because "No records loaded" alone reads as a broken deployment.
+
+### The dashboard describes market performance
+
+No view names a data generator, a simulator, or synthesis. A reader of this dashboard is reading reported performance from the platform, and the interface says so throughout: reported performance is read-only, an editable row is a planned change, and a filter that answers which pipeline run wrote a row is diagnostic detail rather than something a marketing reader is shown by default.
+
+Pipeline-run detail therefore sits behind one preference, `Show data run diagnostics` in Settings, persisted in `localStorage` and off by default. It gates Budget Manager's data-run section and the Campaigns data-run filter. `tests/dashboard.test.js` asserts no dashboard source presents its data as generated or simulated.
+
+## Running a Stage from the Dashboard <span class="status-label status-verified" aria-label="Verified"></span>
+
+Campaign Optimizer carries one tab per model — MTA attribution, MTA strategy optimization, MTA strategy evaluation — and Optimization Log carries the same three beside the provenance it already showed. Each model tab has its own runner, and each log tab its own output.
+
+**The dashboard runs the project's own command.** A run started here and one started in a terminal execute the same script with the same arguments, so the dashboard cannot drift from the pipeline it reports on. The command is shown verbatim beneath the log, so a reader who wants to reproduce a run, or to check what the dashboard actually did, can copy it.
+
+### Progress reports a phase, not a timer
+
+`run_pipeline()` and `run_attribution_models()` take an optional `progress` callback and print a line as each stage begins; the server matches those lines to advance the bar. A slow Shapley fit therefore shows as a slow phase rather than a bar that reaches ninety percent and stops. The bar is monotonic by construction: a later line naming an earlier stage never walks it backwards, which a last-match-wins rule would do as soon as a summary mentions a previous stage. A test asserts every declared phase pattern matches a line the scripts actually print, so a phase cannot silently stop matching.
+
+The callback defaults to `None`, so importing either function produces no output the caller did not ask for; only the command-line entry points pass a printer.
+
+### Polling, because the run outlives the request
+
+The response returns as soon as the child process is spawned and the client polls for the rest. The runs are minutes rather than milliseconds, and a dropped connection partway through a fit should not abandon it. Polling stops when nothing is running.
+
+New results are loaded on request rather than automatically: a finished run swapping the numbers under a reader mid-read would be worse than a button.
+
+### Refusals happen before anything is spawned
+
+Running a stage writes new outputs, so it is refused wherever the deployment cannot write — the published build has no server at all, and a file-mode server would write outputs it cannot read back. Strategy optimization additionally needs a research snapshot to fit against, because fitting a budget-to-revenue curve needs the same Campaign observed at several budget levels and a single reporting window carries one. Every reason is checked before the spawn, so a refusal never leaves a half-started run behind, and each names its remedy rather than only the fault.
+
+Options are validated at the same boundary: a date must be a plain ISO date, a total budget a positive number, and a budget usage policy one the `BudgetUsagePolicy` enum declares. Arguments are passed as a vector with `shell: false`, never as a string a shell would re-parse.
+
+### The unbuilt stage is declared, not hidden
+
+`modules/mta_strategy_evaluation/` and `script/evaluate_strategies.py` do not exist yet. The evaluation stage is therefore declared with `script: null` and an explicit reason, and its tab explains the gap and points at the attribution model evaluation that does exist in `modules/mta_standard/src/evaluation.py`. A missing tab would read as a dashboard defect; a named unbuilt stage reads as the roadmap it is.
 
 ## Reliability is never a footnote <span class="status-label status-verified" aria-label="Verified"></span>
 
@@ -103,6 +143,50 @@ Source: `dashboard/src/lib/deployment.js`
 - Dependencies: Vue's reactivity, `src/theme.js`, and `src/lib/useDashboard.js`.
 - Verification: `dashboard/tests/dashboard.test.js`, which asserts capability follows the snapshot mode rather than the build flag, that the two accents differ, that neither leaks into the chart palette, that both read-only deployments name a remedy, and that the rail's status dot matches the read-only accent.
 
+### `src/lib/diagnostics.js`
+
+Source: `dashboard/src/lib/diagnostics.js`
+
+- Responsibility: Answer whether the surfaces that describe the pipeline rather than the account are shown.
+- Inputs: `localStorage`, read once at module load under the key `mta-dashboard.diagnostics`.
+- Outputs: `useDiagnostics()` returning the computed `diagnosticsOn` and `setDiagnostics(on)`.
+- Behavior contract: **Off by default.** The dashboard's subject is an advertising account; a surface naming which run wrote a number, under which configuration and seed, answers an engineering question, and a reader planning budget should not have to walk past it. The surfaces are gated rather than deleted, because the question is real when a number looks wrong and removing them would mean reaching for a database client instead. The preference is per-browser rather than server-side: it is a property of who is looking, not of the deployment, and two people reading one hosted dashboard can want different answers. Every `localStorage` access is wrapped and falls back to off, because the Node test runner and a privacy-restricted browser have none, and an unguarded read would throw at import time rather than at use.
+- Dependencies: Vue's reactivity.
+- Verification: `dashboard/tests/dashboard.test.js`, which asserts the stored value must read exactly `"true"` to enable, that the guard falls back to off, that Budget Manager's diagnostic section exists only while the preference is on, and that the settings dialog is what sets it.
+
+### `src/lib/useJobs.js`
+
+Source: `dashboard/src/lib/useJobs.js`
+
+- Responsibility: Hold the single shared copy of every stage's run state and poll it while anything is running.
+- Inputs: `GET /api/jobs`, through `src/api/client.js`.
+- Outputs: `useJobs()` returning `stages`, the read-only `busy` and `error`, `running`, `ensureLoaded()`, `refresh()`, `start(stage, options)`, `stop(stage)`, and `reloadAfterRun()`.
+- Behavior contract: One module-level store rather than a fetch per tab: the optimizer shows three stages at once, and three components polling for themselves would be three times the requests to paint one screen, with three answers free to disagree about which stage is running. **Polling stops when nothing is running** — a dashboard left open on an idle pipeline must not issue a request every second forever — and a stage started from this browser restarts the poll itself. `schedule()` clears the timer before setting one, so a manual refresh landing beside a scheduled one cannot leave two timers polling in parallel. A refusal from the server is surfaced rather than swallowed, because a stage blocked for want of a research snapshot and one blocked by a read-only deployment are different problems and only the message distinguishes them. `reloadAfterRun()` is separate from the run and is called by the reader: a finished stage rewrites what every view reads, and swapping the numbers mid-read would be a worse surprise than a button.
+- Dependencies: Vue's reactivity, `src/api/client.js`, and `src/lib/useDashboard.js`.
+- Verification: `dashboard/tests/dashboard.test.js` covers the server contract this module polls — `GET /api/jobs`, the refusals, and the progress shape. The store itself, its poll scheduling, and its stop-when-idle rule are exercised in a real browser against a running stage.
+
+### `server/jobs.js`
+
+Source: `dashboard/server/jobs.js`
+
+- Responsibility: Run one pipeline stage as its own documented command and keep its output where the client can poll it.
+- Inputs: A stage key, the validated run options, and `server/config.js` for the repository root and the configured research snapshot.
+- Outputs: `STAGES`, `STAGE_KEYS`, `activeJob()`, `jobsState()`, `startRefusal()`, `normalizeOptions()`, `startJob()`, and `stopJob()`.
+- Behavior contract: **No stage is reimplemented here.** `STAGES` names the script each stage runs, and the arguments are the documented ones, so a run started from the dashboard and one started in a terminal cannot diverge. Attribution runs `run_pipeline.py` rather than `run_attribution_models.py`, because the pipeline script rebuilds the path report first and publishes all five outputs together, which is what keeps a failed run from leaving half a result. Each stage's `phases` are regexes matched against the script's own stdout and applied only when `phase.at > job.percent`, so the bar is monotonic and a later line naming an earlier stage never walks it backwards. `normalizeOptions()` is the only path from a request body to an argument: dates must match `YYYY-MM-DD` and be ordered, a total budget must be a positive finite number, and a budget usage policy must be one `BudgetUsagePolicy` declares — the list is pinned to `modules/mta_common/src/enums.py` by test, because an unrecognized value would reach argparse's `choices` and fail the run only after it had started. `spawn` is called with an argument vector and the default `shell: false`, never a command string. `startRefusal()` checks every reason **before** anything is spawned, so a refusal never leaves a half-started run behind, and each reason names its remedy; a missing `uv` is reported as the specific remedy rather than as a bare `ENOENT`. The log buffer is bounded at 600 lines and the dropped count is reported rather than hidden, so a truncated log never reads as a complete one. Only a successful run fires `onFinish`, because only a successful run changed what the dashboard reads.
+- Dependencies: Node's `child_process`, `fs`, and `path`, plus `server/config.js`.
+- Verification: `dashboard/tests/dashboard.test.js`, which covers option validation including a shell-metacharacter date, the policies against the enum, the refusal paths for an unavailable and an unknown stage, the monotonic advance, and that every declared phase pattern matches a line the scripts actually print. Exercised end to end against a narrowed attribution run.
+
+### `server/master_data.js`
+
+Source: `dashboard/server/master_data.js`
+
+- Responsibility: Derive the entity catalogue — Ad Providers, Products, Campaigns, Ad Groups, Touchpoints, Product Economics — from the committed platform reports.
+- Inputs: The daily platform report rows and the entity aggregate rows, plus the strategy request when one is present.
+- Outputs: `deriveMasterData(adsRows, bridgeRows, strategyRequest)`, consumed by `server/data_source.js`.
+- Behavior contract: **Derivation rather than a second tracked file.** A catalogue committed beside the reports would be free to disagree with them; one read out of the reports cannot. Because the reports are tracked, every deployment populates its entity sections without any optional sidecar being configured. A field the reports do not carry — a Product's category, a unit price, a Campaign's baseline budget — stays `null` rather than being invented, and the interface renders it as missing. `UNSPECIFIED` is the pipeline's marker for a segment the platform does not report and is mapped back to `null`, so the interface shows it as absent rather than as a literal value the account uses. `distinct()` preserves first-seen order, so a catalogue's row order is stable across reloads.
+- Dependencies: None.
+- Verification: `dashboard/tests/dashboard.test.js`, which asserts every derived section is non-empty against the committed reports, that an unreported field comes back `null` rather than `0`, and that no `UNSPECIFIED` marker survives into a segment.
+
 ### The six view components
 
 Source: `dashboard/src/views/CommandCenter.vue`, `dashboard/src/views/BudgetManager.vue`, `dashboard/src/views/Campaigns.vue`, `dashboard/src/views/CampaignOptimizer.vue`, `dashboard/src/views/OptimizationLog.vue`, `dashboard/src/views/KnowledgeBase.vue`
@@ -132,29 +216,50 @@ parameters; a Product its `sku_id`, inventory, and salable state. Every
 remaining field stays reachable through the editor, which renders the record
 whole.
 
-Data operations render only where `useDeployment().writable` is true. Generated
+Data operations render only where `useDeployment().writable` is true. Reported
 delivery, spend, outcomes, and paths are never editable in any deployment.
 Missing economics remain unavailable rather than becoming zero: a blank
 contribution margin is rendered `--`, and missing Cost of Goods Sold is never
-treated as zero.
+treated as zero. Generation Configs is a diagnostic section and renders only
+where `useDiagnostics().diagnosticsOn` is true.
 
 #### `Campaigns.vue`
 
-Generated historical evidence filtered by Provider, Product, Campaign, ad
-product, marketplace, date, and simulation run. Detail includes configured
-budget against actual spend, delivery and outcome metrics, Product economics,
-interaction frequencies, path frequencies, length, and transitions. A modal
-finds presentation-only historical similarity references at a selected
-threshold and states that they are not used by attribution or strategy. When
-no attribution artifact exists, the view displays “Attribution not available.”
+Reported performance filtered by Provider, Product, Campaign, ad product,
+marketplace, date, and reporting run. Detail includes configured budget against
+actual spend, delivery and outcome metrics, Product economics, interaction
+frequencies, path frequencies, length, and transitions. Each list renders as one
+`EntityTable`, the same component and the same paging, page size, and filtering
+Budget Manager uses, with a row key composed from the fields that distinguish a
+record rather than the row's index. A modal finds presentation-only historical
+similarity references at a selected threshold and states that they are not used
+by attribution or strategy; that modal is the view's one remaining `DataTable`,
+because it is a fixed short list inside a dialog rather than a page of records.
+When no attribution artifact exists, the view displays “Attribution not
+available.”
+
+The four tabs are one `v-if`/`v-else-if`/`v-else` chain, not several. A second
+`v-if` opened mid-way ends the first chain, and the trailing `v-else` then
+renders under whichever tab is selected — which is exactly the defect 0.9.27
+fixed, with the Conversion Paths panel appearing beneath Budget history.
 
 #### `CampaignOptimizer.vue`
 
-Markov against Shapley per touchpoint, the governed recommendation, and the budget shift the recommendation implies.
+One tab per model — MTA attribution, MTA strategy optimization, MTA strategy
+evaluation — each carrying its own `StageRunner` above that model's evidence.
+The attribution tab shows Markov against Shapley per touchpoint, the governed
+recommendation, and the budget shift the recommendation implies; the
+optimization tab shows the allocation, its evidence, and its extrapolation and
+pooled-transfer warnings; the evaluation tab states why the stage cannot run
+yet. Each tab declares the run options its stage accepts — a report window for
+attribution, a budget usage policy and total budget for optimization — and
+those option values are the same names `normalizeOptions()` validates on the
+server, so the offered controls and the accepted arguments cannot diverge
+silently.
 
 #### `OptimizationLog.vue`
 
-Run identifiers, the report window, the input digests, the pipeline stage trail, the optimized Campaign budget plan, and the per-touchpoint reliability flags.
+Run identifiers, the report window, the input digests, the pipeline stage trail, the optimized Campaign budget plan, and the per-touchpoint reliability flags, plus one log tab per model beside them.
 
 Reads `campaignStrategy.optimized_strategy` from the snapshot. The optimized-budget card renders only when the artifact carries a `recommendation_type`, so an absent artifact produces no empty card. A plan with `is_optimized=true` shows the authorized, allocated, and expected-revenue tiles, one row per Campaign with its initial and optimized budget, expected revenue and delta, marginal return, evidence label, and extrapolation flag, followed by named warnings for extrapolated and pooled Campaigns and the two Ad Group disclosure fields. A plan with `is_optimized=false` shows its `recommendation_type` and every `infeasibility_reasons` entry in place of an allocation. Expected revenue is labelled a model estimate, never a realized or guaranteed uplift.
 
@@ -164,7 +269,7 @@ The five-segment vocabulary, the reliability contract, the Outcomes, capacity ru
 
 - Inputs: None. Each component takes no props and reads the shared snapshot through `useDashboard()`, so a view never holds a file path, a Structured Query Language (SQL) statement, or a `fetch` call.
 - Outputs: The rendered page. Nothing is returned and nothing is written.
-- Behavior contract: **No view recomputes attribution or predicts an outcome.** The Campaigns and Budget Manager views may aggregate displayed generated observations into descriptive totals and ratios such as Click-Through Rate (CTR), Cost Per Click (CPC), and Cost Per Mille (CPM); they do not alter source rows. The similarity modal uses only a transparent, equal-weight selector heuristic and its objects follow the presentation-only `SimilarityReference` fields. `CampaignOptimizer.vue` retains its labelled constant-total-budget restatement and refuses it for an unreliable Outcome. Generated history is immutable, filters scope every related panel, and charts retain a table or direct-label alternative.
+- Behavior contract: **No view recomputes attribution or predicts an outcome.** The Campaigns and Budget Manager views may aggregate displayed reported performance into descriptive totals and ratios such as Click-Through Rate (CTR), Cost Per Click (CPC), and Cost Per Mille (CPM); they do not alter source rows. The similarity modal uses only a transparent, equal-weight selector heuristic and its objects follow the presentation-only `SimilarityReference` fields. `CampaignOptimizer.vue` retains its labelled constant-total-budget restatement and refuses it for an unreliable Outcome. Reported performance is immutable, filters scope every related panel, and charts retain a table or direct-label alternative. A view may **start** a stage that rewrites those artifacts, through `StageRunner.vue`, but never computes their contents itself: the numbers still come from the pipeline. No view names the research simulator or calls its data generated — a test asserts this against the view sources — because a production deployment reads a live account and a reader told the numbers are invented cannot act on them.
 - Dependencies: Vue 3 and Plotly, through `src/lib/useDashboard.js`, `src/lib/common.js`, `src/theme.js`, and the shared components.
 - Verification: Rendered in a real browser in all three deployments — the API against PostgreSQL, the API against the committed files, and the static build — with no console error, no failed request, and no error card in any of the six.
 
@@ -179,9 +284,11 @@ Source: `dashboard/src/components/SidebarNav.vue`, `dashboard/src/components/Top
 
 `EntityTable.vue` owns paging, page size, free-text filtering, selection, and the two row controls, and owns nothing about what a row means: columns are declared by the mounting view exactly as `DataTable`'s are. Its default page size is 15, offering 15, 30, 50, and 100. **Selection is keyed by a caller-supplied row identity rather than by page index**, so a batch action cannot act on whatever record happens to occupy that index after the page turns; the selection Set is reassigned rather than mutated, because a Set mutated in place is the same object and Vue's reactivity would not repaint the checkboxes. The header checkbox acts on the current page, which is what it can show. Both components read `renderCell` from `src/lib/common.js`, so one column declaration cannot mean two things in two tables.
 
+`StageRunner.vue` is one stage's controls, progress bar, and log, and is mounted once per model tab in both Campaign Optimizer and Optimization Log — so the two views cannot show a run differently. It takes the stage descriptor whole rather than a set of flags, so a stage that becomes runnable does so on the server without a change here, and it declares its extra controls as data rather than as markup. **The bar reads `job.percent` for both `aria-valuenow` and the visible percentage**, so a screen reader and the bar cannot report different progress, and the command is rendered verbatim beside it. The log follows its tail only while the run is going: scrolling a finished log to the bottom would fight a reader who scrolled up to read why it failed. A blocked stage renders its reason in place of an enabled control rather than failing when pressed.
+
 `ConfirmDialog.vue` is the only route to a deletion. It **names the affected identifiers rather than reporting a count alone**, because a count is not something a reader can check and a batch selected across several pages is exactly the case where a reader cannot see their own selection. The list is capped at twelve with the remainder stated rather than dropped, and the dialog stays open on failure carrying the reason.
 - Dependencies: Vue 3 and `plotly.js-dist-min`.
-- Verification: Exercised in a real browser through the six views that mount them.
+- Verification: Exercised in a real browser through the six views that mount them. `EntityTable.vue`'s paging, page sizes, and identity-keyed selection, `ConfirmDialog.vue`'s named rows, and `StageRunner.vue`'s progressbar contract are covered by `dashboard/tests/dashboard.test.js`.
 
 ### `src/lib/common.js`
 

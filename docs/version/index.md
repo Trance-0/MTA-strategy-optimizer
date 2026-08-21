@@ -11,6 +11,16 @@ The project version is recorded in the repository-root `VERSION` file. Each page
 
 This section records **what** changed. See the [work log](../worklog/) for **who** did the work and when.
 
+## [0.9.27](0.9.27.md)
+
+- Date: 2026-08-20
+- Summary: Ran pipeline stages from the dashboard with streamed logs and phase-matched progress, split the optimizer and its logs into one tab per model, gave `run_pipeline.py` a working report date range that filters and reconciles both inputs, and converted Campaigns to the paged entity table
+
+## [0.9.26](0.9.26.md)
+
+- Date: 2026-08-20
+- Summary: Derived the entity catalogue from the committed reports so every deployment populates it, rebuilt the narrow-viewport rail as a horizontal bar, and revised the dashboard to describe reported market performance rather than generated data
+
 ## [0.9.25](0.9.25.md)
 
 - Date: 2026-08-20

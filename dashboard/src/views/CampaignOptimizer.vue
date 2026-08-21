@@ -1,27 +1,40 @@
 <script setup>
 /**
- * Campaign Optimizer: what each model predicts, and what the shift implies.
+ * Campaign Optimizer: the three models, each with its results and its runner.
  *
- * The two models disagree by construction -- Markov measures removal effect,
- * Shapley measures average marginal contribution -- so this view puts them side
- * by side per touchpoint and shows the governed recommendation between them.
- * The budget-shift panel then reads the recommendation forward: if spend
+ * One tab per model in pipeline order -- attribution, then the strategy
+ * optimization that consumes it, then the evaluation that scores the result.
+ * Each tab shows that model's own output and, where a database is connected,
+ * the controls to run its stage and watch it run. Results and the run that
+ * produced them sit together rather than in separate places, because the
+ * question "what does this say" and the question "is this current" are asked
+ * at the same moment.
+ *
+ * Attribution: the two models disagree by construction -- Markov measures
+ * removal effect, Shapley measures average marginal contribution -- so they are
+ * shown side by side per touchpoint with the governed recommendation between
+ * them. The budget-shift panel reads the recommendation forward: if spend
  * followed attributed credit rather than its current split, which touchpoints
- * would gain and which would give up budget.
+ * would gain and which would give up budget. That shift is a restatement of the
+ * recommendation, not a new model. It never overrides the pipeline's own
+ * allocation, and it is withheld outright when the outcome's reliability
+ * verdict is UNRELIABLE.
  *
- * The shift is a restatement of the recommendation, not a new model. It never
- * overrides the pipeline's own allocation, and it is withheld outright when the
- * outcome's reliability verdict is UNRELIABLE.
+ * Data flow:
+ *     src/lib/useDashboard.js -> here (results)
+ *     src/lib/useJobs.js      -> here (runs)
  */
-import { computed, ref } from "vue";
+import { computed, onMounted, ref } from "vue";
 
 import DataTable from "../components/DataTable.vue";
 import MetricRow from "../components/MetricRow.vue";
 import PlotlyChart from "../components/PlotlyChart.vue";
 import ReliabilityBanner from "../components/ReliabilityBanner.vue";
+import StageRunner from "../components/StageRunner.vue";
 import TableView from "../components/TableView.vue";
 import {
   OUTCOME_LABELS,
+  currencySymbol,
   groupSum,
   pretty,
   shortTouchpoint,
@@ -29,9 +42,58 @@ import {
   statusTone,
 } from "../lib/common.js";
 import { useDashboard } from "../lib/useDashboard.js";
+import { useDeployment } from "../lib/deployment.js";
+import { useJobs } from "../lib/useJobs.js";
 import * as theme from "../theme.js";
 
 const { data } = useDashboard();
+const { writable } = useDeployment();
+const {
+  stages,
+  busy: jobBusy,
+  error: jobError,
+  ensureLoaded: ensureJobsLoaded,
+  start: startStage,
+  stop: stopStage,
+  reloadAfterRun,
+} = useJobs();
+
+onMounted(ensureJobsLoaded);
+
+/** One tab per model, in the order the pipeline runs them. */
+const MODEL_TABS = [
+  { key: "attribution", label: "MTA attribution" },
+  { key: "optimization", label: "MTA strategy optimization" },
+  { key: "evaluation", label: "MTA strategy evaluation" },
+];
+const model = ref("attribution");
+
+/**
+ * The date range narrows which reporting days the attribution stage reads.
+ *
+ * Offered as free text rather than a picker over the loaded snapshot, because
+ * the stage reads the source reports rather than the snapshot: a window the
+ * snapshot cannot show may still be present in the files.
+ */
+const STAGE_CONTROLS = {
+  attribution: [
+    { key: "startDate", label: "From (YYYY-MM-DD)", type: "text", placeholder: "Earliest" },
+    { key: "endDate", label: "To (YYYY-MM-DD)", type: "text", placeholder: "Latest" },
+  ],
+  optimization: [
+    {
+      key: "budgetUsagePolicy",
+      label: "Budget usage",
+      type: "select",
+      options: [
+        { value: "SPEND_FULL_BUDGET", label: "Spend the full budget" },
+        { value: "SPEND_UP_TO_BUDGET", label: "Spend up to the budget" },
+      ],
+    },
+    { key: "totalBudget", label: "Total daily budget", type: "text", placeholder: "Observed baseline" },
+  ],
+  evaluation: [],
+};
 
 const outcome = ref("converted_users");
 
@@ -274,16 +336,138 @@ const shiftColumns = [
 ];
 
 const shiftRows = computed(() => sortBy(shift.value, "delta_pp", "desc"));
+
+// ---------------------------------------------------------------------------
+// Strategy optimization: the fitted response model's plan
+// ---------------------------------------------------------------------------
+
+const strategy = computed(() => data.value.campaignStrategy ?? {});
+const plan = computed(() => strategy.value.optimized_strategy ?? {});
+const hasPlan = computed(() => Boolean(plan.value.recommendation_type));
+const isOptimized = computed(() => Boolean(plan.value.is_optimized));
+const allocations = computed(() => plan.value.allocations ?? []);
+const symbol = computed(() => currencySymbol(strategy.value.currency));
+
+const planMetrics = computed(() => [
+  {
+    label: "Authorized",
+    value: theme.money(plan.value.authorized_budget ?? 0, symbol.value),
+    note: pretty(plan.value.budget_usage_policy),
+  },
+  {
+    label: "Allocated",
+    value: theme.money(plan.value.allocated_budget ?? 0, symbol.value),
+    note: `${allocations.value.length} Campaigns`,
+  },
+  {
+    label: "Expected revenue",
+    value: theme.money(plan.value.expected_optimized_revenue ?? 0, symbol.value),
+    note: `Initial ${theme.money(plan.value.expected_initial_revenue ?? 0, symbol.value)}`,
+    help: "Estimated by the fitted response model, not a realized result.",
+  },
+  {
+    label: "Expected change",
+    value: theme.money(plan.value.expected_revenue_increase ?? 0, symbol.value),
+    note: "Model estimate",
+    help: "The difference between the two estimates above. It is not a guaranteed uplift.",
+  },
+]);
+
+const allocationColumns = computed(() => [
+  { key: "campaign_id", label: "Campaign", width: "20%" },
+  { key: "initial_budget", label: "Initial", format: "money", currency: symbol.value },
+  { key: "optimized_budget", label: "Optimized", format: "money", currency: symbol.value },
+  {
+    key: "expected_revenue_at_optimized",
+    label: "Expected revenue",
+    format: "money",
+    currency: symbol.value,
+  },
+  {
+    key: "expected_revenue_delta",
+    label: "Change",
+    format: "money",
+    currency: symbol.value,
+  },
+  { key: "marginal_expected_revenue", label: "Marginal return", format: "share", digits: 4 },
+  {
+    key: "response_support",
+    label: "Evidence",
+    format: (value) => pretty(value),
+    tone: (value) => (value === "TARGET_HISTORY" ? "green" : "amber"),
+  },
+  { key: "is_extrapolated", label: "Extrapolated", format: "flag" },
+]);
+
+/** Allocations resting on the curve's shape beyond the evidence behind it. */
+const extrapolated = computed(() =>
+  allocations.value.filter((row) => row.is_extrapolated),
+);
+
+/** Campaigns whose curve was borrowed from comparable Campaigns. */
+const pooled = computed(() =>
+  allocations.value.filter((row) => row.response_support === "POOLED_TRANSFER"),
+);
+
+// ---------------------------------------------------------------------------
+// Strategy evaluation
+// ---------------------------------------------------------------------------
+
+/**
+ * The evaluation stage has no artifact to show.
+ *
+ * `modules/mta_strategy_evaluation/` is specified but unbuilt, so this tab
+ * shows what the layer is for and what exists in its place, rather than an
+ * empty table implying a run that failed. The stage's own runner states the
+ * same thing from the server's side.
+ */
+const evaluationAvailable = computed(
+  () => stages.value.evaluation?.available ?? false,
+);
 </script>
 
 <template>
   <section class="page-grid">
     <p class="caption">
-      Model predictions per touchpoint, and the budget shift implied by moving
-      spend toward attributed credit.
+      The three models in pipeline order. Each tab carries that model's own
+      results and, where a database is connected, the controls to run it.
     </p>
 
-    <template v-if="hasData">
+    <div class="tabs" role="tablist" aria-label="Models">
+      <button
+        v-for="entry in MODEL_TABS"
+        :key="entry.key"
+        class="tab"
+        role="tab"
+        :aria-selected="model === entry.key"
+        :class="{ active: model === entry.key }"
+        @click="model = entry.key"
+      >
+        {{ entry.label }}
+      </button>
+    </div>
+
+    <article v-if="stages[model]" class="card">
+      <div class="card-head">
+        <h2>Run {{ stages[model].label }}</h2>
+        <span class="sub">{{ stages[model].script || "No runnable script" }}</span>
+      </div>
+      <div class="card-body">
+        <div v-if="jobError" class="notice bad">{{ jobError.message }}</div>
+        <StageRunner
+          :stage="stages[model]"
+          :writable="writable"
+          :busy="jobBusy"
+          :controls="STAGE_CONTROLS[model] ?? []"
+          @start="startStage(model, $event)"
+          @stop="stopStage(model)"
+          @reload="reloadAfterRun"
+        />
+      </div>
+    </article>
+
+    <!-- 1. MTA attribution -->
+    <template v-if="model === 'attribution' && hasData">
       <div class="filter-row">
         <div class="field">
           <label for="optimizer-outcome">Outcome</label>
@@ -400,12 +584,133 @@ const shiftRows = computed(() => sortBy(shift.value, "delta_pp", "desc"));
       </article>
     </template>
 
-    <article v-else class="card empty-card">
-      <h2>No model comparison output</h2>
+    <article v-else-if="model === 'attribution'" class="card empty-card">
+      <h2>No attribution output</h2>
       <p>
-        No model comparison output is available from the current data source. Run
-        the pipeline, or switch <code>DATABASE</code> in <code>.env</code>.
+        No attribution output is available from the current data source. Run the
+        stage above, or switch <code>DATABASE</code> in <code>.env</code>.
       </p>
     </article>
+
+    <!-- 2. MTA strategy optimization -->
+    <template v-if="model === 'optimization'">
+      <template v-if="hasPlan && isOptimized">
+        <MetricRow :items="planMetrics" />
+
+        <article class="card">
+          <div class="card-head">
+            <h2>Optimized Campaign budget</h2>
+            <span class="sub">{{ allocations.length }} Campaigns</span>
+          </div>
+          <div class="card-body">
+            <DataTable
+              :columns="allocationColumns"
+              :rows="allocations"
+              empty="No Campaign received an optimized budget."
+            />
+            <p class="caption">
+              Each Campaign's budget comes from its own fitted budget-to-spend
+              and spend-to-revenue response, allocated so the marginal return of
+              the last unit of budget is equal across every unconstrained
+              Campaign. Attribution is not an input here: it divides credit for
+              what already happened, which is a different question from how
+              revenue responds when a budget changes.
+            </p>
+
+            <div v-if="extrapolated.length" class="notice warn">
+              <b>Outside observed range</b>
+              <ul>
+                <li v-for="row in extrapolated" :key="row.campaign_id">
+                  {{ row.campaign_id }} is optimized to
+                  {{ theme.money(row.optimized_budget, symbol) }}, outside the
+                  {{ theme.money(row.observed_budget_range[0], symbol) }} to
+                  {{ theme.money(row.observed_budget_range[1], symbol) }} range
+                  its fit observed.
+                </li>
+              </ul>
+            </div>
+
+            <div v-if="pooled.length" class="notice warn">
+              <b>Borrowed response</b>
+              <ul>
+                <li v-for="row in pooled" :key="row.campaign_id">
+                  {{ row.campaign_id }} has too little budget variation of its
+                  own, so its curve was pooled from comparable Campaigns. The
+                  estimate is legitimate but is not this Campaign's observed
+                  behavior.
+                </li>
+              </ul>
+            </div>
+
+            <div v-if="(plan.excluded_campaign_ids ?? []).length" class="notice">
+              Excluded from optimization:
+              {{ (plan.excluded_campaign_ids ?? []).join(", ") }}
+            </div>
+          </div>
+        </article>
+      </template>
+
+      <article v-else-if="hasPlan" class="card">
+        <div class="card-head">
+          <h2>No allocation was produced</h2>
+        </div>
+        <div class="card-body">
+          <div class="notice warn">
+            <b>{{ pretty(plan.recommendation_type) }}</b>
+            <ul>
+              <li v-for="reason in plan.infeasibility_reasons ?? []" :key="reason">
+                {{ reason }}
+              </li>
+            </ul>
+          </div>
+          <p class="caption">
+            The optimizer returned no allocation rather than a fabricated one.
+            The Budget Manager's seed remains the current recommendation.
+          </p>
+        </div>
+      </article>
+
+      <article v-else class="card empty-card">
+        <h2>No optimized strategy</h2>
+        <p>
+          The budget response models have not been fitted against the current
+          data. Run the stage above to fit them and optimize.
+        </p>
+      </article>
+    </template>
+
+    <!-- 3. MTA strategy evaluation -->
+    <template v-if="model === 'evaluation'">
+      <article class="card">
+        <div class="card-head">
+          <h2>Strategy evaluation</h2>
+          <span class="sub">Specified, not yet built</span>
+        </div>
+        <div class="card-body">
+          <p>
+            This layer scores a strategy the way
+            <code>modules/mta_standard</code> scores an attribution model:
+            load a strategy through a validated contract, run it, and compare
+            its output against a baseline and, where one exists, ground truth.
+            It is specified but not implemented — neither
+            <code>modules/mta_strategy_evaluation/</code> nor
+            <code>script/evaluate_strategies.py</code> exists yet.
+          </p>
+          <p class="caption">
+            The tab is shown rather than hidden because the gap is real and
+            worth seeing: the optimization tab above reports an expected
+            revenue that nothing currently scores against a realized outcome.
+            Attribution model evaluation against simulator ground truth does
+            exist, in <code>modules/mta_standard/src/evaluation.py</code>.
+          </p>
+          <div v-if="!evaluationAvailable" class="notice">
+            Until the layer is built, an optimized plan's quality can be judged
+            only by the evidence labels on each allocation — whether its curve
+            came from that Campaign's own history, and whether its budget sits
+            inside the range the fit observed.
+          </div>
+        </div>
+      </article>
+    </template>
   </section>
 </template>

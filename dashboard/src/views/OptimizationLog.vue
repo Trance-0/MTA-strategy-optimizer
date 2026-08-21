@@ -2,14 +2,21 @@
 /**
  * Optimization Log: the run record and its provenance.
  *
+ * Two kinds of record, kept apart. The provenance tab answers what produced
+ * the numbers currently loaded -- which window, which inputs, which hashes --
+ * and is derived from the artifacts themselves, so it is answerable in every
+ * deployment. The three model tabs answer what happened the last time each
+ * stage was run from this dashboard, which only a server that ran one can say.
+ *
  * The reference prototype shows an audit trail of optimisation actions. No
- * module in this project writes such a trail, so rather than invent
- * placeholder entries this view shows the real record that does exist: which
- * attribution run produced the evidence, which files it hashed, and which
- * budget run consumed it. That is the same question -- what happened, and can
- * it be reproduced -- answered from data instead of from a mock.
+ * module writes such a trail, so rather than invent placeholder entries this
+ * view shows the real records that do exist.
+ *
+ * Data flow:
+ *     src/lib/useDashboard.js -> here (provenance)
+ *     src/lib/useJobs.js      -> here (per-model run logs)
  */
-import { computed, ref } from "vue";
+import { computed, onMounted, ref } from "vue";
 
 import DataTable from "../components/DataTable.vue";
 import KeyValuePanel from "../components/KeyValuePanel.vue";
@@ -22,9 +29,37 @@ import {
   statusTone,
 } from "../lib/common.js";
 import { useDashboard } from "../lib/useDashboard.js";
+import { useJobs } from "../lib/useJobs.js";
 import { money } from "../theme.js";
 
 const { data } = useDashboard();
+// Renamed on import: `stages` below is the pipeline's five artifact-producing
+// stages, which is a different list from the three runnable models.
+const { stages: modelStages, ensureLoaded: ensureJobsLoaded } = useJobs();
+
+onMounted(ensureJobsLoaded);
+
+/** Provenance first, then one log tab per model in pipeline order. */
+const LOG_TABS = [
+  { key: "provenance", label: "Provenance" },
+  { key: "attribution", label: "Attribution log" },
+  { key: "optimization", label: "Optimization log" },
+  { key: "evaluation", label: "Evaluation log" },
+];
+const tab = ref("provenance");
+
+/** The stage descriptor behind a model tab, or null on the provenance tab. */
+const activeStage = computed(() => modelStages.value[tab.value] ?? null);
+
+const activeRun = computed(() => activeStage.value?.current ?? null);
+
+function elapsed(record) {
+  if (!record?.startedAt) return "--";
+  const end = record.finishedAt ? new Date(record.finishedAt) : new Date();
+  const seconds = Math.max(0, Math.round((end - new Date(record.startedAt)) / 1000));
+  if (seconds < 60) return `${seconds}s`;
+  return `${Math.floor(seconds / 60)}m ${String(seconds % 60).padStart(2, "0")}s`;
+}
 
 const budget = computed(() => data.value.budgetRecommendation ?? {});
 const request = computed(() => data.value.strategyRequest ?? {});
@@ -261,6 +296,86 @@ const flagColumns = [
 <template>
   <section class="page-grid">
     <p class="caption">
+      Where the current numbers came from, and what happened the last time each
+      model was run from this dashboard.
+    </p>
+
+    <div class="tabs" role="tablist" aria-label="Log sections">
+      <button
+        v-for="entry in LOG_TABS"
+        :key="entry.key"
+        class="tab"
+        role="tab"
+        :aria-selected="tab === entry.key"
+        :class="{ active: tab === entry.key }"
+        @click="tab = entry.key"
+      >
+        {{ entry.label }}
+      </button>
+    </div>
+
+    <!-- One model's run record -->
+    <template v-if="activeStage">
+      <article class="card">
+        <div class="card-head">
+          <h2>{{ activeStage.label }}</h2>
+          <span class="sub">{{ activeStage.script || "No runnable script" }}</span>
+        </div>
+        <div class="card-body">
+          <div v-if="!activeStage.available" class="notice">
+            {{ activeStage.unavailableReason }}
+          </div>
+
+          <template v-if="activeRun">
+            <KeyValuePanel
+              title="Last run"
+              :rows="[
+                { label: 'State', value: activeRun.state },
+                { label: 'Started', value: activeRun.startedAt.replace('T', ' ').slice(0, 19) },
+                { label: 'Duration', value: elapsed(activeRun) },
+                {
+                  label: 'Exit code',
+                  value: activeRun.exitCode === null ? '--' : String(activeRun.exitCode),
+                },
+                { label: 'Command', value: activeRun.command, code: true },
+              ]"
+            />
+
+            <div v-if="activeRun.error" class="notice bad">{{ activeRun.error }}</div>
+
+            <p v-if="activeRun.droppedLines" class="caption">
+              {{ activeRun.droppedLines.toLocaleString() }} earlier line(s)
+              dropped; this is the tail of the output.
+            </p>
+
+            <div class="log-stream run-log">
+              <div
+                v-for="(record, index) in activeRun.lines"
+                :key="index"
+                class="log-row"
+                :class="`log-${record.stream}`"
+              >
+                <span class="log-when">{{ record.at.slice(11, 19) }}</span>
+                <span class="log-message">{{ record.text }}</span>
+              </div>
+            </div>
+            <p class="caption">
+              The dashboard runs the project's own command unchanged, so this is
+              the same output the documented terminal command prints.
+            </p>
+          </template>
+
+          <p v-else-if="activeStage.available" class="table-empty">
+            This model has not been run from the dashboard yet. Run it from the
+            Campaign Optimizer's matching tab.
+          </p>
+        </div>
+      </article>
+    </template>
+
+    <!-- Provenance of whatever is currently loaded -->
+    <template v-else>
+    <p class="caption">
       Provenance of the current numbers: which run produced them, over which
       window, from which inputs.
     </p>
@@ -425,5 +540,6 @@ const flagColumns = [
         </p>
       </div>
     </article>
+    </template>
   </section>
 </template>

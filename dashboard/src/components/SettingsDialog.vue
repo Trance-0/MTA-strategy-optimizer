@@ -15,7 +15,10 @@
 import { computed, ref, watch } from "vue";
 
 import { fetchSettings, postSettings } from "../api/client.js";
+import { useDiagnostics } from "../lib/diagnostics.js";
 import { DOCS_URL, REPO_URL } from "../pages.js";
+
+const { diagnosticsOn, setDiagnostics } = useDiagnostics();
 
 const props = defineProps({
   open: { type: Boolean, default: false },
@@ -154,6 +157,29 @@ function setLevel(level) {
             <b>{{ state.status.label }}</b>
             <span>{{ state.status.detail }}</span>
           </div>
+
+          <!--
+            A view preference rather than a deployment setting, so it is
+            offered in every deployment including the published build, where
+            nothing else on this tab can be changed.
+          -->
+          <label class="toggle">
+            <input
+              type="checkbox"
+              :checked="diagnosticsOn"
+              @change="setDiagnostics($event.target.checked)"
+            />
+            <span>
+              Show data run diagnostics
+              <small>
+                Adds a Budget Manager section describing how the current data
+                run was produced — its run identifier, seed, and configuration
+                checksum. Off by default: it answers an engineering question
+                about the pipeline, not a question about the advertising
+                account.
+              </small>
+            </span>
+          </label>
 
           <template v-if="hosted">
             <div class="notice">

@@ -1342,6 +1342,77 @@ tbody tr.selected:hover {
 }
 
 /* ---------------------------------------------------------------------------
+   Stage runner
+   --------------------------------------------------------------------------- */
+
+.stage-runner {
+  display: grid;
+  gap: 12px;
+}
+
+.run-progress {
+  height: 8px;
+  border-radius: 999px;
+  background: var(--line);
+  overflow: hidden;
+}
+
+.run-progress-fill {
+  height: 100%;
+  background: var(--blue);
+  border-radius: 999px;
+  /* The width is the only thing that animates, so a phase that jumps several
+     steps at once still reads as forward motion rather than a redraw. */
+  transition: width 0.35s ease;
+}
+
+.run-progress-fill.done {
+  background: var(--green);
+}
+
+.run-progress-fill.failed {
+  background: var(--red);
+}
+
+.run-status {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.run-phase {
+  font-weight: 600;
+  font-size: 12.5px;
+  color: var(--text);
+}
+
+.run-meta {
+  font-size: 11px;
+  color: var(--sub);
+  font-variant-numeric: tabular-nums;
+}
+
+.run-log {
+  max-height: 340px;
+  /* A terminal's own reading order: the newest line is at the bottom, and the
+     stream scrolls up as it grows. */
+  background: #fbfcfe;
+}
+
+/* stderr is not necessarily failure -- many tools log progress there -- so it
+   is distinguished rather than coloured as an error. */
+.run-log .log-stderr .log-message {
+  color: var(--amber);
+}
+
+.run-log .log-meta .log-message {
+  color: var(--muted);
+  font-style: italic;
+}
+
+/* ---------------------------------------------------------------------------
    Toast
    --------------------------------------------------------------------------- */
 
@@ -1377,37 +1448,147 @@ tbody tr.selected:hover {
   }
 }
 
+/*
+ * Below the two-column breakpoint the rail becomes a bar across the top rather
+ * than a full-width navy block above the content.
+ *
+ * Stacking the rail's own vertical layout at full width was the defect: the
+ * brand, six stacked items, the status block, and the foot controls together
+ * filled most of a short viewport, so the dashboard itself began below the
+ * fold and every view opened on an empty screen. A bar keeps the same items on
+ * one or two wrapped rows and hands the rest of the height back to the
+ * content. It stays sticky, because navigation that scrolls away on a narrow
+ * screen is navigation the reader has to scroll back up to reach.
+ */
 @media (max-width: 1024px) {
   .app-shell {
     grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr;
   }
 
   .sidebar {
     width: 100%;
-    min-height: auto;
+    min-height: 0;
     max-height: none;
-    position: static;
+    position: sticky;
+    top: 0;
+    z-index: 30;
+    flex-direction: row;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0 4px;
+    padding: 0 10px;
+    border-bottom: 1px solid var(--rail-rule);
+  }
+
+  .brand {
+    height: auto;
+    border-bottom: 0;
+    border-right: 1px solid var(--rail-rule);
+    padding: 8px 12px 8px 0;
+    margin-right: 6px;
+    place-items: center start;
+    text-align: left;
+  }
+
+  /* The brand collapses to its wordmark: a 31px circle beside a horizontal bar
+     is decoration competing with the items for a scarce row. */
+  .brand .logo {
+    display: none;
+  }
+
+  .brand b {
+    margin-top: 0;
   }
 
   .nav {
-    flex-direction: column;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    padding: 6px 0;
+    overflow: visible;
+    flex: 1 1 auto;
+    gap: 2px;
   }
 
+  /* The group headings are a vertical-list affordance. In a row they read as
+     items themselves, so the grouping is carried by order alone. */
   .nav-label {
-    width: 100%;
+    display: none;
   }
 
   .nav-item {
-    width: 100%;
+    width: auto;
+    flex: 0 0 auto;
     flex-direction: row;
-    justify-content: flex-start;
+    justify-content: center;
     text-align: left;
-    min-height: 44px;
-    padding: 8px 12px;
+    min-height: 36px;
+    padding: 6px 10px;
+    gap: 7px;
+  }
+
+  .nav-item svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  .nav-item span {
+    font-size: 11.5px;
   }
 
   .side-foot {
     margin-top: 0;
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border-top: 0;
+    border-left: 1px solid var(--rail-rule);
+    padding: 6px 0 6px 10px;
+  }
+
+  .side-foot .nav-item.foot {
+    min-height: 36px;
+  }
+
+  /* The two-line source detail and the logging pill are reference information,
+     not controls; the status dot and label still say which deployment this is,
+     and Settings carries the detail. */
+  .rail-status-detail,
+  .rail-log,
+  .rail-links {
+    display: none;
+  }
+
+  .rail-status {
+    gap: 6px;
+    white-space: nowrap;
+  }
+}
+
+/*
+ * Narrower still, the item labels go and the rail becomes icons only. Six
+ * labelled items plus two foot controls cannot share a phone-width row without
+ * wrapping into the same tall block the bar exists to avoid; the title
+ * attribute and the header's own heading keep each item identifiable.
+ */
+@media (max-width: 620px) {
+  .nav-item span {
+    display: none;
+  }
+
+  .nav-item {
+    padding: 6px 8px;
+  }
+
+  .brand {
+    padding-right: 8px;
+    margin-right: 2px;
+  }
+
+  .rail-status-label {
+    display: none;
   }
 }
 
