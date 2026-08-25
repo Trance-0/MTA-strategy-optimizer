@@ -242,7 +242,7 @@ No canonical class currently embeds a `DataLineage` field. The module docstring 
 
 ### Current Source Fields
 
-`BudgetRecommendationRun` (table `budget_recommendation_run`) in the dashboard schema, described in [Dashboard Data Model](/en/market-simulation/dashboard-data-model.md#budgetrecommendationrun), carries `source_*` columns: the window, marketplace, advertiser, and SHA-256 digests of the attribution and entity input files consumed by one budget-initializer run. Separately, `modules/mta_strategy_recommendation`'s hierarchy validator computes and compares these digests via its internal `_sha256()` helper (documented in [Strategy Recommendation Module Overview](/en/strategy-recommendation/module-overview.md)) against the digests declared in `strategy_request.json`'s `source` object.
+`BudgetRecommendationRun` (table `budget_recommendation_run`) in the dashboard schema, described in [Dashboard Data Model](/en/market-simulation/dashboard-data-model.md#budgetrecommendationrun), carries `source_*` columns: the window, marketplace, advertiser, and SHA-256 digests of the attribution and entity input files consumed by one budget-initializer run. Separately, `modules/mta_strategy_recommendation`'s hierarchy validator computes and compares these digests via its internal `_sha256()` helper (documented in [Strategy Recommendation Source Files](/en/strategy-recommendation/module-overview/source-files.md)) against the digests declared in `strategy_request.json`'s `source` object.
 
 ### Canonical Conversion
 

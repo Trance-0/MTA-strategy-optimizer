@@ -4,16 +4,17 @@
 
 Marketing ROI Analysis is a validation-oriented Python workspace for historical Multi-Touch Attribution (MTA), standardized model evaluation, and explainable advertising budget initialization. It builds five-segment Amazon Marketing Cloud-style paths, compares Markov and path-level Shapley attribution, adapts four-segment MTA-SIM data to a shared model contract, and produces a deterministic Ad Group budget seed from governed attribution evidence.
 
-The workspace contains three business modules, preserved local Agent/BMad artifacts, research sources, and historical implementation records. The preserved workflow tools are reference material only and are not the Trance-0 development process or part of the model runtime.
+The workspace contains four business modules plus the shared canonical data-model foundation, preserved local Agent/BMad artifacts, research sources, and historical implementation records. The preserved workflow tools are reference material only and are not the Trance-0 development process or part of the model runtime.
 
 ## Project status
 
 **Current stage: runnable pre-production analytics and model-validation workspace.**
 
-- The attribution pipeline, standardized model interface, deterministic budget initializer, validators, and test suites are implemented and runnable.
+- The attribution pipeline, standardized model interface, deterministic budget initializer, Campaign response optimizer, strategy evaluator, validators, and test suites are implemented and runnable.
 - Markov is the official displayed attribution method; Shapley provides model-sensitivity evidence.
 - The Deep Neural Network (DNN) model in `mta_attribution` is a learned surrogate of path-level Shapley shares, not an independent causal estimator.
-- The strategy module produces an explainable initial budget with `is_optimized=false`; it does not predict marginal returns or optimize future spend.
+- The strategy initializer produces an explainable seed, while the separate Campaign response optimizer predicts marginal return and allocates future spend only where repeated budget observations support a fit.
+- Strategy evaluation projects both result shapes into one contract, checks conservation, and compares observed baselines; true optimal-allocation ground truth is not currently available.
 - Current inputs and canonical outputs are synthetic demonstration data.
 - Production Amazon Marketing Cloud privacy execution, rolling-window stability analysis, causal incrementality validation, automated activation, and online experimentation have not been completed.
 
@@ -29,8 +30,9 @@ The current results are appropriate for reproducible development, contract testi
 | Set up and run the project | [Environment setup](docs/en/introduction/environment/index.md) |
 | Run Amazon Marketing Cloud MTA attribution | [AMC MTA usage](docs/en/introduction/environment/amc-mta-usage.md) |
 | Understand the standardized model interface | [Standardized MTA interface](docs/en/attribution/standardized-interface/index.md) |
-| Generate and validate an initial Ad Group budget | [Strategy initializer](docs/en/strategy-recommendation/module-overview.md) |
-| Reproduce the current budget step by step | [Current Ad Group budget calculation](docs/en/strategy-recommendation/current-budget-calculation.md) |
+| Generate and validate an initial Ad Group budget | [Strategy initializer](docs/en/strategy-recommendation/module-overview/) |
+| Evaluate strategy outputs | [Strategy evaluation](docs/en/strategy-evaluation/) |
+| Reproduce the current budget step by step | [Current Ad Group budget calculation](docs/en/strategy-recommendation/current-budget-calculation/) |
 | Plan the research path from MTA to budget optimization | [Budget optimization problem and research plan](docs/en/strategy-recommendation/optimization-plan.md) |
 | Review the current module boundaries | [Module inventory](docs/en/reference/module-inventory.md) |
 | Review input, path, and metric contracts | [AMC data contract](docs/en/market-simulation/amc-data-contract.md) |
@@ -74,7 +76,7 @@ marketing-roi-analysis/
 │   └── mta_strategy_recommendation/  # Campaign Group and Ad Group count/budget initializer
 ├── external/
 │   └── mta_sim_dataset/              # Pinned MTA-SIM-dataset Git submodule and ZheyuanWu generator
-├── deploy/                            # Self-contained interactive Linux server deployment bundle
+├── deploy/appstack/                   # Full-stack image and Yunxiao Kubernetes orchestration
 ├── script/                            # All maintained project command-line entry points
 ├── docs/
 │   ├── en/                           # Active published English documentation
@@ -185,9 +187,12 @@ Without `--check-output`, the generator writes a newly calculated result to stan
 uv run python -X utf8 -B -m unittest discover -s modules/mta_attribution/tests -p "test_*.py"
 uv run python -X utf8 -B -m unittest discover -s modules/mta_standard/tests -p "test_*.py"
 uv run python -X utf8 -B -m unittest discover -s modules/mta_strategy_recommendation/tests -p "test_*.py"
+uv run python -X utf8 -B -m unittest discover -s modules/mta_strategy_evaluation/tests -p "test_*.py"
 ```
 
-The current suites contain 107 attribution tests, 138 standardized-interface tests, and 34 strategy tests.
+Run the canonical-data tests and backend tests from the commands in the
+[development guide](docs/en/introduction/development-guide.md). Treat the
+current results rather than historical counts as authoritative.
 
 ## Run focused validation
 
@@ -201,7 +206,7 @@ Expected results for the committed synthetic data:
 
 - The attribution pipeline detects the 90-day Amazon Ads window, rebuilds the anonymous aggregate paths, and publishes all five contract outputs.
 - All 17 Amazon Marketing Cloud and Amazon Ads five-segment touchpoints align across reporting window, account, marketplace, and currency.
-- All 279 business-module tests pass.
+- All maintained product test suites pass.
 - All 51 recommendation rows have `RELIABLE` status.
 - The strategy initializer reproduces and validates the committed budget seed.
 
@@ -223,22 +228,24 @@ npm run build
 
 English is the active published language. Detailed Chinese sources under `docs/zh/` are preserved but excluded from the current site build.
 
-## Deploy the dashboard to a team server
+## Deploy the full stack with Yunxiao AppStack
 
-The ignored `deploy/.env` in this checkout has been populated from the project-root `.env`. The existing Gitea repository username and password were mapped to `GITEA_USERNAME` and `GITEA_TOKEN`, the PostgreSQL settings were copied, and a new GitHub webhook secret was generated. Review the non-secret addresses and ports before transfer. For the strongest Gitea setup, replace an account password with a repository-scoped, read-only access token.
+Production is a single container: a Node build stage creates the Vue assets,
+then a Python runtime serves those assets and every `/api` route through Flask
+and Gunicorn. Build from the repository root with
+`deploy/appstack/Dockerfile`, push the image to Alibaba Cloud Container
+Registry, and import `deploy/appstack/orchestration.yaml` into Alibaba Cloud
+Yunxiao AppStack.
 
-Transfer only `deploy/run.sh` and the hidden `deploy/.env` into one directory on an `apt`- or `dnf`-based Linux server over Secure Copy Protocol (SCP), Secure File Transfer Protocol (SFTP), or another protected administrative channel. `run.sh` embeds and generates every runtime helper and directory. Do not commit the real environment file or send it through chat or email. Then run:
+Use **Extract Placeholders** in AppStack and bind the values at the environment
+level. `deploy/appstack/values.example.yaml` lists safe examples; set the real
+PostgreSQL password as a private AppStack variable and never put it in a file,
+image, or build log. The orchestration creates the ConfigMap, Secret,
+Deployment, Service, health probes, and authenticated TLS Ingress.
 
-```bash
-cd /path/to/uploaded/deploy
-sudo bash run.sh
-```
-
-The interface requires only Up, Down, and Enter. Choose **Install or update** for the first deployment. Generated configuration, runtime helpers, releases, and state are kept together below `deploy/installation/`. The same menu can show status, start or restart the services, stop them without disabling automatic startup, terminate stale processes proven to belong to this deployment, remove only the `systemd` definitions while preserving data, or perform a separately confirmed full uninstall. Cleanup never kills by port or generic process name. Full uninstall removes the generated `installation/` directory, system integrations, recorded traversal access, and service account; it retains shared dependencies, the uploaded source bundle, and `.env`.
-
-Installation detects occupied ports above 8000, displays progress while downloading pinned prerequisites, and shows phase transitions plus an estimated-time progress bar while the worker pulls and verifies Gitea, runs `npm ci`, tests, builds, activates, and health-checks the dashboard. The estimates are reference durations for a project of this scale; the journal command printed beside the bar exposes detailed Git and npm output. The installer enables three `systemd` services and prints the dashboard address plus exact GitHub webhook settings. Service removal and full uninstall also display progress; project-tree deletion is measured from the exact entries beneath the approved roots and never follows symbolic links. Configure the GitHub repository webhook only after an HTTPS reverse proxy or other secure ingress makes the webhook listener reachable. Use `application/json`, the printed endpoint, push events only, and the protected secret stored below `deploy/installation/config/` at the exact path printed by the installer.
-
-GitHub supplies the event while Gitea supplies the code. The worker tolerates the expected mirror delay but will not build merely because the commit exists somewhere in Gitea: it fetches the configured Gitea branch and requires its resolved tip to equal the queued GitHub `after` commit exactly. See [Running Locally and Publishing](docs/en/dashboard/deployment.md) for the security, rollback, and lifecycle contract.
+See [Backend Setup and Deployment](docs/en/introduction/backend/setups.md) for
+local startup, every placeholder, required Kubernetes Secrets and storage,
+and the full Alibaba validation sequence.
 
 ## Runtime outputs
 

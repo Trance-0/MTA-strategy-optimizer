@@ -1,0 +1,90 @@
+"""Dashboard snapshot contract and JavaScript parity tests.
+
+These tests keep the Flask response at the exact shape the unchanged Vue
+client and the static exporter already consume.
+"""
+
+from __future__ import annotations
+
+import os
+import unittest
+from unittest.mock import patch
+
+from backend.api import dashboard as dashboard_api
+from backend.app import create_app
+from backend.repository import snapshot
+from backend.repository.master_data import derive_master_data
+
+
+EXPECTED_KEYS = {
+    "mode",
+    "source",
+    "adsDaily",
+    "attributionResults",
+    "comparisonTouchpoints",
+    "comparisonSummary",
+    "recommendedAttribution",
+    "entityBridge",
+    "pathReport",
+    "budgetRecommendation",
+    "campaignStrategy",
+    "strategyRequest",
+    "candidatePool",
+    "simulationResearch",
+    "strategyEvaluation",
+}
+
+
+class SnapshotContractTests(unittest.TestCase):
+    """Exercise the whole local-file snapshot through HTTP."""
+
+    @classmethod
+    def setUpClass(cls) -> None:
+        cls.environment = patch.dict(os.environ, {"DATABASE": "false"})
+        cls.environment.start()
+        snapshot.clear_caches()
+        cls.client = create_app().test_client()
+
+    @classmethod
+    def tearDownClass(cls) -> None:
+        snapshot.clear_caches()
+        cls.environment.stop()
+
+    def test_dashboard_has_the_complete_client_contract(self) -> None:
+        response = self.client.get("/api/dashboard")
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.get_json()
+        self.assertEqual(set(payload), EXPECTED_KEYS)
+        self.assertEqual(len(payload["adsDaily"]), 1530)
+        self.assertEqual(len(payload["attributionResults"]), 34)
+        self.assertEqual(len(payload["pathReport"]), 153)
+        self.assertEqual(len(payload["simulationResearch"]), 13)
+
+    def test_reload_clears_the_snapshot_cache(self) -> None:
+        with patch.object(dashboard_api, "clear_caches") as clear:
+            response = self.client.post("/api/reload")
+
+        self.assertEqual(response.status_code, 200)
+        clear.assert_called_once_with()
+
+    def test_zero_base_impressions_are_not_reported_as_missing(self) -> None:
+        catalogue = derive_master_data(
+            [
+                {
+                    "touchpoint": "AMAZON_DSP:AUDIO:UNSPECIFIED:UNSPECIFIED:IMPRESSION",
+                    "impressions": 0,
+                    "clicks": 0,
+                    "cost": 0,
+                    "cost_type": "CPM",
+                    "currency": "USD",
+                }
+            ],
+            [],
+        )
+
+        self.assertEqual(catalogue["touchpoints"][0]["base_impressions"], 0)
+
+
+if __name__ == "__main__":
+    unittest.main()

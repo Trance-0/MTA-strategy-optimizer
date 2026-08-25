@@ -1,5 +1,5 @@
 /**
- * Derive the master-data catalogue from the committed platform reports.
+ * Preserve the former Node master-data derivation as a parity fixture.
  *
  * The Budget Manager's entity sections -- Ad Providers, Products, Campaigns,
  * Ad Groups, Touchpoints, Product Economics -- describe the account the
@@ -16,8 +16,11 @@
  * stays null rather than being invented, and the interface renders it as
  * missing.
  *
- * Data flow:
- *     modules/&#42;/data/simulated/&#42;.csv -> here -> server/data_source.js
+ * Runtime requests use `backend/repository/master_data.py`. This implementation
+ * remains the cross-language reference imported by `server/data_source.js`.
+ *
+ * Parity-test flow:
+ *     committed reports -> here -> server/data_source.js -> dashboard/tests
  */
 
 /** Sum a numeric column across rows, treating blanks as zero. */

@@ -33,6 +33,7 @@ const EMPTY = {
   pathReport: [],
   budgetRecommendation: {},
   campaignStrategy: {},
+  strategyEvaluation: {},
   strategyRequest: {},
   candidatePool: {},
   simulationResearch: {

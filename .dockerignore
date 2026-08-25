@@ -1,0 +1,26 @@
+# Keep the AppStack build context deterministic and credential-free.
+.git
+.github
+.agents
+.agent-scratch
+_bmad
+_bmad-output
+docs
+external
+.env
+.env.*
+deploy/.env
+node_modules
+**/node_modules
+dist
+**/dist
+dist-static
+**/dist-static
+__pycache__
+**/__pycache__
+*.pyc
+.venv
+coverage
+**/coverage
+.vitepress
+**/.vitepress

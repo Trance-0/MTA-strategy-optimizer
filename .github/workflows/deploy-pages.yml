@@ -5,7 +5,7 @@ name: Deploy dashboard and documentation to GitHub Pages
 #   /       the Vue dashboard, built for a static host
 #   /docs/  the VitePress documentation site
 #
-# Pages serves static files and cannot run the dashboard's Express API, so the
+# Pages serves static files and cannot run the dashboard's Flask API, so the
 # published client is built in static mode and reads a snapshot exported from
 # the committed artifacts at build time. It is the same client source the local
 # run serves. The documentation is built with its base path pointing at the
@@ -52,6 +52,19 @@ jobs:
             docs/package-lock.json
             dashboard/package-lock.json
 
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          version: "0.12.2"
+
+      - name: Install backend dependencies
+        run: uv sync --frozen --extra backend
+
       - name: Install documentation dependencies
         working-directory: docs
         run: npm ci
@@ -63,7 +76,7 @@ jobs:
       # The snapshot is exported from the committed CSV and JSON artifacts, not
       # from a database: a static host has no socket to reach PostgreSQL with,
       # and a snapshot exported from one would bake a private deployment's data
-      # into a public artifact. `export_dashboard_snapshot.mjs` pins file mode
+      # into a public artifact. `export_dashboard_snapshot.py` pins file mode
       # and refuses to write anything read from a database.
       - name: Build the dashboard for a static host
         working-directory: dashboard

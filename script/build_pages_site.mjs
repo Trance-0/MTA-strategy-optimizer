@@ -4,13 +4,13 @@
  *
  * Pages serves static files only, so the published dashboard is the Vue client
  * built in static mode: it fetches `data/snapshot.json`, exported from the
- * committed artifacts at build time, instead of the Express API. The client
+ * committed artifacts at build time, instead of the Flask API. The client
  * source is the same one the local run serves — the published build is a
  * different data path, never a different codebase.
  *
  * Run it after both builds:
  *
- *   node script/export_dashboard_snapshot.mjs
+ *   uv run --extra backend python -m script.export_dashboard_snapshot
  *   cd dashboard && npm run build:static && cd ..
  *   cd docs && DOCS_BASE_PATH=/<repo>/docs/ npm run build && cd ..
  *   node script/build_pages_site.mjs
@@ -74,7 +74,8 @@ const snapshot = resolve(dashboardBuild, "data", "snapshot.json");
 if (!existsSync(snapshot)) {
   fail(
     "The static build carries no data/snapshot.json. Run " +
-      "`node script/export_dashboard_snapshot.mjs` before building the client.",
+      "`uv run --extra backend python -m script.export_dashboard_snapshot` " +
+      "before building the client.",
   );
 }
 

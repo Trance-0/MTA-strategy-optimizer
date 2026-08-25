@@ -1,17 +1,17 @@
 /**
- * The settings module behind the foot of the navigation rail.
+ * Preserve the former Node settings module as a parity fixture.
  *
- * Holds the two things a reader may need to change without editing files: the
- * database credentials this dashboard connects with, and whether data access
- * is logged while it streams.
+ * Runtime requests use `backend/services/settings.py`. The JavaScript
+ * regression suite retains this implementation to compare environment-file,
+ * credential-redaction, and bounded-log behavior during migration.
  *
  * Credentials are written to `.env` at the repository root, which is
  * git-ignored. Nothing here writes a credential to a tracked file, to the API
  * response, or to the log: `config.safeSummary()` is the only rendering of a
  * connection, and it omits the password by construction.
  *
- * Data flow:
- *     the settings dialog -> POST /api/settings -> here -> .env -> config.js
+ * Parity-test flow:
+ *     dashboard/tests -> server/index.js -> here -> temporary .env
  */
 
 import { existsSync, readFileSync, writeFileSync } from "node:fs";

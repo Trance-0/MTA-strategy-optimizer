@@ -41,6 +41,15 @@
 - When reviewing or authoring any page, treat a table that is not a two-item comparison as a defect. Convert each row into its own heading with that row's content underneath it, rather than trimming or reformatting the table.
 - `docs/en/introduction/data-models/` carries a stricter, page-specific rule: no tables at all, including comparison tables. That rule is a narrower subset of this one and takes precedence within that directory.
 
+## Documentation file length
+
+- No markdown file under `docs/en/`, `docs/version/`, `docs/worklog/`, or the repository root may exceed **500 lines**. The limit is a hard ceiling, not a target: a page approaching it is already saying too much for one reader to hold.
+- When a page would exceed 500 lines, do not compress it and do not delete content. Convert it into a directory: keep its `index.md` as the parent page that introduces the subject and states how the parts fit together, then give each component its own file beside it, and let the parent introduce each one in a sentence that links to it.
+- Split on the page's own second-level (`##`) sections, because those are the boundaries the author already drew. A section that is itself too long splits again the same way, one directory deeper.
+- The parent `index.md` is an introduction, not a table of contents: it must state what the subject is and why the components divide the way they do, so a reader who stops there still understands the whole.
+- Every split file carries its own `compact` frontmatter, and the parent's `compact` describes the subject rather than listing the children. `source_files` moves to whichever child owns that code, not to the parent.
+- `docs/zh/` is exempt: those pages are preserved sources under the language policy above and must not be restructured.
+
 ## Script placement
 
 - Keep every maintained project command-line entry point in the project-root `/script` directory. Its contents are tracked product code.
@@ -71,7 +80,7 @@
 - `modules/mta_attribution/` — path building, every concrete attribution model, the shared attribution-model interface, and model comparison.
 - `modules/mta_standard/` — framework-only MTA-SIM loading, four-to-five segment adaptation, model registration, execution, output validation, and evaluation. Do not place concrete attribution mathematics here.
 - `modules/mta_strategy_recommendation/` — the Campaign Group Ad Group count and budget initializer.
-- `modules/mta_strategy_evaluation/` — specified in `docs/en/strategy-evaluation/` but not yet implemented. The directory is an empty placeholder; build it to the documented specification rather than treating the absent code as the current design.
+- `modules/mta_strategy_evaluation/` — the shared StrategyOutput contract, artifact projections, evaluation episodes and layers, contributed-model adapters, and contributor-owned code under separate `contrib/<model>/` folders. Name a `contrib/` folder after the kind of model it holds (`mlp`, `classical`), never after its author: a contribution can change hands, and a path cited by code, tests, and documentation must not have to be renamed when it does. Authorship belongs in `docs/worklog/` and in Git history.
 - Use `snake_case` for every directory and Python file. Hyphens are not valid in Python module names, and `modules.mta_strategy_recommendation.src` is imported as a real package path.
 - Name a file after what it contains: one attribution model per `*_attribution_model.py` file, shared contracts in `*_contract.py`.
 - Start every Python file with a module docstring stating what the file does and where it sits in the data flow.
@@ -100,6 +109,7 @@
 - Never compact, merge, or summarize older version pages to save space. Every patch keeps its own full page permanently. Manage sidebar length with structure instead: group each minor version's patches into its own folder (`docs/version/0.9/`, `docs/version/0.8/`, ...), collapsed by default, with that minor version's base release as the folder's `index.md`. Keep only the most recent few patches (currently the latest four) as flat pages at the top of `docs/version/`, outside any folder.
 - Give every version page a distinct `order` frontmatter value that sorts newest-first; do not let pages tie on `order`, since `sortMenusByFrontmatterOrder` falls back to alphabetical sorting on a tie and `"0.9.10"` sorts before `"0.9.2"` as a string.
 - Commit messages should summarize the same change set recorded on the version page. Do not create an undocumented commit, including documentation-only and workflow-only commits.
+- Keep a commit message no longer than the work-log entry it accompanies: **at most 300 words, and at most three sentences summarizing the change set** for that version or patch. The version page is where a change is explained in full; the commit message says which change it is. When three sentences cannot hold the change set, the commit is doing too much and should be split, not the sentence limit stretched.
 
 ## Work log
 

@@ -3,10 +3,9 @@ rem
 rem Start the dashboard locally on Windows.
 rem
 rem One click from a clean clone: this checks the toolchain, installs the
-rem dependencies, builds the client, and starts the server that serves both the
-rem JSON API and that client. Nothing needs to be installed beforehand except
-rem Node.js itself, and the script says exactly how to get it when it is
-rem missing.
+rem dependencies, builds the client, and starts Flask to serve both the JSON
+rem API and that client. Node.js and uv must be installed; failures name the
+rem missing tool before changing the checkout.
 rem
 rem Reads `.env` at the repository root for the data source. Copy `sample.env`
 rem to `.env` and set DATABASE=true with the PG_* values to read the PostgreSQL
@@ -195,6 +194,17 @@ for /f "delims=" %%v in ('node -v') do set "NODE_VERSION=%%v"
 for /f "delims=" %%v in ('npm -v') do set "NPM_VERSION=%%v"
 echo         node %NODE_VERSION%, npm %NPM_VERSION%
 
+set "FAILED_STEP=uv is not installed"
+where uv >nul 2>&1
+if errorlevel 1 (
+  call :banner "uv is not installed"
+  echo   The Flask backend uses the repository's locked Python environment.
+  echo   Install uv from:
+  echo       https://docs.astral.sh/uv/getting-started/installation/
+  goto report
+)
+for /f "delims=" %%v in ('uv --version') do echo         %%v
+
 rem ---------------------------------------------------------------------------
 rem 2. Configuration
 rem ---------------------------------------------------------------------------
@@ -236,13 +246,13 @@ rem ---------------------------------------------------------------------------
 echo.
 echo [3/4] Checking the dependencies
 
-rem `express` standing in for the whole tree: an interrupted install leaves
+rem `vite` standing in for the client tree: an interrupted install leaves
 rem node_modules present but incomplete, and testing only for the directory
 rem would then skip the repair.
 set "FAILED_STEP=dependency installation"
 set "NEEDS_INSTALL=0"
 if not exist "%DASHBOARD_DIR%\node_modules" set "NEEDS_INSTALL=1"
-if not exist "%DASHBOARD_DIR%\node_modules\express" set "NEEDS_INSTALL=1"
+if not exist "%DASHBOARD_DIR%\node_modules\vite" set "NEEDS_INSTALL=1"
 
 rem npm is run from the dashboard directory rather than pointed at it with
 rem `--prefix`, because `--prefix` sets where `node_modules` is written but not
@@ -273,6 +283,17 @@ if "%NEEDS_INSTALL%"=="1" (
 ) else (
   echo         Already installed.
 )
+
+set "FAILED_STEP=backend dependency installation"
+uv sync --extra backend >>"%LOG_FILE%" 2>&1
+if errorlevel 1 (
+  call :banner "Backend dependency installation failed"
+  echo   uv could not install the locked Flask backend environment.
+  echo   Run this command for the complete diagnostic:
+  echo       uv sync --extra backend
+  goto report
+)
+echo         Backend dependencies ready.
 
 rem ---------------------------------------------------------------------------
 rem 4. Client build
@@ -326,8 +347,9 @@ echo ------------------------------------------------------------
 echo   Dashboard starting on http://localhost:%PORT%
 echo ------------------------------------------------------------
 
-if "%OPEN_BROWSER%"=="1" set "DASHBOARD_OPEN=1"
-node "%DASHBOARD_DIR%\server\index.js" %PORT%
+set "BACKEND_PORT=%PORT%"
+set "DASHBOARD_OPEN=%OPEN_BROWSER%"
+uv run --extra backend python -m backend.app
 set "EXIT_CODE=%ERRORLEVEL%"
 
 rem A server that never started -- an occupied port is the usual reason --
@@ -381,6 +403,9 @@ echo     commit         : %COMMIT%
 echo     os             : %OS% %PROCESSOR_ARCHITECTURE%
 echo     node           : %NODE_REPORT%
 echo     npm            : %NPM_REPORT%
+set "UV_REPORT=not installed"
+for /f "delims=" %%v in ('uv --version 2^>nul') do set "UV_REPORT=%%v"
+echo     uv             : %UV_REPORT%
 echo     port requested : %PORT%
 echo     failed step    : %FAILED_STEP%
 if exist "%LOG_FILE%" (

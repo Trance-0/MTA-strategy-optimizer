@@ -1,7 +1,7 @@
 ---
 title: Zheyuan Wu (Trance-0)
 description: Project manager work log covering pipeline development, integration, and algorithm testing
-compact: "Work log of Trance-0 (Zheyuan Wu), project manager: Multi-Touch Attribution Simulator (MTA-SIM) integration, research-scale persistence, module restructuring, specification-oriented documentation, Vue dashboard delivery, public release, GitHub Pages, and Gitee plus self-hosted Gitea mirroring."
+compact: "Work log of Trance-0 (Zheyuan Wu), project manager: MTA-SIM integration, attribution and strategy pipelines, strategy evaluation, canonical data models, persistence, specification-oriented documentation, Vue and Flask dashboard delivery, GitHub Pages, and deployment automation."
 order: 10
 lang: en-US
 ---
@@ -11,9 +11,36 @@ lang: en-US
 > Project: Marketing ROI Analysis
 > Handle: `Trance-0`
 > Role: Project manager — pipeline development, data simulation and integration, algorithm testing
-> Last updated: 2026-08-21
+> Last updated: 2026-08-25
 
 Entries are reconstructed from Git history. They record the change set behind each commit, not a separate narrative.
+
+---
+
+## 2026-08-25
+
+### Completed
+
+- Audited the strategy-evaluation module against its specification and fixed the naming defect it turned up: `contrib/` folders were named after their authors, so renamed them `mlp` and `classical` after the kind of model each holds. A person's name is the wrong identifier for a path that code, tests, documentation, and the report schema all cite, because a contribution can change hands; the report field `contributor` became `contrib_folder` for the same reason, and authorship stays in the work log and Git history. All 19 contributed files stayed `R100` renames.
+- Deleted an untracked, un-ignored second copy of the contribution sitting under `docs/zh/strategy-evaluation/asin-gmv-nn/`, which the next `git add -A` would have committed — compared it file by file first, every one matching. Fixed two defects the audit found: the artifact emitted a Windows-separator path, breaking its own determinism guarantee, and the contributed-model page claimed a 19-column design matrix where canonical mode builds 18, since the market indicator is sized by the marketplaces present.
+- Corrected stale status claims across the documentation: the introduction called the strategy optimizer unimplemented, the progress page still listed the delivered response model and optimizer as todo, and the data-model page said no `EvaluationEpisode` consumer existed. Updated the two contributors' Scope lines, which still described the module as an empty placeholder, at the project manager's direction.
+
+### Next
+
+- Ask Yi Liu and Tianle Chen to record their own first dated entries; the Scope corrections were made on their behalf and their pages otherwise remain theirs.
+
+---
+
+## 2026-08-24
+
+### Completed
+
+- Built the strategy-evaluation module from its English specification: one `StrategyOutput` contract for both recommendation artifacts, conservation and observed-baseline layers, explicit unavailable ground truth, isolated `contrib/` folders holding each contribution verbatim, and a project adapter that runs the unchanged budget-to-revenue networks while retaining their negative held-out fit as a blocking caveat.
+- Added the train-on-demand `evaluate_strategies.py` stage, its deterministic ignored report, Flask job and snapshot integration, dashboard and JavaScript parity updates, and the matching glossary, module inventory, backend, dashboard, command, version, and contributor-boundary documentation. Verified 590 Python tests, 61 dashboard tests, both production builds, and the end-to-end contributed-model refusal on the current insufficient panel.
+
+### Next
+
+- Add a dashboard report view for `strategyEvaluation`, and obtain a research snapshot whose observed Campaign identifiers overlap the deterministic seed before interpreting its baseline layer.
 
 ---
 

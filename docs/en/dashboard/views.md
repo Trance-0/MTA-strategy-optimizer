@@ -1,6 +1,6 @@
 ---
 title: Dashboard Views and Visual Contract
-compact: "Six Vue views and shared components: deployment capability drives accent and data operations, canonical entities render as paged selectable tables with confirmed deletion, the entity catalogue derived from committed reports, market-performance wording with diagnostics behind a preference, per-model tabs that run the real pipeline scripts with streamed logs and phase progress, presentation-only similarity, read-only attribution, chart/table accessibility, and SettingsDialog behavior."
+compact: "Visual contract for six Vue views and shared components: capability-driven theming, paged entity lists, diagnostics, pipeline controls, model tabs, accessibility, and empty/read-only states. Legacy `dashboard/server` jobs and master-data modules remain only as JavaScript parity fixtures."
 lang: en-US
 source_files: dashboard/src/theme.js, dashboard/src/style.css, dashboard/src/lib/deployment.js, dashboard/src/lib/diagnostics.js, dashboard/src/lib/useJobs.js, dashboard/server/jobs.js, dashboard/server/master_data.js, dashboard/src/views/CommandCenter.vue, dashboard/src/views/BudgetManager.vue, dashboard/src/views/Campaigns.vue, dashboard/src/views/CampaignOptimizer.vue, dashboard/src/views/OptimizationLog.vue, dashboard/src/views/KnowledgeBase.vue, dashboard/src/components/SidebarNav.vue, dashboard/src/components/TopBar.vue, dashboard/src/components/SettingsDialog.vue, dashboard/src/components/StageRunner.vue, dashboard/src/components/PlotlyChart.vue, dashboard/src/components/DataTable.vue, dashboard/src/components/EntityTable.vue, dashboard/src/components/ConfirmDialog.vue, dashboard/src/components/TableView.vue, dashboard/src/components/MetricRow.vue, dashboard/src/components/KeyValuePanel.vue, dashboard/src/components/ReliabilityBanner.vue, dashboard/src/lib/common.js
 ---
@@ -95,9 +95,13 @@ Running a stage writes new outputs, so it is refused wherever the deployment can
 
 Options are validated at the same boundary: a date must be a plain ISO date, a total budget a positive number, and a budget usage policy one the `BudgetUsagePolicy` enum declares. Arguments are passed as a vector with `shell: false`, never as a string a shell would re-parse.
 
-### The unbuilt stage is declared, not hidden
+### Strategy evaluation runs as the fourth stage
 
-`modules/mta_strategy_evaluation/` and `script/evaluate_strategies.py` do not exist yet. The evaluation stage is therefore declared with `script: null` and an explicit reason, and its tab explains the gap and points at the attribution model evaluation that does exist in `modules/mta_standard/src/evaluation.py`. A missing tab would read as a dashboard defect; a named unbuilt stage reads as the roadmap it is.
+The evaluation tab starts `script/evaluate_strategies.py` through the same job
+runner as attribution and optimization. The script projects both strategy
+artifacts, checks conservation, compares only allocations whose Campaigns are
+observed, and publishes `strategyEvaluation`. The current view explains those
+layers and exposes the run; it does not yet render the report fields.
 
 ## Reliability is never a footnote <span class="status-label status-verified" aria-label="Verified"></span>
 
@@ -165,22 +169,28 @@ Source: `dashboard/src/lib/useJobs.js`
 - Dependencies: Vue's reactivity, `src/api/client.js`, and `src/lib/useDashboard.js`.
 - Verification: `dashboard/tests/dashboard.test.js` covers the server contract this module polls — `GET /api/jobs`, the refusals, and the progress shape. The store itself, its poll scheduling, and its stop-when-idle rule are exercised in a real browser against a running stage.
 
-### `server/jobs.js`
+### Legacy parity harness: `server/jobs.js`
 
 Source: `dashboard/server/jobs.js`
 
-- Responsibility: Run one pipeline stage as its own documented command and keep its output where the client can poll it.
+- Responsibility: Preserve the former Node pipeline-job behavior for the
+  JavaScript regression suite. Runtime requests use the Flask jobs service
+  specified in [Backend Jobs and Settings](/en/introduction/backend/operations).
 - Inputs: A stage key, the validated run options, and `server/config.js` for the repository root and the configured research snapshot.
 - Outputs: `STAGES`, `STAGE_KEYS`, `activeJob()`, `jobsState()`, `startRefusal()`, `normalizeOptions()`, `startJob()`, and `stopJob()`.
 - Behavior contract: **No stage is reimplemented here.** `STAGES` names the script each stage runs, and the arguments are the documented ones, so a run started from the dashboard and one started in a terminal cannot diverge. Attribution runs `run_pipeline.py` rather than `run_attribution_models.py`, because the pipeline script rebuilds the path report first and publishes all five outputs together, which is what keeps a failed run from leaving half a result. Each stage's `phases` are regexes matched against the script's own stdout and applied only when `phase.at > job.percent`, so the bar is monotonic and a later line naming an earlier stage never walks it backwards. `normalizeOptions()` is the only path from a request body to an argument: dates must match `YYYY-MM-DD` and be ordered, a total budget must be a positive finite number, and a budget usage policy must be one `BudgetUsagePolicy` declares — the list is pinned to `modules/mta_common/src/enums.py` by test, because an unrecognized value would reach argparse's `choices` and fail the run only after it had started. `spawn` is called with an argument vector and the default `shell: false`, never a command string. `startRefusal()` checks every reason **before** anything is spawned, so a refusal never leaves a half-started run behind, and each reason names its remedy; a missing `uv` is reported as the specific remedy rather than as a bare `ENOENT`. The log buffer is bounded at 600 lines and the dropped count is reported rather than hidden, so a truncated log never reads as a complete one. Only a successful run fires `onFinish`, because only a successful run changed what the dashboard reads.
 - Dependencies: Node's `child_process`, `fs`, and `path`, plus `server/config.js`.
-- Verification: `dashboard/tests/dashboard.test.js`, which covers option validation including a shell-metacharacter date, the policies against the enum, the refusal paths for an unavailable and an unknown stage, the monotonic advance, and that every declared phase pattern matches a line the scripts actually print. Exercised end to end against a narrowed attribution run.
+- Verification: `dashboard/tests/dashboard.test.js`, which covers option
+  validation including a shell-metacharacter date, policies against the enum,
+  unavailable and unknown stages, monotonic progress, and phase patterns.
 
-### `server/master_data.js`
+### Legacy parity harness: `server/master_data.js`
 
 Source: `dashboard/server/master_data.js`
 
-- Responsibility: Derive the entity catalogue — Ad Providers, Products, Campaigns, Ad Groups, Touchpoints, Product Economics — from the committed platform reports.
+- Responsibility: Preserve the former Node entity-catalogue derivation for
+  cross-language parity tests. Runtime requests use
+  `backend/repository/master_data.py`.
 - Inputs: The daily platform report rows and the entity aggregate rows, plus the strategy request when one is present.
 - Outputs: `deriveMasterData(adsRows, bridgeRows, strategyRequest)`, consumed by `server/data_source.js`.
 - Behavior contract: **Derivation rather than a second tracked file.** A catalogue committed beside the reports would be free to disagree with them; one read out of the reports cannot. Because the reports are tracked, every deployment populates its entity sections without any optional sidecar being configured. A field the reports do not carry — a Product's category, a unit price, a Campaign's baseline budget — stays `null` rather than being invented, and the interface renders it as missing. `UNSPECIFIED` is the pipeline's marker for a segment the platform does not report and is mapped back to `null`, so the interface shows it as absent rather than as a literal value the account uses. `distinct()` preserves first-seen order, so a catalogue's row order is stable across reloads.

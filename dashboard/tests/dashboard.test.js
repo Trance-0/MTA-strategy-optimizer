@@ -957,17 +957,13 @@ test("progress only ever moves forward", async () => {
   assert.match(jobs, /phase\.at > job\.percent/);
 });
 
-test("a stage that cannot run says why, rather than failing when started", () => {
+test("the evaluation stage is runnable and refusals happen before spawn", () => {
   const { stages } = jobsState();
-  // The evaluation layer is specified but not built. Declaring it with the
-  // reason keeps three tabs honest: a missing tab reads as a dashboard defect,
-  // a named unbuilt stage reads as the roadmap it is.
-  assert.equal(stages.evaluation.available, false);
-  assert.match(stages.evaluation.unavailableReason, /not yet built/);
-  assert.match(stages.evaluation.unavailableReason, /mta_strategy_evaluation/);
+  assert.equal(stages.evaluation.available, true);
+  assert.equal(stages.evaluation.script, "script/evaluate_strategies.py");
   assert.equal(stages.attribution.available, true);
 
-  assert.equal(startRefusal("evaluation", { writable: true }).code, "stage_unavailable");
+  assert.equal(startRefusal("evaluation", { writable: true }), null);
   assert.equal(startRefusal("nonsense", { writable: true }).code, "unknown_stage");
   // Running writes new outputs, so a deployment that reads committed files
   // refuses before anything is spawned rather than failing partway.

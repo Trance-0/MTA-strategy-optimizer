@@ -1,6 +1,6 @@
 ---
 title: Development and Verification Guide
-compact: "Runnable commands for the pipeline, the three module test suites, and strategy validation, plus environment requirements and change principles. Read when you need to execute or verify the project."
+compact: "Runnable commands for the pipeline, canonical data, attribution, standard, recommendation, strategy-evaluation, backend, and dashboard test suites, plus strategy validation and change principles. Read when executing or verifying the project."
 lang: en-US
 ---
 
@@ -30,15 +30,21 @@ Attribution outputs are written under `modules/mta_attribution/outputs/attributi
 
 Five CSV files are retained as the canonical model/governance outputs. Other generated output is excluded by `.gitignore`.
 
-## Run Business Tests
+## Run Product Tests
 
 ```bash
-python -X utf8 -B -m unittest discover -s modules/mta_attribution/tests -t . -p 'test_*.py'
-python -X utf8 -B -m unittest discover -s modules/mta_standard/tests -t . -p 'test_*.py'
-python -X utf8 -B -m unittest discover -s modules/mta_strategy_recommendation/tests -t . -p 'test_*.py'
+uv run python -X utf8 -B -m unittest discover -s modules/mta_common/tests -t . -p 'test_*.py'
+uv run python -X utf8 -B -m unittest discover -s modules/mta_attribution/tests -t . -p 'test_*.py'
+uv run python -X utf8 -B -m unittest discover -s modules/mta_standard/tests -t . -p 'test_*.py'
+uv run python -X utf8 -B -m unittest discover -s modules/mta_strategy_recommendation/tests -t . -p 'test_*.py'
+uv run python -X utf8 -B -m unittest discover -s modules/mta_strategy_evaluation/tests -t . -p 'test_*.py'
+uv run --extra backend python -X utf8 -B -m unittest discover -s backend/tests -t . -p 'test_*.py'
+Set-Location dashboard
+npm test
 ```
 
-The migration-source audit recorded 107 passing tests. Always treat the current test run, rather than that historical count, as ground truth.
+Always treat the current test run, rather than a historical count in a release
+note, as ground truth.
 
 ## Validate the Campaign Group Initial-Strategy Sample
 

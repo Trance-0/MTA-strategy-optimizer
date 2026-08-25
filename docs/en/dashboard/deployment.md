@@ -1,172 +1,120 @@
 ---
 title: Running Locally and Publishing
-compact: "Dashboard deployment contract: local launchers, static publishing, and deploy/run.sh lifecycle with verified embedded helpers, phase-aware build estimates, measured uninstall progress, script-local installation, private-parent traversal, bounded Gitea diagnostics, exact-commit releases, rollback, and cleanup."
+compact: "Dashboard delivery contract: Bash and Windows launchers build Vue then start Flask, Vite hot reload proxies `/api`, static publishing exports Flask's file-mode snapshot through Python, GitHub Pages assembles dashboard and English documentation, and production uses the Yunxiao AppStack image and orchestration."
 lang: en-US
-source_files: dashboard/index.html, dashboard/vite.config.js, dashboard/run.sh, dashboard/run.bat, deploy/run.sh, deploy/runtime/enqueue_deploy.sh, deploy/runtime/deploy_worker.sh, script/build_pages_site.mjs, script/export_dashboard_snapshot.mjs
+source_files: dashboard/index.html, dashboard/vite.config.js, dashboard/run.sh, dashboard/run.bat, script/build_pages_site.mjs, script/export_dashboard_snapshot.py
 ---
 
 # Running Locally and Publishing
 
-## Running It Locally <span class="status-label status-verified" aria-label="Verified"></span>
+## Running Locally
 
 ```bash
 ./dashboard/run.sh          # macOS, Linux, Git Bash
 dashboard\run.bat           # Windows
 ./dashboard/run.sh 8600     # a different port
-./dashboard/run.sh --help   # the full banner
+./dashboard/run.sh --help   # complete usage
 ```
 
-Nothing needs to be installed beforehand except Node.js. Both launchers take an optional port, resolve the repository root themselves so they work from any directory, and then work through four named steps: the toolchain, the configuration, the dependencies, and the client build. They check Node against Vite's engine range, `^20.19.0 || >=22.12.0`; they copy `sample.env` to `.env` when none exists, so a fresh clone starts in file mode rather than failing on a missing variable, and never overwrite an existing one; and they install and build only when what those steps produce is absent, so a warm checkout starts immediately. Reading the PostgreSQL mirror is a matter of setting `DATABASE=true` and the `PG_*` values in `.env`; nothing about the command changes.
+The launchers require Node.js in Vite's supported range and `uv`. They resolve
+the repository root, copy `sample.env` to `.env` only when absent, install the
+locked Node and Flask dependencies, build `dashboard/dist`, and start
+`backend.app`. The backend serves the Application Programming Interface (API)
+and built client on one port. `--rebuild` removes only the generated client
+build before rebuilding it.
 
-Every failure names what went wrong, what to do about it, and the environment facts a bug report needs — version, commit, operating system, Node, npm, requested port, failed step, and the last twenty lines of the install or build output, which is otherwise hidden so a successful run stays quiet.
+For client hot reload, start Flask from the repository root and Vite from
+`dashboard/`:
 
-For client work, `npm run dev` in `dashboard/` serves the sources through Vite with hot reload and proxies `/api` to the Express server, which must be started separately with `npm start`.
+```powershell
+uv run --extra backend python -m backend.app
+Set-Location dashboard
+npm run dev
+```
 
-## Deploying to a Team Server <span class="status-label status-designed" aria-label="Designed"></span>
+Vite proxies `/api` to `http://127.0.0.1:8501`. The client therefore exercises
+the real Python backend while Vue modules reload in place.
 
-The server transfer consists of exactly `run.sh` and `.env` in one directory. `run.sh` is an explicit deployment-only exception to the repository's normal rule that maintained project commands live under root `script/`: it embeds the queue and deployment-worker helpers and creates every other directory and file before the repository exists on the server. The tracked `.env.example` names every accepted setting but contains no credential. The real `.env` is ignored, must be transferred over a protected administrative channel, and is treated as bootstrap input rather than as a permanent secret store. In the prepared local bundle, current PostgreSQL values and Gitea credentials are mapped from the project-root `.env`, while the GitHub repository/branch and a newly generated webhook secret complete the deployment-only settings. A repository-scoped, read-only Gitea token is preferred over an account password.
+## Static GitHub Pages Build
 
-After protected transfer, the operator runs `sudo bash run.sh`. The full-screen interface accepts Up, Down, and Enter only. Its main menu installs or updates the deployment, reports status, starts or restarts managed services, stops them without changing their automatic-start setting, terminates stale project processes, uninstalls the service definitions while preserving application data, or exits. Every generated project file lives below `deploy/installation/`: protected configuration in `config/`, runtime helpers and releases in `app/`, and queues and operational state in `state/`. Full removal has a separate confirmation whose safe default is cancellation; it removes only that generated `installation/` tree, the three service registrations, their narrow `sudoers` rule, the minimum path-traversal access added by the installer, and the service account. Shared Git, Node.js, `adnanh/webhook`, the uploaded source bundle, and `deploy/.env` are retained.
+GitHub Pages cannot run Flask, so the published client uses static mode.
+`script/export_dashboard_snapshot.py` forces local-file mode and writes the
+same fourteen-key JavaScript Object Notation (JSON) object as Flask to
+`dashboard/public/data/snapshot.json`. `vite build --mode static` copies it
+into the build and sets the one client flag that makes
+`dashboard/src/api/client.js` fetch the relative data file.
 
-Stale-process cleanup first stops only the three named `mta-dashboard` services whose on-disk unit definitions still reference the current `deploy/installation/` paths or the reviewed legacy paths; an unrecognized same-name unit is preserved. It then considers only processes owned by the dedicated `mta-dashboard` account and associated with this deployment through one of those verified `systemd` control groups, a working directory below the current or legacy project roots, or a command referencing those roots or the installed hooks file. It never selects by port, `node`, Git, npm, or another generic process name. Each process identifier is checked against those conditions again immediately before a `TERM` signal and, if still alive after the grace period, again before a `KILL` signal. Reused process identifiers and all unrelated processes are therefore excluded.
+The exporter must never publish database data. It sets `DATABASE=false` and
+`DASHBOARD_HOSTED=true` before loading any repository and refuses a snapshot
+whose mode is not `local files`. This makes accidental private-data inclusion
+a failed build rather than a review convention.
 
-`run.sh` detects the Linux distribution, processor architecture, package manager, init system, occupied Transmission Control Protocol (TCP) ports, and installed Git, Node.js, npm, and `adnanh/webhook` versions. It supports `systemd` as the service manager and refuses an unsupported init system with a named remedy; it never falls back to an unmanaged background process. It accepts an operator-selected unbound port above 8000 or finds one from the configured starting point. This proves only that the server can bind the local port. Firewall, proxy, Domain Name System (DNS), and external reachability remain explicit operator configuration and are never inferred from a local socket probe. Curl displays a progress bar while downloading Node.js or `adnanh/webhook`, and the checksum gate still runs before either archive is extracted.
+Run the dashboard static build from `dashboard/`:
 
-The installer creates an unprivileged `mta-dashboard` account and creates the complete project installation below the directory containing `run.sh`. It uses Access Control Lists (ACLs) to grant that account traversal—not listing or general read access—through otherwise private ancestors such as `/root`, then grants ownership only on the generated application and state directories. It preserves an adequate pre-existing account-specific ACL; an inadequate pre-existing entry is reported instead of being overwritten because uninstall could not safely reconstruct its original permissions. When the bundle is below `/root`, the generated units turn off `systemd` home-directory masking because that feature would otherwise hide the installation even after file permissions were correct; the remaining filesystem protections and explicit read/write path restrictions stay enabled. The installer records only the ancestor ACL entries it added and removes those entries during full uninstall. A credential-free Gitea repository address is mandatory. Hypertext Transfer Protocol Secure (HTTPS) access uses a Gitea access token through Git's non-interactive credential helper; Secure Shell (SSH) access uses an operator-supplied private key and pinned known-hosts file. A credential must never appear in a repository address, command argument, service definition, process listing, deployment log, or printed setup summary.
+```powershell
+npm run build:static
+```
 
-The system-level exceptions are operating-system dependencies, the service account, the three required service registrations under `/etc/systemd/system/`, and the narrow restart authorization under `/etc/sudoers.d/`. The unit definitions point into `deploy/installation/`; they do not contain a second application copy. A successful first deployment removes the obsolete `/etc/mta-dashboard`, `/opt/mta-dashboard`, and `/var/lib/mta-dashboard` trees left by earlier versions of this installer, but only after the new local release passes its health checks.
+The Pages workflow installs Python, `uv`, Node, dashboard dependencies, and
+documentation dependencies. It builds the dashboard and English VitePress
+site, then `script/build_pages_site.mjs` assembles the dashboard at `/` and the
+documentation at `/docs/` in the ignored `site/` directory. GitHub Pages is
+the only maintained documentation deployment target.
 
-The dashboard binds to the configured private address, `127.0.0.1` by default. A public deployment must put a Transport Layer Security (TLS) reverse proxy with team authentication in front of it, because the dashboard exposes settings and data-mutation routes and does not implement user authentication. The webhook listener also defaults to loopback for a reverse proxy. Binding either service to a non-loopback address requires an explicit setting and causes the installer to print a warning rather than silently widening access.
+## Production Deployment
 
-### GitHub Receives the Push; Gitea Supplies the Code
+The retired `deploy/run.sh` host bundle no longer exists. Production builds
+one full-stack container and deploys it through Alibaba Cloud Yunxiao AppStack.
+The exact image, placeholders, Kubernetes resources, credential boundary,
+health probes, and validation sequence are specified in
+[Backend Setup and Deployment](/en/introduction/backend/setups).
 
-GitHub is the authoritative event source. Gitea is the only repository the deployment server reads, and its mirror may lag a GitHub push by approximately five minutes. A GitHub push therefore does not mean the matching source is already available for deployment.
+## Source Files
 
-The webhook accepts only a JavaScript Object Notation (JSON) `POST`. Before executing any project command, `adnanh/webhook` verifies the [Hash-based Message Authentication Code (HMAC)](/en/reference/definitions#hmac-hash-based-message-authentication-code) carried by `X-Hub-Signature-256` and matches the configured `repository.full_name`. An authenticated GitHub `ping` is acknowledged without queueing work, so the setup delivery succeeds. A deployment additionally requires `X-GitHub-Event: push` and the configured `refs/heads/<branch>`. The enqueue command then independently validates the push payload's 40-character `after` commit identifier and the `X-GitHub-Delivery` identifier. A delivery identifier already recorded in the protected state directory is acknowledged without creating a second deployment.
-
-The webhook command only writes the latest desired commit to a durable queue by atomic rename. It does not clone, install, build, restart, or wait for Gitea. This separation lets the webhook return a successful response within GitHub's ten-second delivery window while the supervised deployment worker handles the slow path. Several pushes received during one mirror delay are coalesced: the durable queue retains the newest desired commit, so an intermediate commit is not deployed immediately before its successor.
-
-### Exact-Commit Gate
-
-For each queued request, the deployment worker polls the configured Gitea branch at the configured interval, ten seconds by default. It reloads the queue on every poll so a newer GitHub push replaces the target being awaited. The normal waiting window is ten minutes, which covers the expected five-minute mirror delay with margin; both values are configurable. Each individual Gitea probe or clone has a separate bounded request timeout, 45 seconds by default. A timeout reports the repository host and branch without printing authentication data, retains the queued request, and enters the ordinary retry path instead of hanging the installer or worker indefinitely. Other Git failures preserve their diagnostic text because repository addresses are required to be credential-free.
-
-**Before building, the worker fetches the Gitea branch and verifies that its resolved commit exactly equals the latest queued GitHub `after` commit.** Seeing the commit anywhere in the object store is insufficient, and seeing a different branch tip is insufficient. Until the branch tip and queued commit are identical, the currently running dashboard remains untouched.
-
-If the waiting window expires, the worker records the expected and observed commit identifiers, retains the pending request, and enters the configured retry delay. It never deploys the older Gitea branch as a fallback. The continuously supervised worker then retries without requiring GitHub to redeliver the webhook. A newer queued push supersedes the timed-out target on the next poll.
-
-### Atomic Release and Recovery
-
-After the exact-commit gate passes, the worker creates `deploy/installation/app/releases/<commit>`, checks out that commit from Gitea, runs `npm ci`, the dashboard tests, and `npm run build`, and verifies that `dashboard/dist/index.html` exists. A deployment lock prevents concurrent builds. The active `deploy/installation/app/current` symbolic link changes only after every pre-activation check passes.
-
-The dashboard service is then restarted and checked through both its page and `/api/health`, a liveness probe independent of `DATABASE`/`PG_*` and of the configured database already holding data — a release with an empty or unreachable database is still a successfully deployed release, so activation health does not gate on it. If either health check fails, the worker restores the previous symbolic link, restarts the previous release, verifies recovery, and leaves the failed release and logs available for diagnosis. A successful deployment removes the matching queue entry only if no newer desired commit arrived during the build, records the active commit, and prunes releases beyond the configured retention count. The initial interactive installation deploys the branch tip currently available from Gitea; exact GitHub-to-Gitea matching governs every queued webhook deployment after that.
-
-### Services and Operator Output
-
-`systemd` owns three long-running services: the Node dashboard, the small `adnanh/webhook` receiver, and the queue worker. They run as the unprivileged service account, restart after recoverable failures, start after networking, and write operational output to the journal. The worker also atomically publishes a root-readable progress record naming the current operation, its percentage interval, start time, typical phase duration, and estimated total remaining time. It updates that record while waiting for the mirrored branch, cloning and verifying the exact commit, installing locked npm dependencies, testing, building, activating, and health-checking. The installer turns those records into persistent phase log lines plus a live progress bar with elapsed time and an explicitly approximate estimated time remaining. Percentages interpolate only within the current phase and stop below its boundary when a common-duration estimate is exceeded; phase completion, not elapsed time, advances the authoritative boundary. The installer enables the services, performs the initial deployment, exercises a locally signed GitHub-style webhook, and reports service and health status. Stop is reversible and preserves enablement; start restores the receiver and worker immediately and starts the dashboard when an active release exists. Status works without loading the bootstrap credential file.
-
-The first-release estimates are reference values for a project of this scale, not deadlines: roughly one minute for the filtered Gitea clone, three minutes for `npm ci`, ninety seconds for tests, two minutes for the production build, and one minute for activation and both health probes. Network throughput, package-cache warmth, server processor count, and a delayed Gitea mirror can move the actual duration substantially. The journal remains the detailed subprocess log and the installer prints its command if an operator needs individual npm or Git lines.
-
-The final summary prints the verified dashboard address and the GitHub repository-webhook fields the operator must enter: payload address, `application/json` content type, push events only, active status, TLS verification enabled, and the name of the protected secret setting. It never prints the secret value. The receiver enforces the branch because GitHub repository webhooks do not provide a branch-filter control.
-
-## Published Build <span class="status-label status-verified" aria-label="Verified"></span>
-
-The dashboard is deployed to GitHub Pages at the site root, with the documentation one level down at `/docs/`.
-
-Pages serves static files and cannot run the Express Application Programming Interface (API), so the published client is built in **static mode**: `script/export_dashboard_snapshot.mjs` writes the same payload the API would return to `data/snapshot.json` at build time, and `src/api/client.js` fetches that file instead. A view sees no difference. This is the browser-side counterpart of the `DATABASE=true/false` contract — the same client source, a different data path, never a different codebase.
-
-Three consequences follow, and each is handled rather than hidden:
-
-- **The database source is unavailable.** A static host has no server to open a connection from. The export command pins file mode and **refuses to write a snapshot read from a database**, so a private deployment's data cannot be baked into a public artifact. The settings dialog replaces the credential form with the local-run instructions, so a visitor is never invited to type a real password into a page that cannot use it.
-- **The base path is relative.** Pages serves a project site from a subdirectory, so `vite build --mode static` sets `base` to `./` and the snapshot is fetched at a relative path; an absolute path would resolve against the domain root.
-- **Only the data the loaders read is published.** One snapshot of roughly 720 KB, exported from the eleven committed artifacts. The 2.8 MB synthetic-events extract is excluded because no view reads it.
-
-The workflow is `.github/workflows/deploy-pages.yml`. It builds the client with `npm run build:static`, builds the documentation with its base path set to the Pages base plus `docs/` — because Pages performs no rewrites and every internal link is resolved at build time — then assembles both into `site/` and uploads that as the Pages artifact.
-
-## Source Files <span class="status-label status-verified" aria-label="Verified"></span>
-
-The code-level specification for the files this page describes. Each entry states responsibility, inputs, outputs, dependencies, and the test that verifies it.
-
-### `deploy/run.sh`
-
-Source: `deploy/run.sh`
-
-- Responsibility: Manage one Linux team server from the self-contained `deploy/` transfer bundle through an Up/Down/Enter menu: install or update, inspect, start or restart, stop, or uninstall the managed services; perform the first deployment from Gitea; verify the signed webhook path; and print the GitHub setup fields.
-- Inputs: Only `run.sh` and `.env` in the same server directory, or `--env PATH` for a differently located configuration; `--non-interactive`, `--check`, and `--help`; an `apt`- or `dnf`-based Linux distribution with `systemd`; root or `sudo`; outbound access to the configured Gitea service, Node.js downloads, and the `adnanh/webhook` release. The real `.env` follows `.env.example` and supplies the GitHub repository/branch/secret, credential-free Gitea address and read-only authentication, listener addresses and ports, mirror timing, data source, and optional public addresses. Status, start, stop, and uninstall do not parse bootstrap credentials.
-- Outputs: Node.js and `adnanh/webhook` when compatible versions are absent; visible progress for their downloads; phase-aware first-release progress; the `mta-dashboard` account; and `deploy/installation/` containing protected configuration and the root-only webhook secret, runtime helpers, immutable releases and the active link, queue state, and the atomic worker-progress record. The only project integrations outside the script directory are the three `systemd` registrations and narrow service-restart `sudoers` rule. Installation produces an initial healthy release and credential-free operator summary. Full uninstall removes the generated local tree, integrations, recorded [Access Control List (ACL)](/en/reference/definitions#acl-access-control-list) entries, and account with visible progress; shared dependencies, uploaded sources, and bootstrap `.env` remain.
-- Behavior contract: The default terminal interface accepts Up/Down and Enter; text confirmation is never required inside the command. The safe option is selected by default for credential removal, stale cleanup, and both uninstall menus. Paths derive from the real directory containing `run.sh`, not the caller's working directory. The command materializes its embedded, reviewed queue and worker payloads under `installation/app/bin`; no companion runtime source is required on the server. Before installing those helpers, and during `--check`, it decodes both payloads into a temporary directory, verifies their embedded [SHA-256](/en/reference/definitions#sha-256-secure-hash-algorithm-256-bit) digests, and checks their Bash syntax. A mismatch or malformed payload stops before any service is changed. The parser accepts only named keys and never evaluates `.env` as shell code. Repository addresses containing credentials, query strings, or fragments are rejected. [HTTPS](/en/reference/definitions#https-hypertext-transfer-protocol-secure) authentication requires a read-only token; [SSH](/en/reference/definitions#ssh-secure-shell) authentication requires both a private key and a pinned known-hosts file. GitHub's webhook secret must contain at least 32 URL-safe characters. Dashboard and webhook ports must be unbound, distinct on the same address, above 8000, and no greater than 65535; an occupied configured port is replaced only with arrow-key operator confirmation, or automatically in non-interactive mode. Compatible installed tools are retained. Otherwise Node 22.23.2 and webhook 2.8.3 archives are downloaded with a curl progress bar from their upstream secure addresses and checked against the architecture-specific SHA-256 digest embedded in the command before extraction. Gitea probes and clones have the configured per-request timeout and preserve credential-free diagnostics. Bootstrap commands run as `mta-dashboard` from the local state directory. `--check` performs no install, ACL, or service mutation. A rerun stops only verified current or legacy services before probing their ports, regenerates root-owned definitions, and reuses a healthy local release whose commit still matches Gitea. Missing `active_commit` is silent and expected until the worker completes; the installer reads the worker's atomic progress record, prints every phase transition, and renders an interpolated bar whose remaining time is labeled as an estimate. If the supervised worker stops, installation reports its journal immediately instead of waiting for the overall deadline. Service-only removal shows progress across the verified unit definitions and system integration cleanup. Full uninstall additionally counts the entries beneath each approved project root and advances its deletion bar as those exact entries are removed without following symbolic links or crossing into another mounted filesystem. Stale cleanup signals only revalidated processes owned by the dedicated account and tied to verified control groups, current or legacy paths, or hooks files; it never kills by port or generic executable name. Real credentials are separated between the dashboard and deploy environment files, given only to the service that needs them, and never printed. The local root-only webhook-secret file lets an administrator retrieve that one value explicitly while configuring GitHub. After a healthy interactive install, the operator can retain or permanently remove the exact uploaded `.env`; non-interactive mode keeps it and prints the removal reminder. The final GitHub fields name `POST`, `application/json`, push-only events, active status, certificate verification, the exact endpoint, and the protected secret path.
-- Dependencies: Bash, then the operating-system packages the command installs: ACL and base64 tools, certificate authorities, `curl`, Git, OpenSSL, `sudo`, archive tools, `util-linux`, and `iproute`. No companion script is required on the server.
-- Verification: `bash -n deploy/run.sh`; `sudo bash deploy/run.sh --check --env <test-env>` on Ubuntu with `systemd`; `npm test` and `npm run build` in `dashboard/`; then a full run on the target class of server. The check path was executed on Ubuntu 22.04 under Windows Subsystem for Linux without changing packages or services.
-
-### `deploy/runtime/enqueue_deploy.sh`
-
-Source: `deploy/runtime/enqueue_deploy.sh`
-
-- Responsibility: Keep the GitHub request path short by independently validating the untrusted commit and delivery arguments, deduplicating the delivery, and atomically replacing the durable desired-commit queue entry.
-- Packaging: This readable source is embedded byte-for-byte in `deploy/run.sh`, which materializes it under `installation/app/bin`; it is not a server transfer prerequisite.
-- Inputs: `enqueue_deploy.sh <after-commit> <delivery-id> <event>`, invoked only after `adnanh/webhook` has verified GitHub's [Hash-based Message Authentication Code (HMAC)](/en/reference/definitions#hmac-hash-based-message-authentication-code), content type, repository, and either the setup-ping event or the push event plus branch. Production supplies the local `deploy/installation/state` root through `MTA_DASHBOARD_STATE_ROOT`; a temporary override isolates verification.
-- Outputs: A three-line `queue/pending` file containing the lowercase 40-character commit, delivery identifier, and Coordinated Universal Time (UTC) receipt time; plus a protected delivery marker retained for thirty days.
-- Behavior contract: An authenticated `ping` with a valid delivery identifier exits 0 without writing queue state. For a push, a malformed commit, the all-zero deleted-ref commit, a malformed delivery identifier, or any other event exits 2 without writing state. Queue mutation holds `queue.lock`, writes a mode-`600` temporary file, and renames it over `pending`, so the worker sees either the whole old request or the whole new request. The delivery marker is written only after the atomic queue move; a crash can therefore cause an idempotent duplicate write but cannot acknowledge and lose a request. A recorded delivery exits 0 without replacing the queue. A newer accepted delivery replaces the desired commit, which is how pushes coalesce during mirror delay.
-- Dependencies: Bash, `flock`, `mktemp`, `find`, and the protected state directory.
-- Verification: `bash -n deploy/runtime/enqueue_deploy.sh`; an isolated temporary-state test covering acceptance, delivery deduplication, newest-request replacement, and malformed-commit rejection.
-
-### `deploy/runtime/deploy_worker.sh`
-
-Source: `deploy/runtime/deploy_worker.sh`
-
-- Responsibility: Supervise the eventual-consistency boundary between GitHub and Gitea, enforce the exact-commit gate, build immutable dashboard releases without privilege, activate and health-check them, and roll back a failed activation.
-- Packaging: This readable source is embedded byte-for-byte in `deploy/run.sh`, which materializes it under `installation/app/bin`; it is not a server transfer prerequisite.
-- Inputs: The durable queue; the root-only deploy environment passed by `systemd`; the credential-free Gitea repository and branch; optional HTTPS token or SSH key paths; mirror polling/wait/retry values; dashboard private address; release retention; and the narrow permission to restart exactly `mta-dashboard.service`. `--verify-exact <commit>` exercises only the fetched-branch equality gate. The two `MTA_DASHBOARD_*_ROOT` overrides isolate verification and are not set by production services.
-- Outputs: Immutable `deploy/installation/app/releases/<commit>` checkouts with built clients, the atomic local `current` link, `active_commit`, journal records that name expected and observed commits, an atomic seven-line `deploy_progress` record containing phase, lower and upper percentage boundaries, start time, typical phase seconds, estimated seconds remaining, and a credential-free message, removal of a satisfied queue entry, and bounded old releases.
-- Behavior contract: The worker reloads `pending` on every poll, so the newest accepted push supersedes an older wait and resets its waiting window. A mirror-window timeout retains the request and the active release, sleeps for the retry interval, and tries again; an older Gitea revision is never a fallback. Each Git network command also has the configured per-request timeout, preventing one probe or clone from consuming that entire window or hanging forever. When the remote branch first reports the desired commit, the build path **clones the branch and independently resolves `refs/remotes/origin/<branch>` again**. Unless that fetched identifier exactly equals the current queued GitHub commit, the checkout is rejected before dependency installation. It also rechecks the queue before the build and before activation, so a superseded release is never switched live. A deployment lock serializes builds. The accepted checkout runs `npm ci`, tests, and the production build as `mta-dashboard`; no repository command runs as root, and the npm subprocesses have every Gitea/Git authentication variable removed from their environment. A failed or timed-out clone, dependency install, test, build, or health check retains the queue and waits for the retry interval instead of entering a tight failure loop. Activation uses an atomic symbolic-link rename. Both `/` and `/api/dashboard` must become healthy after restart. Failure restores and verifies the preceding link; success removes the queue only when it still names the deployed commit. A queued commit already active and healthy is an idempotent no-op. Git authentication is non-interactive, and a credential cannot enter a clone address or log.
-- Dependencies: Bash, Git, npm, `curl`, `flock`, the generated askpass helper or pinned SSH files, and the three installed services.
-- Verification: `bash -n deploy/runtime/deploy_worker.sh`; an isolated local bare-repository test in which the current branch tip passes `--verify-exact` and its stale parent fails; the dashboard test/build commands; then a target-server exercise covering delayed mirroring, coalesced pushes, timeout/retry, activation health, and rollback.
-
-### `index.html` and `vite.config.js`
-
-Source: `dashboard/index.html`, `dashboard/vite.config.js`
-
-- Responsibility: Mount the client, and build it for the two deployments.
-- Inputs: `src/main.js`. The build mode.
-- Outputs: `dashboard/dist` for a local run, `dashboard/dist-static` for the published build.
-- Behavior contract: One source tree serves both targets; the only difference is `base` and the `VITE_STATIC_BUILD` flag `src/api/client.js` reads. `base` is relative in the static build because Pages serves a project site from a subdirectory and an absolute asset path would resolve against the domain root. Plotly and Vue are split into their own chunks, so a change to a view leaves the visitor's cached copy of the 4.6 MB chart library intact. `manualChunks` is written as a **function**: Vite 8 bundles with Rolldown, which fails the build on the object form rather than normalising it. The dev server proxies `/api` to the Express server, so client work has hot reload against the real API.
-- Dependencies: `vite`, `@vitejs/plugin-vue`.
-- Verification: `npm run build` and `npm run build:static` in `dashboard/`, then serving each and driving it in a real browser.
-
-### `export_dashboard_snapshot.mjs`
-
-Source: `script/export_dashboard_snapshot.mjs`
-
-- Responsibility: Write the dashboard snapshot to a JavaScript Object Notation (JSON) file for the published static build.
-- Inputs: The committed Comma-Separated Values (CSV) and JSON artifacts.
-- Outputs: `dashboard/public/data/snapshot.json` by default, which Vite copies into the build output verbatim, plus a summary line naming the row count, the size, and the source.
-- Behavior contract: The export is **forced to file mode**, pinned before `data_source.js` is imported because the mode is cached on first read, and it **refuses to write a snapshot whose mode is anything else** — a published artifact must never carry data read from a private database. The payload is the same one the API returns, produced by the same loaders, which is what keeps the two deployments one codebase. It is not pretty-printed: indentation adds roughly a third to a file every visitor downloads.
-- Dependencies: Everything `server/data_source.js` needs in file mode.
-- Verification: `node script/export_dashboard_snapshot.mjs`, then serving `dashboard/dist-static` and driving it in a real browser; the six views render identically to the API-backed run with no failed request.
-
-### `build_pages_site.mjs`
-
-Source: `script/build_pages_site.mjs`
-
-- Responsibility: Assemble the GitHub Pages site — the dashboard at the root, the documentation under `/docs/`.
-- Inputs: `dashboard/dist-static` and `docs/.vitepress/dist`.
-- Outputs: `site/`, which the workflow uploads as the Pages artifact, plus a summary line naming the file count and total size.
-- Behavior contract: The script refuses to run, naming the command that fixes it, when either build is missing **or when the static build carries no `data/snapshot.json`** — the snapshot is the published build's only data source, so without it every view would render its error card, which would reach a visitor as a broken page rather than as a failed build. A `.nojekyll` marker is written, without which Pages runs Jekyll and drops the underscore-prefixed files inside the built assets.
-- Dependencies: Node's `fs`, `path`, and `url`. No build tool of its own.
-- Verification: `node script/build_pages_site.mjs` after both builds, then serving `site/`. The assembled site was verified in a real browser: the dashboard at the root with all six views rendering, the snapshot at `/data/snapshot.json`, and the documentation at `/docs/`.
-
-### `run.sh` and `run.bat`
+### `dashboard/run.sh` and `dashboard/run.bat`
 
 Source: `dashboard/run.sh`, `dashboard/run.bat`
 
-- Responsibility: Start the local dashboard from a clean clone, on either platform, with one command and nothing installed beforehand but Node.js.
-- Inputs: An optional port as the first argument, defaulting to 8501; `--no-open`, `--rebuild`, and `-h`/`--help`. Node on `PATH`. `DASHBOARD_NONINTERACTIVE=1` suppresses the `pause` that `run.bat` uses to hold a double-clicked window open on failure.
-- Outputs: A running server, with its Uniform Resource Locator (URL) printed before it starts. On failure, a named cause, a remedy, and a bug-report block.
-- Behavior contract: Both resolve the repository root from the script's own location rather than the working directory, so the command works from anywhere. Four steps run in order — toolchain, configuration, dependencies, client build — and each failure is reported by name rather than as the raw error of whatever ran last.
+- Responsibility: Validate local Node and uv toolchains, initialize safe file
+  configuration, install dependencies, build Vue, and launch Flask.
+- Inputs: Optional port, `--no-open`, `--rebuild`, and root `.env`.
+- Outputs: `dashboard/dist` and one local backend process.
+- Dependencies: Node.js, npm, uv, and the locked project files.
+- Verification: `bash -n dashboard/run.sh`, `dashboard\run.bat --help`, and a
+  local `/api/health` request after startup.
 
-  Node is checked against **Vite's own engine range**, `^20.19.0 || >=22.12.0`, comparing the minor and patch numbers rather than the major alone. The precision matters: Vite's bundler binding is an optional dependency carrying that same range, so an unsupported version installs cleanly — npm skips the binding silently — and fails minutes later at build time with a missing-module error naming neither Node nor the version.
+### `dashboard/index.html` and `dashboard/vite.config.js`
 
-  `sample.env` is copied to `.env` when none exists, which is what makes a fresh clone start in file mode instead of failing on a missing variable; an existing `.env` is never overwritten, because it holds the operator's real credentials. `npm install` runs only when `node_modules/express` is absent — the package standing in for the whole tree, so an interrupted install is repaired rather than skipped — and `npm run build` only when `dist/index.html` is absent, or always with `--rebuild`. Both npm commands run from `dashboard/` rather than through `npm --prefix`, which sets where `node_modules` is written but not where the manifest is read from.
+Source: `dashboard/index.html`, `dashboard/vite.config.js`
 
-  An unrecognised argument or an out-of-range port exits 2, `--help` exits 0, and a failed step exits 1. The port is not probed here: the server binds it, so it is the process that can report a conflict precisely rather than racing a check made in advance.
-- Dependencies: Node and npm. Nothing else is assumed present.
-- Verification: Both were run against a simulated clean clone — `node_modules` and `dist` removed — on Node 26.5, which installed, built, and served the client and the API, and on Node 22.11, which is refused at step one with the range named. Every argument path was checked for its exit code, and the failure report was confirmed to carry the environment block and the tail of `dashboard/.run.log` from an install forced to fail. `dashboard\run.bat 8602` from a directory outside the repository served both the client and the API against the live PostgreSQL mirror with `DATABASE=true`.
+- Responsibility: Provide the Vue document and configure API/static builds,
+  output directories, chunking, and the development proxy.
+- Inputs: Build mode and client source modules.
+- Outputs: `dist` for Flask or `dist-static` for Pages.
+- Dependencies: Vite and Vue plugin.
+- Verification: `npm test`, `npm run build`, and `npm run build:static` in
+  `dashboard/`.
+
+### `script/export_dashboard_snapshot.py`
+
+Source: `script/export_dashboard_snapshot.py`
+
+- Responsibility: Export the Flask snapshot repositories in forced file mode
+  to the generated static-client data path using an atomic replacement.
+- Inputs: Committed module artifacts only.
+- Outputs: Minified UTF-8 `dashboard/public/data/snapshot.json`.
+- Dependencies: `backend.repository.snapshot` and the backend dependency extra.
+- Verification: `uv run --extra backend python -X utf8 -B -m script.export_dashboard_snapshot`;
+  assert the result reports `mode: local files` and fourteen keys.
+
+### `script/build_pages_site.mjs`
+
+Source: `script/build_pages_site.mjs`
+
+- Responsibility: Validate both production builds, copy them into one Pages
+  artifact, and add `.nojekyll`.
+- Inputs: `dashboard/dist-static` and `docs/.vitepress/dist`.
+- Outputs: Ignored `site/` with dashboard root and `/docs/` documentation.
+- Dependencies: Node's standard library.
+- Verification: Run after both builds and confirm it reports the assembled
+  file count and size.

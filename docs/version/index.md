@@ -11,6 +11,11 @@ The project version is recorded in the repository-root `VERSION` file. Each page
 
 This section records **what** changed. See the [work log](../worklog/) for **who** did the work and when.
 
+## [0.9.28](0.9.28.md)
+
+- Date: 2026-08-25
+- Summary: Built runnable strategy evaluation contracts and layers, preserved the contributed budget-to-revenue networks verbatim under model-named `contrib/` folders with an adapter, added the train-on-demand evaluation stage and snapshot, and completed the Flask/AppStack runtime migration
+
 ## [0.9.27](0.9.27.md)
 
 - Date: 2026-08-20
@@ -26,32 +31,32 @@ This section records **what** changed. See the [work log](../worklog/) for **who
 - Date: 2026-08-20
 - Summary: Added a pipeline architecture diagram to the English documentation homepage hero, replacing VitePress's default circular logo slot on that page only
 
-## [0.9.24](0.9.24.md)
+## [0.9.24](0.9/0.9.24.md)
 
 - Date: 2026-08-20
 - Summary: Restructured the Linux deploy bundle so a single `run.sh` uploaded beside `.env` embeds and checksum-verifies its runtime helpers and consolidates install paths under `deploy/installation/`, and fixed a stale embedded worker payload that would have reintroduced the 0.9.23 health-check bug
 
-## [0.9.23](0.9.23.md)
+## [0.9.23](0.9/0.9.23.md)
 
 - Date: 2026-08-20
 - Summary: Added Budget Manager's Form/JSON dual-mode master-object editor with template pre-fill, and decoupled the deploy worker's activation health check from database readiness by adding `GET /api/health`
 
-## [0.9.22](0.9.22.md)
+## [0.9.22](0.9/0.9.22.md)
 
 - Date: 2026-08-19
 - Summary: Derived write capability from the snapshot's data source rather than the build flag, themed the read-only and database-connected deployments apart, and replaced Budget Manager's detail lists with paged, selectable entity tables carrying row edit and confirmed deletion
 
-## [0.9.21](0.9.21.md)
+## [0.9.21](0.9/0.9.21.md)
 
 - Date: 2026-08-19
 - Summary: Specified the implemented Campaign budget response model and constrained optimizer, corrected the pages that still called them unimplemented, and surfaced the optimized plan in the dashboard's Optimization Log
 
-## [0.9.20](0.9.20.md)
+## [0.9.20](0.9/0.9.20.md)
 
 - Date: 2026-08-18
 - Summary: Integrated independent Multi-Touch Attribution Simulator (MTA-SIM) domain records through `mta_common`, adopted native five-segment interactions, added 10k CSV and 100k PostgreSQL research modes, and expanded the dashboard's canonical master-data and historical-analysis views
 
-## [0.9.19](0.9.19.md)
+## [0.9.19](0.9/0.9.19.md)
 
 - Date: 2026-08-18
 - Summary: Grouped the canonical data-model class reference into eight ordered subsections and added a vertical topological Draw.io dependency map with arrows reserved for foreign-key-style identifiers
@@ -61,37 +66,37 @@ This section records **what** changed. See the [work log](../worklog/) for **who
 - Date: 2026-08-18
 - Summary: Added a project-wide documentation table-usage rule to `AGENTS.md` and decomposed 135 non-comparison tables into sub-level headings across 45 files under `docs/en`, `docs/version`, and `docs/worklog`
 
-## [0.9.17](0.9.17.md)
+## [0.9.17](0.9/0.9.17.md)
 
 - Date: 2026-08-18
 - Summary: Added the `modules/mta_common` canonical data-model foundation and its legacy compatibility bridge, with full documentation
 
-## [0.9.16](0.9.16.md)
+## [0.9.16](0.9/0.9.16.md)
 
 - Date: 2026-08-18
 - Summary: Recorded the UI_design reference prototype's move from `external/` to `design-artifacts/`
 
-## [0.9.15](0.9.15.md)
+## [0.9.15](0.9/0.9.15.md)
 
 - Date: 2026-08-18
 - Summary: Restructured the nav bar, renamed Datasets to Market Simulation, fixed version-folder default collapse, and loosened the work-log confirmation rule
 
-## [0.9.14](0.9.14.md)
+## [0.9.14](0.9/0.9.14.md)
 
 - Date: 2026-08-17
 - Summary: Fixed nested sidebar folder titles, reversed version-log compaction into per-minor-version folders, and fixed the sidebar's alphabetical version sort
 
-## [0.9.13](0.9.13.md)
+## [0.9.13](0.9/0.9.13.md)
 
 - Date: 2026-08-17
 - Summary: Moved Environment under Introduction and renamed Strategy Recommendation, fixed the resulting sidebar and cross-link breakage, and hardened the docs launcher against silent failures
 
-## [0.9.12](0.9.12.md)
+## [0.9.12](0.9/0.9.12.md)
 
 - Date: 2026-08-17
 - Summary: Split the monolithic dashboard documentation page into `index.md`, `views.md`, `navigation.md`, `deployment.md`, and `database-import.md`
 
-## [0.9.11](0.9.11.md)
+## [0.9.11](0.9/0.9.11.md)
 
 - Date: 2026-08-15
 - Summary: Vue client over a Node API replacing the Streamlit and stlite dashboard, three dual-source parity defects and five cold-start launcher defects fixed, and the parity command and test suite the repository was missing

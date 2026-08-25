@@ -1,6 +1,6 @@
 ---
 title: Module Inventory
-compact: "Summary of the three runnable modules, their status and entry points, plus the standard `data/`, `outputs/`, `src/`, `tests/` subdirectory convention. Read for orientation; per-file specification lives under implementation."
+compact: "Summary of the four runnable modules, including strategy evaluation contracts, contributed-model adapters, status, entry points, and the standard data, outputs, src, and tests convention. Read for orientation; per-file specifications live on owning pages."
 lang: en-US
 ---
 
@@ -24,7 +24,13 @@ lang: en-US
 
 - **Purpose:** Generate the new Ad Group count and initial budget using Campaign Group as the top level, and optimize Campaign budgets against fitted response curves where budget variation has been observed
 - **Status:** Runnable generator, canonical output, and validator are implemented; the Campaign response model and constrained budget optimizer are implemented, and Ad Group-level optimization is not
-- **Entry point:** [Strategy initializer](../strategy-recommendation/module-overview.md) and [Campaign budget optimizer](../strategy-recommendation/campaign-budget-optimizer.md)
+- **Entry point:** [Strategy initializer](../strategy-recommendation/module-overview/) and [Campaign budget optimizer](../strategy-recommendation/campaign-budget-optimizer.md)
+
+## MTA Strategy Evaluation (`modules/mta_strategy_evaluation/`)
+
+- **Purpose:** Project strategy artifacts into one `StrategyOutput` contract, check allocation conservation, compare observed baselines, isolate unavailable strategy ground truth, and adapt contributed response models without modifying contributor files
+- **Status:** Runnable evaluation package and fourth pipeline stage; the current contributed network is retained with its negative held-out fit as a blocking caveat
+- **Entry point:** [Strategy evaluation](../strategy-evaluation/) and [running an evaluation](../strategy-evaluation/running-an-evaluation.md)
 
 ## Directory Convention
 

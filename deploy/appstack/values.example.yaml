@@ -1,0 +1,24 @@
+# Non-secret example values for AppStack's extracted orchestration placeholders.
+# Supply pgPassword as a private AppStack environment variable; do not put a
+# real password in this file.
+namespace: marketing-roi
+image: registry.cn-shanghai.aliyuncs.com/your-namespace/marketing-roi-analysis:REPLACE_WITH_COMMIT_SHA
+imagePullSecret: marketing-roi-acr-pull
+replicas: 2
+database: "true"
+pgHost: pg.example.rds.aliyuncs.com
+pgPort: "5432"
+pgDatabase: mta_data
+pgUser: mta_backend
+pgPassword: CHANGE_ME_IN_APPSTACK
+pgSslMode: require
+mtaSimDataDir: /data/mta-sim
+mtaSimPvc: marketing-roi-simulator-data
+requestCpu: 250m
+requestMemory: 512Mi
+limitCpu: "1"
+limitMemory: 1Gi
+host: marketing-roi.example.com
+ingressClassName: nginx
+ingressAuthSecret: marketing-roi-basic-auth
+tlsSecret: marketing-roi-tls

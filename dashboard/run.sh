@@ -4,8 +4,8 @@
 #
 # One command from a clean clone: this checks the toolchain, installs the
 # dependencies, builds the client, and starts the server that serves both the
-# JSON API and that client. Nothing needs to be installed beforehand except
-# Node.js itself, and the script says exactly how to get it when it is missing.
+# Flask JSON API and that client. Node.js and uv must be installed; the script
+# says exactly what is missing before it changes the checkout.
 #
 # Reads `.env` at the repository root for the data source. Copy `sample.env` to
 # `.env` and set `DATABASE=true` with the `PG_*` values to read the PostgreSQL
@@ -109,6 +109,7 @@ fail() {
   printf '    shell          : %s\n' "${BASH_VERSION:-unknown}"
   printf '    node           : %s\n' "$(command -v node >/dev/null 2>&1 && node -v || echo 'not installed')"
   printf '    npm            : %s\n' "$(command -v npm >/dev/null 2>&1 && npm -v || echo 'not installed')"
+  printf '    uv             : %s\n' "$(command -v uv >/dev/null 2>&1 && uv --version || echo 'not installed')"
   printf '    port requested : %s\n' "$PORT"
   printf '    failed step    : %s\n' "$title"
   if [ -s "$LOG_FILE" ]; then
@@ -205,6 +206,14 @@ fi
 
 note "node $(node -v), npm $(npm -v)"
 
+if ! command -v uv >/dev/null 2>&1; then
+  fail "uv is not installed" \
+    "The Flask backend uses the repository's locked Python environment." \
+    "Install uv from https://docs.astral.sh/uv/getting-started/installation/" \
+    "and run this command again."
+fi
+note "$(uv --version)"
+
 # ---------------------------------------------------------------------------
 # 2. Configuration
 # ---------------------------------------------------------------------------
@@ -238,10 +247,10 @@ fi
 
 step 3 "Checking the dependencies"
 
-# `express` standing in for the whole tree: an interrupted install leaves
+# `vite` standing in for the client tree: an interrupted install leaves
 # node_modules present but incomplete, and testing only for the directory
 # would then skip the repair.
-if [ ! -d "${DASHBOARD_DIR}/node_modules" ] || [ ! -d "${DASHBOARD_DIR}/node_modules/express" ]; then
+if [ ! -d "${DASHBOARD_DIR}/node_modules" ] || [ ! -d "${DASHBOARD_DIR}/node_modules/vite" ]; then
   note "Installing (a few minutes on the first run)..."
   if ! run_quiet_in_dashboard npm install --no-audit --no-fund; then
     fail "Dependency installation failed" \
@@ -260,6 +269,14 @@ if [ ! -d "${DASHBOARD_DIR}/node_modules" ] || [ ! -d "${DASHBOARD_DIR}/node_mod
 else
   note "Already installed."
 fi
+
+if ! uv sync --extra backend >>"$LOG_FILE" 2>&1; then
+  fail "Backend dependency installation failed" \
+    "uv could not install the locked Flask backend environment." \
+    "Run this command for the complete diagnostic:" \
+    "    uv sync --extra backend"
+fi
+note "Backend dependencies ready."
 
 # ---------------------------------------------------------------------------
 # 4. Client build
@@ -304,5 +321,6 @@ printf '\n%s\n' "------------------------------------------------------------"
 printf '  Dashboard starting on http://localhost:%s\n' "$PORT"
 printf '%s\n' "------------------------------------------------------------"
 
-[ "$OPEN_BROWSER" -eq 1 ] && export DASHBOARD_OPEN=1
-exec node "${DASHBOARD_DIR}/server/index.js" "$PORT"
+export BACKEND_PORT="$PORT"
+export DASHBOARD_OPEN="$OPEN_BROWSER"
+exec uv run --extra backend python -m backend.app

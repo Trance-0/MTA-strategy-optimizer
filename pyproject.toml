@@ -11,14 +11,47 @@ dependencies = []
 # These dependencies belong to the database import alone; install with:
 #   uv sync --extra dashboard
 #
-# The dashboard itself is a Vue client over a Node API and needs no Python at
-# all: `./dashboard/run.sh` installs its own dependencies with npm. What is
-# left here is what `script/import_to_database.py` needs to populate the
-# PostgreSQL mirror from the committed artifacts.
+# What is here is what `script/import_to_database.py` needs to populate the
+# PostgreSQL mirror from the committed artifacts, and what the backend shares
+# with it: one definition of the schema and one reader of `.env`.
 dashboard = [
     "sqlalchemy>=2.0",
     "psycopg[binary]>=3.2",
     "python-dotenv>=1.0",
+]
+
+# The Flask service under `backend/`, which owns every database read and write
+# and serves the three model endpoints. Install with:
+#   uv sync --extra backend
+#
+# It includes the dashboard extra rather than restating it, because the
+# service reads `dashboard/config.py` and `dashboard/models.py` directly: one
+# definition of the schema, one reader of `.env`. Gunicorn is the Web Server
+# Gateway Interface server the deployment runs; it is a real dependency of the
+# deployed service rather than a development convenience, so it belongs here.
+backend = [
+    "sqlalchemy>=2.0",
+    "psycopg[binary]>=3.2",
+    "python-dotenv>=1.0",
+    "flask>=3.0",
+    "gunicorn>=23.0; sys_platform != 'win32'",
+]
+
+# The contributed response models under
+# `modules/mta_strategy_evaluation/contrib/`, which are the only code in the
+# repository that needs a numerical stack. Install with:
+#   uv sync --extra strategy-evaluation
+#
+# It is an extra rather than a core dependency so the sentence above stays
+# true: attribution, standard, and strategy recommendation still import
+# nothing outside the standard library, and a checkout that never runs the
+# evaluation stage never installs a compiler-backed wheel. The versions are
+# the ones the contributor declared in their own `code/requirements.txt`,
+# restated here rather than read from that file, because their file is
+# preserved verbatim and must not become a build input.
+strategy-evaluation = [
+    "numpy>=2.0",
+    "matplotlib>=3.8",
 ]
 
 [tool.uv]

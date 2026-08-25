@@ -54,25 +54,73 @@ class Strategy(ABC):
 
 ### Identity Fields
 
-| Field | Type | Meaning |
-| --- | --- | --- |
-| `strategy_id` | `str` | Unique identifier within the strategy registry; lowercase, underscore-separated |
-| `strategy_version` | `str` | [Semantic version](/en/reference/definitions) of this strategy's contract; a breaking output change must advance the major version |
-| `capabilities` | `StrategyCapabilities` | Declared capabilities a caller can inspect without instantiating the strategy |
+
+#### `strategy_id`
+
+**Type:** `str`
+
+**Meaning:** Unique identifier within the strategy registry; lowercase, underscore-separated
+
+#### `strategy_version`
+
+**Type:** `str`
+
+**Meaning:** [Semantic version](/en/reference/definitions) of this strategy's contract; a breaking output change must advance the major version
+
+#### `capabilities`
+
+**Type:** `StrategyCapabilities`
+
+**Meaning:** Declared capabilities a caller can inspect without instantiating the strategy
+
 
 ### Capabilities Declaration
 
 `StrategyCapabilities` lets a caller filter the registry before loading — the same pattern used by [`ModelCapabilities`](/en/attribution/standardized-interface/#the-model-interface) in the attribution layer.
 
-| Field | Type | Meaning |
-| --- | --- | --- |
-| `requires_attribution_evidence` | `bool` | Whether `allocate()` needs Multi-Touch Attribution (MTA) rows; `false` would mean equal-split or historical-only strategies |
-| `requires_candidate_pool` | `bool` | Whether `allocate()` needs candidate Keyword and Stock Keeping Unit (SKU) counts |
-| `requires_fit` | `bool` | Whether the strategy must be fitted on historical data before `allocate()` |
-| `supports_persistence` | `bool` | Whether `save()`/`load()` round-trip is supported |
-| `deterministic` | `bool` | Whether the same inputs always produce byte-identical outputs |
-| `objective` | `str` | The business objective this strategy targets |
-| `constraint_types` | `list[str]` | The constraint types this strategy can satisfy |
+
+#### `requires_attribution_evidence`
+
+**Type:** `bool`
+
+**Meaning:** Whether `allocate()` needs Multi-Touch Attribution (MTA) rows; `false` would mean equal-split or historical-only strategies
+
+#### `requires_candidate_pool`
+
+**Type:** `bool`
+
+**Meaning:** Whether `allocate()` needs candidate Keyword and Stock Keeping Unit (SKU) counts
+
+#### `requires_fit`
+
+**Type:** `bool`
+
+**Meaning:** Whether the strategy must be fitted on historical data before `allocate()`
+
+#### `supports_persistence`
+
+**Type:** `bool`
+
+**Meaning:** Whether `save()`/`load()` round-trip is supported
+
+#### `deterministic`
+
+**Type:** `bool`
+
+**Meaning:** Whether the same inputs always produce byte-identical outputs
+
+#### `objective`
+
+**Type:** `str`
+
+**Meaning:** The business objective this strategy targets
+
+#### `constraint_types`
+
+**Type:** `list[str]`
+
+**Meaning:** The constraint types this strategy can satisfy
+
 
 ### Input: `StrategyScope`
 
@@ -87,24 +135,55 @@ class StrategyScope:
     campaigns: list[CampaignSpec]
 ```
 
-| Field | Meaning |
-| --- | --- |
-| `campaign_group_id` | The Campaign Group this allocation is for |
-| `marketplace` | Advertising marketplace (e.g., `US`, `UK`) |
-| `advertiser_id` | Advertiser account identifier |
-| `report_start_date`, `report_end_date` | Observation window for the attribution evidence; must be valid [ISO dates](/en/reference/definitions#iso-date-format) and `start <= end` |
-| `campaigns` | Ordered list of Campaign specifications within the group |
+
+#### `campaign_group_id`
+
+**Meaning:** The Campaign Group this allocation is for
+
+#### `marketplace`
+
+**Meaning:** Advertising marketplace (e.g., `US`, `UK`)
+
+#### `advertiser_id`
+
+**Meaning:** Advertiser account identifier
+
+#### `report_start_date`, `report_end_date`
+
+**Meaning:** Observation window for the attribution evidence; must be valid [ISO dates](/en/reference/definitions#iso-date-format) and `start <= end`
+
+#### `campaigns`
+
+**Meaning:** Ordered list of Campaign specifications within the group
+
 
 `CampaignSpec` carries the fixed properties of one Campaign:
 
-| Field | Meaning |
-| --- | --- |
-| `campaign_id` | Unique identifier within the group |
-| `ad_product` | One of Sponsored Products (SP), Sponsored Brands (SB), Sponsored Display (SD), or Demand-Side Platform (DSP) (see [advertising platform terms](/en/reference/definitions#advertising-platform-terms)) |
-| `enabled` | Whether the Campaign participates in this allocation |
-| `min_ad_groups` | Minimum new Ad Groups this Campaign must receive |
-| `max_ad_groups` | Maximum new Ad Groups this Campaign can receive |
-| `min_daily_budget_per_group` | Floor for each new group's daily budget |
+
+#### `campaign_id`
+
+**Meaning:** Unique identifier within the group
+
+#### `ad_product`
+
+**Meaning:** One of Sponsored Products (SP), Sponsored Brands (SB), Sponsored Display (SD), or Demand-Side Platform (DSP) (see [advertising platform terms](/en/reference/definitions#advertising-platform-terms))
+
+#### `enabled`
+
+**Meaning:** Whether the Campaign participates in this allocation
+
+#### `min_ad_groups`
+
+**Meaning:** Minimum new Ad Groups this Campaign must receive
+
+#### `max_ad_groups`
+
+**Meaning:** Maximum new Ad Groups this Campaign can receive
+
+#### `min_daily_budget_per_group`
+
+**Meaning:** Floor for each new group's daily budget
+
 
 ### Input: `StrategyEvidence`
 
@@ -117,12 +196,23 @@ class StrategyEvidence:
     lineage: EvidenceLineage
 ```
 
-| Field | Meaning |
-| --- | --- |
-| `attribution` | Rows from [the governed MTA recommendation](/en/market-simulation/amc-data-contract#models-and-outputs); each row contains a touchpoint, three Outcome shares, reliability status, and recommended value |
-| `candidates` | Eligible candidate counts per Campaign, as in the current [`candidate_pool.json`](/en/strategy-recommendation/output-data-contract) |
-| `entity_bridge` | Historical touchpoint-to-entity relationships for bridging attribution grain to Campaign grain |
-| `lineage` | Content hashes and scope of the evidence files, matching the pattern in the [current initializer](/en/strategy-recommendation/module-overview#1-verify-evidence-lineage-before-calculation) |
+
+#### `attribution`
+
+**Meaning:** Rows from [the governed MTA recommendation](/en/market-simulation/amc-data-contract#models-and-outputs); each row contains a touchpoint, three Outcome shares, reliability status, and recommended value
+
+#### `candidates`
+
+**Meaning:** Eligible candidate counts per Campaign, as in the current [`candidate_pool.json`](/en/strategy-recommendation/output-data-contract)
+
+#### `entity_bridge`
+
+**Meaning:** Historical touchpoint-to-entity relationships for bridging attribution grain to Campaign grain
+
+#### `lineage`
+
+**Meaning:** Content hashes and scope of the evidence files, matching the pattern in the [current initializer](/en/strategy-recommendation/module-overview/current-implementation#1-verify-evidence-lineage-before-calculation)
+
 
 ### Input: `StrategyConstraints`
 
@@ -136,13 +226,27 @@ class StrategyConstraints:
     additional: dict[str, Any]          # Extension point for future constraint types
 ```
 
-| Field | Meaning |
-| --- | --- |
-| `total_daily_budget` | Group-level daily budget ceiling; `None` means relative-shares-only mode |
-| `outcome_weights` | Weights for combining the three [MTA Outcomes](/en/attribution/#three-outcome-types) into a single score; must sum to 1 |
-| `ad_group_min_budget` | Floor for any single Ad Group budget |
-| `ad_group_max_budget` | Ceiling for any single Ad Group budget; `None` means unbounded |
-| `additional` | Extension point for constraints not yet in the contract (inventory, pacing, margin) |
+
+#### `total_daily_budget`
+
+**Meaning:** Group-level daily budget ceiling; `None` means relative-shares-only mode
+
+#### `outcome_weights`
+
+**Meaning:** Weights for combining the three [MTA Outcomes](/en/attribution/#three-outcome-types) into a single score; must sum to 1
+
+#### `ad_group_min_budget`
+
+**Meaning:** Floor for any single Ad Group budget
+
+#### `ad_group_max_budget`
+
+**Meaning:** Ceiling for any single Ad Group budget; `None` means unbounded
+
+#### `additional`
+
+**Meaning:** Extension point for constraints not yet in the contract (inventory, pacing, margin)
+
 
 ### Output: `StrategyAllocation`
 
@@ -159,29 +263,75 @@ class StrategyAllocation:
     warnings: list[str]
 ```
 
-| Field | Meaning |
-| --- | --- |
-| `strategy_id`, `strategy_version` | Which strategy and contract produced this allocation |
-| `scope` | The Campaign Group scope this allocation was computed for |
-| `lineage` | Evidence lineage, carried forward from input for auditability |
-| `allocation_type` | Whether this is an unoptimized seed or an optimized result |
-| `campaigns` | One allocation record per Campaign |
-| `conservation` | Report proving budget and share conservation |
-| `warnings` | Ordered, non-repeating warning codes (e.g., `NO_BUDGET_BASELINE_RELATIVE_SHARES_ONLY`) |
+
+#### `strategy_id`, `strategy_version`
+
+**Meaning:** Which strategy and contract produced this allocation
+
+#### `scope`
+
+**Meaning:** The Campaign Group scope this allocation was computed for
+
+#### `lineage`
+
+**Meaning:** Evidence lineage, carried forward from input for auditability
+
+#### `allocation_type`
+
+**Meaning:** Whether this is an unoptimized seed or an optimized result
+
+#### `campaigns`
+
+**Meaning:** One allocation record per Campaign
+
+#### `conservation`
+
+**Meaning:** Report proving budget and share conservation
+
+#### `warnings`
+
+**Meaning:** Ordered, non-repeating warning codes (e.g., `NO_BUDGET_BASELINE_RELATIVE_SHARES_ONLY`)
+
 
 `CampaignAllocation` mirrors the current [Ad Group output contract](/en/strategy-recommendation/strategy-output-contract#4-ad-group-output):
 
-| Field | Meaning |
-| --- | --- |
-| `campaign_id` | Campaign within the group |
-| `ad_product` | Advertising product of the Campaign |
-| `recommended_ad_group_count` | Number of new Ad Groups |
-| `count_rationale` | Candidate counts, capacities, and how the count was derived |
-| `campaign_mta_score` | Weighted Outcome contribution for this Campaign |
-| `budget_seed_share` | Campaign's share of the total budget |
-| `campaign_budget_seed` | Absolute Campaign budget, when a total is supplied |
-| `ad_groups` | Ordered list of anonymous Ad Group budget slots |
-| `execution_status` | `EXECUTABLE`, `INSUFFICIENT_BUDGET_FOR_MINIMUMS`, or `UNEXECUTABLE` |
+
+#### `campaign_id`
+
+**Meaning:** Campaign within the group
+
+#### `ad_product`
+
+**Meaning:** Advertising product of the Campaign
+
+#### `recommended_ad_group_count`
+
+**Meaning:** Number of new Ad Groups
+
+#### `count_rationale`
+
+**Meaning:** Candidate counts, capacities, and how the count was derived
+
+#### `campaign_mta_score`
+
+**Meaning:** Weighted Outcome contribution for this Campaign
+
+#### `budget_seed_share`
+
+**Meaning:** Campaign's share of the total budget
+
+#### `campaign_budget_seed`
+
+**Meaning:** Absolute Campaign budget, when a total is supplied
+
+#### `ad_groups`
+
+**Meaning:** Ordered list of anonymous Ad Group budget slots
+
+#### `execution_status`
+
+**Meaning:** `EXECUTABLE`, `INSUFFICIENT_BUDGET_FOR_MINIMUMS`, or `UNEXECUTABLE`
+
 
 ## Conservation Contract <span class="status-label status-recommendation" aria-label="Recommendation"></span>
 
@@ -200,10 +350,19 @@ Constraint (4) is an inequality: a strategy may leave budget unallocated, but it
 
 **Tolerances** follow the attribution-layer precedent:
 
-| Constraint | Absolute tolerance | Relative tolerance |
-| --- | --- | --- |
-| Share conservation | `1e-12` | — |
-| Budget conservation | `1e-6` | `1e-9` |
+
+#### Share conservation
+
+**Absolute tolerance:** `1e-12`
+
+**Relative tolerance:** —
+
+#### Budget conservation
+
+**Absolute tolerance:** `1e-6`
+
+**Relative tolerance:** `1e-9`
+
 
 ## Status Labels
 

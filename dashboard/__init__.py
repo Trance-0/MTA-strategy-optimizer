@@ -1,14 +1,14 @@
-"""Database schema and configuration shared by the dashboard and the importer.
+"""Database schema and configuration shared by Flask and the importer.
 
-The dashboard itself is a Vue client over a Node API and holds no Python: see
-`dashboard/server/` and `dashboard/src/`. What remains here is the part
-`script/import_to_database.py` needs — the `.env` contract in `config.py` and
-the PostgreSQL schema in `models.py` — kept in this package because the
-dashboard's own reader is the only consumer of the tables it defines.
+The dashboard is a Vue client over the Flask API in `backend/`. This package
+owns the shared `.env` contract in `config.py` and PostgreSQL schema in
+`models.py`; both the Flask repositories and `script/import_to_database.py`
+import those definitions. `dashboard/server/` remains only as a JavaScript
+parity fixture during the backend migration.
 
 Data flow:
-    .env -> config.py -> script/import_to_database.py -> the PostgreSQL mirror
-    models.py declares the eighteen tables that import writes
+    .env -> config.py -> Flask repositories and script/import_to_database.py
+    models.py declares the eighteen tables that the importer writes and Flask reads
 
 Run the dashboard from the repository root:
     ./dashboard/run.sh          # dashboard\\run.bat on Windows

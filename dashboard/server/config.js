@@ -84,7 +84,7 @@ function flag(name) {
 /**
  * Return true when running as the published static build.
  *
- * The static build has no Node process behind it: `scripts/export_static_data.mjs`
+ * The static build has no Node process behind it: `script/export_dashboard_snapshot.py`
  * writes the snapshot to a JSON file at build time and the browser fetches that
  * file directly. There is no socket to reach PostgreSQL with and no writable
  * `.env`, so the flag lets the settings dialog say so plainly instead of

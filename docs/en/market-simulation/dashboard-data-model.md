@@ -1,7 +1,7 @@
 ---
 title: Dashboard Data Model
 description: The eighteen relational classes the dashboard reads when DATABASE=true
-compact: "Relational mirror of the pipeline's CSV and JSON artifacts in four layers: entity (`advertiser`, `campaign_group`, `campaign`, `ad_group`, `touchpoint`, `targeting_candidate`), history (`ads_daily_performance`, `path_report`, `touchpoint_entity_bridge`, `synthetic_user_event`), model output (`attribution_run`, `attribution_result`, `model_comparison_touchpoint`, `model_comparison_summary`, `recommended_attribution`), and strategy (`budget_recommendation_run`, `campaign_budget_recommendation`, `ad_group_budget_slot`). Read before changing the schema or the import command."
+compact: "PostgreSQL mirror contract in `dashboard/models.py`: eighteen ordered entity, history, model-output, and strategy tables populated by `script/import_to_database.py` and read by Flask repositories in database mode. Covers keys, constraints, lineage, nullability, rounding, and file/database parity."
 order: 60
 ---
 
@@ -25,7 +25,13 @@ The attribution, standard, and strategy modules never import these classes. They
 - Reads: The eighteen tables below
 - Requires: A populated PostgreSQL instance
 
-`dashboard/server/data_source.js` guarantees that both modes return identical fields, types, values, and row order, so a view cannot tell which one it is reading. `script/verify_dashboard_parity.mjs` asserts that guarantee against a live database. Five differences make it non-trivial and are normalised in the loader rather than in any view; they are specified in full under [Two Data Sources, One Contract](../dashboard/index.md#two-data-sources-one-contract).
+The Flask repositories under `backend/repository/` guarantee that both modes
+return identical fields, types, values, and row order, so a view cannot tell
+which one it is reading. The legacy `dashboard/server/data_source.js` loader
+and `script/verify_dashboard_parity.mjs` remain a cross-language migration
+oracle against a live database. Five differences make parity non-trivial and
+are normalized in the loaders rather than in any view; they are specified in
+full under [Two Data Sources, One Contract](../dashboard/index.md#two-data-sources-one-contract).
 
 One of them constrains this schema directly. **Row order is part of the contract**, because the views render in the order the loader returns, and a file loader returns the artifact's own order. Every table therefore carries a surrogate `id` primary key, `script/import_to_database.py` inserts rows in each artifact's order, and every query the dashboard issues orders by that key rather than by the business key — `order by campaign_id` sorts alphabetically and would put the same Campaigns on screen in a different sequence than file mode does.
 

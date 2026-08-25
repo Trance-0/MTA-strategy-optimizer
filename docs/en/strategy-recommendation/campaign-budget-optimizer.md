@@ -10,7 +10,7 @@ source_files: modules/mta_strategy_recommendation/src/response_dataset.py, modul
 
 ## 1. What This Answers, and What the Initializer Answers
 
-The [budget initializer](module-overview.md) answers a structural question: how many new Ad Groups does each Campaign need, and what starting budget does each new group receive when nothing is yet known about it. Its answer is a seed, labelled `INITIAL_SEED` with `is_optimized=false`, and it is derived from historical Multi-Touch Attribution (MTA) credit.
+The [budget initializer](module-overview/) answers a structural question: how many new Ad Groups does each Campaign need, and what starting budget does each new group receive when nothing is yet known about it. Its answer is a seed, labelled `INITIAL_SEED` with `is_optimized=false`, and it is derived from historical Multi-Touch Attribution (MTA) credit.
 
 This page specifies a different question:
 

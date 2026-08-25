@@ -1,12 +1,11 @@
 /**
- * Run a pipeline stage from the dashboard and stream its progress back.
+ * Preserve the former Node pipeline-job service as a parity fixture.
  *
- * The three model stages -- attribution, strategy optimization, and strategy
- * evaluation -- already exist as command-line scripts. This module runs one of
- * those, exactly as the documented command would, and keeps its output where
- * the client can poll it. It does not reimplement any stage: a run started here
- * and a run started in a terminal execute the same script with the same
- * arguments, so the dashboard cannot drift from the pipeline it reports on.
+ * Runtime requests use `backend/services/jobs.py`. The JavaScript regression
+ * suite imports this module through the legacy Express oracle so option,
+ * refusal, progress, and log-buffer behavior can be checked while that suite
+ * is migrated. Strategy evaluation uses the same runnable command and phase
+ * contract as the Python service so the parity suite checks the fourth stage.
  *
  * Why a poll rather than a socket: the client already polls `/api/settings` for
  * the rail's status, the runs are minutes rather than milliseconds, and a
@@ -19,9 +18,8 @@
  * It is additionally gated on a configured database, because a stage's whole
  * purpose here is to refresh what the dashboard reads.
  *
- * Data flow:
- *     POST /api/jobs -> here -> uv run script/*.py -> modules/&#42;/outputs
- *     GET  /api/jobs -> here -> the Campaign Optimizer's log tabs
+ * Parity-test flow:
+ *     dashboard/tests -> server/index.js -> here -> fixed script definitions
  */
 
 import { spawn } from "node:child_process";
@@ -93,20 +91,14 @@ export const STAGES = {
   },
   evaluation: {
     label: "MTA strategy evaluation",
-    /**
-     * `modules/mta_strategy_evaluation/` is specified but not built, so there
-     * is no script to run. The stage is declared here with the reason rather
-     * than omitted, so the view can show three tabs and say plainly why the
-     * third cannot run yet — a missing tab reads as a dashboard defect, while
-     * a named unbuilt stage reads as the roadmap it is.
-     */
-    script: null,
-    unavailableReason:
-      "The strategy evaluation layer is specified but not yet built: " +
-      "modules/mta_strategy_evaluation/ and script/evaluate_strategies.py do " +
-      "not exist. Attribution model evaluation against ground truth is " +
-      "available in modules/mta_standard/src/evaluation.py.",
-    phases: [],
+    script: "script/evaluate_strategies.py",
+    phases: [
+      { at: 10, match: /projecting strategies/i, message: "Projecting strategy artifacts" },
+      { at: 35, match: /checking conservation/i, message: "Checking allocation conservation" },
+      { at: 60, match: /comparing against baselines/i, message: "Comparing strategies against baselines" },
+      { at: 80, match: /fitting the contributed model/i, message: "Fitting the contributed model" },
+      { at: 95, match: /writing the artifact/i, message: "Writing the strategy evaluation" },
+    ],
   },
 };
 

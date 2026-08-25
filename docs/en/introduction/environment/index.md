@@ -1,7 +1,7 @@
 ---
 title: Environment Setup
 description: Local execution, documentation development, and directory responsibilities
-compact: "Setup and toolchain: Python/Node prerequisites, verification, documentation, mirrors, and the deploy/.env transfer plus arrow-key Linux lifecycle whose generated config, releases, helpers, and state remain under deploy/installation/."
+compact: "Setup and toolchain: Python, uv, Node prerequisites; module and documentation verification; GitHub/Gitea mirrors; local Flask dashboard startup; and Yunxiao AppStack full-stack container deployment through reviewable Kubernetes orchestration and protected environment variables."
 lang: en-US
 ---
 
@@ -47,6 +47,8 @@ uv run python -X utf8 -B -m unittest discover -s modules/mta_standard/tests -p "
 uv run python -X utf8 -B script/generate_initial_budget.py --check-output
 uv run python -X utf8 script/validate_simulated_hierarchy.py
 uv run python -X utf8 -B -m unittest discover -s modules/mta_strategy_recommendation/tests -p "test_*.py"
+
+uv run python -X utf8 -B -m unittest discover -s modules/mta_strategy_evaluation/tests -p "test_*.py"
 ```
 
 ## Local Documentation Site <span class="status-label status-verified" aria-label="Verified"></span>
@@ -86,20 +88,22 @@ Configure the workflow with the `GITEA_USERNAME`, `GITEA_PASSWORD`, and `GITEA_R
 
 Plain-text `http://` addresses, embedded credentials, query strings, fragments, nested repository paths, and unsupported characters are rejected before any network operation. The normalized secure Gitea base address and two-segment repository path are passed separately to the mirror step, which reconstructs the destination without placing credentials in the remote address. `.github/workflows/mirror-to-gitee.yml` remains the separate gitee.com-only mirror and uses the corresponding `GITEE_*` secrets.
 
-## Team Server Dashboard Deployment <span class="status-label status-designed" aria-label="Designed"></span>
+## Dashboard Backend and Production Deployment <span class="status-label status-verified" aria-label="Verified"></span>
 
-The self-contained `deploy/` directory is the dashboard's Linux server transfer bundle. Its real `deploy/.env` is ignored by Git. For this checkout it is generated from the project-root `.env`: the PostgreSQL (`PG_*`) settings are copied, `GITEA_REPO_USERNAME` maps to `GITEA_USERNAME`, `GITEA_REPO_USER_PASSWORD` maps to `GITEA_TOKEN`, the GitHub repository and current branch are recorded, and a new webhook secret is generated without displaying it. A repository-scoped, read-only Gitea access token is safer than reusing an account password and should replace the mapped value before production use.
+The local launchers build Vue and start the Flask backend on one port. Install
+the backend independently with `uv sync --extra backend`, or use
+`dashboard/run.sh` on macOS/Linux and `dashboard/run.bat` on Windows.
 
-Transfer only `run.sh` and the hidden `.env` into the same server directory through Secure Copy Protocol (SCP), Secure File Transfer Protocol (SFTP), or another protected administrative channel. `run.sh` embeds and generates all runtime helpers and directories. On an `apt`- or `dnf`-based Linux server whose process 1 is `systemd`, run:
+Production no longer transfers an interactive host script or a real `.env`.
+Alibaba Cloud Yunxiao AppStack builds `deploy/appstack/Dockerfile`, pushes the
+image to Alibaba Cloud Container Registry (ACR), and applies the native
+Kubernetes orchestration in `deploy/appstack/orchestration.yaml`. AppStack
+environment placeholders inject PostgreSQL configuration; the password is a
+private variable and never enters the repository or image.
 
-```bash
-cd /path/to/uploaded/deploy
-sudo bash run.sh
-```
-
-The interactive interface accepts only Up, Down, and Enter. It can install or update, report status, start or restart services, stop services, terminate stale processes proven to belong to the dedicated account and project paths, remove only the service definitions while preserving configuration and releases, or perform a separately confirmed full uninstall. Generated configuration, runtime helpers, releases, and state all live below `deploy/installation/`. Stale cleanup never selects by port or generic process name. A full uninstall removes that generated directory, recorded traversal access, system integrations, and the service account. It retains the uploaded sources, `.env`, and shared Git, Node.js, and `adnanh/webhook` installations.
-
-The install path detects occupied ports above 8000, installs dependencies with visible download progress, deploys the current Gitea branch, enables the three `systemd` services, exercises a signed local webhook, and prints the GitHub webhook fields. Each Gitea request has a bounded timeout and actionable credential-free error output. The operator must still provide a Transport Layer Security (TLS) reverse proxy or equivalent secure ingress, Domain Name System (DNS), firewall rules, and GitHub reachability. GitHub sends the event, Gitea supplies the code, and the deployment worker waits through mirror delay until a newly fetched Gitea branch tip equals the queued GitHub commit exactly. See [Running Locally and Publishing](/en/dashboard/deployment) for the full security, queue, rollback, and lifecycle contract.
+See [Backend Setup and Deployment](/en/introduction/backend/setups) for the
+complete local commands, AppStack placeholder list, authenticated Transport
+Layer Security ingress, health probes, and Alibaba validation sequence.
 
 ## Directory Quick Reference <span class="status-label status-verified" aria-label="Verified"></span>
 
@@ -125,7 +129,7 @@ Run every maintained project data, attribution, strategy, or documentation comma
 
 ### `deploy/`
 
-Transfer and operate the interactive Linux dashboard deployment bundle. Keep its real `.env` outside Git.
+Build and deploy the AppStack full-stack image and Kubernetes orchestration.
 
 ### `modules/mta_attribution/data/simulated/`
 

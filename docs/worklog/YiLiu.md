@@ -1,7 +1,7 @@
 ---
 title: Yi Liu (Willow-sakura)
 description: Work log for the shared evaluation module
-compact: "Work log of Willow-sakura (Yi Liu): co-owns the unbuilt evaluation module with Tianle Chen, specified under docs/en/strategy-evaluation as modules/mta_strategy_evaluation. Awaiting first dated entries from the author."
+compact: "Work log of Willow-sakura (Yi Liu): co-owns the evaluation module with Tianle Chen; contributed the budget-to-revenue networks now preserved verbatim in modules/mta_strategy_evaluation/contrib/mlp/. Awaiting first dated entries from the author."
 order: 40
 lang: en-US
 ---
@@ -14,7 +14,8 @@ lang: en-US
 
 ## Scope
 
-- Shares ownership of the evaluation module. It is specified under [strategy evaluation](../en/strategy-evaluation/) and `modules/mta_strategy_evaluation/` is currently an empty placeholder, so the documentation is the build target rather than a description of existing code.
+- Shares ownership of the evaluation module, specified under [strategy evaluation](../en/strategy-evaluation/). `modules/mta_strategy_evaluation/` is now built, so the documentation describes existing code; the strategy registry and loader remain the build target.
+- Contributed the budget-to-revenue neural networks, preserved byte-for-byte in `modules/mta_strategy_evaluation/contrib/mlp/` and reached through a project-owned adapter. See [the contributed model's page](../en/strategy-evaluation/contributed-models/asin-gmv-nn.md).
 
 ---
 

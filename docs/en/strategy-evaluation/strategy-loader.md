@@ -57,17 +57,79 @@ Each strategy is declared in one JSON file. The loader reads a directory of decl
 
 ### Field Reference
 
-| Field | Type | Required | Meaning |
-| --- | --- | --- | --- |
-| `strategy_id` | `string` | Yes | Unique identifier; lowercase, underscore-separated |
-| `strategy_version` | `string` | Yes | [Semantic version](https://semver.org) of this declaration file |
-| `display_name` | `string` | Yes | Human-readable name for logs and reports |
-| `description` | `string` | Yes | One-sentence summary of what the strategy does |
-| `implementation.module` | `string` | Yes | Fully qualified Python module path |
-| `implementation.function` | `string` | Yes | The callable within that module |
-| `capabilities` | `object` | Yes | Must match the [`StrategyCapabilities` fields](./strategy-structure#capabilities-declaration) |
-| `input_contract.schema_version` | `string` | Yes | Version of the input contract this strategy expects |
-| `input_contract.required_inputs` | `array[string]` | Yes | File names the strategy requires; used for pre-flight validation |
+
+#### `strategy_id`
+
+**Type:** `string`
+
+**Required:** Yes
+
+**Meaning:** Unique identifier; lowercase, underscore-separated
+
+#### `strategy_version`
+
+**Type:** `string`
+
+**Required:** Yes
+
+**Meaning:** [Semantic version](https://semver.org) of this declaration file
+
+#### `display_name`
+
+**Type:** `string`
+
+**Required:** Yes
+
+**Meaning:** Human-readable name for logs and reports
+
+#### `description`
+
+**Type:** `string`
+
+**Required:** Yes
+
+**Meaning:** One-sentence summary of what the strategy does
+
+#### `implementation.module`
+
+**Type:** `string`
+
+**Required:** Yes
+
+**Meaning:** Fully qualified Python module path
+
+#### `implementation.function`
+
+**Type:** `string`
+
+**Required:** Yes
+
+**Meaning:** The callable within that module
+
+#### `capabilities`
+
+**Type:** `object`
+
+**Required:** Yes
+
+**Meaning:** Must match the [`StrategyCapabilities` fields](./strategy-structure#capabilities-declaration)
+
+#### `input_contract.schema_version`
+
+**Type:** `string`
+
+**Required:** Yes
+
+**Meaning:** Version of the input contract this strategy expects
+
+#### `input_contract.required_inputs`
+
+**Type:** `array[string]`
+
+**Required:** Yes
+
+**Meaning:** File names the strategy requires; used for pre-flight validation
+
 
 ## Strategy Registry <span class="status-label status-recommendation" aria-label="Recommendation"></span>
 
@@ -93,13 +155,27 @@ allocation = strategy.allocate(scope, evidence, constraints)
 
 ### Registry Behavior
 
-| Rule | Behavior |
-| --- | --- |
-| Duplicate `strategy_id` | The last declaration loaded wins; a warning is emitted |
-| Missing implementation | `build_strategy()` raises `ImportError` with the missing module path |
-| Version mismatch | If the declaration version and the implementing class's `strategy_version` differ, a warning is emitted but instantiation proceeds |
-| Unregistered `strategy_id` | `build_strategy()` raises `KeyError` with the available identifiers listed |
-| Empty registry | `build_strategy()` and `list_strategies()` raise `RuntimeError` — an empty registry is a configuration error, not a valid state |
+
+#### Duplicate `strategy_id`
+
+**Behavior:** The last declaration loaded wins; a warning is emitted
+
+#### Missing implementation
+
+**Behavior:** `build_strategy()` raises `ImportError` with the missing module path
+
+#### Version mismatch
+
+**Behavior:** If the declaration version and the implementing class's `strategy_version` differ, a warning is emitted but instantiation proceeds
+
+#### Unregistered `strategy_id`
+
+**Behavior:** `build_strategy()` raises `KeyError` with the available identifiers listed
+
+#### Empty registry
+
+**Behavior:** `build_strategy()` and `list_strategies()` raise `RuntimeError` — an empty registry is a configuration error, not a valid state
+
 
 ### Registry Directory
 
@@ -130,11 +206,25 @@ This layout mirrors `modules/mta_standard/`: the framework owns loading, validat
 
 Before a strategy's output is accepted, the loader runs a three-stage validation pipeline:
 
-| Stage | Check | Failure behavior |
-| --- | --- | --- |
-| 1. Declaration validation | JSON schema, required fields, `strategy_id` format, capabilities types | `ValueError` with the specific field and reason |
-| 2. Input validation | Evidence lineage (Secure Hash Algorithm 256-bit (SHA-256) hashes match), scope consistency, required files present | `HierarchyValidationError` — same exception class used by the [current initializer](/en/strategy-recommendation/module-overview#1-verify-evidence-lineage-before-calculation) |
-| 3. Output validation | Conservation contract, field completeness, forbidden fields absent | `StrategyOutputError` before any file is written |
+
+#### 1. Declaration validation
+
+**Check:** JSON schema, required fields, `strategy_id` format, capabilities types
+
+**Failure behavior:** `ValueError` with the specific field and reason
+
+#### 2. Input validation
+
+**Check:** Evidence lineage (Secure Hash Algorithm 256-bit (SHA-256) hashes match), scope consistency, required files present
+
+**Failure behavior:** `HierarchyValidationError` — same exception class used by the [current initializer](/en/strategy-recommendation/module-overview/current-implementation#1-verify-evidence-lineage-before-calculation)
+
+#### 3. Output validation
+
+**Check:** Conservation contract, field completeness, forbidden fields absent
+
+**Failure behavior:** `StrategyOutputError` before any file is written
+
 
 Stage 1 runs at registry load time. Stages 2 and 3 run when `allocate()` is called with the validated evidence wrapper.
 
@@ -142,14 +232,43 @@ Stage 1 runs at registry load time. Stages 2 and 3 run when `allocate()` is call
 
 `strategy_validator.py` enforces the [conservation contract](./strategy-structure#conservation-contract) and additionally checks:
 
-| Check | Rule | Tolerance |
-| --- | --- | --- |
-| Non-negativity | Every budget and share is finite and `>= 0` | Exact |
-| Uniqueness | One `ad_group_slot_id` per Campaign, no duplicate slots | Exact |
-| Slot completeness | Slot count matches `recommended_ad_group_count` | Exact |
-| Campaign completeness | Every Campaign in scope has an allocation record | Exact |
-| Forbidden fields | No candidate IDs, Targeting, Audiences, or activation actions in output | Exact |
-| Execution status validity | Status is one of the three defined values | Exact |
+
+#### Non-negativity
+
+**Rule:** Every budget and share is finite and `>= 0`
+
+**Tolerance:** Exact
+
+#### Uniqueness
+
+**Rule:** One `ad_group_slot_id` per Campaign, no duplicate slots
+
+**Tolerance:** Exact
+
+#### Slot completeness
+
+**Rule:** Slot count matches `recommended_ad_group_count`
+
+**Tolerance:** Exact
+
+#### Campaign completeness
+
+**Rule:** Every Campaign in scope has an allocation record
+
+**Tolerance:** Exact
+
+#### Forbidden fields
+
+**Rule:** No candidate IDs, Targeting, Audiences, or activation actions in output
+
+**Tolerance:** Exact
+
+#### Execution status validity
+
+**Rule:** Status is one of the three defined values
+
+**Tolerance:** Exact
+
 
 ## Integration with Existing Pipeline <span class="status-label status-recommendation" aria-label="Recommendation"></span>
 

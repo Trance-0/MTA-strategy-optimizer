@@ -2,8 +2,8 @@
  * The client's single route to the data.
  *
  * Two deployments share one contract. A local run fetches `/api/dashboard`
- * from the Express server beside it; the published static build has no server,
- * so `scripts/export_static_data.mjs` writes the same payload to
+ * from the Flask backend beside it; the published static build has no server,
+ * so `script/export_dashboard_snapshot.py` writes the same payload to
  * `data/snapshot.json` at build time and this module fetches that instead.
  * A view sees no difference, which is the browser-side counterpart of the
  * `DATABASE=true/false` contract the loaders keep.

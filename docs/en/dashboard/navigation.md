@@ -1,6 +1,6 @@
 ---
 title: Navigation Rail and Settings
-compact: "Navigation rail and settings: grouped hash routing, DATABASE/PostgreSQL controls, protected server read-only mode, write-only passwords, and the bounded logging ring buffer. Specifies pages.js, App.vue, main.js, and server/settings.js."
+compact: "Navigation and settings contract: grouped hash routing, PostgreSQL controls, read-only deployments, write-only passwords, and bounded logging. Vue files own navigation; `dashboard/server/settings.js` remains a JavaScript parity fixture while Flask owns runtime settings."
 lang: en-US
 source_files: dashboard/src/pages.js, dashboard/src/App.vue, dashboard/src/main.js, dashboard/server/settings.js
 ---
@@ -45,11 +45,13 @@ The rail closes with **Docs** and **Repo**. A reader who arrives at the publishe
 
 The code-level specification for the files this page describes. Each entry states responsibility, inputs, outputs, dependencies, and the test that verifies it.
 
-### `server/settings.js`
+### Legacy parity harness: `server/settings.js`
 
 Source: `dashboard/server/settings.js`
 
-- Responsibility: Back the settings module in the foot of the rail — edit the credentials this dashboard connects with, and capture the data access log while it streams.
+- Responsibility: Preserve the former Node settings behavior for the
+  JavaScript regression suite. Runtime requests use the Flask settings service
+  specified in [Backend Jobs and Settings](/en/introduction/backend/operations).
 - Inputs: `.env` at the repository root, the live environment as a fallback, and the reader's entries in the modal.
 - Outputs: `readEnv()`, `writeEnv()`, `status()`, `testConnection()`, `applyLogging()`, `loggingEnabled()`, `logState()`, `log()`, `clearLog()`, `settingsState()`, and `RingBuffer`.
 - Behavior contract: **No credential is written to a tracked file, to the API response, or to the log.** `.env` is git-ignored, `sample.env` is the tracked template and holds no real value, and the password is rendered only through `config.safeSummary()`, which omits it by construction. `settingsState()` carries the read-only flag that lets the modal distinguish a protected server from an editable checkout. `writeEnv()` rewrites the file rather than appending to it, preserving comments and unrelated keys and replacing a key in place, so one key cannot end up with two values and the winner decided by read order; it does not accumulate a trailing blank line on repeated saves; and it then clears the loader caches and disposes the pool, because both would otherwise survive the edit. `testConnection()` connects with the values just typed rather than the values saved, and closes the client whether or not the probe succeeded, so a failed test cannot leave a socket open on a shared instance. The log is a fixed-capacity ring buffer, not a file, so an open dashboard cannot fill a disk; each message is truncated so one record cannot dominate it; and a record below the active level is dropped rather than stored and filtered on display. Logging is off by default because it costs time on every request.

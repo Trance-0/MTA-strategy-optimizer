@@ -280,7 +280,7 @@ Source: `modules/mta_common/src/legacy_adapters.py`
 
 Two of these consumers now exist, in `modules/mta_strategy_recommendation` rather than here. Its response model consumes `CampaignEpisode` as its training row shape, and its budget optimizer reads `StrategyObjective`, `BudgetUsagePolicy`, and `BudgetConstraints` to decide a Campaign allocation. See [Campaign Budget Response Model and Optimizer](/en/strategy-recommendation/campaign-budget-optimizer.md).
 
-A future evaluation harness would consume `EvaluationEpisode` to compare a model's decision against simulator ground truth without that ground truth ever reaching the model itself. That consumer does not exist yet.
+The third consumer now exists too. `modules/mta_strategy_evaluation` uses `CampaignEpisode` the same way, holding observations beside a strategy's decision so a strategy can be scored without ground truth ever reaching the model that produced it. See [Evaluation layers](/en/strategy-evaluation/evaluation-layers.md).
 
 ## Current Availability <span class="status-label status-verified" aria-label="Verified"></span>
 

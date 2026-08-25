@@ -1,7 +1,7 @@
 ---
 title: Terms and Abbreviations
 description: Attribution, advertising hierarchy, data, and optimization terminology
-compact: "Canonical glossary for attribution, advertising, optimization, data, and deployment terms including AMC, MTA, ROAS, TVD, HMAC, HTTPS, TLS, SSH, ACL, TCP, and DNS. Every documentation abbreviation must have an entry here."
+compact: "Canonical glossary for attribution, advertising, evaluation, machine learning, optimization, data, and deployment terms, including GMV, MLP, R-squared, sMAPE, Kendall's tau, Huber loss, Adam, epoch, one-hot encoding, and elasticity."
 lang: en-US
 ---
 
@@ -36,6 +36,10 @@ An ordered sequence of touchpoints in the observation window, separated with ` >
 ### Outcome
 
 A business result to which the model allocates credit. This project includes unique converted users, purchase count, and revenue.
+
+### GMV (Gross Merchandise Value)
+
+The total value of merchandise sold over a period before deductions such as returns, fees, or advertising cost. The contributed strategy-evaluation network uses revenue as its available approximation of GMV.
 
 ### Campaign Group, Campaign, and Ad Group
 
@@ -131,6 +135,22 @@ The fraction of the top K touchpoints (by attribution share) that two models agr
 
 The difference between a model's sum of allocated shares and the required total (1 for shares, the observed outcome total for values). A value of zero means the model perfectly conserved the input total. Non-zero values indicate a calculation defect.
 
+### R-squared (Coefficient of Determination)
+
+The share of outcome variance explained by a prediction relative to predicting the observed mean. One is perfect, zero is no better than the mean, and a negative value is worse than the mean baseline. The contributed network's held-out R-squared is negative.
+
+### sMAPE (Symmetric Mean Absolute Percentage Error)
+
+The average absolute prediction error divided by the average magnitude of the prediction and observation, expressed symmetrically so swapping them does not change the score. Lower is better; the zero-versus-zero case contributes zero error.
+
+### Kendall's Tau
+
+A rank-agreement statistic based on concordant and discordant pairs. This project's strategy baseline comparison uses tau-b, which adjusts for tied values and returns no statistic when a ranking has no direction.
+
+### Huber Loss
+
+A training loss that behaves like squared error for small residuals and absolute error for large residuals. It preserves a smooth gradient near the target while reducing the influence of extreme observations.
+
 ### L1 Distance (Manhattan Distance)
 
 The sum of absolute differences between two vectors across all dimensions. In this project, [TVD](#tvd-total-variation-distance) is defined as half the L1 distance between share vectors, normalizing the result to [0, 1].
@@ -156,6 +176,10 @@ A cryptographic hash function that produces a 256-bit (32-byte) fingerprint of a
 ### HMAC (Hash-based Message Authentication Code)
 
 A keyed digest used to prove that a message came from a party holding the shared secret and was not changed in transit. The team-server deployment validates GitHub's SHA-256 webhook HMAC before queueing a requested commit.
+
+### HTTP (Hypertext Transfer Protocol)
+
+The request-and-response protocol a browser uses to ask a server for a page or a piece of data. The dashboard client and its backend speak it, and the numeric status a response carries — 200 for success, 403 for a refusal, 503 for a dependency that is configured but unreachable — is part of every endpoint contract in this project.
 
 ### HTTPS (Hypertext Transfer Protocol Secure)
 
@@ -185,6 +209,22 @@ The naming system that maps a server name to network addresses. The deployment i
 
 A machine learning model with multiple layers of interconnected nodes. In this project, the [DNN credit model](/en/attribution/standardized-interface/dnn) learns to predict attribution shares from touchpoint segment structure, enabling predictions for campaigns with no historical path data.
 
+### MLP (Multi-Layer Perceptron)
+
+A feed-forward neural network made from fully connected layers. The contributed strategy-evaluation model uses a 32-unit then 16-unit hidden stack to predict log-transformed revenue.
+
+### Adam (Adaptive Moment Estimation)
+
+A gradient-based optimization algorithm that maintains moving averages of both gradients and squared gradients to adapt each parameter's learning rate. The contributed network implements Adam directly.
+
+### Epoch
+
+One complete pass through the training observations. Early stopping ends training when validation performance has not improved for a declared number of epochs.
+
+### One-Hot Encoding
+
+A representation of one categorical value as several binary fields, with exactly one field active for the selected category. The contributed adapter uses it for day-of-week and marketplace inputs.
+
 ### SHAP (SHapley Additive exPlanations)
 
 A widely used library for explaining model predictions using Shapley values. This project's Shapley implementation is an exact closed-form solution for a specific path-unanimity game and does not use the SHAP package. The two should not be confused.
@@ -195,7 +235,56 @@ A lightweight text-based data interchange format. Strategy requests and outputs 
 
 ### API (Application Programming Interface)
 
-A defined way for one program to request services from another. In this project, Amazon Ads API and Amazon Marketing Cloud API provide the upstream data that feeds into attribution and strategy calculations.
+A defined way for one program to request services from another. In this project, Amazon Ads API and Amazon Marketing Cloud API provide the upstream data that feeds into attribution and strategy calculations, and the dashboard's own backend exposes one to its browser client.
+
+### REST (Representational State Transfer)
+
+A convention for building a web API in which each address names a thing and the HTTP method names what to do with it: read it, replace it, or remove it. The dashboard backend follows it, which is why reading the snapshot and starting a pipeline stage are the same address family rather than two unrelated protocols.
+
+### SQL (Structured Query Language)
+
+The language a relational database understands. This project's queries are written against PostgreSQL.
+
+### ORM (Object-Relational Mapper)
+
+A library that maps database rows onto objects in a programming language, so a query is written in that language instead of as SQL text. `dashboard/models.py` defines this project's mapping with SQLAlchemy; writing a query through it means a column renamed in one place cannot silently keep working elsewhere.
+
+### WSGI (Web Server Gateway Interface)
+
+The standard calling convention between a Python web application and the server process that runs it. Flask applications are WSGI applications, which is what lets the same code be served by a development server locally and by a production server such as Gunicorn on a deployment host.
+
+### YAML (Yet Another Markup Language)
+
+An indentation-based text format for configuration. The name is also read as
+the recursive "YAML Ain't Markup Language". Continuous-integration platforms including GitHub Actions and Alibaba Cloud Yunxiao describe their pipelines in it.
+
+### CI/CD (Continuous Integration / Continuous Delivery)
+
+Continuous Integration is the practice of building and testing every change automatically as it lands. Continuous Delivery extends that to releasing the tested result. This repository already practises both through GitHub Actions; [Backend Setup and Deployment](/en/introduction/backend/setups) specifies the Alibaba-hosted target.
+
+### Yunxiao (Alibaba Cloud DevOps)
+
+Alibaba Cloud's hosted DevOps platform, published in Chinese as 云效. Its pipeline product is called Flow, its code hosting is called Codeup, and its application-centred delivery layer is called AppStack. Flow occupies the same role Jenkins does but is a managed service rather than a server the team runs.
+
+### ECS (Elastic Compute Service)
+
+Alibaba Cloud's virtual machine service. An ECS instance is an ordinary Linux server that the team is responsible for patching, sizing, and keeping alive.
+
+### SAE (Serverless App Engine)
+
+Alibaba Cloud's serverless application platform. It runs a container image without the team provisioning or maintaining a virtual machine, and bills for what runs. Compared with ECS it removes the machine-level work, at the cost of requiring the application to be packaged as an image.
+
+### ACR (Alibaba Cloud Container Registry)
+
+Alibaba Cloud's store for container images. A pipeline that deploys by image builds one, pushes it here, and the deployment target pulls it from here.
+
+### VPC (Virtual Private Cloud)
+
+A private network inside a cloud account. Resources placed in one can reach each other without traversing the public internet, which is how a deployed backend is expected to reach its PostgreSQL instance.
+
+### RAM (Resource Access Management)
+
+Alibaba Cloud's permission system. Authorizing a pipeline to deploy to a machine means granting it a RAM role rather than storing a machine password.
 
 ## Product Economics Terms <span class="status-label status-verified" aria-label="Verified"></span>
 
@@ -244,6 +333,10 @@ Reading a fitted [Response Curve](#response-curve) at a budget outside the range
 ### Pooled Transfer
 
 Fitting a Campaign's [Response Curve](#response-curve) from comparable Campaigns because it lacks sufficient budget variation of its own. The estimate is legitimate but is not that Campaign's observed behavior, so it is labelled wherever it appears.
+
+### Elasticity
+
+The proportional change in an outcome associated with a proportional change in an input. The contributed model assigns prior elasticity weights to advertising types when adjusting a prediction for a changed budget mix; those priors are assumptions, not effects identified from this project's observations.
 
 ### ROAS (Return on Ad Spend)
 

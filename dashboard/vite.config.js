@@ -4,7 +4,7 @@
  * Two build targets share one source tree:
  *
  *   vite build                  the local build, which fetches `/api/dashboard`
- *                               from the Express server beside it
+ *                               from the Flask backend beside it
  *   vite build --mode static    the published build, which fetches
  *                               `data/snapshot.json` written at build time
  *

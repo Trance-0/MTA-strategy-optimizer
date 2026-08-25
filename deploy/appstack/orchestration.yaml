@@ -1,0 +1,163 @@
+# Alibaba Cloud Yunxiao AppStack Kubernetes orchestration template.
+# In AppStack, extract each {{ .Values.* }} placeholder and bind it to the
+# target environment. Mark pgPassword as a password/private variable.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: marketing-roi-backend
+  namespace: "{{ .Values.namespace }}"
+  labels:
+    app.kubernetes.io/name: marketing-roi-backend
+data:
+  DATABASE: "{{ .Values.database }}"
+  BACKEND_HOST: "0.0.0.0"
+  BACKEND_PORT: "8501"
+  DASHBOARD_CONFIG_READ_ONLY: "true"
+  PG_HOST: "{{ .Values.pgHost }}"
+  PG_PORT: "{{ .Values.pgPort }}"
+  PG_DATABASE: "{{ .Values.pgDatabase }}"
+  PG_USER: "{{ .Values.pgUser }}"
+  PG_SSLMODE: "{{ .Values.pgSslMode }}"
+  MTA_SIM_DATA_DIR: "{{ .Values.mtaSimDataDir }}"
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: marketing-roi-backend
+  namespace: "{{ .Values.namespace }}"
+  labels:
+    app.kubernetes.io/name: marketing-roi-backend
+type: Opaque
+stringData:
+  PG_PASSWORD: "{{ .Values.pgPassword }}"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: marketing-roi-backend
+  namespace: "{{ .Values.namespace }}"
+  labels:
+    app.kubernetes.io/name: marketing-roi-backend
+spec:
+  replicas: {{ .Values.replicas }}
+  revisionHistoryLimit: 5
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: marketing-roi-backend
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: marketing-roi-backend
+    spec:
+      imagePullSecrets:
+        - name: "{{ .Values.imagePullSecret }}"
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: application
+          image: "{{ .Values.image }}"
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 8501
+              protocol: TCP
+          envFrom:
+            - configMapRef:
+                name: marketing-roi-backend
+            - secretRef:
+                name: marketing-roi-backend
+          readinessProbe:
+            httpGet:
+              path: /api/health
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 6
+          livenessProbe:
+            httpGet:
+              path: /api/health
+              port: http
+            initialDelaySeconds: 15
+            periodSeconds: 20
+            timeoutSeconds: 3
+            failureThreshold: 3
+          resources:
+            requests:
+              cpu: "{{ .Values.requestCpu }}"
+              memory: "{{ .Values.requestMemory }}"
+            limits:
+              cpu: "{{ .Values.limitCpu }}"
+              memory: "{{ .Values.limitMemory }}"
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            readOnlyRootFilesystem: true
+          volumeMounts:
+            - name: temporary
+              mountPath: /tmp
+            - name: simulator-data
+              mountPath: /data/mta-sim
+              readOnly: true
+      volumes:
+        - name: temporary
+          emptyDir: {}
+        - name: simulator-data
+          persistentVolumeClaim:
+            claimName: "{{ .Values.mtaSimPvc }}"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: marketing-roi-backend
+  namespace: "{{ .Values.namespace }}"
+  labels:
+    app.kubernetes.io/name: marketing-roi-backend
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: marketing-roi-backend
+  ports:
+    - name: http
+      port: 80
+      targetPort: http
+      protocol: TCP
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: marketing-roi-backend
+  namespace: "{{ .Values.namespace }}"
+  labels:
+    app.kubernetes.io/name: marketing-roi-backend
+  annotations:
+    nginx.ingress.kubernetes.io/auth-type: basic
+    nginx.ingress.kubernetes.io/auth-secret: "{{ .Values.ingressAuthSecret }}"
+    nginx.ingress.kubernetes.io/auth-realm: "Authentication required"
+    nginx.ingress.kubernetes.io/proxy-body-size: "256k"
+spec:
+  ingressClassName: "{{ .Values.ingressClassName }}"
+  tls:
+    - hosts:
+        - "{{ .Values.host }}"
+      secretName: "{{ .Values.tlsSecret }}"
+  rules:
+    - host: "{{ .Values.host }}"
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: marketing-roi-backend
+                port:
+                  name: http

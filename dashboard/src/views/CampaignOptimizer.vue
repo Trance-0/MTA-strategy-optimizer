@@ -414,12 +414,12 @@ const pooled = computed(() =>
 // ---------------------------------------------------------------------------
 
 /**
- * The evaluation stage has no artifact to show.
+ * The evaluation stage publishes an API artifact that this view does not yet
+ * render. Its tab explains the implemented layers and exposes the same runner
+ * as the other stages, while avoiding a partial visualization of the report.
  *
- * `modules/mta_strategy_evaluation/` is specified but unbuilt, so this tab
- * shows what the layer is for and what exists in its place, rather than an
- * empty table implying a run that failed. The stage's own runner states the
- * same thing from the server's side.
+ * `evaluationAvailable` is the deployment's ability to start the stage, not
+ * whether an evaluation artifact has already been produced.
  */
 const evaluationAvailable = computed(
   () => stages.value.evaluation?.available ?? false,
@@ -684,30 +684,28 @@ const evaluationAvailable = computed(
       <article class="card">
         <div class="card-head">
           <h2>Strategy evaluation</h2>
-          <span class="sub">Specified, not yet built</span>
+          <span class="sub">Runnable assurance stage</span>
         </div>
         <div class="card-body">
           <p>
             This layer scores a strategy the way
             <code>modules/mta_standard</code> scores an attribution model:
-            load a strategy through a validated contract, run it, and compare
-            its output against a baseline and, where one exists, ground truth.
-            It is specified but not implemented — neither
-            <code>modules/mta_strategy_evaluation/</code> nor
-            <code>script/evaluate_strategies.py</code> exists yet.
+            project both strategy artifacts into one validated contract, check
+            conservation, and compare an allocation with observed baselines
+            when every allocated Campaign has observations. Ground-truth
+            scoring remains explicitly not run because the simulator does not
+            publish a true optimal strategy allocation.
           </p>
           <p class="caption">
-            The tab is shown rather than hidden because the gap is real and
-            worth seeing: the optimization tab above reports an expected
-            revenue that nothing currently scores against a realized outcome.
-            Attribution model evaluation against simulator ground truth does
-            exist, in <code>modules/mta_standard/src/evaluation.py</code>.
+            Run the stage above to publish
+            <code>strategy_evaluation.json</code>. Its report is available from
+            the dashboard snapshot as <code>strategyEvaluation</code>; this
+            view does not yet visualize that report.
           </p>
           <div v-if="!evaluationAvailable" class="notice">
-            Until the layer is built, an optimized plan's quality can be judged
-            only by the evidence labels on each allocation — whether its curve
-            came from that Campaign's own history, and whether its budget sits
-            inside the range the fit observed.
+            This deployment cannot start the evaluation command. Run the
+            dashboard in a writable deployment, or execute
+            <code>script/evaluate_strategies.py</code> from a terminal.
           </div>
         </div>
       </article>

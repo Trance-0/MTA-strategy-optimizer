@@ -46,7 +46,7 @@ lang: en-US
 ### `docs/en/<section>/`
 
 - Project responsibility: Code-level specification, carried in the Source Files section of the page that describes the file; no separate implementation section exists
-- Key entry point: [Attribution](../attribution/index.md), [Strategy](../strategy-recommendation/module-overview.md), [Dashboard](../dashboard/index.md)
+- Key entry point: [Attribution](../attribution/index.md), [Strategy](../strategy-recommendation/module-overview/), [Dashboard](../dashboard/index.md)
 
 ### `docs/zh/specifications/`
 

@@ -33,8 +33,8 @@ The overall approach has three stages with clearly separated responsibilities:
 
 ### Strategy Optimizer
 
-- Current output: Not yet implemented
-- Not currently included: The project cannot currently claim revenue maximization or optimal return on investment (ROI)
+- Current output: Campaign budgets optimized against fitted response curves where budget variation has been observed, plus a strategy evaluation stage that checks allocation conservation and compares each strategy against observed baselines
+- Not currently included: The project cannot currently claim revenue maximization or optimal return on investment (ROI); the optimizer fits an association between budget and revenue, not a causal one, and no simulator publishes a true optimal allocation to score against
 
 Current outputs should be understood as **historical evidence and a budget starting point**, not production-grade causal attribution or automated budget optimization.
 
@@ -43,14 +43,15 @@ Current outputs should be understood as **historical evidence and a budget start
 1. [Project structure and data flow](./project-structure.md): directories, entry points, and the stage-by-stage pipeline.
 2. [Canonical data model](./data-models/index.md): the provider-independent domain model shared across attribution, strategy, and dashboard modules, and its legacy compatibility bridge.
 3. [Progress and todos](./progress.md): what is implemented, what is limited, and what comes next.
-4. [AMC MTA project introduction](./amc-mta-introduction.md): what the runnable attribution module does and does not claim.
-5. [AMC MTA architecture](./amc-mta-architecture.md): algorithms, contracts, and output architecture.
-6. [AMC MTA capability assessment](./amc-mta-capability.md): maturity, sample results, risks, and implementation order.
-7. [Workspace architecture](./workspace-architecture.md): the business, knowledge, and tool layers.
-8. [Development and verification guide](./development-guide.md): run the project and reproduce verification.
-9. [Workspace file-location management](./file-management.md): adding, moving, and archiving files.
-10. [Workspace assessment](./assessment.md): audited health, scale, and risks.
-11. [Work log roster](../../worklog/index.md): who is involved, their area, and their day-by-day record.
+4. [Backend API](./backend/index.md): live data access, model endpoints, local setup, and AppStack deployment.
+5. [AMC MTA project introduction](./amc-mta-introduction.md): what the runnable attribution module does and does not claim.
+6. [AMC MTA architecture](./amc-mta-architecture.md): algorithms, contracts, and output architecture.
+7. [AMC MTA capability assessment](./amc-mta-capability.md): maturity, sample results, risks, and implementation order.
+8. [Workspace architecture](./workspace-architecture.md): the business, knowledge, and tool layers.
+9. [Development and verification guide](./development-guide.md): run the project and reproduce verification.
+10. [Workspace file-location management](./file-management.md): adding, moving, and archiving files.
+11. [Workspace assessment](./assessment.md): audited health, scale, and risks.
+12. [Work log roster](../../worklog/index.md): who is involved, their area, and their day-by-day record.
 
 ## Entry Points by Topic
 
@@ -72,11 +73,11 @@ Current outputs should be understood as **historical evidence and a budget start
 
 ### Per-file code-level specification
 
-On the page describing that file: see the Source Files section of [Attribution](../attribution/index.md), [the standardized interface](../attribution/standardized-interface/index.md), [Strategy](../strategy-recommendation/module-overview.md), or [Dashboard](../dashboard/index.md)
+On the page describing that file: see the Source Files section of [Attribution](../attribution/index.md), [the standardized interface](../attribution/standardized-interface/index.md), [Strategy](../strategy-recommendation/module-overview/source-files.md), or [Dashboard](../dashboard/index.md)
 
 ### Campaign Group initial strategy
 
-[Strategy Initializer](../strategy-recommendation/module-overview.md)
+[Strategy Initializer](../strategy-recommendation/module-overview/)
 
 ### Initial-strategy plan and contract
 
@@ -84,7 +85,7 @@ On the page describing that file: see the Source Files section of [Attribution](
 
 ### Current budget calculation
 
-[Step-by-step Ad Group initial-budget calculation](../strategy-recommendation/current-budget-calculation.md)
+[Step-by-step Ad Group initial-budget calculation](../strategy-recommendation/current-budget-calculation/)
 
 ### Future budget optimization research
 

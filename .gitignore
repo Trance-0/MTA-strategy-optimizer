@@ -18,6 +18,13 @@ venv/
 htmlcov/
 /generated/
 
+# matplotlib writes a font cache into whatever `MPLCONFIGDIR` points at, and
+# the contributed trainer under `modules/mta_strategy_evaluation/contrib/`
+# points it at a directory beside itself at import time. That folder is
+# preserved verbatim, so a cache written there must not be committed and must
+# not make the contributor's tree look modified.
+.mplconfig/
+
 # ---------------------------------------------------------------------------
 # Node and Vue
 # ---------------------------------------------------------------------------

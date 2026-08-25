@@ -23,7 +23,7 @@ This index describes external Amazon Ads, Amazon Attribution, and AMC originals 
 - **Type:** TXT
 - **Purpose and boundary:** upstream formatting examples
 
-## [Marketing Stream field research](amazon-marketing-stream-fields.md)
+## [Marketing Stream field research](amazon-marketing-stream-fields/)
 
 - **Type:** Markdown
 - **Purpose and boundary:** streaming measure and dimension reference
