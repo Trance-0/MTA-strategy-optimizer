@@ -9,17 +9,12 @@
   },
   "scripts": {
     "dev": "vite",
-    "start": "uv run --directory .. --extra backend python -m backend.app",
     "build": "vite build",
     "build:static": "uv run --directory .. --extra backend python -m script.export_dashboard_snapshot && vite build --mode static",
     "export:static": "uv run --directory .. --extra backend python -m script.export_dashboard_snapshot",
-    "verify:parity": "node ../script/verify_dashboard_parity.mjs",
     "test": "node --test \"tests/**/*.test.js\""
   },
   "dependencies": {
-    "dotenv": "^17.2.3",
-    "express": "^5.2.1",
-    "pg": "^8.23.0",
     "plotly.js-dist-min": "^3.7.0",
     "vue": "^3.5.41"
   },

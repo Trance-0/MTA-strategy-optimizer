@@ -27,11 +27,9 @@ The attribution, standard, and strategy modules never import these classes. They
 
 The Flask repositories under `backend/repository/` guarantee that both modes
 return identical fields, types, values, and row order, so a view cannot tell
-which one it is reading. The legacy `dashboard/server/data_source.js` loader
-and `script/verify_dashboard_parity.mjs` remain a cross-language migration
-oracle against a live database. Five differences make parity non-trivial and
-are normalized in the loaders rather than in any view; they are specified in
-full under [Two Data Sources, One Contract](../dashboard/index.md#two-data-sources-one-contract).
+which one it is reading. Five differences make parity non-trivial and are
+normalized in the loaders rather than in any view; they are specified in full
+under [Two Data Sources, One Contract](../dashboard/index.md#two-data-sources-one-contract).
 
 One of them constrains this schema directly. **Row order is part of the contract**, because the views render in the order the loader returns, and a file loader returns the artifact's own order. Every table therefore carries a surrogate `id` primary key, `script/import_to_database.py` inserts rows in each artifact's order, and every query the dashboard issues orders by that key rather than by the business key — `order by campaign_id` sorts alphabetically and would put the same Campaigns on screen in a different sequence than file mode does.
 

@@ -11,6 +11,11 @@ The project version is recorded in the repository-root `VERSION` file. Each page
 
 This section records **what** changed. See the [work log](../worklog/) for **who** did the work and when.
 
+## [0.9.29](0.9.29.md)
+
+- Date: 2026-08-26
+- Summary: Added a two-container Docker test stack tagged from `VERSION` that detects the data source automatically and gives credentials to the API alone, removed the dashboard's Node server component after porting its coverage to the backend suite, and fixed a bind-parameter defect that made every database-mode snapshot fail
+
 ## [0.9.28](0.9.28.md)
 
 - Date: 2026-08-25

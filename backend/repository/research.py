@@ -301,15 +301,21 @@ def _database_simulation_research() -> dict:
     ad_groups = sql(
         "select * from mta_sim_ad_group order by run_id, campaign_id, ad_group_id"
     )
+    # The interaction suffixes are escaped as `\:IMPRESSION` and `\:CLICK`
+    # because `sql()` wraps the statement in SQLAlchemy's `text()`, which reads
+    # a bare `:NAME` as a bind parameter even inside a quoted SQL literal.
+    # Unescaped, every database-mode snapshot fails with "A value is required
+    # for bind parameter 'IMPRESSION'" before any row is read. The backslash is
+    # consumed by the parser, so PostgreSQL still receives `:IMPRESSION`.
     touchpoints = sql(
-        """
+        r"""
         select *, array_remove(array[
           case when impression_enabled then concat(ad_product, ':', format, ':',
             coalesce(placement, 'UNSPECIFIED'), ':',
-            coalesce(creative, 'UNSPECIFIED'), ':IMPRESSION') end,
+            coalesce(creative, 'UNSPECIFIED'), '\:IMPRESSION') end,
           case when click_enabled then concat(ad_product, ':', format, ':',
             coalesce(placement, 'UNSPECIFIED'), ':',
-            coalesce(creative, 'UNSPECIFIED'), ':CLICK') end
+            coalesce(creative, 'UNSPECIFIED'), '\:CLICK') end
         ], null) as compatibility_keys
         from mta_sim_touchpoint order by run_id, identifier
         """

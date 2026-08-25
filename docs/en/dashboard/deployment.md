@@ -1,8 +1,8 @@
 ---
 title: Running Locally and Publishing
-compact: "Dashboard delivery contract: Bash and Windows launchers build Vue then start Flask, Vite hot reload proxies `/api`, static publishing exports Flask's file-mode snapshot through Python, GitHub Pages assembles dashboard and English documentation, and production uses the Yunxiao AppStack image and orchestration."
+compact: "Dashboard delivery contract: Bash and Windows launchers build Vue then start Flask, Vite hot reload proxies `/api`, a two-container Docker stack runs the client and API separately for testing, static publishing exports Flask's file-mode snapshot through Python, GitHub Pages assembles dashboard and English documentation, and production uses the Yunxiao AppStack image and orchestration."
 lang: en-US
-source_files: dashboard/index.html, dashboard/vite.config.js, dashboard/run.sh, dashboard/run.bat, script/build_pages_site.mjs, script/export_dashboard_snapshot.py
+source_files: dashboard/index.html, dashboard/vite.config.js, dashboard/run.sh, dashboard/run.bat, deploy/docker/compose.yaml, deploy/docker/defaults.env, deploy/docker/run.sh, deploy/docker/run.bat, script/build_pages_site.mjs, script/export_dashboard_snapshot.py
 ---
 
 # Running Locally and Publishing
@@ -34,6 +34,56 @@ npm run dev
 
 Vite proxies `/api` to `http://127.0.0.1:8501`. The client therefore exercises
 the real Python backend while Vue modules reload in place.
+
+## Two-Container Docker Stack
+
+`deploy/docker/` runs the client and the API as separate containers, so each
+can be rebuilt, restarted, and read on its own. It is a testing counterpart to
+AppStack, which deploys one image serving both.
+
+```bash
+./deploy/docker/run.sh          # build both images and start
+./deploy/docker/run.sh down     # stop and remove them
+./deploy/docker/run.sh logs     # follow both containers
+```
+
+`deploy\docker\run.bat` is the Windows equivalent. Both read the
+repository-root `VERSION` file into `PROJECT_VERSION` and tag the two images
+with it, so bumping `VERSION` is the only thing that rolls the tag. `up` stops
+the previous run first: a rebuilt image does not replace a container that is
+already running, and the old one still holds the published ports.
+
+The client is served by NGINX on `http://localhost:8090` and proxies `/api` to
+the API container by service name. The API is also published on
+`http://localhost:8501` so it can be exercised with `curl`, but the browser
+never uses that port — **the only thing the client is given is a URL.** No
+credential and no database driver exists on the client side of the stack.
+
+The dashboard container waits for the API's `service_healthy` condition rather
+than for its start, because NGINX resolves the upstream name once at worker
+start. The API's health check calls `/api/health` with `urllib`, since the slim
+Python image carries no `curl` or `wget`.
+
+### The data source is detected, not configured
+
+`compose.yaml` layers two application environment files, last value winning:
+
+- `deploy/docker/defaults.env` is tracked and holds `DATABASE=false` with empty
+  `PG_*` values, so a clean checkout with no `.env` starts and serves the
+  committed CSV and JSON files.
+- The repository-root `.env` is optional and overrides any of those. It is
+  passed to the **API container only**, at run time. `.dockerignore` excludes
+  `.env` from the build context, so no credential is baked into an image layer.
+
+`run.sh` prints which of the two was resolved, so a stack reading the wrong
+source is visible at startup rather than at the first empty chart.
+
+`DATABASE=true` needs a host the container can reach. `localhost` in the root
+`.env` names the container itself; a database on the Docker Desktop host is
+`host.docker.internal`. Stack knobs — `DASHBOARD_PORT`, `API_PORT` — go in an
+ignored `deploy/docker/.env` instead, so the root file's `DASHBOARD_PORT`,
+which is where the *local* server binds, cannot silently move the published
+port.
 
 ## Static GitHub Pages Build
 
@@ -82,6 +132,37 @@ Source: `dashboard/run.sh`, `dashboard/run.bat`
 - Dependencies: Node.js, npm, uv, and the locked project files.
 - Verification: `bash -n dashboard/run.sh`, `dashboard\run.bat --help`, and a
   local `/api/health` request after startup.
+
+### The two-container test stack
+
+Source: `deploy/docker/compose.yaml`, `deploy/docker/defaults.env`,
+`deploy/docker/Dockerfile.api`, `deploy/docker/Dockerfile.dashboard`,
+`deploy/docker/nginx.conf`, `deploy/docker/run.sh`, `deploy/docker/run.bat`
+
+- Responsibility: Build and run the client and API as two containers, tagged
+  from `VERSION`, reading whichever data source the checkout is configured for.
+- Inputs: The repository root as build context; `defaults.env`; the optional
+  root `.env`; the optional `deploy/docker/.env` for ports.
+- Outputs: `marketing-roi-analysis-dashboard` on 8090 and
+  `marketing-roi-analysis-api` on 8501, both with health checks.
+- Behavior contract: `Dockerfile.api` deliberately does **not** copy
+  `dashboard/dist`, so `client_dist_directory()` returns None and the service
+  registers API routes only — the client is the other image. It builds with
+  `npm run build`, not `--mode static`, which would bake a snapshot and make
+  Flask unreachable. `HOME` and `UV_CACHE_DIR` are set to `/tmp` *after*
+  `uv sync` and the `useradd`, because the build runs as root and an earlier
+  `UV_CACHE_DIR` bakes a root-owned cache the service account is then denied;
+  without them every pipeline stage fails at launch, since the unprivileged
+  user's home is `/nonexistent` and uv initializes a cache before it runs
+  anything. The root `.env` is layered over `defaults.env` at run time and
+  never copied into an image. The client container holds no credential and
+  reaches the API by service name.
+- Dependencies: Docker with Compose v2. No local Node or uv.
+- Verification: `./deploy/docker/run.sh up`, then both containers reach
+  `healthy`; `/api/health` answers directly and through the proxy;
+  `/api/dashboard` returns fifteen keys; and the six views render in a browser
+  with no console, page, or network error. Verified in both file mode and
+  against the live PostgreSQL instance.
 
 ### `dashboard/index.html` and `dashboard/vite.config.js`
 

@@ -11,9 +11,18 @@ lang: en-US
 > Project: Marketing ROI Analysis
 > Handle: `Trance-0`
 > Role: Project manager — pipeline development, data simulation and integration, algorithm testing
-> Last updated: 2026-08-25
+> Last updated: 2026-08-26
 
 Entries are reconstructed from Git history. They record the change set behind each commit, not a separate narrative.
+
+---
+
+## 2026-08-26
+
+### Completed
+
+- Built `deploy/docker/`, a two-container test stack tagging both images from `VERSION`, and made its data source detected rather than configured: a tracked `defaults.env` under the optional root `.env`, so a clean checkout serves the committed files and a configured one reaches its database with no extra step. Credentials reach the API container alone and only at run time — verified that neither image contains one and that the API has no `.env` on disk — while the client is a static bundle behind NGINX that is given a URL and nothing else.
+- Removed the dashboard's Node server component after porting the coverage that would have gone with it: `dashboard/server/` and the parity verifier are deleted along with `express`, `pg`, and `dotenv`, and the backend suite went from 15 tests to 32 including a case the Node suite never had. Fixed a pre-existing defect the browser verification surfaced, where a literal `:IMPRESSION` inside a `text()` statement read as a bind parameter and failed every database-mode snapshot before a row was read. Corrected the commit-message rule in `AGENTS.md`, which said 300 **words** where 300 characters was meant, making it no constraint at all.
 
 ---
 

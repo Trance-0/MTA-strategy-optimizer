@@ -1,8 +1,8 @@
 ---
 title: Dashboard Views and Visual Contract
-compact: "Visual contract for six Vue views and shared components: capability-driven theming, paged entity lists, diagnostics, pipeline controls, model tabs, accessibility, and empty/read-only states. Legacy `dashboard/server` jobs and master-data modules remain only as JavaScript parity fixtures."
+compact: "Visual contract for six Vue views and shared components: capability-driven theming, paged entity lists, diagnostics, pipeline controls, model tabs, accessibility, and empty/read-only states. The stage catalogue and entity derivation the views render are owned by `backend/services/jobs.py` and `backend/repository/master_data.py`."
 lang: en-US
-source_files: dashboard/src/theme.js, dashboard/src/style.css, dashboard/src/lib/deployment.js, dashboard/src/lib/diagnostics.js, dashboard/src/lib/useJobs.js, dashboard/server/jobs.js, dashboard/server/master_data.js, dashboard/src/views/CommandCenter.vue, dashboard/src/views/BudgetManager.vue, dashboard/src/views/Campaigns.vue, dashboard/src/views/CampaignOptimizer.vue, dashboard/src/views/OptimizationLog.vue, dashboard/src/views/KnowledgeBase.vue, dashboard/src/components/SidebarNav.vue, dashboard/src/components/TopBar.vue, dashboard/src/components/SettingsDialog.vue, dashboard/src/components/StageRunner.vue, dashboard/src/components/PlotlyChart.vue, dashboard/src/components/DataTable.vue, dashboard/src/components/EntityTable.vue, dashboard/src/components/ConfirmDialog.vue, dashboard/src/components/TableView.vue, dashboard/src/components/MetricRow.vue, dashboard/src/components/KeyValuePanel.vue, dashboard/src/components/ReliabilityBanner.vue, dashboard/src/lib/common.js
+source_files: dashboard/src/theme.js, dashboard/src/style.css, dashboard/src/lib/deployment.js, dashboard/src/lib/diagnostics.js, dashboard/src/lib/useJobs.js, dashboard/src/views/CommandCenter.vue, dashboard/src/views/BudgetManager.vue, dashboard/src/views/Campaigns.vue, dashboard/src/views/CampaignOptimizer.vue, dashboard/src/views/OptimizationLog.vue, dashboard/src/views/KnowledgeBase.vue, dashboard/src/components/SidebarNav.vue, dashboard/src/components/TopBar.vue, dashboard/src/components/SettingsDialog.vue, dashboard/src/components/StageRunner.vue, dashboard/src/components/PlotlyChart.vue, dashboard/src/components/DataTable.vue, dashboard/src/components/EntityTable.vue, dashboard/src/components/ConfirmDialog.vue, dashboard/src/components/TableView.vue, dashboard/src/components/MetricRow.vue, dashboard/src/components/KeyValuePanel.vue, dashboard/src/components/ReliabilityBanner.vue, dashboard/src/lib/common.js
 ---
 
 # Dashboard Views and Visual Contract
@@ -168,34 +168,6 @@ Source: `dashboard/src/lib/useJobs.js`
 - Behavior contract: One module-level store rather than a fetch per tab: the optimizer shows three stages at once, and three components polling for themselves would be three times the requests to paint one screen, with three answers free to disagree about which stage is running. **Polling stops when nothing is running** — a dashboard left open on an idle pipeline must not issue a request every second forever — and a stage started from this browser restarts the poll itself. `schedule()` clears the timer before setting one, so a manual refresh landing beside a scheduled one cannot leave two timers polling in parallel. A refusal from the server is surfaced rather than swallowed, because a stage blocked for want of a research snapshot and one blocked by a read-only deployment are different problems and only the message distinguishes them. `reloadAfterRun()` is separate from the run and is called by the reader: a finished stage rewrites what every view reads, and swapping the numbers mid-read would be a worse surprise than a button.
 - Dependencies: Vue's reactivity, `src/api/client.js`, and `src/lib/useDashboard.js`.
 - Verification: `dashboard/tests/dashboard.test.js` covers the server contract this module polls — `GET /api/jobs`, the refusals, and the progress shape. The store itself, its poll scheduling, and its stop-when-idle rule are exercised in a real browser against a running stage.
-
-### Legacy parity harness: `server/jobs.js`
-
-Source: `dashboard/server/jobs.js`
-
-- Responsibility: Preserve the former Node pipeline-job behavior for the
-  JavaScript regression suite. Runtime requests use the Flask jobs service
-  specified in [Backend Jobs and Settings](/en/introduction/backend/operations).
-- Inputs: A stage key, the validated run options, and `server/config.js` for the repository root and the configured research snapshot.
-- Outputs: `STAGES`, `STAGE_KEYS`, `activeJob()`, `jobsState()`, `startRefusal()`, `normalizeOptions()`, `startJob()`, and `stopJob()`.
-- Behavior contract: **No stage is reimplemented here.** `STAGES` names the script each stage runs, and the arguments are the documented ones, so a run started from the dashboard and one started in a terminal cannot diverge. Attribution runs `run_pipeline.py` rather than `run_attribution_models.py`, because the pipeline script rebuilds the path report first and publishes all five outputs together, which is what keeps a failed run from leaving half a result. Each stage's `phases` are regexes matched against the script's own stdout and applied only when `phase.at > job.percent`, so the bar is monotonic and a later line naming an earlier stage never walks it backwards. `normalizeOptions()` is the only path from a request body to an argument: dates must match `YYYY-MM-DD` and be ordered, a total budget must be a positive finite number, and a budget usage policy must be one `BudgetUsagePolicy` declares — the list is pinned to `modules/mta_common/src/enums.py` by test, because an unrecognized value would reach argparse's `choices` and fail the run only after it had started. `spawn` is called with an argument vector and the default `shell: false`, never a command string. `startRefusal()` checks every reason **before** anything is spawned, so a refusal never leaves a half-started run behind, and each reason names its remedy; a missing `uv` is reported as the specific remedy rather than as a bare `ENOENT`. The log buffer is bounded at 600 lines and the dropped count is reported rather than hidden, so a truncated log never reads as a complete one. Only a successful run fires `onFinish`, because only a successful run changed what the dashboard reads.
-- Dependencies: Node's `child_process`, `fs`, and `path`, plus `server/config.js`.
-- Verification: `dashboard/tests/dashboard.test.js`, which covers option
-  validation including a shell-metacharacter date, policies against the enum,
-  unavailable and unknown stages, monotonic progress, and phase patterns.
-
-### Legacy parity harness: `server/master_data.js`
-
-Source: `dashboard/server/master_data.js`
-
-- Responsibility: Preserve the former Node entity-catalogue derivation for
-  cross-language parity tests. Runtime requests use
-  `backend/repository/master_data.py`.
-- Inputs: The daily platform report rows and the entity aggregate rows, plus the strategy request when one is present.
-- Outputs: `deriveMasterData(adsRows, bridgeRows, strategyRequest)`, consumed by `server/data_source.js`.
-- Behavior contract: **Derivation rather than a second tracked file.** A catalogue committed beside the reports would be free to disagree with them; one read out of the reports cannot. Because the reports are tracked, every deployment populates its entity sections without any optional sidecar being configured. A field the reports do not carry — a Product's category, a unit price, a Campaign's baseline budget — stays `null` rather than being invented, and the interface renders it as missing. `UNSPECIFIED` is the pipeline's marker for a segment the platform does not report and is mapped back to `null`, so the interface shows it as absent rather than as a literal value the account uses. `distinct()` preserves first-seen order, so a catalogue's row order is stable across reloads.
-- Dependencies: None.
-- Verification: `dashboard/tests/dashboard.test.js`, which asserts every derived section is non-empty against the committed reports, that an unreported field comes back `null` rather than `0`, and that no `UNSPECIFIED` marker survives into a segment.
 
 ### The six view components
 

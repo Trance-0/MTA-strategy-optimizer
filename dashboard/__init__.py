@@ -1,10 +1,9 @@
 """Database schema and configuration shared by Flask and the importer.
 
-The dashboard is a Vue client over the Flask API in `backend/`. This package
-owns the shared `.env` contract in `config.py` and PostgreSQL schema in
-`models.py`; both the Flask repositories and `script/import_to_database.py`
-import those definitions. `dashboard/server/` remains only as a JavaScript
-parity fixture during the backend migration.
+The dashboard is a Vue client over the Flask API in `backend/`: `src/` calls
+`/api/*` and holds no database code of its own. This package owns the shared
+`.env` contract in `config.py` and PostgreSQL schema in `models.py`; both the
+Flask repositories and `script/import_to_database.py` import those definitions.
 
 Data flow:
     .env -> config.py -> Flask repositories and script/import_to_database.py

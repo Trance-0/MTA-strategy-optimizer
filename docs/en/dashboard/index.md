@@ -1,9 +1,9 @@
 ---
 title: Dashboard
 description: The Vue dashboard's architecture, its dual data source contract, and where each topic is documented
-compact: "Vue/Flask dashboard contract: Python repositories own file/PostgreSQL access and serve the unchanged 14-key snapshot; views issue no SQL and recompute no attribution. Legacy `dashboard/server` remains only as the parity reference until its JavaScript tests and database verifier are migrated."
+compact: "Vue/Flask dashboard contract: Python repositories own file/PostgreSQL access and serve the unchanged 14-key snapshot; views issue no SQL and recompute no attribution. The client is a browser application only — it holds no database code and reaches everything through `/api`."
 lang: en-US
-source_files: dashboard/server/config.js, dashboard/server/csv.js, dashboard/server/data_source.js, dashboard/server/index.js, dashboard/src/api/client.js, dashboard/src/lib/useDashboard.js, dashboard/tests/dashboard.test.js, script/verify_dashboard_parity.mjs
+source_files: dashboard/src/api/client.js, dashboard/src/lib/useDashboard.js, dashboard/tests/dashboard.test.js, backend/repository/coercion.py, backend/tests/test_coercion.py, backend/tests/test_settings.py
 ---
 
 # Dashboard
@@ -37,6 +37,13 @@ The boundary is exact: `src/api/client.js` is the only module in the client
 that issues a request, and `backend/repository/` is the only runtime layer that
 opens an artifact or database connection. A view holds no file path, no
 Structured Query Language (SQL) statement, and no direct `fetch` call.
+
+The client half is a browser application and nothing else. It ships no server,
+reads no `.env`, and carries no PostgreSQL driver: `dashboard/package.json`
+declares Vue and Plotly and no other runtime dependency. Every credential and
+every query lives behind the API, so the only thing a deployment has to give
+the client is a URL — see [Running Locally and Publishing](./deployment.md) for
+the two-container stack that does exactly that.
 
 ### The API
 
@@ -107,7 +114,7 @@ Every query therefore orders by the **surrogate key**, not by the business key. 
 
 ### What the database legitimately does not carry
 
-Three groups of fields exist in the JSON artifacts and in no table: the capacity rules, the per-Campaign derivation breakdown, and the source file paths and counts. They are pipeline configuration and intermediate arithmetic rather than observations, and modelling them would mean the database stored figures the dashboard is forbidden to recompute. No view reads any of them. `verify_dashboard_parity.mjs` lists them explicitly, so the exemption is stated rather than assumed and a **new** absence is still a failure.
+Three groups of fields exist in the JSON artifacts and in no table: the capacity rules, the per-Campaign derivation breakdown, and the source file paths and counts. They are pipeline configuration and intermediate arithmetic rather than observations, and modelling them would mean the database stored figures the dashboard is forbidden to recompute. No view reads any of them.
 
 When `DATABASE=true` but the database is unreachable or empty, the API answers `503` with a named reason and the client renders it as a page stating both remedies, rather than surfacing a connection error from inside whichever chart happened to read it first.
 
@@ -147,57 +154,6 @@ Continue with [Views and visual contract](./views.md) for the reliability rule e
 
 The code-level specification for the files this page describes. Each entry states responsibility, inputs, outputs, dependencies, and the test that verifies it.
 
-### Legacy parity harness: `server/config.js`
-
-Source: `dashboard/server/config.js`
-
-- Responsibility: Preserve the former Node loader's configuration so the
-  database-parity verifier and JavaScript regression suite remain a migration
-  oracle. It is not the supported runtime configuration.
-- Inputs: `.env` at the repository root, loaded without overriding real environment variables so a shell export, `systemd` environment file, or container secret wins. `DATABASE`, `DASHBOARD_HOSTED`, and `DASHBOARD_CONFIG_READ_ONLY` accept `1`, `true`, `yes`, or `on`, case-insensitively. `DASHBOARD_HOST` and `DASHBOARD_PORT` configure the listener.
-- Outputs: `useDatabase()`, `isHosted()`, `configReadOnly()`, `databaseSettings()`, `safeSummary()`, `serverHost()`, `serverPort()`, `simulatorDataDirectory()`; the legacy artifact path constants; and `DESCRIPTION_ROW_MARKERS`.
-- Behavior contract: `databaseSettings()` throws naming **every** missing variable and pointing at `sample.env`, rather than failing later at connection time with a misleading network error. `safeSummary()` returns a display string that never contains the password, omitted by construction rather than masked, so no future edit can accidentally widen it. `useDatabase()` returns false whenever `isHosted()` is true, regardless of the switch — a static host has no socket to open, so the hosted flag decides before the switch is read. `serverHost()` defaults to `127.0.0.1`, so running the Node server does not expose settings or mutation routes on every interface by accident. `.env` is read once and cached, so the mode is fixed for the life of the process; this is why `verify_dashboard_parity.mjs` probes the two modes in separate processes.
-- Dependencies: `dotenv`. Installed with `npm install` in `dashboard/`.
-- Verification: `node script/verify_dashboard_parity.mjs`, which exercises both modes.
-
-### `server/csv.js`
-
-Source: `dashboard/server/csv.js`
-
-- Responsibility: Read the project's committed CSV artifacts into objects keyed by header name.
-- Inputs: A path to one of the artifacts the pipeline writes.
-- Outputs: `parseCsv(text)` returning rows of raw string cells, and `readCsv(path)` returning objects.
-- Behavior contract: The parser covers exactly what those files contain — quoted fields, doubled quotes inside them, and both line endings — rather than pulling in a dependency. It **does no type inference**: every value comes back as a string and `data_source.js` coerces the columns it knows about, because inference is what makes a file read and a database read disagree. A Unicode Transformation Format 8-bit (UTF-8) byte-order mark is stripped, or it would become part of the first header name and every lookup of that column would miss. The Chinese field-description row is dropped by matching its exact marker from `config.DESCRIPTION_ROW_MARKERS`, not by heuristic: an earlier heuristic that tested for the absence of digits silently discarded a real data row from the files that have no such row. The empty row a trailing newline produces is discarded, or it would become a row of nulls in every chart.
-- Dependencies: None beyond Node's `fs`.
-- Verification: `dashboard/tests/dashboard.test.js`, which covers quoting, doubled quotes, Carriage Return Line Feed (CRLF), the byte-order mark, the description row in both the files that carry it and the files that do not, and the trailing newline.
-
-### Legacy parity harness: `server/data_source.js`
-
-Source: `dashboard/server/data_source.js`
-
-- Responsibility: Preserve the former Node snapshot implementation for
-  cross-language parity verification. Runtime requests use the Python
-  repositories specified in [Dashboard Data Endpoints](/en/introduction/backend/dashboard-data).
-- Inputs: `server/config.js`; committed legacy artifacts or an optional generated MTA-SIM run directory; and either the legacy PostgreSQL tables or direct `mta_sim_*` research tables.
-- Outputs: The legacy loaders plus `loadCampaignStrategy()`, `loadSimulationResearch()`, and `loadSnapshot()`. `simulationResearch` contains runs, Provider profiles, Products, Campaigns, Ad Groups, structured Touchpoints, economics, links, budget/outcome history, delivery, configurations, and latent/observed Touchpoint pairs. `campaignStrategy` is the [Campaign budget optimizer](/en/strategy-recommendation/campaign-budget-optimizer.md) artifact in its own shape. The module also exposes master-draft upsert/archive operations, date normalization, source/status helpers, cache clearing, and pool disposal.
-- Behavior contract: Legacy loaders preserve exact cross-mode parity. Research loaders normalize the same fields and types across modes and preserve the selected run's natural scale. `loadCampaignStrategy()` is mode-independent by construction: the optimizer's artifact is produced by a research command rather than by the import pipeline, so no table represents it and both modes read the same file, returning `{}` when it is absent. Generated history is read-only. Only `dashboard_master_object` accepts future-run drafts, and only in database mode; drafts never update the `mta_sim_*` observation tables. `formatDate()` is the single date conversion. `project()` pins absent values to `null`. `pg` is loaded lazily and results are cached for ten minutes until Reload.
-- Dependencies: `pg`, plus `server/config.js` and `server/csv.js`.
-- Verification: `node script/verify_dashboard_parity.mjs` against a populated database. The file-mode invariants — booleans, date format, null-not-empty-string, finite numbers, and JSON round-tripping — are covered by `dashboard/tests/dashboard.test.js`, which needs no database.
-
-### Legacy parity harness: `server/index.js`
-
-Source: `dashboard/server/index.js`
-
-- Responsibility: Provide an in-process Express oracle for the existing
-  JavaScript route tests while they are migrated. `npm start`, the local
-  launchers, and AppStack do not execute this file.
-- Inputs: HTTP requests. The client build in `dashboard/dist`, when one exists.
-- Outputs: `createApp()`, a listening server when run directly, the existing dashboard/reload/settings routes, `PUT`/`DELETE /api/master/:entityType/:entityId` for planned master drafts, and `GET`/`POST`/`DELETE /api/jobs` for the pipeline stages.
-- Behavior contract: `GET /api/health` always returns `200` once the process is listening, independent of database state — the deploy worker's activation health check. `GET /api/dashboard` checks database availability and returns a named `503` reason on failure. Master writes are refused outside database mode, validate the supported entity type and JSON object payload, and upsert or archive only `dashboard_master_object`; no route mutates reported performance. `GET /api/jobs` returns every stage in one response, because the view shows three tabs at once. `POST /api/jobs/:stage` refuses a read-only deployment with `403` before it reads the body, answers an invalid option with `400 invalid_options` and a stage already running with `409`, and otherwise returns `202` as soon as the child is spawned — the client polls for the rest — clearing the caches when a run succeeds, since a successful stage rewrote what the dashboard reads. `DELETE /api/jobs/:stage` answers an unknown stage `404` and an idle stage `409`: "nothing is running" and "no such stage" are different faults, and answering both the same way would let a typo read as an idle stage. Hosted settings remain read-only, and `DASHBOARD_CONFIG_READ_ONLY=true` makes every settings mutation return the named `read_only_configuration` error while retaining the live server and its configured data source. When run directly, the server binds the configured host and port and prints that exact address.
-- Dependencies: `express`, plus `server/config.js`, `server/data_source.js`, `server/jobs.js`, and `server/settings.js`.
-- Verification: `dashboard/tests/dashboard.test.js` imports `createApp()`
-  directly. Live browser verification starts Flask through the launchers.
-
 ### `src/api/client.js` and `src/lib/useDashboard.js`
 
 Source: `dashboard/src/api/client.js`, `dashboard/src/lib/useDashboard.js`
@@ -216,17 +172,32 @@ Source: `dashboard/tests/dashboard.test.js`
 - Responsibility: Verify the contracts a clean checkout can check without a database.
 - Inputs: The committed artifacts, and temporary files for the `.env` tests.
 - Outputs: Pass or fail per test. Run with `npm test` in `dashboard/`.
-- Behavior contract: The suite pins file mode **before** anything imports `server/config.js`, which caches the mode on first read, so a test run can never touch the operator's real database. It covers the CSV parser's quoting, line endings, byte-order mark, description row, and trailing newline; `writeEnv()`'s in-place replacement, single append, and stable output; the log buffer's bound, default-off state, level filtering, and truncation; loopback as the default server host; rejection of settings writes in protected deployment mode; the navigation registration contract; the entity table's paging and identity-keyed selection; the run options, refusals, and job route status codes; and the snapshot invariants — real booleans rather than the string `"false"`, dates as `YYYY-MM-DD`, absent text as `null` rather than `""`, finite numbers rather than strings, the five touchpoint segments, and that the whole snapshot survives JSON serialisation unchanged. `formatDate()` is tested directly against a `Date` object, because file mode never produces one and the database's shape would otherwise be unverifiable without a connection. Several tests assert against **source text** rather than a rendered component, because the suite runs without a Document Object Model (DOM): they pin contracts a reader cannot see in a screenshot — that a progress bar's `aria-valuenow` and its visible percentage read one value, that a phase pattern still matches a line the Python actually prints, that the offered budget policies are the ones the enum declares.
+- Behavior contract: Every test runs without a database and without a browser, so a clean checkout can run the whole suite. It covers the navigation registration contract; the entity table's paging and identity-keyed selection; the run options and refusals; and the snapshot invariants — real booleans rather than the string `"false"`, dates as `YYYY-MM-DD`, absent text as `null` rather than `""`, finite numbers rather than strings, the five touchpoint segments, and that the whole snapshot survives JSON serialisation unchanged. Several tests assert against **source text** rather than a rendered component, because the suite runs without a Document Object Model (DOM): they pin contracts a reader cannot see in a screenshot — that a progress bar's `aria-valuenow` and its visible percentage read one value, that a phase pattern still matches a line the Python actually prints, that the offered budget policies are the ones the enum declares. Two of those read Python sources directly, because the contract they pin is now owned by `backend/services/`; the reader is the client, so the test stays here.
 - Dependencies: Node's built-in test runner. No database.
-- Verification: `npm test` in `dashboard/`. Sixty-one tests pass against the committed artifacts.
+- Verification: `npm test` in `dashboard/`. Twenty-six tests pass against the committed artifacts.
 
-### `verify_dashboard_parity.mjs`
+### `backend/tests/test_coercion.py` and `backend/tests/test_settings.py`
 
-Source: `script/verify_dashboard_parity.mjs`
+Source: `backend/tests/test_coercion.py`, `backend/tests/test_settings.py`
 
-- Responsibility: Assert that every loader returns the same fields, values, and row order whether `DATABASE` is true or false.
-- Inputs: The committed artifacts, and a populated PostgreSQL instance configured in `.env`.
-- Outputs: One line per loader, and a non-zero exit status naming every field that differs.
-- Behavior contract: The two modes are probed in **separate child processes**, because `server/config.js` caches the mode after the first read and one process therefore cannot hold both. The child writes only the snapshot to standard output, so a log line cannot corrupt the payload. Differences are reported in full rather than at the first one, because a single normalisation bug usually shows up in many fields at once and the pattern across them identifies the cause. Row order is compared positionally, not as a set, because the views render in the order the loader returns. `ALLOWED_DB_ABSENCES` lists the fields the relational schema legitimately does not carry, so the exemption is explicit and a new absence is still a failure.
-- Dependencies: Everything `server/data_source.js` needs.
-- Verification: `node script/verify_dashboard_parity.mjs`. It is a command rather than a unit test because it requires a populated database, which a clean checkout does not have. It reported all ten loaders identical against the live instance as of version 0.9.20; `campaignStrategy` is the eleventh and is parity-safe by construction, since both modes read the one artifact file.
+- Responsibility: Hold the reader and settings contracts that the deleted Node
+  suite proved, so removing that code did not remove the coverage.
+- Inputs: Temporary files only. Neither test reads the repository's own `.env`
+  or opens a connection.
+- Outputs: Pass or fail per test, under `uv run --extra backend python -m unittest`.
+- Behavior contract: `read_csv` drops the Chinese field-description row by
+  matching its exact marker rather than by heuristic — an earlier heuristic
+  that tested for the absence of digits silently discarded a real data row from
+  the files that carry no such row — strips a Unicode Transformation Format
+  8-bit (UTF-8) byte-order mark that would otherwise become part of the first
+  header name, keeps quoting, embedded newlines, and Carriage Return Line Feed
+  (CRLF) intact, discards the empty row a trailing newline produces, and
+  returns no rows rather than raising for an artifact that has not been
+  produced. `write_env` replaces a key in place, appends a missing one exactly
+  once, preserves comments and unrelated keys, does not grow the file over
+  repeated saves, and keeps a password containing `=` intact. Diagnostic
+  logging is off by default, drops records below the active level rather than
+  storing and filtering them on display, truncates one message at 400
+  characters, and bounds the buffer at `LOG_CAPACITY`.
+- Dependencies: The backend dependency extra. No database.
+- Verification: `uv run --extra backend python -m unittest discover -s backend/tests -t .`. Thirty-two tests pass.

@@ -1,8 +1,8 @@
 ---
 title: Navigation Rail and Settings
-compact: "Navigation and settings contract: grouped hash routing, PostgreSQL controls, read-only deployments, write-only passwords, and bounded logging. Vue files own navigation; `dashboard/server/settings.js` remains a JavaScript parity fixture while Flask owns runtime settings."
+compact: "Navigation and settings contract: grouped hash routing, PostgreSQL controls, read-only deployments, write-only passwords, and bounded logging. Vue files own navigation; `backend/services/settings.py` owns runtime settings and every credential."
 lang: en-US
-source_files: dashboard/src/pages.js, dashboard/src/App.vue, dashboard/src/main.js, dashboard/server/settings.js
+source_files: dashboard/src/pages.js, dashboard/src/App.vue, dashboard/src/main.js, backend/services/settings.py
 ---
 
 # Navigation Rail and Settings
@@ -45,19 +45,6 @@ The rail closes with **Docs** and **Repo**. A reader who arrives at the publishe
 
 The code-level specification for the files this page describes. Each entry states responsibility, inputs, outputs, dependencies, and the test that verifies it.
 
-### Legacy parity harness: `server/settings.js`
-
-Source: `dashboard/server/settings.js`
-
-- Responsibility: Preserve the former Node settings behavior for the
-  JavaScript regression suite. Runtime requests use the Flask settings service
-  specified in [Backend Jobs and Settings](/en/introduction/backend/operations).
-- Inputs: `.env` at the repository root, the live environment as a fallback, and the reader's entries in the modal.
-- Outputs: `readEnv()`, `writeEnv()`, `status()`, `testConnection()`, `applyLogging()`, `loggingEnabled()`, `logState()`, `log()`, `clearLog()`, `settingsState()`, and `RingBuffer`.
-- Behavior contract: **No credential is written to a tracked file, to the API response, or to the log.** `.env` is git-ignored, `sample.env` is the tracked template and holds no real value, and the password is rendered only through `config.safeSummary()`, which omits it by construction. `settingsState()` carries the read-only flag that lets the modal distinguish a protected server from an editable checkout. `writeEnv()` rewrites the file rather than appending to it, preserving comments and unrelated keys and replacing a key in place, so one key cannot end up with two values and the winner decided by read order; it does not accumulate a trailing blank line on repeated saves; and it then clears the loader caches and disposes the pool, because both would otherwise survive the edit. `testConnection()` connects with the values just typed rather than the values saved, and closes the client whether or not the probe succeeded, so a failed test cannot leave a socket open on a shared instance. The log is a fixed-capacity ring buffer, not a file, so an open dashboard cannot fill a disk; each message is truncated so one record cannot dominate it; and a record below the active level is dropped rather than stored and filtered on display. Logging is off by default because it costs time on every request.
-- Dependencies: `pg` for the connection test, plus `server/config.js` and `server/data_source.js`.
-- Verification: `dashboard/tests/dashboard.test.js`, which asserts `writeEnv()` preserves comments and unrelated keys, appends a missing key exactly once, does not grow a blank line on repeated saves, and writes every key the dialog sends; and that the buffer stays bounded, starts disabled, honours its level, and truncates. The tests redirect the path to a temporary file, so the real `.env` is never touched.
-
 ### `src/pages.js`, `src/App.vue`, and `src/main.js`
 
 Source: `dashboard/src/main.js`, `dashboard/src/App.vue`, `dashboard/src/pages.js`
@@ -68,3 +55,41 @@ Source: `dashboard/src/main.js`, `dashboard/src/App.vue`, `dashboard/src/pages.j
 - Behavior contract: `src/pages.js` is the single place a view is registered, and `tests/dashboard.test.js` asserts that `PAGES`, `PAGE_GROUPS`, and `App.vue`'s component map agree, so the rail cannot offer a destination the shell cannot render. The two foot controls are drawn from the same icon set but are **not** navigable pages, and the test asserts that too. The page is written into the hash with `replaceState`, so a view is linkable and survives a refresh without filling the back stack. `App.vue` renders the loading, error, and loaded states itself rather than leaving each view to do it, so a failed load is one page naming both remedies rather than six broken charts. The report window and marketplace in the header are read from the data rather than fixed in the markup.
 - Dependencies: Vue 3.
 - Verification: `dashboard/tests/dashboard.test.js` for the registration contract; the rendered result was verified in a real browser for all six views.
+
+### `backend/services/settings.py`
+
+Source: `backend/services/settings.py`
+
+- Responsibility: Own the settings state the modal reads and the `.env` write
+  it performs. This is the only code that reads or writes a credential; the
+  client sends a form and receives a state.
+- Inputs: `.env` at the repository root, the live environment as a fallback,
+  and the reader's entries in the modal.
+- Outputs: `read_env()`, `write_env()`, `status()`, `test_connection()`,
+  `apply_logging()`, `log_state()`, `log()`, `clear_log()`, and
+  `settings_state()`.
+- Behavior contract: **No credential is written to a tracked file, to the API
+  response, or to the log.** `.env` is git-ignored, `sample.env` is the tracked
+  template and holds no real value, and the password is rendered only through
+  `DatabaseSettings.safe_summary()`, which omits it by construction.
+  `settings_state()` carries the read-only flag that lets the modal distinguish
+  a protected server from an editable checkout. `write_env()` rewrites the file
+  rather than appending to it, preserving comments and unrelated keys and
+  replacing a key in place, so one key cannot end up with two values and the
+  winner decided by read order; it does not accumulate a trailing blank line on
+  repeated saves; and it then clears the loader caches, which would otherwise
+  survive the edit. `test_connection()` connects with the values just typed
+  rather than the values saved, and closes the connection whether or not the
+  probe succeeded, so a failed test cannot leave a socket open on a shared
+  instance. The log is a fixed-capacity buffer, not a file, so an open
+  dashboard cannot fill a disk; each message is truncated so one record cannot
+  dominate it; and a record below the active level is dropped rather than
+  stored and filtered on display. Logging is off by default because it costs
+  time on every request.
+- Dependencies: `dashboard/config.py` and the backend dependency extra.
+- Verification: `backend/tests/test_settings.py`, which asserts `write_env()`
+  preserves comments and unrelated keys, appends a missing key exactly once,
+  does not grow a blank line on repeated saves, writes every key the dialog
+  sends, and keeps a password containing `=` intact; and that the buffer stays
+  bounded, starts disabled, honours its level, and truncates. Every test writes
+  to a temporary directory, so the real `.env` is never touched.

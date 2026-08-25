@@ -1,0 +1,112 @@
+# The local two-container test stack.
+#
+# This is the testing counterpart of `deploy/appstack/`, not a replacement for
+# it. AppStack deploys one image serving the API and the client together;
+# here they are two containers so each can be rebuilt, restarted, and read on
+# its own. The images are built from the repository root as their context.
+#
+#   deploy/docker/run.sh      build both images and start the stack
+#   deploy/docker/run.bat     the same on Windows
+#
+# Two files configure this, and they are deliberately not the same one:
+#
+#   ./defaults.env     tracked application defaults. DATABASE=false and empty
+#                      PG_* values, so a clean checkout with no root `.env`
+#                      starts and serves the committed CSV and JSON files
+#                      under `modules/` with no database and no credentials.
+#   ../../.env         the checkout's own application configuration, if it has
+#                      one. Optional, git-ignored, layered over the defaults
+#                      at run time -- see the API service below.
+#   ./.env             this stack's knobs: DASHBOARD_PORT, API_PORT. Optional,
+#                      git-ignored, read by Compose for `${...}` below.
+#
+# The last two are separate because they answer different questions. The root
+# file's DASHBOARD_PORT is where the *local* server binds; it must not move the
+# port this stack publishes. Compose interpolates only from the project
+# directory, which is `deploy/docker`, so it cannot.
+
+name: marketing-roi-analysis
+
+services:
+  marketing-roi-analysis-api:
+    build:
+      context: ../..
+      dockerfile: deploy/docker/Dockerfile.api
+    image: marketing-roi-analysis-api:${PROJECT_VERSION:-dev}
+    container_name: marketing-roi-analysis-api
+    restart: unless-stopped
+    # Later files win, so the repository root's `.env` overrides any default it
+    # sets and leaves the rest alone. `required: false` is what makes the root
+    # file optional: without it Compose refuses to start a checkout that has
+    # none, which is the case `defaults.env` exists to serve.
+    #
+    # Read by the Docker CLI at run time and handed to the container as
+    # environment. `.dockerignore` excludes `.env` from the build context, so
+    # no credential is baked into an image layer -- but the whole root file
+    # does reach this container, including keys the application never reads.
+    # Keep deployment-only secrets in `deploy/.env`, not the root one.
+    #
+    # It is passed to the API alone. The client container is a static bundle
+    # behind NGINX: it holds no credentials and reaches the API by service
+    # name, which is what "expose only the backend URL to the frontend" means
+    # concretely.
+    #
+    # DATABASE=true needs a host this container can reach. `localhost` in the
+    # root `.env` names the container itself, not the machine; a database on
+    # the Docker Desktop host is `host.docker.internal`.
+    env_file:
+      - path: ./defaults.env
+        required: true
+      - path: ../../.env
+        required: false
+    environment:
+      # Set here rather than in an env file: these are properties of running
+      # inside a container, and `environment` outranks `env_file`, so a root
+      # `.env` written for the local server cannot move the bind address or
+      # open a browser in a container that has none.
+      BACKEND_HOST: "0.0.0.0"
+      BACKEND_PORT: "8501"
+      DASHBOARD_OPEN: "false"
+    # Published so the API can be exercised directly with curl. The browser
+    # never uses this port; it reaches `/api` through the dashboard
+    # container's proxy, so the client needs no backend URL of its own.
+    ports:
+      - "${API_PORT:-8501}:8501"
+    healthcheck:
+      # `/api/health` is liveness only and deliberately does not require a
+      # populated database, so this stays green in file mode. urllib is used
+      # because the slim image carries no curl or wget.
+      test:
+        - CMD
+        - python
+        - -c
+        - import urllib.request; urllib.request.urlopen("http://127.0.0.1:8501/api/health").read()
+      interval: 10s
+      timeout: 3s
+      retries: 6
+      start_period: 15s
+
+  marketing-roi-analysis-dashboard:
+    build:
+      context: ../..
+      dockerfile: deploy/docker/Dockerfile.dashboard
+    image: marketing-roi-analysis-dashboard:${PROJECT_VERSION:-dev}
+    container_name: marketing-roi-analysis-dashboard
+    restart: unless-stopped
+    # NGINX resolves the API's name once at worker start, so it must not start
+    # before the service answers; waiting on health rather than on start is
+    # what makes `run.sh` deterministic instead of usually working.
+    depends_on:
+      marketing-roi-analysis-api:
+        condition: service_healthy
+    # 8080 is the busiest port on a developer machine; 8090 is the default so
+    # a first run does not collide with whatever already holds it. Set
+    # DASHBOARD_PORT in `deploy/docker/.env` to move it.
+    ports:
+      - "${DASHBOARD_PORT:-8090}:80"
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--spider", "http://127.0.0.1/"]
+      interval: 10s
+      timeout: 3s
+      retries: 6
+      start_period: 5s
