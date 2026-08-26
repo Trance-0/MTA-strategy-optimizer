@@ -280,8 +280,9 @@ Source: `.github/workflows/publish-containers.yml`
 - Verification: Both images published at `0.9.30` and consumed on a runner that
   never built them — pulled, started through `run.sh pull`, both `healthy`,
   `/api/health` answering `{"ok":true}` directly and proxied, and
-  `/api/dashboard` returning fifteen keys. Four commits that did not touch
-  `VERSION` started no run, so the filter holds in both directions.
+  `/api/dashboard` returning fifteen keys. The commit raising `VERSION` to
+  `0.9.30` started a run on its own; six later commits that did not touch
+  `VERSION` started none, so the filter holds in both directions.
 
 ### `dashboard/index.html` and `dashboard/vite.config.js`
 
