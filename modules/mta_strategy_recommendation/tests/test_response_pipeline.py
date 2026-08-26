@@ -37,6 +37,13 @@ from modules.mta_strategy_recommendation.src.response_model import (
 PROJECT_ROOT = Path(__file__).resolve().parents[3]
 SUBMODULE_ROOT = PROJECT_ROOT / "external" / "mta_sim_dataset"
 
+# This suite runs the vendored MTA-SIM simulator to produce its fixture, so a
+# checkout without that submodule has nothing to generate from. Skipped rather
+# than failed for the same reason as in
+# `modules/mta_standard/tests/test_mta_sim_generator_adapter.py`: the absence
+# of a separate repository is not a defect in this one.
+SUBMODULE_AVAILABLE = (SUBMODULE_ROOT / "ZheyuanWu" / "simulations").is_dir()
+
 
 def _generate_snapshot(directory: Path, display_budget: float = 6.0) -> Path:
     """Run the pinned simulator over a small intervention configuration."""
@@ -102,6 +109,10 @@ def _generate_snapshot(directory: Path, display_budget: float = 6.0) -> Path:
     return output / "simulation_research.json"
 
 
+@unittest.skipUnless(
+    SUBMODULE_AVAILABLE,
+    f"the MTA-SIM submodule is not checked out at {SUBMODULE_ROOT}",
+)
 class ResponsePipelineTest(unittest.TestCase):
     """The simulator's file contract must carry a learnable budget response."""
 
