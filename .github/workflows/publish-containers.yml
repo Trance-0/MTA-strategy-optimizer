@@ -123,15 +123,12 @@ jobs:
     if: needs.version.outputs.publish == 'true'
     runs-on: ubuntu-latest
     steps:
-      # `mta_standard` generates a dataset through the MTA-SIM submodule and
-      # fails with "submodule is not initialized" without it. The two
-      # submodules are public, so the default token reads them; they are
-      # needed by the tests alone and never enter an image, because
-      # `.dockerignore` excludes `external/`.
+      # Deliberately without `submodules`. Nothing under `external/` enters
+      # either image -- `.dockerignore` excludes it -- so a vendored project
+      # is not what this gate is testing. The one test that runs the MTA-SIM
+      # generator skips when its checkout is absent.
       - name: Checkout repository
         uses: actions/checkout@v6
-        with:
-          submodules: recursive
 
       # Vite's engine range is `^20.19.0 || >=22.12.0` and its bundler binding
       # is an optional dependency carrying that same range: on an unsupported

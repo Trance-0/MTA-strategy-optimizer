@@ -11,6 +11,15 @@ from types import SimpleNamespace
 PROJECT_ROOT = Path(__file__).resolve().parents[3]
 SUBMODULE_ROOT = PROJECT_ROOT / "external" / "mta_sim_dataset"
 
+# `external/mta_sim_dataset` is a separate repository vendored as a submodule,
+# and this is the one test that runs its generator rather than this project's
+# own code. A checkout without it -- a clone made with no `--recursive`, or an
+# automated environment that does not fetch submodules -- would otherwise fail
+# here for the absence of another project rather than for a defect in this
+# one. Skipped rather than failed, so the suite reports what this repository
+# is answerable for. The two tests below need no checkout and always run.
+SUBMODULE_AVAILABLE = (SUBMODULE_ROOT / "ZheyuanWu" / "simulations").is_dir()
+
 from modules.mta_standard.src.evaluation import load_simulation_ground_truth
 from modules.mta_standard.src.mta_sim_generator_adapter import (
     _simulator_config,
@@ -21,6 +30,10 @@ from modules.mta_standard.src.mta_sim_generator_adapter import (
 class MtaSimGeneratorAdapterTests(unittest.TestCase):
     """Verify real submodule generation and local contract adaptation."""
 
+    @unittest.skipUnless(
+        SUBMODULE_AVAILABLE,
+        f"the MTA-SIM submodule is not checked out at {SUBMODULE_ROOT}",
+    )
     def test_generates_and_loads_baseline_toy_dataset(self) -> None:
         """Generate the public toy fixture and keep ground truth evaluation-only."""
 
