@@ -1,8 +1,8 @@
 ---
 title: Running Locally and Publishing
-compact: "Dashboard delivery contract: Bash and Windows launchers build Vue then start Flask, Vite hot reload proxies `/api`, a two-container Docker stack runs the client and API separately for testing, static publishing exports Flask's file-mode snapshot through Python, GitHub Pages assembles dashboard and English documentation, and production uses the Yunxiao AppStack image and orchestration."
+compact: "Dashboard delivery contract: Bash and Windows launchers build Vue then start Flask, Vite hot reload proxies `/api`, a two-container Docker stack runs the client and API separately and can build them or pull `mta-backend` and `mta-dashboard` from GHCR, `publish-containers.yml` releases those images on a VERSION change, static publishing exports Flask's file-mode snapshot, GitHub Pages assembles dashboard and documentation, and production uses the Yunxiao AppStack image."
 lang: en-US
-source_files: dashboard/index.html, dashboard/vite.config.js, dashboard/run.sh, dashboard/run.bat, deploy/docker/compose.yaml, deploy/docker/defaults.env, deploy/docker/run.sh, deploy/docker/run.bat, script/build_pages_site.mjs, script/export_dashboard_snapshot.py
+source_files: dashboard/index.html, dashboard/vite.config.js, dashboard/run.sh, dashboard/run.bat, deploy/docker/compose.yaml, deploy/docker/defaults.env, deploy/docker/run.sh, deploy/docker/run.bat, deploy/docker/Dockerfile.api, deploy/docker/Dockerfile.dashboard, .github/workflows/publish-containers.yml, script/build_pages_site.mjs, script/export_dashboard_snapshot.py
 ---
 
 # Running Locally and Publishing
@@ -43,6 +43,7 @@ AppStack, which deploys one image serving both.
 
 ```bash
 ./deploy/docker/run.sh          # build both images and start
+./deploy/docker/run.sh pull     # pull the published images and start
 ./deploy/docker/run.sh down     # stop and remove them
 ./deploy/docker/run.sh logs     # follow both containers
 ```
@@ -51,7 +52,87 @@ AppStack, which deploys one image serving both.
 repository-root `VERSION` file into `PROJECT_VERSION` and tag the two images
 with it, so bumping `VERSION` is the only thing that rolls the tag. `up` stops
 the previous run first: a rebuilt image does not replace a container that is
-already running, and the old one still holds the published ports.
+already running, and the old one still holds the published ports. Both modes
+wait for the health checks with `compose up -d --wait`, so a script that
+continues to a request is not racing the start.
+
+`up` builds from this checkout; `pull` fetches the images already published
+for this `VERSION` and builds nothing. Use `pull` on a machine that only runs
+the stack, and `up` when the sources have changed — a build is the only way to
+see an edit that is not yet released. Because the tag is the `VERSION` file
+rather than `latest`, `pull` is exact: it fetches the images built from this
+checkout's version, not whatever was published most recently.
+
+### Published Images
+
+Both services name a GitHub Container Registry (GHCR) image in `compose.yaml`,
+so a locally built image and a pulled one are the same name at the same
+version and `compose up` cannot silently mix them:
+
+```text
+ghcr.io/trance-0/mta-backend:<VERSION>
+ghcr.io/trance-0/mta-dashboard:<VERSION>
+```
+
+Both are public, so `docker pull` needs no login. A fork sets `IMAGE_NAMESPACE`
+to its own owner to run its own images; the scripts fold it to lowercase,
+because a registry path must be lowercase and a GitHub owner need not be.
+
+The stack can therefore be run on a host with neither a toolchain nor the
+sources, given `compose.yaml`, `defaults.env`, and `nginx.conf`:
+
+```bash
+docker pull ghcr.io/trance-0/mta-backend:0.9.30
+docker pull ghcr.io/trance-0/mta-dashboard:0.9.30
+```
+
+### Publishing on a Version Change
+
+`.github/workflows/publish-containers.yml` builds and pushes both images. It
+triggers on a push to `main` that changes `VERSION`, not on every commit: a
+published image is identified by the version it was built from, so rebuilding
+on each push would produce many images claiming to be the same version and
+leave the tag meaning "whichever build ran last".
+
+`paths: VERSION` restricts the workflow to pushes that touch the file, and a
+first job asks the registry whether both tags already resolve. If they do the
+run stops there, so a push that touches `VERSION` without changing its content
+publishes nothing. `workflow_dispatch` takes a `force` input for the one case
+that must overwrite a tag deliberately.
+
+The four jobs run in order, and each is a gate on the next:
+
+#### `version`
+
+Reads `VERSION`, rejects anything that is not `major.minor.patch` before a
+build can fail on a malformed tag, folds the owner to lowercase once, and
+decides whether to publish.
+
+#### `test`
+
+Runs the suites owning the code each image ships — the five module suites and
+the backend suite for `mta-backend`, the dashboard suite for `mta-dashboard` —
+then builds the client. A failure publishes nothing. The client build runs
+here as well as in the image, because a failure costs seconds here and a full
+layer cache miss there.
+
+#### `build`
+
+One matrix job per image, from the same two Dockerfiles the local stack uses.
+Each pushes the version tag and `latest`, and carries an
+`org.opencontainers.image.source` label, which is what attaches the package to
+this repository and lets it inherit repository visibility rather than being an
+orphan in the owner's namespace.
+
+#### `verify`
+
+Pulls both images on a runner that never built them and starts them through
+`run.sh pull` — the same file a developer runs, rather than a second
+description of it. It then asserts `/api/health` directly and through the
+client's proxy, that the client document is served, and that
+`/api/dashboard` returns its full snapshot. The build job proves an image was
+pushed; only a pull from a machine that never built it proves it can be
+consumed.
 
 The client is served by NGINX on `http://localhost:8090` and proxies `/api` to
 the API container by service name. The API is also published on
@@ -139,13 +220,21 @@ Source: `deploy/docker/compose.yaml`, `deploy/docker/defaults.env`,
 `deploy/docker/Dockerfile.api`, `deploy/docker/Dockerfile.dashboard`,
 `deploy/docker/nginx.conf`, `deploy/docker/run.sh`, `deploy/docker/run.bat`
 
-- Responsibility: Build and run the client and API as two containers, tagged
+- Responsibility: Build or pull the client and API as two containers, tagged
   from `VERSION`, reading whichever data source the checkout is configured for.
 - Inputs: The repository root as build context; `defaults.env`; the optional
-  root `.env`; the optional `deploy/docker/.env` for ports.
+  root `.env`; the optional `deploy/docker/.env` for ports; `IMAGE_NAMESPACE`
+  for the registry owner, defaulting to `trance-0`.
 - Outputs: `marketing-roi-analysis-dashboard` on 8090 and
   `marketing-roi-analysis-api` on 8501, both with health checks.
-- Behavior contract: `Dockerfile.api` deliberately does **not** copy
+- Behavior contract: `run.sh up` builds and `run.sh pull` fetches, and both
+  start through the same `compose.yaml` with `up -d --wait`, so the command
+  returns only once both health checks pass. Each service's `image` is the
+  GHCR reference in both modes, so a built image and a pulled one cannot be
+  confused; `pull` fails with the remedy rather than falling back to a build,
+  because silently building a version that was supposed to be released hides
+  the thing worth knowing. Neither script pushes: the workflow is the only
+  writer of the registry. `Dockerfile.api` deliberately does **not** copy
   `dashboard/dist`, so `client_dist_directory()` returns None and the service
   registers API routes only — the client is the other image. It builds with
   `npm run build`, not `--mode static`, which would bake a snapshot and make
@@ -162,7 +251,35 @@ Source: `deploy/docker/compose.yaml`, `deploy/docker/defaults.env`,
   `healthy`; `/api/health` answers directly and through the proxy;
   `/api/dashboard` returns fifteen keys; and the six views render in a browser
   with no console, page, or network error. Verified in both file mode and
-  against the live PostgreSQL instance.
+  against the live PostgreSQL instance. `./deploy/docker/run.sh pull` reaches
+  the same state without building, and reports a missing version rather than
+  building one.
+
+### `.github/workflows/publish-containers.yml`
+
+Source: `.github/workflows/publish-containers.yml`
+
+- Responsibility: Test, build, publish, and verify `mta-backend` and
+  `mta-dashboard` on GHCR when `VERSION` changes on `main`.
+- Inputs: The `VERSION` file; the repository root as build context; the
+  two `deploy/docker/` Dockerfiles; `GITHUB_TOKEN` with `packages: write`.
+- Outputs: Two public images tagged with the version and `latest`, each
+  labelled with its source repository, revision, and version.
+- Behavior contract: The trigger is `paths: VERSION` on `main` plus manual
+  dispatch, never every commit. The `version` job rejects a `VERSION` that is
+  not `major.minor.patch` and skips the run when both tags already resolve in
+  the registry, so a tag is written once unless dispatched with `force`. The
+  registry is asked rather than the GitHub API, because the registry is what a
+  `docker pull` consults. Tests gate the build, and the build gates a `verify`
+  job that pulls both images on a runner that never built them and exercises
+  the running stack. The concurrency group queues rather than cancels, since a
+  cancelled publish can leave a manifest half-written.
+- Dependencies: `actions/checkout`, `actions/setup-node`,
+  `actions/setup-python`, `astral-sh/setup-uv`, `docker/login-action`,
+  `docker/setup-buildx-action`, and `docker/build-push-action`.
+- Verification: Bump `VERSION` on `main` and confirm the run publishes both
+  images and the `verify` job pulls and runs them; push a commit that does not
+  touch `VERSION` and confirm no run starts.
 
 ### `dashboard/index.html` and `dashboard/vite.config.js`
 

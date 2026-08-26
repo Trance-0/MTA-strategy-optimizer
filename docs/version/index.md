@@ -11,6 +11,11 @@ The project version is recorded in the repository-root `VERSION` file. Each page
 
 This section records **what** changed. See the [work log](../worklog/) for **who** did the work and when.
 
+## [0.9.30](0.9.30.md)
+
+- Date: 2026-08-26
+- Summary: Fixed the navigation rail flattening its three sections into one undifferentiated row below the wide breakpoint, and published `mta-backend` and `mta-dashboard` to the GitHub Container Registry from a workflow triggered by a `VERSION` change rather than by every commit, with a `pull` mode on the Docker stack that runs those images
+
 ## [0.9.29](0.9.29.md)
 
 - Date: 2026-08-26

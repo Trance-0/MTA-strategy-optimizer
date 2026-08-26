@@ -351,8 +351,6 @@ test("the rail becomes a bar, not a tall block, below the wide breakpoint", () =
   const narrow = STYLE_CSS.slice(STYLE_CSS.indexOf("@media (max-width: 1024px)"));
   assert.match(narrow, /\.sidebar \{[^}]*flex-direction: row/);
   assert.match(narrow, /\.sidebar \{[^}]*position: sticky/);
-  // The group headings read as items once the items sit in a row.
-  assert.match(narrow, /\.nav-label \{\s*display: none/);
   assert.match(narrow, /\.nav \{[^}]*flex-direction: row/);
 
   // Labels are dropped only at the narrowest width, so the buttons must carry
@@ -361,6 +359,59 @@ test("the rail becomes a bar, not a tall block, below the wide breakpoint", () =
   assert.match(SIDEBAR_NAV, /:aria-label="PAGES\[key\]\.title"/);
   assert.match(SIDEBAR_NAV, /aria-label="Settings"/);
   assert.match(SIDEBAR_NAV, /aria-label="Reload data"/);
+});
+
+test("the bar collapses each multi-page group instead of flattening it", () => {
+  // Hiding the group headings dropped OVERVIEW, PLANNING, and INSIGHTS from the
+  // bar entirely, leaving six views as one undifferentiated strip. The bar now
+  // carries a labelled disclosure per group, so the sections survive the
+  // breakpoint.
+  const narrow = STYLE_CSS.slice(STYLE_CSS.indexOf("@media (max-width: 1024px)"));
+
+  // The group is a positioned box only in the bar; the column leaves its
+  // children directly in `.nav`, which is the layout it has always had.
+  assert.match(STYLE_CSS, /\.nav-group,\s*\.nav-group-items \{\s*display: contents/);
+  assert.match(narrow, /\.nav-group\.collapsible \{[^}]*position: relative/);
+
+  // The panel floats over the content rather than growing the bar back into
+  // the tall block the bar exists to avoid.
+  assert.match(narrow, /\.nav-group\.collapsible > \.nav-group-items \{[^}]*position: absolute/);
+
+  // A group with one page is not worth a disclosure, and a heading that does
+  // nothing is not a button.
+  assert.match(SIDEBAR_NAV, /group\.pages\.length > 1/);
+  assert.match(SIDEBAR_NAV, /v-if="!isCollapsible\(group\)" class="nav-label"/);
+
+  // The disclosure state is real state, so the component owns it rather than
+  // the stylesheet, and the breakpoint it watches is the stylesheet's own.
+  const breakpoint = SIDEBAR_NAV.match(/BAR_BREAKPOINT = "\(max-width: (\d+)px\)"/);
+  assert.ok(breakpoint, "SidebarNav must state the breakpoint it collapses at");
+  assert.ok(
+    STYLE_CSS.includes(`@media (max-width: ${breakpoint[1]}px)`),
+    "the rail's collapse breakpoint has drifted from the stylesheet's",
+  );
+
+  // A disclosure has to announce itself, say which panel it owns, and close on
+  // the routes a reader expects.
+  assert.match(SIDEBAR_NAV, /:aria-expanded="openGroup === group\.label"/);
+  assert.match(SIDEBAR_NAV, /:aria-controls="panelId\(group\)"/);
+  assert.match(SIDEBAR_NAV, /:hidden="isCollapsible\(group\) && openGroup !== group\.label"/);
+  assert.match(SIDEBAR_NAV, /event\.key === "Escape"/);
+  assert.match(SIDEBAR_NAV, /pointerdown/);
+
+  // A closed group still shows the reader is inside it, and widening the
+  // window cannot leave a panel open over an already-expanded column.
+  assert.match(SIDEBAR_NAV, /currentGroup === group\.label/);
+  assert.match(SIDEBAR_NAV, /if \(!event\.matches\) openGroup\.value = ""/);
+
+  // Every listener the component adds is removed again.
+  for (const event of ["pointerdown", "keydown"]) {
+    assert.ok(
+      SIDEBAR_NAV.includes(`document.removeEventListener("${event}"`),
+      `SidebarNav leaks its ${event} listener`,
+    );
+  }
+  assert.match(SIDEBAR_NAV, /query\?\.removeEventListener\("change"/);
 });
 
 test("data-run diagnostics are a preference, off by default", () => {

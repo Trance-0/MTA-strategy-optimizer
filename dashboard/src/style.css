@@ -167,6 +167,19 @@ code {
   min-height: 0;
 }
 
+/* In the column every group is open, so the wrapper and the item list draw no
+   box of their own: `contents` leaves the heading and the buttons as direct
+   children of `.nav`, which is the layout the rail has always had. The two
+   elements exist for the bar, where a group becomes a disclosure. */
+.nav-group,
+.nav-group-items {
+  display: contents;
+}
+
+.nav-group-items[hidden] {
+  display: none;
+}
+
 .nav-label {
   font-size: 8px;
   letter-spacing: 0.9px;
@@ -1511,10 +1524,96 @@ tbody tr.selected:hover {
     gap: 2px;
   }
 
-  /* The group headings are a vertical-list affordance. In a row they read as
-     items themselves, so the grouping is carried by order alone. */
+  /*
+   * A multi-page group collapses into one labelled disclosure. Six items
+   * flattened into the row lost the grouping entirely -- OVERVIEW, PLANNING,
+   * and INSIGHTS were hidden and the views ran together as one undifferentiated
+   * strip -- so the bar carries three controls that name their section and open
+   * the items beneath it. `relative` is the panel's containing block; the
+   * single-page group keeps `display: contents` and stays an item on the bar,
+   * because opening a list to choose its only entry is friction.
+   */
+  .nav-group.collapsible {
+    display: block;
+    position: relative;
+    flex: 0 0 auto;
+  }
+
   .nav-label {
     display: none;
+  }
+
+  .nav-group-trigger {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    border: 0;
+    background: transparent;
+    color: var(--rail-text);
+    font-size: 11.5px;
+    font-weight: 600;
+    letter-spacing: 0.6px;
+    padding: 6px 10px;
+    min-height: 36px;
+    border-radius: 7px;
+    transition: background-color 0.12s ease;
+  }
+
+  .nav-group-trigger:hover {
+    background: #ffffff0f;
+    color: #fff;
+  }
+
+  /* A closed disclosure still says the reader is inside it, so the active view
+     is never invisible just because its group is shut. */
+  .nav-group-trigger.current {
+    background: var(--rail-active);
+    color: #fff;
+  }
+
+  .nav-group.open > .nav-group-trigger {
+    background: #ffffff1a;
+    color: #fff;
+  }
+
+  .nav-chevron {
+    width: 13px;
+    height: 13px;
+    flex: none;
+    transition: transform 0.15s ease;
+  }
+
+  .nav-group.open .nav-chevron {
+    transform: rotate(180deg);
+  }
+
+  /* The open panel floats over the content rather than growing the bar: a bar
+     that reflows the page on every open is the tall block this layout exists
+     to avoid. */
+  .nav-group.collapsible > .nav-group-items {
+    display: flex;
+    flex-direction: column;
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    z-index: 40;
+    min-width: 168px;
+    padding: 5px;
+    border: 1px solid var(--rail-rule);
+    border-radius: 9px;
+    background: var(--navy);
+    box-shadow: 0 12px 28px #0b1b3a4d;
+  }
+
+  .nav-group.collapsible > .nav-group-items[hidden] {
+    display: none;
+  }
+
+  /* Inside the panel the items are a list again, so they read left-aligned
+     rather than centred as they do on the bar. */
+  .nav-group.collapsible .nav-item {
+    width: 100%;
+    justify-content: flex-start;
   }
 
   .nav-item {
@@ -1578,8 +1677,23 @@ tbody tr.selected:hover {
     display: none;
   }
 
+  /* An open panel is a list, not a bar: it has the width for its labels and is
+     unreadable without them, so the icons-only rule above stops at its edge. */
+  .nav-group.collapsible .nav-item span {
+    display: inline;
+  }
+
   .nav-item {
     padding: 6px 8px;
+  }
+
+  /* The group names shorten but do not go. They are the only thing naming a
+     section once its items are behind a disclosure, and a bare chevron names
+     nothing. */
+  .nav-group-trigger {
+    padding: 6px 8px;
+    font-size: 10.5px;
+    letter-spacing: 0.3px;
   }
 
   .brand {

@@ -1,5 +1,14 @@
 # Keep deterministic source, documentation, data, and generated baselines stable
 # across Windows and Unix worktrees.
+#
+# `.bat` is the exception that must be CRLF. cmd.exe seeks a `goto`/`call`
+# label by byte offset and re-reads the file as it goes, and in an LF-only
+# script that seek can land mid-line and report "cannot find the batch label"
+# for a label that is plainly there. It depends on the offsets, so an LF file
+# that works today breaks when an edit above the label changes its length --
+# which is exactly what happened to `deploy/docker/run.bat` when `pull` mode
+# was added to it.
+*.bat text eol=crlf
 *.py text eol=lf
 *.md text eol=lf
 *.json text eol=lf

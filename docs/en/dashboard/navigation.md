@@ -17,6 +17,14 @@ The sidebar reproduces the prototype's rail: a navy column of stacked icon butto
 
 The rail writes the selected page into the location hash, so a view is linkable and survives a refresh. It is written with `replaceState` rather than assignment, so switching views does not fill the browser's back stack with intermediate pages.
 
+### Below the wide breakpoint
+
+At `1024px` the rail becomes a sticky horizontal bar, and **each group of more than one view collapses into a labelled disclosure** rather than spilling its items into the row. The three sections survive the breakpoint: a reader on a tablet or a phone still meets OVERVIEW, PLANNING, and INSIGHTS, and reaches a view through the section it belongs to, exactly as in the column.
+
+A group holding a single view is not given a disclosure — opening a list to choose the only entry in it is friction — so Command Center stays a button on the bar itself. A closed disclosure carries the active state when the current view is inside it, so the reader's position is never hidden by a shut group. The panel is absolutely positioned and floats over the content: a bar that reflowed the page on every open would be the tall block the bar exists to avoid.
+
+Because a disclosure has state that CSS cannot hold, `SidebarNav.vue` watches the breakpoint with `matchMedia` rather than leaving the layout to the stylesheet alone. The width is stated in both places, and `tests/dashboard.test.js` asserts the two have not drifted apart. Widening the window past the breakpoint closes any open group, so a panel cannot strand itself over a column that is already showing its items.
+
 ### The settings module
 
 Everything about the dashboard's own plumbing is pinned to the foot of the rail, ruled off from the view navigation above it, so it never reads as a seventh place to navigate to. It shows the active source, a status dot, and whether logging is on, and opens a modal with two tabs:

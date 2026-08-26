@@ -1,0 +1,348 @@
+name: Publish containers to GHCR
+
+# Builds the two images the Docker stack runs -- `mta-dashboard` and
+# `mta-backend` -- and publishes them to the GitHub Container Registry.
+#
+# The trigger is the `VERSION` file, not the commit. A published image is
+# identified by the version it was built from, so rebuilding on every push
+# would produce many images claiming to be the same version and leave the tag
+# meaning "whichever build ran last". `paths: VERSION` restricts the workflow
+# to the pushes that change the file, and the guard job below refuses a version
+# already in the registry, so an image tag is written exactly once.
+#
+# Both are single-source images: `Dockerfile.api` never copies the client in,
+# and `Dockerfile.dashboard` is NGINX over the built bundle. They are the same
+# two files `deploy/docker/run.sh` builds locally, so a pulled stack and a
+# built stack are the same stack.
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - VERSION
+  workflow_dispatch:
+    inputs:
+      force:
+        description: "Republish even if the version is already in the registry"
+        type: boolean
+        default: false
+
+# `packages: write` is what lets GITHUB_TOKEN push to ghcr.io under this
+# repository's owner. `contents: read` is all the checkout needs; nothing here
+# writes to the repository.
+permissions:
+  contents: read
+  packages: write
+
+# Two runs publishing the same tag would race in the registry. Queued rather
+# than cancelled: a cancelled publish can leave a manifest half-written.
+concurrency:
+  group: publish-containers
+  cancel-in-progress: false
+
+jobs:
+  # Resolve the version and decide whether it needs publishing, before anything
+  # expensive runs. Registry paths must be lowercase and the owner is not, so
+  # the namespace is folded here once rather than in each job that names an
+  # image.
+  version:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.resolve.outputs.version }}
+      namespace: ${{ steps.resolve.outputs.namespace }}
+      publish: ${{ steps.published.outputs.publish }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Resolve the version and registry namespace
+        id: resolve
+        shell: bash
+        run: |
+          set -euo pipefail
+          version="$(tr -d '[:space:]' < VERSION)"
+          # A tag is a Docker reference, and an empty or malformed VERSION
+          # would push something like `mta-backend:` and fail deep inside the
+          # build. Rejected here, where the message names the file.
+          if ! printf '%s' "$version" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+            echo "::error file=VERSION::VERSION must hold a major.minor.patch version; read '${version}'"
+            exit 1
+          fi
+          namespace="$(printf '%s' "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "namespace=$namespace" >> "$GITHUB_OUTPUT"
+          echo "Publishing as ghcr.io/${namespace}/mta-{backend,dashboard}:${version}"
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # Asked of the registry rather than of the GitHub API: the registry is
+      # what a `docker pull` consults, so it is the only thing that can answer
+      # whether this tag is already resolvable. A push that touches VERSION
+      # without changing its content, and a re-dispatch, both stop here.
+      - name: Check whether the version is already published
+        id: published
+        shell: bash
+        env:
+          VERSION: ${{ steps.resolve.outputs.version }}
+          NAMESPACE: ${{ steps.resolve.outputs.namespace }}
+          FORCE: ${{ inputs.force }}
+        run: |
+          set -uo pipefail
+          if [ "$FORCE" = "true" ]; then
+            echo "publish=true" >> "$GITHUB_OUTPUT"
+            echo "Forced republish of ${VERSION}."
+            exit 0
+          fi
+          missing=0
+          for image in mta-backend mta-dashboard; do
+            if docker manifest inspect "ghcr.io/${NAMESPACE}/${image}:${VERSION}" >/dev/null 2>&1; then
+              echo "ghcr.io/${NAMESPACE}/${image}:${VERSION} is already published."
+            else
+              echo "ghcr.io/${NAMESPACE}/${image}:${VERSION} is not published yet."
+              missing=1
+            fi
+          done
+          if [ "$missing" -eq 0 ]; then
+            echo "publish=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::Version ${VERSION} is already in the registry. Bump VERSION to publish a new image, or dispatch this workflow with force enabled."
+          else
+            echo "publish=true" >> "$GITHUB_OUTPUT"
+          fi
+
+  # The gate on both images. It runs the suites that own the code each image
+  # ships: `modules/` and `backend/` go into mta-backend, `dashboard/src` into
+  # mta-dashboard. A failure here means nothing is published.
+  test:
+    needs: version
+    if: needs.version.outputs.publish == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      # Vite's engine range is `^20.19.0 || >=22.12.0` and its bundler binding
+      # is an optional dependency carrying that same range: on an unsupported
+      # version npm skips the binding silently and the build fails afterwards
+      # naming neither Node nor the version.
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: dashboard/package-lock.json
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          version: "0.12.2"
+
+      - name: Install backend dependencies
+        run: uv sync --frozen --extra backend
+
+      - name: Install dashboard dependencies
+        working-directory: dashboard
+        run: npm ci
+
+      # The business modules are copied into the backend image, so their tests
+      # gate it too. `mta_strategy_evaluation` needs the numerical stack its
+      # contributed models import, which the backend extra does not carry.
+      - name: Run the business module tests
+        run: |
+          set -euo pipefail
+          for module in mta_common mta_attribution mta_standard mta_strategy_recommendation; do
+            echo "::group::modules/${module}"
+            uv run python -X utf8 -B -m unittest discover -s "modules/${module}/tests" -t . -p 'test_*.py'
+            echo "::endgroup::"
+          done
+          echo "::group::modules/mta_strategy_evaluation"
+          uv run --extra strategy-evaluation python -X utf8 -B \
+            -m unittest discover -s modules/mta_strategy_evaluation/tests -t . -p 'test_*.py'
+          echo "::endgroup::"
+
+      - name: Run the backend tests
+        run: uv run --extra backend python -X utf8 -B -m unittest discover -s backend/tests -t . -p 'test_*.py'
+
+      - name: Run the dashboard tests
+        working-directory: dashboard
+        run: npm test
+
+      # The image build runs `npm run build` in a container where a failure
+      # costs a full Docker layer cache miss to discover. Running it here
+      # fails in seconds instead, on the same lockfile.
+      - name: Build the dashboard client
+        working-directory: dashboard
+        run: npm run build
+
+  # One job per image so the two publish independently and a log names which
+  # image it belongs to. Both build from the repository root, so the root
+  # `.dockerignore` applies and no `.env` enters a layer.
+  build:
+    needs:
+      - version
+      - test
+    if: needs.version.outputs.publish == 'true'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - image: mta-backend
+            dockerfile: deploy/docker/Dockerfile.api
+            title: MTA strategy optimizer API
+            description: Flask API serving the marketing ROI pipeline, without the client bundle
+          - image: mta-dashboard
+            dockerfile: deploy/docker/Dockerfile.dashboard
+            title: MTA strategy optimizer dashboard
+            description: Vue client behind NGINX, proxying /api to the mta-backend container
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # `org.opencontainers.image.source` is what makes GitHub attach the
+      # package to this repository and inherit its visibility, rather than
+      # leaving an orphan package in the owner's namespace.
+      - name: Build and push ${{ matrix.image }}
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ${{ matrix.dockerfile }}
+          push: true
+          platforms: linux/amd64
+          tags: |
+            ghcr.io/${{ needs.version.outputs.namespace }}/${{ matrix.image }}:${{ needs.version.outputs.version }}
+            ghcr.io/${{ needs.version.outputs.namespace }}/${{ matrix.image }}:latest
+          labels: |
+            org.opencontainers.image.title=${{ matrix.title }}
+            org.opencontainers.image.description=${{ matrix.description }}
+            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.version=${{ needs.version.outputs.version }}
+            org.opencontainers.image.licenses=MIT
+          cache-from: type=gha,scope=${{ matrix.image }}
+          cache-to: type=gha,scope=${{ matrix.image }},mode=max
+
+  # Proves the published images are pullable and that the two actually run as
+  # a stack. The build job proves an image was pushed; only a pull from a
+  # runner that never built it proves it can be consumed. Nothing here is
+  # built: every image comes from the registry.
+  verify:
+    needs:
+      - version
+      - build
+    if: needs.version.outputs.publish == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Pull both published images
+        shell: bash
+        env:
+          VERSION: ${{ needs.version.outputs.version }}
+          NAMESPACE: ${{ needs.version.outputs.namespace }}
+        run: |
+          set -euo pipefail
+          for image in mta-backend mta-dashboard; do
+            docker pull "ghcr.io/${NAMESPACE}/${image}:${VERSION}"
+            docker image inspect "ghcr.io/${NAMESPACE}/${image}:${VERSION}" \
+              --format 'pulled {{.RepoTags}} {{.Size}} bytes'
+          done
+
+      # Started through the same `compose.yaml` the local stack uses, in its
+      # pull mode, so what is verified here is the file a developer runs and
+      # not a second description of it.
+      - name: Start the stack from the registry images
+        shell: bash
+        env:
+          PROJECT_VERSION: ${{ needs.version.outputs.version }}
+          IMAGE_NAMESPACE: ${{ needs.version.outputs.namespace }}
+        run: ./deploy/docker/run.sh pull
+
+      - name: Verify the API answers directly and through the client proxy
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          # Compose reported both containers healthy before this step, so a
+          # failure here is the response body, not a slow start.
+          echo "::group::direct /api/health"
+          curl --fail --silent --show-error http://localhost:8501/api/health
+          echo
+          echo "::endgroup::"
+
+          echo "::group::proxied /api/health"
+          curl --fail --silent --show-error http://localhost:8090/api/health
+          echo
+          echo "::endgroup::"
+
+          echo "::group::the client document"
+          curl --fail --silent --show-error http://localhost:8090/ | head -c 400
+          echo
+          echo "::endgroup::"
+
+          # The snapshot is the payload every view reads. A stack that serves
+          # the document but answers this with an error is broken in the way
+          # a health check cannot see.
+          echo "::group::/api/dashboard through the proxy"
+          keys="$(curl --fail --silent --show-error http://localhost:8090/api/dashboard \
+            | python3 -c 'import json,sys; print(len(json.load(sys.stdin)))')"
+          echo "snapshot keys: ${keys}"
+          test "$keys" -ge 14
+          echo "::endgroup::"
+
+      - name: Report the stack state
+        if: always()
+        shell: bash
+        run: |
+          docker ps --all --format 'table {{.Names}}\t{{.Image}}\t{{.Status}}'
+          echo "::group::api logs";       docker logs marketing-roi-analysis-api       2>&1 | tail -n 40; echo "::endgroup::"
+          echo "::group::dashboard logs"; docker logs marketing-roi-analysis-dashboard 2>&1 | tail -n 40; echo "::endgroup::"
+
+      - name: Stop the stack
+        if: always()
+        run: ./deploy/docker/run.sh down
+
+      - name: Summarize the published images
+        shell: bash
+        env:
+          VERSION: ${{ needs.version.outputs.version }}
+          NAMESPACE: ${{ needs.version.outputs.namespace }}
+        run: |
+          {
+            echo "### Published and verified"
+            echo
+            echo "Pulled from the registry and run as a stack, not rebuilt."
+            echo
+            echo '```sh'
+            echo "docker pull ghcr.io/${NAMESPACE}/mta-backend:${VERSION}"
+            echo "docker pull ghcr.io/${NAMESPACE}/mta-dashboard:${VERSION}"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"

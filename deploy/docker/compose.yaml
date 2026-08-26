@@ -1,12 +1,24 @@
-# The local two-container test stack.
+# The two-container stack.
 #
 # This is the testing counterpart of `deploy/appstack/`, not a replacement for
 # it. AppStack deploys one image serving the API and the client together;
 # here they are two containers so each can be rebuilt, restarted, and read on
-# its own. The images are built from the repository root as their context.
+# its own.
 #
-#   deploy/docker/run.sh      build both images and start the stack
-#   deploy/docker/run.bat     the same on Windows
+#   deploy/docker/run.sh          build both images and start the stack
+#   deploy/docker/run.sh pull     pull the published images and start
+#   deploy/docker/run.bat         the same on Windows
+#
+# Each service carries both `build` and `image`, which is what lets one file
+# serve those two modes. `image` is the published GHCR reference in both, so a
+# locally built image and a pulled one are the same name at the same version
+# and `compose up` cannot silently mix them: `build` tags that reference, and
+# `pull` fetches it. Nothing here pushes -- `.github/workflows/
+# publish-containers.yml` is the only writer of the registry.
+#
+# The build context is the repository root, so the root `.dockerignore`
+# applies. The registry images are built from these same two Dockerfiles, so a
+# pulled stack and a built stack are the same stack.
 #
 # Two files configure this, and they are deliberately not the same one:
 #
@@ -32,7 +44,10 @@ services:
     build:
       context: ../..
       dockerfile: deploy/docker/Dockerfile.api
-    image: marketing-roi-analysis-api:${PROJECT_VERSION:-dev}
+    # IMAGE_NAMESPACE defaults to the upstream owner, so `run.sh pull` works
+    # on a fresh checkout with nothing configured. A fork sets it to its own
+    # lowercase owner to run its own published images.
+    image: ghcr.io/${IMAGE_NAMESPACE:-trance-0}/mta-backend:${PROJECT_VERSION:-dev}
     container_name: marketing-roi-analysis-api
     restart: unless-stopped
     # Later files win, so the repository root's `.env` overrides any default it
@@ -90,7 +105,7 @@ services:
     build:
       context: ../..
       dockerfile: deploy/docker/Dockerfile.dashboard
-    image: marketing-roi-analysis-dashboard:${PROJECT_VERSION:-dev}
+    image: ghcr.io/${IMAGE_NAMESPACE:-trance-0}/mta-dashboard:${PROJECT_VERSION:-dev}
     container_name: marketing-roi-analysis-dashboard
     restart: unless-stopped
     # NGINX resolves the API's name once at worker start, so it must not start
