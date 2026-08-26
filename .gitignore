@@ -133,10 +133,14 @@ modules/mta_attribution/outputs/attribution/*
 !modules/mta_attribution/outputs/attribution/amc_mta_model_comparison_summary.csv
 !modules/mta_attribution/outputs/attribution/amc_mta_recommended_attribution.csv
 
-# Keep the deterministic strategy budget seed used by the CLI and tests.
+# Keep the two deterministic strategy artifacts. Both are synthetic, both are
+# read by the CLI, the backend, and the evaluation tests, and both are copied
+# into the API image -- `.dockerignore` does not exclude `modules/`, so leaving
+# one untracked made a local build and a CI build produce different images.
 !modules/mta_strategy_recommendation/outputs/
 modules/mta_strategy_recommendation/outputs/*
 !modules/mta_strategy_recommendation/outputs/initial_budget_recommendation.json
+!modules/mta_strategy_recommendation/outputs/campaign_strategy.json
 
 # draw.io
 *.bkp
