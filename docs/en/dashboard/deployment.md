@@ -277,9 +277,11 @@ Source: `.github/workflows/publish-containers.yml`
 - Dependencies: `actions/checkout`, `actions/setup-node`,
   `actions/setup-python`, `astral-sh/setup-uv`, `docker/login-action`,
   `docker/setup-buildx-action`, and `docker/build-push-action`.
-- Verification: Bump `VERSION` on `main` and confirm the run publishes both
-  images and the `verify` job pulls and runs them; push a commit that does not
-  touch `VERSION` and confirm no run starts.
+- Verification: Both images published at `0.9.30` and consumed on a runner that
+  never built them — pulled, started through `run.sh pull`, both `healthy`,
+  `/api/health` answering `{"ok":true}` directly and proxied, and
+  `/api/dashboard` returning fifteen keys. Four commits that did not touch
+  `VERSION` started no run, so the filter holds in both directions.
 
 ### `dashboard/index.html` and `dashboard/vite.config.js`
 

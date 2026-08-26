@@ -322,17 +322,25 @@ jobs:
           test "$keys" -ge 14
           echo "::endgroup::"
 
+      # Diagnostics only. `|| true` on each container, because this step runs
+      # after a failure and the failure may be that a container never started
+      # -- a `docker logs` error for an absent container would then replace the
+      # real reason with a second one, which is what happened when this step
+      # first ran.
       - name: Report the stack state
         if: always()
         shell: bash
         run: |
           docker ps --all --format 'table {{.Names}}\t{{.Image}}\t{{.Status}}'
-          echo "::group::api logs";       docker logs marketing-roi-analysis-api       2>&1 | tail -n 40; echo "::endgroup::"
-          echo "::group::dashboard logs"; docker logs marketing-roi-analysis-dashboard 2>&1 | tail -n 40; echo "::endgroup::"
+          for container in marketing-roi-analysis-api marketing-roi-analysis-dashboard; do
+            echo "::group::${container} logs"
+            docker logs "$container" 2>&1 | tail -n 40 || echo "no such container"
+            echo "::endgroup::"
+          done
 
       - name: Stop the stack
         if: always()
-        run: ./deploy/docker/run.sh down
+        run: ./deploy/docker/run.sh down || true
 
       - name: Summarize the published images
         shell: bash
