@@ -1,9 +1,9 @@
 ---
 title: Backend Jobs and Settings
 description: Pipeline job polling and protected runtime settings contracts
-compact: "Specifies `/api/jobs` and `/api/settings`: validated subprocess argument vectors, bounded logs and history, three runnable model stages including strategy evaluation, stop semantics, cache invalidation, connection testing, the `PG_SCHEMA` census and its `invalid_schema` refusal, protected `.env` writes, read-only AppStack behavior, and diagnostics."
+compact: "Contracts for `/api/jobs`, `/api/settings`, and `/api/schema-operations`: protected settings, schema discovery, initialization and simulator parsing, validated subprocess arguments, bounded polling logs, termination, cache invalidation, and read-only deployment refusals."
 lang: en-US
-source_files: backend/api/jobs.py, backend/api/settings.py, backend/services/jobs.py, backend/services/settings.py, backend/tests/test_settings.py
+source_files: backend/api/jobs.py, backend/api/settings.py, backend/api/schema_operations.py, backend/services/jobs.py, backend/services/settings.py, backend/services/schema_operations.py, backend/tests/test_settings.py, backend/tests/test_schema_operations.py
 ---
 
 # Backend Jobs and Settings
@@ -64,6 +64,29 @@ actions return `403`; operators change environment variables through AppStack
 and roll the Deployment. The schema is chosen there through the `pgSchema`
 value and takes effect on restart.
 
+## Schema Operations
+
+`GET /api/schema-operations` returns the running or most recent schema
+operation. `POST /api/schema-operations` accepts `initialize` or `derive`, a
+validated schema name, and an explicit Boolean `replace`. `DELETE
+/api/schema-operations` requests termination. Hosted, protected, and file-mode
+deployments refuse starts before spawning a process.
+
+Initialization accepts a nonexistent or empty schema. It accepts a complete
+dashboard schema only with `replace: true`, and always refuses a populated
+simulator, partial, or unrelated schema. Derivation accepts only a source that
+currently holds every simulator source table required by
+`derive_scenario_schemas.py`. This classification is repeated immediately
+before the process starts rather than trusting an earlier browser census.
+
+Both actions spawn the documented root command as a fixed argument vector with
+no shell. Standard output and standard error are combined in order,
+timestamped, truncated to 500 characters per line, and bounded to 600 retained
+lines with a dropped-line count. The response is `202` once the process exists;
+the client polls the `GET` route until `succeeded`, `failed`, or `stopped`. A
+successful operation disposes the database pool and clears snapshot caches
+before the next census.
+
 ## Source Files
 
 ### `backend/api/jobs.py` and `backend/services/jobs.py`
@@ -102,3 +125,29 @@ Source: `backend/api/settings.py`, `backend/services/settings.py`
   database pool disposal, and snapshot cache invalidation.
 - Verification: `backend/tests/test_settings.py`, plus Flask settings requests
   in writable and read-only test environments.
+
+### `backend/api/schema_operations.py` and `backend/services/schema_operations.py`
+
+Source: `backend/api/schema_operations.py`,
+`backend/services/schema_operations.py`
+
+- Responsibility: Validate schema setup requests, recheck live schema
+  capabilities, run the canonical initializer or simulator parser, expose a
+  bounded polling log, and terminate the active process on request.
+- Inputs: Operation action, valid source or target schema name, explicit
+  replacement Boolean, saved PostgreSQL connection settings, and the live
+  schema census.
+- Outputs: `202` operation snapshots, `400` validation errors, `403` deployment
+  refusals, `409` capability or concurrency refusals, and terminal operation
+  state with exit code and detailed output.
+- Behavior contract: Browser input is passed only through a fixed argument
+  vector. An initializer never writes to a populated non-dashboard schema; a
+  parser never writes to its source; replacement is absent unless explicitly
+  requested. Logs retain 600 lines of at most 500 characters each and report
+  truncation.
+- Dependencies: `script/import_to_database.py`,
+  `script/derive_scenario_schemas.py`, database pool disposal, and snapshot
+  cache invalidation.
+- Verification: `backend/tests/test_schema_operations.py` proves argument
+  construction, capability refusals, bounded logs, lifecycle state, and route
+  protection without opening a live database.

@@ -1366,6 +1366,38 @@ tbody tr.selected:hover {
   word-break: break-word;
 }
 
+.schema-operation {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  border-top: 1px solid var(--line);
+  padding-top: 12px;
+}
+
+.schema-operation .section-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.schema-operation h4 {
+  margin: 0 0 3px;
+  font-size: 12.5px;
+  text-transform: capitalize;
+}
+
+.schema-operation .schema-command {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.schema-log .log-when {
+  max-width: 185px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 /* ---------------------------------------------------------------------------
    Stage runner
    --------------------------------------------------------------------------- */

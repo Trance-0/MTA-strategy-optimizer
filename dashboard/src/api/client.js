@@ -199,3 +199,36 @@ export async function postSettings(payload) {
   });
   return readJson(response);
 }
+
+/** Poll the active or most recent database-schema setup operation. */
+export async function fetchSchemaOperation() {
+  if (IS_STATIC) return { current: null };
+  const response = await fetch("/api/schema-operations");
+  return readJson(response);
+}
+
+/** Start initialization or simulator parsing for one validated schema name. */
+export async function startSchemaOperation(action, schema, replace = false) {
+  if (IS_STATIC) throw new Error("Schema setup is unavailable in the static build.");
+  const response = await fetch("/api/schema-operations", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ action, schema, replace }),
+  });
+  const result = await readJson(response);
+  if (!response.ok) {
+    const error = new Error(result.message ?? "The schema operation was not started.");
+    error.code = result.error;
+    throw error;
+  }
+  return result;
+}
+
+/** Request termination of the active schema setup operation. */
+export async function stopSchemaOperation() {
+  if (IS_STATIC) return { current: null };
+  const response = await fetch("/api/schema-operations", { method: "DELETE" });
+  const result = await readJson(response);
+  if (!response.ok) throw new Error(result.message ?? "No schema operation is running.");
+  return result;
+}

@@ -1,7 +1,7 @@
 ---
 title: Dashboard
 description: The Vue dashboard's architecture, its dual data source contract, and where each topic is documented
-compact: "Vue/Flask dashboard contract: Python repositories own file/PostgreSQL access and serve the unchanged 14-key snapshot; views issue no SQL and recompute no attribution. The client is a browser application only — it holds no database code and reaches everything through `/api`."
+compact: "Vue/Flask dashboard boundary: Python owns file/PostgreSQL access and the 14-key snapshot; browser views issue no SQL. `client.js` covers snapshots, models, jobs, settings, and polled schema initialization/parsing through `/api`."
 lang: en-US
 source_files: dashboard/src/api/client.js, dashboard/src/lib/useDashboard.js, dashboard/tests/dashboard.test.js, backend/repository/coercion.py, backend/tests/test_coercion.py, backend/tests/test_settings.py
 ---
@@ -160,8 +160,8 @@ Source: `dashboard/src/api/client.js`, `dashboard/src/lib/useDashboard.js`
 
 - Responsibility: Be the client's single route to the data, and hold the single shared copy of it.
 - Inputs: `/api/dashboard` in a local run, or `data/snapshot.json` in the published build.
-- Outputs: `IS_STATIC`, dashboard/reload/settings calls, `saveMasterObject()`, `archiveMasterObject()`, `fetchJobs()`, `startJob()`, `stopJob()`; and `useDashboard()`, including empty `simulationResearch` and `strategyEvaluation` shapes before loading.
-- Behavior contract: `IS_STATIC` is baked in at build time by `vite build --mode static`, and it is the only thing that decides which of the two sources is read; **no view branches on it.** The static path is relative because Pages serves a project site from a subdirectory. A response that is not JSON — a proxy page or a 404 — is reported by status rather than as a parse error naming character 0. In the static build `fetchSettings()` returns the hosted state directly and `postSettings()` refuses, rather than issuing requests that would 404. `useDashboard()` holds one module-level snapshot, so the six views that mount together share one in-flight request rather than issuing six, and two views can never show two different reads. An empty snapshot is exposed until the first load resolves, so a view renders its own empty state rather than crashing on a missing field.
+- Outputs: `IS_STATIC`, dashboard/reload/settings calls, `saveMasterObject()`, `archiveMasterObject()`, `fetchJobs()`, `startJob()`, `stopJob()`, `fetchSchemaOperation()`, `startSchemaOperation()`, and `stopSchemaOperation()`; and `useDashboard()`, including empty `simulationResearch` and `strategyEvaluation` shapes before loading.
+- Behavior contract: `IS_STATIC` is baked in at build time by `vite build --mode static`, and it is the only thing that decides which of the two sources is read; **no view branches on it.** The static path is relative because Pages serves a project site from a subdirectory. A response that is not JSON — a proxy page or a 404 — is reported by status rather than as a parse error naming character 0. In the static build settings and schema-operation functions return hosted refusals without issuing requests that would 404. Live schema starts send only `action`, `schema`, and an explicit replacement Boolean; errors retain the backend message. `useDashboard()` holds one module-level snapshot, so the six views that mount together share one in-flight request rather than issuing six, and two views can never show two different reads. An empty snapshot is exposed until the first load resolves, so a view renders its own empty state rather than crashing on a missing field.
 - Dependencies: Vue's reactivity.
 - Verification: Driven in a real browser against both the API and the static snapshot; both render the six views identically with no console error.
 

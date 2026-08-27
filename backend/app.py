@@ -36,6 +36,7 @@ from flask import Flask, jsonify, send_from_directory  # noqa: E402
 from backend.api import dashboard as dashboard_api  # noqa: E402
 from backend.api import jobs as jobs_api  # noqa: E402
 from backend.api import models as models_api  # noqa: E402
+from backend.api import schema_operations as schema_operations_api  # noqa: E402
 from backend.api import settings as settings_api  # noqa: E402
 from backend.config import (  # noqa: E402
     client_dist_directory,
@@ -62,6 +63,7 @@ def create_app() -> Flask:
     app.register_blueprint(dashboard_api.blueprint)
     app.register_blueprint(jobs_api.blueprint)
     app.register_blueprint(settings_api.blueprint)
+    app.register_blueprint(schema_operations_api.blueprint)
     app.register_blueprint(models_api.blueprint)
 
     _register_client(app)

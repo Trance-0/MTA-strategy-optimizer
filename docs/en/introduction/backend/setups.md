@@ -1,7 +1,7 @@
 ---
 title: Backend Setup and Deployment
 description: Local Flask startup and Yunxiao AppStack deployment configuration
-compact: "Setup contract for Flask and Yunxiao AppStack: `uv sync --extra backend`, Vue production build, Gunicorn image, `PG_SCHEMA` schema selection and its census, AppStack value placeholders, ConfigMap and Secret inputs, health probes, authenticated Transport Layer Security ingress, and PostgreSQL connectivity."
+compact: "Flask and Yunxiao AppStack setup: local commands, Gunicorn image, PostgreSQL `PG_SCHEMA` selection, capability census fields for dashboard, source, empty, and unrelated schemas, deployment values, probes, authenticated ingress, and connectivity."
 lang: en-US
 source_files: backend/app.py, backend/config.py, backend/database.py, backend/services/schemas.py, backend/wsgi.py, backend/tests/test_app.py, backend/tests/test_schemas.py, deploy/appstack/Dockerfile, deploy/appstack/orchestration.yaml, deploy/appstack/values.example.yaml, .dockerignore
 ---
@@ -93,6 +93,14 @@ capability rather than a name: the fourteen tables the dashboard's loaders read
 directly must all be present for the schema to be selectable. An incomplete
 schema is still listed, marked unselectable, and carries the tables it lacks
 and the command that would populate it.
+
+The same census drives schema setup without changing the stricter selection
+rule. Each entry classifies itself as `dashboard`, `source`, `partial_source`,
+`empty`, or `other`; `canInitialize` and `canDerive` state which setup action is
+safe. `SIMULATOR_SOURCE_TABLES` contains the complete parsing prerequisite, so
+a partly uploaded source is visible but cannot start a parser that is already
+known to fail. These fields are capability data rather than a hard-coded menu,
+so an additional readable schema appears automatically.
 
 `GET /api/settings` returns the census under `schemas`, enumerated only in
 database mode. A connection test returns the census for the server just
@@ -215,7 +223,8 @@ Source: `backend/services/schemas.py`
   what each can serve. `REQUIRED_TABLES` is the fourteen tables a schema must
   hold to be selectable; `RESEARCH_TABLES` is the four external history tables
   whose presence distinguishes a scenario awaiting an import from an unrelated
-  schema. `available_schemas()` reads through the service engine and
+  schema; and `SIMULATOR_SOURCE_TABLES` is the full parser prerequisite.
+  `available_schemas()` reads through the service engine and
   `probe_schemas()` through a throwaway engine for credentials not yet saved.
   Neither raises: each returns `{schemas, selected, error}` so an unreachable
   database renders as a dialog that says so rather than a settings page that
@@ -224,8 +233,9 @@ Source: `backend/services/schemas.py`
 - Inputs: The configured connection, or a candidate `PG_*` mapping.
 - Outputs: Per schema — `name`, `selectable`, `selected`, `tableCount`,
   `missingTables` (capped at eight), `missingCount`, `hasResearchTables`, and a
-  `detail` string naming the reason and the command that would populate the
-  schema. `tableCount` is the schema's whole relation count, not the matched
+  `kind`, `canInitialize`, `canDerive`, `sourceMissingCount`, and `detail`
+  string naming its capability and safe next action. `tableCount` is the
+  schema's whole relation count, not the matched
   subset the census filters on: reporting the subset would describe a
   fifty-three-table schema as holding fourteen, and a reader comparing that
   against their database client would reasonably conclude the connection was

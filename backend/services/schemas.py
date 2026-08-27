@@ -61,6 +61,23 @@ RESEARCH_TABLES: tuple[str, ...] = (
     "mta_sim_budget_observation",
 )
 
+#: The complete source contract consumed by
+#: `script/derive_scenario_schemas.py`. Keeping the census aware of all of it
+#: prevents a schema with only a few similarly named research tables from
+#: being offered a parse action that can only fail after a process starts.
+SIMULATOR_SOURCE_TABLES: tuple[str, ...] = (
+    "mta_simulation_run",
+    "mta_sim_campaign",
+    "mta_sim_ad_group",
+    "mta_sim_touchpoint",
+    "mta_sim_product",
+    "mta_sim_campaign_product_link",
+    "mta_sim_delivery_observation",
+    "mta_sim_outcome_observation",
+    "amc_path_report",
+    "amazon_ads_daily_touchpoint_performance",
+)
+
 #: How a reader populates a schema that carries research history but not the
 #: dashboard's model. Deriving reads the scenario's own advertisers and
 #: marketplaces; the fixture importer would write the demo account's entities
@@ -87,9 +104,20 @@ def _describe(
     missing = [table for table in REQUIRED_TABLES if table not in present]
     research = [table for table in RESEARCH_TABLES if table in present]
     complete = not missing
+    source_missing = [
+        table for table in SIMULATOR_SOURCE_TABLES if table not in present
+    ]
+    parse_source = not source_missing
 
     if complete:
         detail = f"{total} table(s). Serves every view."
+        kind = "dashboard"
+    elif parse_source:
+        detail = (
+            f"{total} table(s). Complete source model; parse its scenarios "
+            "into dashboard schemas."
+        )
+        kind = "source"
     elif research:
         # Worded without naming the research pipeline: this string is rendered
         # in the settings dialog, and the dashboard does not describe the
@@ -99,16 +127,19 @@ def _describe(
             f"attribution or strategy model. Derive a schema per scenario "
             f"with: {DERIVE_COMMAND.format(schema=schema)}"
         )
+        kind = "partial_source"
     elif total:
         detail = (
             f"{total} table(s), none of them the dashboard's. This schema "
             "belongs to another application."
         )
+        kind = "other"
     else:
         detail = (
             "Empty. Load the committed sample with: "
             f"{IMPORT_COMMAND.format(schema=schema)}"
         )
+        kind = "empty"
 
     return {
         "name": schema,
@@ -120,6 +151,10 @@ def _describe(
         "missingTables": missing[:8],
         "missingCount": len(missing),
         "hasResearchTables": bool(research),
+        "kind": kind,
+        "canInitialize": total == 0 or complete,
+        "canDerive": parse_source and not complete,
+        "sourceMissingCount": len(source_missing),
         "detail": detail,
     }
 
@@ -160,7 +195,13 @@ def _read_schemas(selected: str) -> list[dict[str, Any]]:
     return _census(
         sql(
             _CENSUS_STATEMENT,
-            {"required": list(REQUIRED_TABLES + RESEARCH_TABLES)},
+            {
+                "required": list(
+                    dict.fromkeys(
+                        REQUIRED_TABLES + RESEARCH_TABLES + SIMULATOR_SOURCE_TABLES
+                    )
+                )
+            },
         ),
         selected,
     )
@@ -240,7 +281,13 @@ def probe_schemas(updates: dict[str, str]) -> dict[str, Any]:
         with probe.connect() as connection:
             rows = connection.execute(
                 text(_CENSUS_STATEMENT),
-                {"required": list(REQUIRED_TABLES + RESEARCH_TABLES)},
+                {
+                    "required": list(
+                        dict.fromkeys(
+                            REQUIRED_TABLES + RESEARCH_TABLES + SIMULATOR_SOURCE_TABLES
+                        )
+                    )
+                },
             ).mappings()
             return {
                 "schemas": _census([dict(row) for row in rows], selected),

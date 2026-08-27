@@ -286,6 +286,21 @@ test("the schema selection is sent, saved, and refilled from a live test", () =>
   assert.match(settingsApi, /"invalid_schema"/);
 });
 
+test("schema setup exposes discovery-driven initialization, parsing, and logs", () => {
+  assert.match(SETTINGS_DIALOG, /id="setup-schema"/);
+  assert.match(SETTINGS_DIALOG, /v-for="option in schemas\.schemas"/);
+  assert.match(SETTINGS_DIALOG, /Initialize sample model/);
+  assert.match(SETTINGS_DIALOG, /Parse all scenarios/);
+  assert.match(SETTINGS_DIALOG, /operation\.lines/);
+  assert.match(SETTINGS_DIALOG, /operation\.command/);
+
+  const client = readFileSync(resolve(HERE, "..", "src", "api", "client.js"), "utf8");
+  assert.match(client, /fetchSchemaOperation/);
+  assert.match(client, /startSchemaOperation/);
+  assert.match(client, /stopSchemaOperation/);
+  assert.match(client, /\/api\/schema-operations/);
+});
+
 test("the rail's status dot agrees with the deployment accent", async () => {
   const settings = readFileSync(
     resolve(HERE, "..", "..", "backend", "services", "settings.py"),

@@ -1,6 +1,6 @@
 ---
 title: Populating PostgreSQL
-compact: "The `import_to_database.py` importer and the schema/`.env` contract it writes against: `--replace`, `--dry-run`, `--full-events`, `--schema` flags, `PG_SCHEMA` targeting, one-transaction commit, and the surrogate `id` insert order the dashboard's row-order rule depends on. Adds `derive_scenario_schemas.py`, which computes the same model from a simulator-populated schema, one schema per scenario, and states the layers it could not derive. Specifies `config.py`, `models.py`, `import_to_database.py`, `derive_scenario_schemas.py`."
+compact: "PostgreSQL schema initialization and simulator parsing through `import_to_database.py`, `derive_scenario_schemas.py`, `PG_SCHEMA`, and dashboard schema-setup controls, including replacement safeguards, derived marketplace schemas, and streamed operation logs."
 lang: en-US
 source_files: dashboard/config.py, dashboard/models.py, script/import_to_database.py, script/derive_scenario_schemas.py
 ---
@@ -102,6 +102,41 @@ filled with a plausible number. A scenario whose Campaign shape or targeting
 inventory cannot satisfy the strategy module's contract is derived without a
 budget recommendation, and the command prints why rather than fabricating the
 counts that would produce one.
+
+## Initializing and Parsing from the Dashboard
+
+The local dashboard settings separate the active **Dashboard schema** from the
+**Schema setup** target. The active selector contains only schemas that already
+hold the complete dashboard model. The setup menu contains every readable,
+plain-identifier schema returned by PostgreSQL, including empty schemas,
+simulator source schemas, complete dashboard schemas, and schemas owned by
+other applications. Newly introduced readable schemas therefore appear
+without a frontend code change.
+
+An empty existing schema, or a valid new schema name entered by the operator,
+can start the committed-sample initializer. This invokes
+`script/import_to_database.py --schema <target>` as a fixed subprocess argument
+vector. A non-empty schema is never treated as empty. Replacing a complete
+dashboard schema requires an explicit replacement choice and browser
+confirmation; a simulator or unrelated populated schema is never offered the
+fixture initializer because that would mix accounts.
+
+A schema is offered the parse action only when it holds every table in
+`SOURCE_TABLES` from `derive_scenario_schemas.py`. Parsing invokes
+`script/derive_scenario_schemas.py --source <source> --all`, discovers the
+source's marketplaces at run time, and writes one target schema per scenario.
+The source remains read-only. Replacement of already-derived target schemas is
+off by default and requires an explicit choice and browser confirmation.
+
+Initialization and parsing return immediately after starting and continue as
+server-side operations. The settings dialog polls their state and renders the
+exact reproducible command, start and finish times, exit status, and each
+timestamped output line. The log retains at most 600 lines and reports how
+many earlier lines were dropped. A successful operation clears database read
+caches and refreshes the schema census, so newly initialized or derived
+schemas become available in the active selector without restarting the
+dashboard. Closing the dialog does not stop an operation; the operator may
+request termination explicitly.
 
 ## Source Files <span class="status-label status-verified" aria-label="Verified"></span>
 

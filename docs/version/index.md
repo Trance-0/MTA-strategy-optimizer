@@ -1,7 +1,7 @@
 ---
 title: Version Log
 description: Release history and material changes for the maintained project
-compact: "Index of all version pages with dates, one-line summaries, and outstanding follow-ups. Read to locate when a change landed or to add a version page; not a specification of current behavior."
+compact: "Routes release history from `VERSION` to one page per patch, keeping the latest four patches flat and older patches in minor-version folders; includes dates, summaries, historical group links, and planned follow-ups."
 order: 1
 ---
 
@@ -10,6 +10,11 @@ order: 1
 The project version is recorded in the repository-root `VERSION` file. Each page here is one small patch description covering a coherent change set, rather than a reproduction of every commit message. Every patch keeps its own permanent page; older minor versions are grouped into a collapsed folder per minor version instead of being compacted away.
 
 This section records **what** changed. See the [work log](../worklog/) for **who** did the work and when.
+
+## [0.9.32](0.9.32.md)
+
+- Date: 2026-08-27
+- Summary: Added discovery-driven dashboard controls and protected backend operations to initialize empty or new PostgreSQL schemas and parse complete source schemas into one dashboard schema per scenario, with explicit replacement confirmation, bounded timestamped polling logs, termination, and automatic cache and census refresh
 
 ## [0.9.31](0.9.31.md)
 
@@ -26,22 +31,22 @@ This section records **what** changed. See the [work log](../worklog/) for **who
 - Date: 2026-08-26
 - Summary: Added a two-container Docker test stack tagged from `VERSION` that detects the data source automatically and gives credentials to the API alone, removed the dashboard's Node server component after porting its coverage to the backend suite, and fixed a bind-parameter defect that made every database-mode snapshot fail
 
-## [0.9.28](0.9.28.md)
+## [0.9.28](0.9/0.9.28.md)
 
 - Date: 2026-08-25
 - Summary: Built runnable strategy evaluation contracts and layers, preserved the contributed budget-to-revenue networks verbatim under model-named `contrib/` folders with an adapter, added the train-on-demand evaluation stage and snapshot, and completed the Flask/AppStack runtime migration
 
-## [0.9.27](0.9.27.md)
+## [0.9.27](0.9/0.9.27.md)
 
 - Date: 2026-08-20
 - Summary: Ran pipeline stages from the dashboard with streamed logs and phase-matched progress, split the optimizer and its logs into one tab per model, gave `run_pipeline.py` a working report date range that filters and reconciles both inputs, and converted Campaigns to the paged entity table
 
-## [0.9.26](0.9.26.md)
+## [0.9.26](0.9/0.9.26.md)
 
 - Date: 2026-08-20
 - Summary: Derived the entity catalogue from the committed reports so every deployment populates it, rebuilt the narrow-viewport rail as a horizontal bar, and revised the dashboard to describe reported market performance rather than generated data
 
-## [0.9.25](0.9.25.md)
+## [0.9.25](0.9/0.9.25.md)
 
 - Date: 2026-08-20
 - Summary: Added a pipeline architecture diagram to the English documentation homepage hero, replacing VitePress's default circular logo slot on that page only

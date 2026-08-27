@@ -12,9 +12,15 @@
  * back, and leaving the field blank keeps the stored one rather than clearing
  * it, so the value is never rendered into the page.
  */
-import { computed, ref, watch } from "vue";
+import { computed, onUnmounted, ref, watch } from "vue";
 
-import { fetchSettings, postSettings } from "../api/client.js";
+import {
+  fetchSchemaOperation,
+  fetchSettings,
+  postSettings,
+  startSchemaOperation,
+  stopSchemaOperation,
+} from "../api/client.js";
 import { useDiagnostics } from "../lib/diagnostics.js";
 import { DOCS_URL, REPO_URL } from "../pages.js";
 
@@ -56,6 +62,26 @@ const readOnly = computed(() => hosted.value || (state.value?.readOnly ?? false)
  * becomes that server's rather than the saved one's.
  */
 const schemas = ref({ schemas: [], selected: "public", error: null });
+const setupSchema = ref("");
+const newSchema = ref("");
+const replaceSchemas = ref(false);
+const schemaOperation = ref({ current: null });
+let operationTimer = null;
+
+const setupOption = computed(() =>
+  (schemas.value.schemas ?? []).find((item) => item.name === setupSchema.value),
+);
+const operation = computed(() => schemaOperation.value.current);
+const operationRunning = computed(() =>
+  ["running", "stopping"].includes(operation.value?.state),
+);
+const connectionSaved = computed(() => {
+  if (!state.value?.useDatabase || form.value.PG_PASSWORD) return false;
+  const saved = state.value.connection ?? {};
+  return ["PG_HOST", "PG_PORT", "PG_DATABASE", "PG_USER", "PG_SSLMODE", "PG_SCHEMA"].every(
+    (key) => String(form.value[key] ?? "") === String(saved[key] ?? ""),
+  );
+});
 
 /**
  * The stored schema, kept as an option even when the list does not contain it.
@@ -102,6 +128,62 @@ function schemaTitle(option) {
   return `Unavailable. ${option.detail}${missing}`;
 }
 
+function schemaKind(option) {
+  return {
+    dashboard: "dashboard-ready",
+    source: "parse-ready source",
+    partial_source: "partial source",
+    empty: "empty",
+    other: "other application",
+  }[option.kind] ?? "unclassified";
+}
+
+function chooseSetupDefault() {
+  const listed = schemas.value.schemas ?? [];
+  if (!listed.some((item) => item.name === setupSchema.value)) {
+    setupSchema.value =
+      listed.find((item) => item.canDerive)?.name ??
+      listed.find((item) => item.canInitialize)?.name ??
+      listed[0]?.name ??
+      "";
+  }
+}
+
+function scheduleOperationPoll() {
+  if (operationTimer !== null) window.clearTimeout(operationTimer);
+  operationTimer = null;
+  if (props.open && operationRunning.value) {
+    operationTimer = window.setTimeout(refreshOperation, 900);
+  }
+}
+
+async function refreshOperation() {
+  const previous = operation.value;
+  try {
+    schemaOperation.value = await fetchSchemaOperation();
+    const current = operation.value;
+    if (previous?.state === "running" && current?.state === "succeeded") {
+      await refreshSchemaCensus();
+    }
+  } catch (error) {
+    message.value = { ok: false, text: `${error.name}: ${error.message}` };
+  } finally {
+    scheduleOperationPoll();
+  }
+}
+
+async function refreshSchemaCensus() {
+  const result = await postSettings({
+    action: "test",
+    useDatabase: form.value.useDatabase,
+    connection: connectionPayload(),
+  });
+  if (result.schemas) {
+    schemas.value = result.schemas;
+    chooseSetupDefault();
+  }
+}
+
 async function refresh() {
   state.value = await fetchSettings();
   if (state.value.connection) {
@@ -112,6 +194,8 @@ async function refresh() {
     };
   }
   if (state.value.schemas) schemas.value = state.value.schemas;
+  chooseSetupDefault();
+  await refreshOperation();
 }
 
 watch(
@@ -124,6 +208,10 @@ watch(
   },
   { immediate: true },
 );
+
+onUnmounted(() => {
+  if (operationTimer !== null) window.clearTimeout(operationTimer);
+});
 
 function connectionPayload() {
   return {
@@ -153,6 +241,7 @@ async function send(action, extra = {}) {
       // it fills the dropdown from the server the reader just reached rather
       // than from the one that happens to be saved.
       if (result.schemas) schemas.value = result.schemas;
+      chooseSetupDefault();
     } else if (action === "save") {
       message.value = {
         ok: result.ok !== false,
@@ -169,6 +258,60 @@ async function send(action, extra = {}) {
     message.value = { ok: false, text: `${error.name}: ${error.message}` };
   } finally {
     busy.value = false;
+  }
+}
+
+async function runSchemaOperation(action) {
+  const schema =
+    action === "initialize" && newSchema.value.trim()
+      ? newSchema.value.trim()
+      : setupSchema.value;
+  if (!schema) {
+    message.value = { ok: false, text: "Choose or enter a schema first." };
+    return;
+  }
+  if (
+    replaceSchemas.value &&
+    !window.confirm(
+      action === "derive"
+        ? `Replace any existing derived target schemas while parsing ${schema}? ` +
+            "The source stays read-only, but target replacement cannot be undone " +
+            "from the dashboard."
+        : `Rebuild dashboard schema ${schema}? Existing target tables will be ` +
+            "replaced and cannot be restored from the dashboard.",
+    )
+  ) {
+    return;
+  }
+  busy.value = true;
+  message.value = null;
+  try {
+    schemaOperation.value = await startSchemaOperation(
+      action,
+      schema,
+      replaceSchemas.value,
+    );
+    message.value = {
+      ok: true,
+      text: `${action === "derive" ? "Parsing" : "Initialization"} started.`,
+    };
+    scheduleOperationPoll();
+  } catch (error) {
+    message.value = { ok: false, text: `${error.name}: ${error.message}` };
+  } finally {
+    busy.value = false;
+  }
+}
+
+async function stopSchemaSetup() {
+  busy.value = true;
+  try {
+    schemaOperation.value = await stopSchemaOperation();
+  } catch (error) {
+    message.value = { ok: false, text: `${error.name}: ${error.message}` };
+  } finally {
+    busy.value = false;
+    scheduleOperationPoll();
   }
 }
 
@@ -325,7 +468,7 @@ cp sample.env .env      # set DATABASE=true and the PG_* values
                 </select>
               </div>
               <div class="field span-2">
-                <label for="pg-schema">Schema</label>
+                <label for="pg-schema">Dashboard schema</label>
                 <!--
                   A schema that cannot serve the dashboard is listed and
                   disabled rather than omitted. Omitting it would leave a reader
@@ -380,6 +523,118 @@ cp sample.env .env      # set DATABASE=true and the PG_* values
                 Test the connection to list the schemas this server offers.
               </template>
             </p>
+
+            <template v-if="form.useDatabase">
+              <h3>Schema setup</h3>
+              <p class="caption">
+                Manage every readable schema on the saved connection. Parse-ready
+                sources stay read-only and produce one dashboard schema per
+                scenario; empty or new schemas can receive the committed sample.
+              </p>
+              <p v-if="!connectionSaved" class="notice">
+                Save the database connection and active schema before running
+                setup. Operations always use the saved connection.
+              </p>
+              <div class="form-grid">
+                <div class="field span-2">
+                  <label for="setup-schema">Existing schema</label>
+                  <select id="setup-schema" v-model="setupSchema">
+                    <option
+                      v-for="option in schemas.schemas"
+                      :key="option.name"
+                      :value="option.name"
+                    >
+                      {{ option.name }} — {{ schemaKind(option) }}
+                    </option>
+                  </select>
+                </div>
+                <div class="field span-2">
+                  <label for="new-schema">New schema name</label>
+                  <input
+                    id="new-schema"
+                    v-model="newSchema"
+                    type="text"
+                    placeholder="Optional target for sample initialization"
+                  />
+                </div>
+              </div>
+
+              <p v-if="setupOption" class="caption schema-help">
+                <b>{{ setupOption.name }}</b> — {{ setupOption.detail }}
+              </p>
+
+              <label class="toggle">
+                <input v-model="replaceSchemas" type="checkbox" />
+                <span>
+                  Replace existing target tables
+                  <small>
+                    Off is safe for first runs. On requires confirmation and is
+                    needed only to rebuild an existing dashboard target.
+                  </small>
+                </span>
+              </label>
+
+              <div class="rec-actions">
+                <button
+                  class="btn"
+                  :disabled="busy || operationRunning || !connectionSaved || (!newSchema.trim() && !setupOption?.canInitialize)"
+                  @click="runSchemaOperation('initialize')"
+                >
+                  Initialize sample model
+                </button>
+                <button
+                  class="btn primary"
+                  :disabled="busy || operationRunning || !connectionSaved || !setupOption?.canDerive"
+                  @click="runSchemaOperation('derive')"
+                >
+                  Parse all scenarios
+                </button>
+              </div>
+
+              <section v-if="operation" class="schema-operation" aria-live="polite">
+                <div class="section-head">
+                  <div>
+                    <h4>
+                      {{ operation.action }} {{ operation.schema }} —
+                      {{ operation.state }}
+                    </h4>
+                    <p class="caption">
+                      Started {{ operation.startedAt }}
+                      <template v-if="operation.finishedAt">
+                        · finished {{ operation.finishedAt }}
+                      </template>
+                      <template v-if="operation.exitCode !== null">
+                        · exit {{ operation.exitCode }}
+                      </template>
+                    </p>
+                  </div>
+                  <button
+                    v-if="operationRunning"
+                    class="btn small"
+                    :disabled="busy"
+                    @click="stopSchemaSetup"
+                  >
+                    Stop
+                  </button>
+                </div>
+                <p v-if="operation.error" class="notice bad">{{ operation.error }}</p>
+                <p v-if="operation.droppedLines" class="caption">
+                  {{ operation.droppedLines }} earlier log line(s) dropped.
+                </p>
+                <pre class="schema-command"><code>{{ operation.command }}</code></pre>
+                <div class="log-stream schema-log">
+                  <div
+                    v-for="(line, index) in operation.lines"
+                    :key="`${line.at}-${index}`"
+                    class="log-row"
+                  >
+                    <span class="log-when">{{ line.at }}</span>
+                    <span class="log-source">{{ line.stream }}</span>
+                    <span class="log-message">{{ line.text }}</span>
+                  </div>
+                </div>
+              </section>
+            </template>
 
             <div class="rec-actions">
               <button class="btn" :disabled="busy" @click="send('test')">

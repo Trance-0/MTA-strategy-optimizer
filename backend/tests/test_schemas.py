@@ -21,6 +21,7 @@ import unittest
 from backend.services.schemas import (
     REQUIRED_TABLES,
     RESEARCH_TABLES,
+    SIMULATOR_SOURCE_TABLES,
     _census,
     _describe,
 )
@@ -90,7 +91,9 @@ class ConnectArgumentTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             _settings("mta -c log_statement=all").connect_args()
 
-    def test_the_summary_names_a_non_default_schema_and_never_the_password(self) -> None:
+    def test_the_summary_names_a_non_default_schema_and_never_the_password(
+        self,
+    ) -> None:
         self.assertIn("(mta)", _settings("mta").safe_summary())
         self.assertNotIn("secret", _settings("mta").safe_summary())
         self.assertNotIn("(", _settings(DEFAULT_SCHEMA).safe_summary())
@@ -126,6 +129,22 @@ class SchemaDescriptionTests(unittest.TestCase):
         # have to reconstruct either.
         self.assertIn("derive_scenario_schemas.py --source mta", described["detail"])
 
+    def test_a_complete_source_is_parseable_but_not_selectable(self) -> None:
+        described = _describe("mta", set(SIMULATOR_SOURCE_TABLES), 19, "public")
+
+        self.assertFalse(described["selectable"])
+        self.assertTrue(described["canDerive"])
+        self.assertFalse(described["canInitialize"])
+        self.assertEqual(described["kind"], "source")
+
+    def test_a_partial_source_is_not_offered_a_parser(self) -> None:
+        described = _describe(
+            "mta", set(SIMULATOR_SOURCE_TABLES) - {"amc_path_report"}, 18, "public"
+        )
+
+        self.assertFalse(described["canDerive"])
+        self.assertGreater(described["sourceMissingCount"], 0)
+
     def test_a_populated_schema_is_never_told_to_run_the_fixture_import(self) -> None:
         # The fixture importer writes its own advertiser, campaign group, and
         # campaigns. Pointed at a schema that already holds a different
@@ -138,7 +157,10 @@ class SchemaDescriptionTests(unittest.TestCase):
     def test_an_empty_schema_is_offered_the_fixture_import(self) -> None:
         described = _describe("blank", set(), 0, "public")
 
-        self.assertIn("script/import_to_database.py --schema blank", described["detail"])
+        self.assertIn(
+            "script/import_to_database.py --schema blank", described["detail"]
+        )
+        self.assertTrue(described["canInitialize"])
 
     def test_no_description_names_the_research_pipeline(self) -> None:
         # These strings are rendered in the settings dialog, which the client

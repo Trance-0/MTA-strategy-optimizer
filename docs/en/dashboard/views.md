@@ -1,6 +1,6 @@
 ---
 title: Dashboard Views and Visual Contract
-compact: "Visual contract for six Vue views and shared components: capability-driven theming, paged entity lists, diagnostics, pipeline controls, model tabs, accessibility, and empty/read-only states. The stage catalogue and entity derivation the views render are owned by `backend/services/jobs.py` and `backend/repository/master_data.py`."
+compact: "Vue view/component contract: six views, responsive navigation, paged entities, model runners, diagnostics, charts, accessibility, and settings controls for active-schema selection, initialization, source parsing, replacement confirmation, polling logs, and termination."
 lang: en-US
 source_files: dashboard/src/theme.js, dashboard/src/style.css, dashboard/src/lib/deployment.js, dashboard/src/lib/diagnostics.js, dashboard/src/lib/useJobs.js, dashboard/src/views/CommandCenter.vue, dashboard/src/views/BudgetManager.vue, dashboard/src/views/Campaigns.vue, dashboard/src/views/CampaignOptimizer.vue, dashboard/src/views/OptimizationLog.vue, dashboard/src/views/KnowledgeBase.vue, dashboard/src/components/SidebarNav.vue, dashboard/src/components/TopBar.vue, dashboard/src/components/SettingsDialog.vue, dashboard/src/components/StageRunner.vue, dashboard/src/components/PlotlyChart.vue, dashboard/src/components/DataTable.vue, dashboard/src/components/EntityTable.vue, dashboard/src/components/ConfirmDialog.vue, dashboard/src/components/TableView.vue, dashboard/src/components/MetricRow.vue, dashboard/src/components/KeyValuePanel.vue, dashboard/src/components/ReliabilityBanner.vue, dashboard/src/lib/common.js
 ---
@@ -270,7 +270,28 @@ Source: `dashboard/src/components/SidebarNav.vue`, `dashboard/src/components/Top
 
 `ConfirmDialog.vue` is the only route to a deletion. It **names the affected identifiers rather than reporting a count alone**, because a count is not something a reader can check and a batch selected across several pages is exactly the case where a reader cannot see their own selection. The list is capped at twelve with the remainder stated rather than dropped, and the dialog stays open on failure carrying the reason.
 
-`SettingsDialog.vue`'s schema field is a dropdown over the census returned by `/api/settings` and refreshed by a connection test, described in [Backend Jobs and Settings](../introduction/backend/operations.md#schema-selection). **A schema that cannot serve the dashboard is listed and disabled rather than omitted**: omitting it would leave a reader who knows the schema exists with no account of its absence, while disabling it puts the reason at the moment they would have chosen it. Each option carries the server's own `detail` as its `title`, and the same explanation — the reason, the tables the schema lacks, and the command that would populate it — is rendered as help text under the field, because the browser tooltip is not shown over an open dropdown everywhere and a hover may never arrive. The stored selection stays in the list even when the census is empty, so an unreachable database cannot make the dialog display a schema the reader never chose and then save it. The dialog holds the census apart from the rest of the settings state, because a connection test refreshes the list without refreshing anything else: the reader edits the host, tests, and the list becomes that server's rather than the saved one's.
+`SettingsDialog.vue` separates active selection from setup. Its **Dashboard
+schema** field is a dropdown over the census returned by `/api/settings` and
+refreshed by a connection test, described in [Backend Jobs and
+Settings](../introduction/backend/operations.md#schema-selection). **A schema
+that cannot serve the dashboard is listed and disabled rather than omitted**:
+omitting it would leave a reader who knows the schema exists with no account
+of its absence, while disabling it puts the reason at the moment they would
+have chosen it. Each option carries the server's own `detail` as its `title`,
+and the same explanation — the reason and tables the schema lacks — is
+rendered as help text under the field. The stored selection stays in the list
+when the census is empty, so an unreachable database cannot make the dialog
+display a schema the reader never chose and then save it.
+
+The **Schema setup** menu lists every censused schema, including disabled
+active-schema choices, and labels its detected kind and available action.
+Simulator sources expose **Parse all scenarios**; empty schemas expose
+**Initialize sample model**; a valid new name can initialize a new schema.
+Replacement is an explicit checkbox followed by browser confirmation. While
+an operation runs, the dialog polls `/api/schema-operations` and shows its
+status, exact command, bounded timestamped output, dropped-line count, and stop
+control. Success refreshes the census so new targets immediately appear in the
+Dashboard schema selector.
 - Dependencies: Vue 3 and `plotly.js-dist-min`.
 - Verification: Exercised in a real browser through the six views that mount them. `EntityTable.vue`'s paging, page sizes, and identity-keyed selection, `ConfirmDialog.vue`'s named rows, `SettingsDialog.vue`'s disabled-schema and census contracts, and `StageRunner.vue`'s progressbar contract are covered by `dashboard/tests/dashboard.test.js`.
 
