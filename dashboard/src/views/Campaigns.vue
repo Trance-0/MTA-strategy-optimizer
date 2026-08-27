@@ -160,19 +160,39 @@ const interactionHistoryLayout = computed(() => theme.layout({
 }));
 
 const budgetHistoryTraces = computed(() => {
-  const rows = scopedHistory.value.slice(0, 80);
-  const labels = rows.map((row) => `${row.report_date} · ${row.campaign_id} · ${row.budget_level}×`);
-  return [
-    { type: "bar", name: "Configured budget", x: labels,
-      y: rows.map((row) => row.configured_budget), marker: { color: theme.SERIES[1] } },
-    { type: "bar", name: "Actual spend", x: labels,
-      y: rows.map((row) => row.actual_spend), marker: { color: theme.SERIES[0] } },
-  ];
+  const campaigns = distinct(scopedHistory.value, "campaign_id");
+  const colors = theme.seriesColors(campaigns);
+  return campaigns.map((campaign) => {
+    const rows = scopedHistory.value.filter((row) => row.campaign_id === campaign);
+    return {
+      type: "scatter",
+      mode: "markers",
+      name: campaign,
+      x: rows.map((row) => row.configured_budget),
+      y: rows.map((row) => row.actual_spend),
+      customdata: rows.map((row) => [row.report_date, row.budget_level]),
+      marker: { color: colors[campaign], size: 8, opacity: 0.68 },
+      hovertemplate:
+        `<b>${campaign}</b><br>%{customdata[0]} · %{customdata[1]}×<br>` +
+        "Budget %{x:$,.2f}<br>Spend %{y:$,.2f}<extra></extra>",
+    };
+  });
 });
-const budgetHistoryLayout = computed(() => theme.layout({
-  height: 340, barmode: "group", xaxis: { visible: false },
-  yaxis: { title: { text: "Budget / spend" } },
-}));
+const budgetHistoryLayout = computed(() => {
+  const highest = Math.max(
+    1,
+    ...scopedHistory.value.flatMap((row) => [row.configured_budget, row.actual_spend].map(Number)),
+  );
+  return theme.layout({
+    height: 360,
+    xaxis: { title: { text: "Configured budget" }, range: [0, highest * 1.04] },
+    yaxis: { title: { text: "Actual spend" }, range: [0, highest * 1.04] },
+    shapes: [{
+      type: "line", x0: 0, y0: 0, x1: highest, y1: highest,
+      line: { color: theme.AXIS, width: 1.5, dash: "dash" },
+    }],
+  });
+});
 
 const historicalColumns = [
   { key: "report_date", label: "Date" },
@@ -339,23 +359,44 @@ const byTouchpoint = computed(() =>
 );
 
 const touchpointTraces = computed(() => {
-  const top = byTouchpoint.value.slice(0, 12).reverse();
-  return [
-    {
-      type: "bar",
-      orientation: "h",
-      name: "Spend",
-      y: top.map((row) => shortTouchpoint(row.key)),
-      x: top.map((row) => row.cost),
-      marker: { color: theme.SERIES[0], line: { color: theme.SURFACE, width: 2 } },
-      hovertemplate: "<b>%{y}</b><br>Spend %{x:$,.2f}<extra></extra>",
+  const rows = byTouchpoint.value;
+  const largestVolume = Math.max(1, ...rows.map((row) => Number(row.impressions) + Number(row.clicks)));
+  return [{
+    type: "scatter",
+    mode: "markers+text",
+    x: rows.map((row) => row.cost),
+    y: rows.map((row) => row.sales),
+    text: rows.map((row) => shortTouchpoint(row.key)),
+    textposition: "top center",
+    textfont: { size: 9, color: theme.MUTED },
+    customdata: rows.map((row) => [row.key, row.impressions, row.clicks,
+      row.cost ? row.sales / row.cost : 0]),
+    marker: {
+      color: theme.SERIES[0], opacity: 0.74,
+      size: rows.map((row) => 10 + 24 * Math.sqrt(
+        (Number(row.impressions) + Number(row.clicks)) / largestVolume,
+      )),
+      line: { color: theme.SURFACE, width: 1 },
     },
-  ];
+    hovertemplate:
+      "<b>%{customdata[0]}</b><br>Spend %{x:$,.2f}<br>Reported sales %{y:$,.2f}<br>" +
+      "ROAS %{customdata[3]:.2f}x<br>%{customdata[1]:,.0f} impressions · " +
+      "%{customdata[2]:,.0f} clicks<extra></extra>",
+  }];
 });
 
-const touchpointLayout = computed(() =>
-  theme.layout({ height: 380, legend: false, xaxis: { title: { text: "Spend" } } }),
-);
+const touchpointLayout = computed(() => {
+  const highest = Math.max(1, ...byTouchpoint.value.flatMap((row) => [row.cost, row.sales].map(Number)));
+  return theme.layout({
+    height: 440, legend: false,
+    xaxis: { title: { text: "Spend" }, range: [0, highest * 1.08] },
+    yaxis: { title: { text: "Reported sales" }, range: [0, highest * 1.08] },
+    shapes: [{
+      type: "line", x0: 0, y0: 0, x1: highest, y1: highest,
+      line: { color: theme.AXIS, width: 1.5, dash: "dash" },
+    }],
+  });
+});
 
 const touchpointColumns = [
   { key: "key", label: "Touchpoint", format: (value) => shortTouchpoint(value) },
@@ -415,6 +456,35 @@ const bridgeLayout = computed(() =>
   }),
 );
 
+/** Five-segment interaction vocabulary, nested and sized only by additive cost. */
+const touchpointTreemap = computed(() => {
+  const nodes = new Map();
+  for (const row of bridge.value) {
+    const segments = String(row.touchpoint ?? "").split(":");
+    if (segments.length !== 5) continue;
+    for (let depth = 0; depth < segments.length; depth += 1) {
+      const id = segments.slice(0, depth + 1).join(":");
+      const parent = depth ? segments.slice(0, depth).join(":") : "";
+      if (!nodes.has(id)) nodes.set(id, { id, parent, label: pretty(segments[depth]), value: 0 });
+      nodes.get(id).value += Number(row.cost ?? 0);
+    }
+  }
+  const rows = [...nodes.values()];
+  return rows.length ? [{
+    type: "treemap",
+    ids: rows.map((row) => row.id),
+    labels: rows.map((row) => row.label),
+    parents: rows.map((row) => row.parent),
+    values: rows.map((row) => row.value),
+    branchvalues: "total",
+    marker: { colorscale: theme.SEQUENTIAL },
+    hovertemplate: "<b>%{label}</b><br>Spend %{value:$,.2f}<br>%{percentParent:.1%} of parent<extra></extra>",
+  }] : [];
+});
+const touchpointTreemapLayout = computed(() => theme.layout({
+  height: 440, legend: false, margin: { l: 4, r: 4, t: 4, b: 4 },
+}));
+
 const bridgeColumns = [
   { key: "campaign_id", label: "Campaign" },
   { key: "ad_group_id", label: "Ad Group" },
@@ -459,15 +529,21 @@ const byLength = computed(() =>
 
 const lengthTraces = computed(() => [
   {
-    type: "bar",
-    x: byLength.value.map((row) => row.key),
-    y: byLength.value.map((row) => row.conversion_rate),
-    marker: { color: theme.SERIES[0], line: { color: theme.SURFACE, width: 2 } },
-    text: byLength.value.map((row) => `${(row.conversion_rate * 100).toFixed(1)}%`),
-    textposition: "outside",
+    type: "funnel",
+    orientation: "h",
+    y: byLength.value.map((row) => `${row.key} touchpoint${row.key === 1 ? "" : "s"}`),
+    x: byLength.value.map((row) => row.users),
+    customdata: byLength.value.map((row) => [row.converted_users, row.conversion_rate]),
+    text: byLength.value.map((row) =>
+      `${theme.count(row.users)} users · ${(row.conversion_rate * 100).toFixed(1)}% converted`,
+    ),
+    textinfo: "text",
+    textposition: "inside",
     textfont: { size: 11, color: theme.MUTED },
+    marker: { color: theme.SEQUENTIAL.slice(2, 2 + byLength.value.length) },
     hovertemplate:
-      "<b>%{x} touchpoints</b><br>Conversion rate %{y:.2%}<extra></extra>",
+      "<b>%{y}</b><br>Users %{x:,.0f}<br>Converted %{customdata[0]:,.0f}<br>" +
+      "Conversion rate %{customdata[1]:.1%}<extra></extra>",
   },
 ]);
 
@@ -475,10 +551,58 @@ const lengthLayout = computed(() =>
   theme.layout({
     height: 300,
     legend: false,
-    xaxis: { title: { text: "Touchpoints on the path" }, dtick: 1 },
-    yaxis: { title: { text: "Conversion rate" }, tickformat: ".0%" },
+    xaxis: { title: { text: "Users (labels retain conversion rate)" } },
+    yaxis: { title: { text: "Path length" } },
   }),
 );
+
+/** Position-layered graph avoids the cycles present in raw touchpoint transitions. */
+const journeyTraces = computed(() => {
+  const links = new Map();
+  const nodeIds = new Set();
+  for (const row of paths.value) {
+    const path = String(row.path ?? "").split(/\s*>\s*/).filter(Boolean);
+    if (!path.length) continue;
+    const first = `First|${path[0]}`;
+    const midLabel = path.length === 3 ? path[1] : path.length === 2 ? "Direct" : "Single touch";
+    const mid = `Middle|${midLabel}`;
+    const last = `Last|${path[path.length - 1]}`;
+    nodeIds.add(first); nodeIds.add(mid); nodeIds.add(last);
+    for (const [source, target] of [[first, mid], [mid, last]]) {
+      const key = `${source}\u0000${target}`;
+      links.set(key, (links.get(key) ?? 0) + Number(row.converted_users ?? 0));
+    }
+  }
+  const ids = [...nodeIds];
+  const index = new Map(ids.map((id, position) => [id, position]));
+  const rows = [...links.entries()].map(([key, value]) => {
+    const [source, target] = key.split("\u0000");
+    return { source: index.get(source), target: index.get(target), value };
+  }).filter((row) => row.value > 0);
+  return rows.length ? [{
+    type: "sankey",
+    arrangement: "snap",
+    node: {
+      label: ids.map((id) => shortTouchpoint(id.split("|")[1])),
+      color: ids.map((id) => id.startsWith("First|") ? theme.SERIES[0]
+        : id.startsWith("Middle|") ? theme.SERIES[2] : theme.SERIES[1]),
+      pad: 12, thickness: 13,
+    },
+    link: {
+      source: rows.map((row) => row.source), target: rows.map((row) => row.target),
+      value: rows.map((row) => row.value), color: "rgba(42,120,214,0.20)",
+      hovertemplate: "%{source.label} → %{target.label}<br>%{value:,.0f} converted users<extra></extra>",
+    },
+  }] : [];
+});
+const journeyLayout = computed(() => theme.layout({
+  height: 620, legend: false, margin: { l: 8, r: 8, t: 30, b: 8 },
+  annotations: [
+    { x: 0, y: 1.04, xref: "paper", yref: "paper", text: "First touch", showarrow: false },
+    { x: 0.5, y: 1.04, xref: "paper", yref: "paper", text: "Middle", showarrow: false },
+    { x: 1, y: 1.04, xref: "paper", yref: "paper", text: "Last touch", showarrow: false },
+  ],
+}));
 
 const pathColumns = [
   { key: "path", label: "Path", width: "40%" },
@@ -564,7 +688,7 @@ const scopedRowKey = (row) =>
       <template v-if="scopedHistory.length">
         <MetricRow :items="historyTiles" />
         <article class="card">
-          <div class="card-head"><h2>Configured budget vs actual spend</h2><span class="sub">First 80 selected observations</span></div>
+          <div class="card-head"><h2>Budget delivery response</h2><span class="sub">Configured budget vs actual spend · dashed line is full delivery</span></div>
           <div class="card-body">
             <PlotlyChart :traces="budgetHistoryTraces" :layout="budgetHistoryLayout" label="Configured Campaign budget compared with actual spend" />
             <EntityTable
@@ -678,14 +802,14 @@ const scopedRowKey = (row) =>
 
         <article class="card">
           <div class="card-head">
-            <h2>Spend and return by touchpoint</h2>
-            <span class="sub">Top 12 of {{ byTouchpoint.length }} by spend</span>
+            <h2>Touchpoint efficiency</h2>
+            <span class="sub">{{ byTouchpoint.length }} touchpoints · size is interaction volume</span>
           </div>
           <div class="card-body">
             <PlotlyChart
               :traces="touchpointTraces"
               :layout="touchpointLayout"
-              label="Spend by touchpoint, highest first"
+              label="Spend against reported sales by touchpoint with a break-even line"
             />
             <p class="caption">The table below carries every touchpoint.</p>
             <EntityTable
@@ -745,6 +869,11 @@ const scopedRowKey = (row) =>
           </p>
           <template v-else>
             <PlotlyChart
+              :traces="touchpointTreemap"
+              :layout="touchpointTreemapLayout"
+              label="Five-segment touchpoint hierarchy sized by spend"
+            />
+            <PlotlyChart
               :traces="bridgeTraces"
               :layout="bridgeLayout"
               label="Assisted revenue by Campaign"
@@ -772,17 +901,23 @@ const scopedRowKey = (row) =>
 
       <article class="card">
         <div class="card-head">
-          <h2>Conversion paths</h2>
+          <h2>Journey graph</h2>
         </div>
         <div class="card-body">
+          <PlotlyChart
+            :traces="journeyTraces"
+            :layout="journeyLayout"
+            label="Position-layered journey graph from first through middle to last touch"
+          />
           <PlotlyChart
             :traces="lengthTraces"
             :layout="lengthLayout"
             label="Conversion rate by the number of touchpoints on the path"
           />
           <p class="caption">
-            Longer paths convert more often here, which is why last-touch
-            attribution understates the touchpoints that open a journey.
+            Link width is converted-user volume. The funnel keeps path volume
+            and conversion rate together, so a higher rate cannot be mistaken
+            for a larger addressable audience.
           </p>
 
           <!--

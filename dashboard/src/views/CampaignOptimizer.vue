@@ -45,6 +45,7 @@ import { useDashboard } from "../lib/useDashboard.js";
 import { useDeployment } from "../lib/deployment.js";
 import { useJobs } from "../lib/useJobs.js";
 import * as theme from "../theme.js";
+import willowDemoSource from "../../../docs/en/strategy-evaluation/asin-gmv-nn-v1/demo 3.1.html?raw";
 
 const { data } = useDashboard();
 const { writable } = useDeployment();
@@ -114,36 +115,35 @@ const status = computed(() => verdict.value.reliability_status ?? "UNKNOWN");
 // ---------------------------------------------------------------------------
 
 const comparison = computed(() =>
-  sortBy(
-    data.value.comparisonTouchpoints.filter((row) => row.outcome === outcome.value),
-    "markov_share",
-  ),
+  data.value.comparisonTouchpoints
+    .filter((row) => row.outcome === outcome.value)
+    .slice()
+    .sort((a, b) => Math.abs(a.gap_pp ?? 0) - Math.abs(b.gap_pp ?? 0)),
 );
 
 const comparisonTraces = computed(() => {
   const labels = comparison.value.map((row) => shortTouchpoint(row.touchpoint));
   return [
-    ["markov_share", "markov"],
-    ["shapley_share", "shapley"],
-  ].map(([field, model]) => ({
-    type: "bar",
-    orientation: "h",
-    name: pretty(model),
-    y: labels,
-    x: comparison.value.map((row) => row[field]),
-    marker: {
-      color: theme.MODEL_COLORS[model],
-      line: { color: theme.SURFACE, width: 2 },
+    {
+      type: "scatter", mode: "lines", name: "Gap",
+      x: comparison.value.flatMap((row) => [row.markov_share, row.shapley_share, null]),
+      y: labels.flatMap((label) => [label, label, null]),
+      line: { color: theme.AXIS, width: 3 }, hoverinfo: "skip", showlegend: false,
     },
-    hovertemplate: `<b>${pretty(model)}</b><br>%{y}<br>Share %{x:.2%}<extra></extra>`,
-  }));
+    ...[["markov_share", "markov"], ["shapley_share", "shapley"]].map(([field, name]) => ({
+      type: "scatter", mode: "markers", name: pretty(name),
+      x: comparison.value.map((row) => row[field]), y: labels,
+      customdata: comparison.value.map((row) => row.gap_pp),
+      marker: { color: theme.MODEL_COLORS[name], size: 10,
+        line: { color: theme.SURFACE, width: 1 } },
+      hovertemplate: `<b>${pretty(name)}</b><br>%{y}<br>Share %{x:.2%}<br>Gap %{customdata:.2f} pp<extra></extra>`,
+    })),
+  ];
 });
 
 const comparisonLayout = computed(() =>
   theme.layout({
     height: 460,
-    barmode: "group",
-    bargroupgap: 0.08,
     xaxis: { title: { text: "Attributed share" }, tickformat: ".0%" },
   }),
 );
@@ -269,7 +269,7 @@ const shiftTraces = computed(() => {
       x: ordered.map((row) => row.delta_pp),
       marker: {
         color: ordered.map((row) =>
-          row.delta_pp >= 0 ? theme.SERIES[2] : theme.SERIES[7],
+          row.delta_pp >= 0 ? theme.DIVERGING[1] : theme.DIVERGING[3],
         ),
         line: { color: theme.SURFACE, width: 2 },
       },
@@ -389,7 +389,6 @@ const allocationColumns = computed(() => [
     format: "money",
     currency: symbol.value,
   },
-  { key: "marginal_expected_revenue", label: "Marginal return", format: "share", digits: 4 },
   {
     key: "response_support",
     label: "Evidence",
@@ -409,6 +408,106 @@ const pooled = computed(() =>
   allocations.value.filter((row) => row.response_support === "POOLED_TRANSFER"),
 );
 
+const responseCampaign = ref("");
+const responseModels = computed(() => strategy.value.response_models?.campaign_models ?? {});
+const responseCampaigns = computed(() => Object.keys(responseModels.value));
+const activeResponseCampaign = computed(() =>
+  responseCampaign.value && responseModels.value[responseCampaign.value]
+    ? responseCampaign.value : responseCampaigns.value[0] ?? "",
+);
+const activeResponseModel = computed(() => responseModels.value[activeResponseCampaign.value] ?? {});
+const activeAllocation = computed(() =>
+  allocations.value.find((row) => row.campaign_id === activeResponseCampaign.value) ?? {},
+);
+const responseObservations = computed(() =>
+  (strategy.value.response_observations ?? []).filter(
+    (row) => row.campaign_id === activeResponseCampaign.value,
+  ),
+);
+
+function expectedRevenue(model, budget) {
+  const spendModel = model.spend_response ?? {};
+  const revenueModel = model.revenue_response ?? {};
+  const spend = Number(spendModel.capacity ?? 0) *
+    (1 - Math.exp(-Math.max(0, budget) / Math.max(Number(spendModel.scale ?? 1), 1e-9)));
+  return Number(revenueModel.baseline ?? 0) + Number(revenueModel.alpha ?? 0) *
+    (1 - Math.exp(-spend / Math.max(Number(revenueModel.kappa ?? 1), 1e-9)));
+}
+
+const responseCurveTraces = computed(() => {
+  const model = activeResponseModel.value;
+  if (!model.campaign_id) return [];
+  const allocation = activeAllocation.value;
+  const observed = model.diagnostics?.observed_budget_range ?? [0, 0];
+  const maximum = Math.max(Number(observed[1] ?? 0), Number(allocation.optimized_budget ?? 0), 1) * 1.25;
+  const budgets = Array.from({ length: 81 }, (_, index) => maximum * index / 80);
+  return [
+    {
+      type: "scatter", mode: "lines", name: "Fitted response",
+      x: budgets, y: budgets.map((budget) => expectedRevenue(model, budget)),
+      line: { color: theme.SERIES[0], width: 3 },
+      hovertemplate: "Budget %{x:$,.2f}<br>Expected revenue %{y:$,.2f}<extra></extra>",
+    },
+    {
+      type: "scatter", mode: "markers", name: "Observed",
+      x: responseObservations.value.map((row) => row.configured_budget),
+      y: responseObservations.value.map((row) => row.total_revenue),
+      customdata: responseObservations.value.map((row) => row.report_date),
+      marker: { color: theme.SERIES[2], size: 7, opacity: 0.72 },
+      hovertemplate: "%{customdata}<br>Budget %{x:$,.2f}<br>Observed revenue %{y:$,.2f}<extra></extra>",
+    },
+    {
+      type: "scatter", mode: "markers+text", name: "Decision",
+      x: [allocation.initial_budget, allocation.optimized_budget],
+      y: [allocation.expected_revenue_at_initial, allocation.expected_revenue_at_optimized],
+      text: ["Initial", "Optimized"], textposition: ["bottom right", "top left"],
+      marker: { color: [theme.MUTED, theme.MODEL_COLORS.recommended], size: 12,
+        symbol: ["circle", "diamond"] },
+      hovertemplate: "%{text}<br>Budget %{x:$,.2f}<br>Expected revenue %{y:$,.2f}<extra></extra>",
+    },
+  ];
+});
+const responseCurveLayout = computed(() => {
+  const model = activeResponseModel.value;
+  const observed = model.diagnostics?.observed_budget_range ?? [0, 0];
+  const allocation = activeAllocation.value;
+  const maximum = Math.max(Number(observed[1] ?? 0), Number(allocation.optimized_budget ?? 0), 1) * 1.25;
+  return theme.layout({
+    height: 430,
+    xaxis: { title: { text: `Configured budget (${symbol.value.trim()})` }, range: [0, maximum] },
+    yaxis: { title: { text: "Revenue" } },
+    shapes: [
+      { type: "rect", x0: 0, x1: Number(observed[0] ?? 0), y0: 0, y1: 1, yref: "paper",
+        fillcolor: "rgba(148,98,0,0.08)", line: { width: 0 }, layer: "below" },
+      { type: "rect", x0: Number(observed[1] ?? 0), x1: maximum, y0: 0, y1: 1, yref: "paper",
+        fillcolor: "rgba(148,98,0,0.08)", line: { width: 0 }, layer: "below" },
+    ],
+  });
+});
+
+const allocationWaterfall = computed(() => {
+  if (!allocations.value.length) return [];
+  const initial = allocations.value.reduce((total, row) => total + Number(row.initial_budget ?? 0), 0);
+  return [{
+    type: "waterfall", orientation: "v",
+    measure: ["absolute", ...allocations.value.map(() => "relative"), "total"],
+    x: ["Initial total", ...allocations.value.map((row) => row.campaign_id), "Optimized total"],
+    y: [initial, ...allocations.value.map((row) => Number(row.optimized_budget) - Number(row.initial_budget)), 0],
+    text: [theme.money(initial, symbol.value), ...allocations.value.map((row) =>
+      theme.money(Number(row.optimized_budget) - Number(row.initial_budget), symbol.value)),
+      theme.money(plan.value.allocated_budget, symbol.value)],
+    textposition: "outside",
+    increasing: { marker: { color: theme.DIVERGING[1] } },
+    decreasing: { marker: { color: theme.DIVERGING[3] } },
+    totals: { marker: { color: theme.MODEL_COLORS.recommended } },
+    connector: { line: { color: theme.AXIS } },
+    hovertemplate: "%{x}<br>%{text}<extra></extra>",
+  }];
+});
+const allocationWaterfallLayout = computed(() => theme.layout({
+  height: 360, legend: false, yaxis: { title: { text: "Budget" } },
+}));
+
 // ---------------------------------------------------------------------------
 // Strategy evaluation
 // ---------------------------------------------------------------------------
@@ -423,6 +522,12 @@ const pooled = computed(() =>
  */
 const evaluationAvailable = computed(
   () => stages.value.evaluation?.available ?? false,
+);
+
+/** Willow-sakura's original self-contained demo, opened directly on GMV Forecast. */
+const willowStrategyEvaluationDemo = willowDemoSource.replace(
+  'document.getElementById("nav").addEventListener("click",e=>{const b=e.target.closest(".nav-item");if(b)go(b.dataset.page)});go("overview");',
+  'document.getElementById("nav").addEventListener("click",e=>{const b=e.target.closest(".nav-item");if(b)go(b.dataset.page)});go("gmv");',
 );
 </script>
 
@@ -486,8 +591,8 @@ const evaluationAvailable = computed(
 
       <article class="card">
         <div class="card-head">
-          <h2>Markov against Shapley</h2>
-          <span class="sub">{{ OUTCOME_LABELS[outcome] }}</span>
+          <h2>Markov–Shapley disagreement</h2>
+          <span class="sub">{{ OUTCOME_LABELS[outcome] }} · longest connector is the largest gap</span>
         </div>
         <div class="card-body">
           <PlotlyChart
@@ -500,8 +605,7 @@ const evaluationAvailable = computed(
             No comparison rows for {{ OUTCOME_LABELS[outcome] }}.
           </p>
           <p v-if="largestGap" class="caption">
-            Where the two bars differ, the models disagree about how much credit a
-            touchpoint deserves. Largest gap:
+            Connector length is model disagreement. Largest gap:
             <b>{{ shortTouchpoint(largestGap.touchpoint) }}</b> at
             {{ Number(largestGap.gap_pp).toFixed(2) }} percentage points.
           </p>
@@ -596,6 +700,54 @@ const evaluationAvailable = computed(
     <template v-if="model === 'optimization'">
       <template v-if="hasPlan && isOptimized">
         <MetricRow :items="planMetrics" />
+
+        <article class="card">
+          <div class="card-head">
+            <h2>Campaign response curve</h2>
+            <span class="sub">Observed points, fitted response, and decision</span>
+          </div>
+          <div class="card-body">
+            <div class="filter-row">
+              <div class="field">
+                <label for="response-campaign">Campaign</label>
+                <select
+                  id="response-campaign"
+                  :value="activeResponseCampaign"
+                  @change="responseCampaign = $event.target.value"
+                >
+                  <option v-for="campaign in responseCampaigns" :key="campaign" :value="campaign">
+                    {{ campaign }}
+                  </option>
+                </select>
+              </div>
+            </div>
+            <PlotlyChart
+              v-if="responseCurveTraces.length"
+              :traces="responseCurveTraces"
+              :layout="responseCurveLayout"
+              label="Fitted campaign budget response with observations and initial and optimized budgets"
+            />
+            <p v-else class="table-empty">No fitted response model is available.</p>
+            <p class="caption">
+              Amber shading is outside the observed budget range. A decision in
+              that area is extrapolated visibly rather than reduced to a flag.
+            </p>
+          </div>
+        </article>
+
+        <article class="card">
+          <div class="card-head">
+            <h2>Allocation waterfall</h2>
+            <span class="sub">Initial total → Campaign shifts → optimized total</span>
+          </div>
+          <div class="card-body">
+            <PlotlyChart
+              :traces="allocationWaterfall"
+              :layout="allocationWaterfallLayout"
+              label="Budget allocation waterfall from initial to optimized total"
+            />
+          </div>
+        </article>
 
         <article class="card">
           <div class="card-head">
@@ -698,15 +850,31 @@ const evaluationAvailable = computed(
           </p>
           <p class="caption">
             Run the stage above to publish
-            <code>strategy_evaluation.json</code>. Its report is available from
-            the dashboard snapshot as <code>strategyEvaluation</code>; this
-            view does not yet visualize that report.
+            <code>strategy_evaluation.json</code>. Willow-sakura’s original
+            interactive neural-network dashboard demo is embedded below as a
+            separate contributed demonstration.
           </p>
           <div v-if="!evaluationAvailable" class="notice">
             This deployment cannot start the evaluation command. Run the
             dashboard in a writable deployment, or execute
             <code>script/evaluate_strategies.py</code> from a terminal.
           </div>
+        </div>
+      </article>
+
+      <article class="card">
+        <div class="card-head">
+          <h2>Willow-sakura strategy-evaluation demo</h2>
+          <span class="sub">SK-II Extended-27 multilayer perceptron · contributed artifact</span>
+        </div>
+        <div class="card-body demo-embed-body">
+          <iframe
+            class="strategy-demo-frame"
+            title="Willow-sakura interactive strategy evaluation and GMV forecast dashboard demo"
+            :srcdoc="willowStrategyEvaluationDemo"
+            loading="lazy"
+            sandbox="allow-scripts"
+          ></iframe>
         </div>
       </article>
     </template>

@@ -21,6 +21,7 @@ import { computed, onMounted, ref } from "vue";
 import DataTable from "../components/DataTable.vue";
 import KeyValuePanel from "../components/KeyValuePanel.vue";
 import MetricRow from "../components/MetricRow.vue";
+import PlotlyChart from "../components/PlotlyChart.vue";
 import {
   OUTCOME_LABELS,
   currencySymbol,
@@ -31,6 +32,7 @@ import {
 import { useDashboard } from "../lib/useDashboard.js";
 import { useJobs } from "../lib/useJobs.js";
 import { money } from "../theme.js";
+import * as theme from "../theme.js";
 
 const { data } = useDashboard();
 // Renamed on import: `stages` below is the pipeline's five artifact-producing
@@ -291,6 +293,38 @@ const flagColumns = [
   { key: "reliability_status", label: "Verdict", tone: (value) => statusTone(value) },
   { key: "reliability_reason", label: "Reason", width: "24%" },
 ];
+
+/** The governed AND verdict for every outcome/touchpoint pair at once. */
+const reliabilityMatrixTraces = computed(() => {
+  const outcomes = Object.keys(OUTCOME_LABELS);
+  const touchpoints = distinct(comparison.value, "touchpoint");
+  const lookup = new Map(comparison.value.map((row) => [
+    `${row.outcome}\u0000${row.touchpoint}`, row.reliability_status,
+  ]));
+  const score = { UNRELIABLE: 0, PARTIAL: 0.5, RELIABLE: 1 };
+  return touchpoints.length ? [{
+    type: "heatmap",
+    x: touchpoints.map((value) => value.split(":").filter((part) => part !== "UNSPECIFIED").join(" / ")),
+    y: outcomes.map((value) => OUTCOME_LABELS[value]),
+    z: outcomes.map((outcomeKey) => touchpoints.map((touchpoint) =>
+      score[lookup.get(`${outcomeKey}\u0000${touchpoint}`)] ?? 0.5)),
+    customdata: outcomes.map((outcomeKey) => touchpoints.map((touchpoint) =>
+      lookup.get(`${outcomeKey}\u0000${touchpoint}`) ?? "NO RESULT")),
+    colorscale: [
+      [0, theme.STATUS_COLORS.UNRELIABLE], [0.49, theme.STATUS_COLORS.UNRELIABLE],
+      [0.5, theme.STATUS_COLORS.PARTIAL], [0.51, theme.STATUS_COLORS.PARTIAL],
+      [0.52, theme.STATUS_COLORS.RELIABLE], [1, theme.STATUS_COLORS.RELIABLE],
+    ],
+    zmin: 0, zmax: 1, showscale: false,
+    xgap: 2, ygap: 2,
+    hovertemplate: "%{y}<br>%{x}<br><b>%{customdata}</b><extra></extra>",
+  }] : [];
+});
+const reliabilityMatrixLayout = computed(() => theme.layout({
+  height: 430, legend: false, margin: { l: 105, r: 8, t: 8, b: 185 },
+  xaxis: { tickangle: -45, title: { text: "Touchpoint" } },
+  yaxis: { title: { text: "Outcome" }, autorange: "reversed" },
+}));
 </script>
 
 <template>
@@ -518,6 +552,12 @@ const flagColumns = [
         <h2>Reliability flags by touchpoint</h2>
       </div>
       <div class="card-body">
+        <PlotlyChart
+          v-if="reliabilityMatrixTraces.length"
+          :traces="reliabilityMatrixTraces"
+          :layout="reliabilityMatrixLayout"
+          label="Reliability verdict matrix by outcome and touchpoint"
+        />
         <div class="filter-row">
           <div class="field">
             <label for="log-outcome">Outcome</label>

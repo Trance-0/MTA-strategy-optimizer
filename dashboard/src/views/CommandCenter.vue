@@ -64,54 +64,49 @@ const tiles = computed(() => {
   ];
 });
 
-/**
- * Daily spend against daily sales.
- *
- * Indexed to each series' own window mean rather than plotted on two axes:
- * spend and sales differ by two orders of magnitude here, and a second y-axis
- * would invent a correlation the data does not contain.
- */
+/** Daily return on ad spend, with spend retained as low-contrast context. */
 const daily = computed(() =>
-  groupSum(data.value.adsDaily, "report_date", ["cost", "sales"]).sort((a, b) =>
-    a.key < b.key ? -1 : 1,
-  ),
+  groupSum(data.value.adsDaily, "report_date", ["cost", "sales"])
+    .map((row) => ({ ...row, roas: row.cost ? row.sales / row.cost : 0 }))
+    .sort((a, b) => a.key < b.key ? -1 : 1),
 );
 
 const spendTraces = computed(() => {
   const rows = daily.value;
   if (rows.length === 0) return [];
+  const meanSpend = rows.reduce((total, row) => total + row.cost, 0) / rows.length;
   return [
-    ["cost", "Spend", theme.SERIES[0]],
-    ["sales", "Reported sales", theme.SERIES[1]],
-  ].map(([field, label, color]) => {
-    const mean = rows.reduce((total, row) => total + row[field], 0) / rows.length;
-    return {
-      type: "scatter",
-      mode: "lines",
-      name: label,
+    {
+      type: "scatter", mode: "lines", name: "Spend context",
       x: rows.map((row) => row.key),
-      y: rows.map((row) => (mean ? (row[field] / mean) * 100 : 0)),
-      line: { color, width: 2 },
-      customdata: rows.map((row) => row[field]),
-      hovertemplate:
-        `<b>${label}</b><br>%{x}<br>Index %{y:.0f}<br>` +
-        "Actual %{customdata:,.2f}<extra></extra>",
-    };
-  });
+      y: rows.map((row) => meanSpend ? row.cost / meanSpend * totals.value.roas : 0),
+      fill: "tozeroy", fillcolor: "rgba(42,120,214,0.10)",
+      line: { color: "rgba(42,120,214,0.20)", width: 1 },
+      customdata: rows.map((row) => row.cost),
+      hovertemplate: "%{x}<br>Spend %{customdata:$,.2f}<extra></extra>",
+    },
+    {
+      type: "scatter", mode: "lines+markers", name: "Daily ROAS",
+      x: rows.map((row) => row.key), y: rows.map((row) => row.roas),
+      line: { color: theme.SERIES[1], width: 2.5 }, marker: { size: 5 },
+      customdata: rows.map((row) => [row.cost, row.sales]),
+      hovertemplate: "<b>%{x}</b><br>ROAS %{y:.2f}x<br>Spend %{customdata[0]:$,.2f}<br>Sales %{customdata[1]:$,.2f}<extra></extra>",
+    },
+  ];
 });
 
 const spendLayout = computed(() =>
   theme.layout({
     height: 300,
-    yaxis: { title: { text: "Indexed to window average = 100" } },
+    yaxis: { title: { text: "Return on ad spend" }, ticksuffix: "x" },
     shapes: [
       {
         type: "line",
         xref: "paper",
         x0: 0,
         x1: 1,
-        y0: 100,
-        y1: 100,
+        y0: totals.value.roas,
+        y1: totals.value.roas,
         line: { color: theme.AXIS, width: 1 },
       },
     ],
@@ -119,10 +114,10 @@ const spendLayout = computed(() =>
       {
         xref: "paper",
         x: 1,
-        y: 100,
+        y: totals.value.roas,
         yanchor: "bottom",
         xanchor: "right",
-        text: "window average",
+        text: `window average ${totals.value.roas.toFixed(2)}x`,
         showarrow: false,
         font: { size: 10, color: theme.MUTED },
       },
@@ -134,6 +129,7 @@ const dailyColumns = [
   { key: "key", label: "Date", format: (value) => shortDate(value) },
   { key: "cost", label: "Spend", format: "money" },
   { key: "sales", label: "Reported sales", format: "money" },
+  { key: "roas", label: "ROAS", format: (value) => theme.ratio(value) },
 ];
 
 /** Per-outcome verdict on whether the two models agree. */
@@ -232,20 +228,20 @@ const productColumns = [
     <div class="page-grid two-up">
       <article class="card">
         <div class="card-head">
-          <h2>Spend and return over time</h2>
-          <span class="sub">Indexed to each series' own average</span>
+          <h2>Daily return on ad spend</h2>
+          <span class="sub">Spend remains as a light context band</span>
         </div>
         <div class="card-body">
           <PlotlyChart
             v-if="spendTraces.length"
             :traces="spendTraces"
             :layout="spendLayout"
-            label="Daily spend and reported sales, both indexed to their window average"
+            label="Daily return on ad spend against its window average with spend context"
           />
           <p v-else class="table-empty">No daily performance rows in this window.</p>
           <p class="caption">
-            Both series are indexed to their own window average so they share one
-            axis. Hover shows the actual amount.
+            The line answers whether spend earned its return. The shaded band
+            shows relative spend pressure without adding a second axis.
           </p>
           <TableView
             label="View daily values as a table"

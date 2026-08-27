@@ -1119,6 +1119,18 @@ tbody tr.selected:hover {
   min-height: 60px;
 }
 
+.demo-embed-body {
+  padding: 0;
+}
+
+.strategy-demo-frame {
+  display: block;
+  width: 100%;
+  min-height: 880px;
+  border: 0;
+  background: var(--plane);
+}
+
 /* ---------------------------------------------------------------------------
    Settings modal
    --------------------------------------------------------------------------- */
