@@ -44,6 +44,8 @@ services:
     build:
       context: ../..
       dockerfile: deploy/docker/Dockerfile.api
+      args:
+        BUILD_COMMIT: ${PROJECT_COMMIT:-unknown}
     # IMAGE_NAMESPACE defaults to the upstream owner, so `run.sh pull` works
     # on a fresh checkout with nothing configured. A fork sets it to its own
     # lowercase owner to run its own published images.
@@ -105,6 +107,8 @@ services:
     build:
       context: ../..
       dockerfile: deploy/docker/Dockerfile.dashboard
+      args:
+        BUILD_COMMIT: ${PROJECT_COMMIT:-unknown}
     image: ghcr.io/${IMAGE_NAMESPACE:-trance-0}/mta-dashboard:${PROJECT_VERSION:-dev}
     container_name: marketing-roi-analysis-dashboard
     restart: unless-stopped

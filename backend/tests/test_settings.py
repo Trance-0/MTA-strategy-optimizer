@@ -18,9 +18,11 @@ from __future__ import annotations
 
 import tempfile
 import unittest
+from unittest.mock import patch
 from pathlib import Path
 
 from backend.app import create_app
+from backend.config import REPO_ROOT, backend_identity, project_commit, project_version
 from backend.services.settings import (
     ENV_KEYS,
     LOG_CAPACITY,
@@ -28,8 +30,42 @@ from backend.services.settings import (
     clear_log,
     log,
     log_state,
+    settings_state,
     write_env,
 )
+
+
+class DeploymentIdentityTests(unittest.TestCase):
+    """Check Settings reports the backend build actually running."""
+
+    def tearDown(self) -> None:
+        project_commit.cache_clear()
+        project_version.cache_clear()
+        backend_identity.cache_clear()
+
+    def test_project_version_comes_from_the_tracked_file(self) -> None:
+        expected = (REPO_ROOT / "VERSION").read_text(encoding="utf-8").strip()
+        self.assertEqual(project_version(), expected)
+        self.assertRegex(project_version(), r"^\d+\.\d+\.\d+$")
+
+    def test_build_commit_environment_wins_over_checkout_detection(self) -> None:
+        expected = "a" * 40
+        with patch.dict("os.environ", {"PROJECT_COMMIT": expected}):
+            project_commit.cache_clear()
+            self.assertEqual(project_commit(), expected)
+
+    def test_settings_carries_project_and_runtime_identity(self) -> None:
+        with (
+            patch("backend.services.settings.use_database", return_value=False),
+            patch("backend.services.settings.is_hosted", return_value=False),
+            patch("backend.services.settings.config_read_only", return_value=False),
+        ):
+            identity = settings_state()["backendIdentity"]
+
+        self.assertEqual(identity["version"], project_version())
+        self.assertRegex(identity["commit"], r"^(unknown|[0-9a-f]{40}|[0-9a-f]{64})$")
+        self.assertRegex(identity["runtime"]["python"], r"^\d+\.\d+")
+        self.assertRegex(identity["runtime"]["flask"], r"^\d+\.\d+")
 
 
 def _env_file(contents: str = "") -> Path:

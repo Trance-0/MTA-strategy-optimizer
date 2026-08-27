@@ -233,6 +233,8 @@ jobs:
           file: ${{ matrix.dockerfile }}
           push: true
           platforms: linux/amd64
+          build-args: |
+            BUILD_COMMIT=${{ github.sha }}
           tags: |
             ghcr.io/${{ needs.version.outputs.namespace }}/${{ matrix.image }}:${{ needs.version.outputs.version }}
             ghcr.io/${{ needs.version.outputs.namespace }}/${{ matrix.image }}:latest

@@ -1,7 +1,7 @@
 ---
 title: Backend Setup and Deployment
 description: Local Flask startup and Yunxiao AppStack deployment configuration
-compact: "Flask and Yunxiao AppStack setup: local commands, Gunicorn image, PostgreSQL `PG_SCHEMA` selection, capability census fields for dashboard, source, empty, and unrelated schemas, deployment values, probes, authenticated ingress, and connectivity."
+compact: "Flask and AppStack setup: local commands, Gunicorn image, backend project and commit identity, Python and Flask detection, PostgreSQL schema census, protected deployment values, probes, ingress, connectivity, and Docker build metadata without copied Git history."
 lang: en-US
 source_files: backend/app.py, backend/config.py, backend/database.py, backend/services/schemas.py, backend/wsgi.py, backend/tests/test_app.py, backend/tests/test_schemas.py, deploy/appstack/Dockerfile, deploy/appstack/orchestration.yaml, deploy/appstack/values.example.yaml, .dockerignore
 ---
@@ -121,6 +121,19 @@ context. Its Node stage produces `dashboard/dist`; its Python stage installs
 the locked `backend` dependency extra and runs Gunicorn as unprivileged user
 `10001`. The image contains no Node runtime and no environment file.
 
+Pass the source revision while building:
+
+```bash
+docker build --build-arg BUILD_COMMIT="$(git rev-parse HEAD)" \
+  -f deploy/appstack/Dockerfile -t marketing-roi-analysis .
+```
+
+The Dockerfile copies `VERSION` into both the client build context and runtime
+image, bakes `BUILD_COMMIT` into the Vue bundle, and exposes it to Python as
+`PROJECT_COMMIT`. If the build platform supplies its checkout revision under a
+different name, map that value to `BUILD_COMMIT`; do not copy `.git` into the
+context.
+
 The production entry point is:
 
 ```text
@@ -209,7 +222,13 @@ Source: `backend/config.py`, `backend/database.py`
   restricted to external `mta_sim_*` tables and table-existence probes.
 - Inputs: `.env` or deployment environment variables.
 - Outputs: Safe non-secret source labels, paths, ORM row mappings, and
-  transactional write results.
+  transactional write results, plus `backend_identity()` containing project
+  version, commit identifier, Python version, and Flask version.
+- Behavior contract: `project_version()` reads the tracked root `VERSION` file.
+  `project_commit()` prefers `PROJECT_COMMIT`, then `GITHUB_SHA`, then a local
+  `git rev-parse HEAD`, and returns `unknown` when none is valid. Runtime
+  dependency versions are detected from the running interpreter and installed
+  Flask distribution rather than copied from dependency declarations.
 - Dependencies: `dashboard/config.py`, `dashboard/models.py`, SQLAlchemy, and
   Psycopg.
 - Verification: Snapshot tests in file mode plus the AppStack database-mode
@@ -274,9 +293,9 @@ Source: `.dockerignore`, `deploy/appstack/Dockerfile`,
 - Responsibility: Build one credential-free full-stack image and declare its
   Kubernetes configuration, secret injection, rollout, probes, service, and
   authenticated TLS ingress.
-- Inputs: Repository root build context, AppStack placeholder values, an image
-  registry, and pre-existing registry-pull, TLS, authentication, and storage
-  Secrets/claims.
+- Inputs: Repository root build context, `BUILD_COMMIT`, AppStack placeholder
+  values, an image registry, and pre-existing registry-pull, TLS,
+  authentication, and storage Secrets/claims.
 - Outputs: One deployable image and one AppStack orchestration template.
 - Dependencies: Node 22.23.0, Python 3.12.11, uv 0.8.13, ACR, Kubernetes, and
   an NGINX Ingress controller.

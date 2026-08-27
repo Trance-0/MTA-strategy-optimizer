@@ -11,6 +11,11 @@ The project version is recorded in the repository-root `VERSION` file. Each page
 
 This section records **what** changed. See the [work log](../worklog/) for **who** did the work and when.
 
+## [0.9.33](0.9.33.md)
+
+- Date: 2026-08-27
+- Summary: Added a deployment-identity block to Settings that compares the dashboard and backend project versions and full Git commit identifiers, reports detected Python and Flask versions, and makes incomplete or mismatched independently deployed artifacts visible
+
 ## [0.9.32](0.9.32.md)
 
 - Date: 2026-08-27
@@ -26,7 +31,7 @@ This section records **what** changed. See the [work log](../worklog/) for **who
 - Date: 2026-08-26
 - Summary: Fixed the navigation rail flattening its three sections into one undifferentiated row below the wide breakpoint, and published `mta-backend` and `mta-dashboard` to the GitHub Container Registry from a workflow triggered by a `VERSION` change rather than by every commit, with a `pull` mode on the Docker stack that runs those images
 
-## [0.9.29](0.9.29.md)
+## [0.9.29](0.9/0.9.29.md)
 
 - Date: 2026-08-26
 - Summary: Added a two-container Docker test stack tagged from `VERSION` that detects the data source automatically and gives credentials to the API alone, removed the dashboard's Node server component after porting its coverage to the backend suite, and fixed a bind-parameter defect that made every database-mode snapshot fail

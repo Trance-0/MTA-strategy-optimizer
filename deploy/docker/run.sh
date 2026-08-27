@@ -35,6 +35,8 @@ set -euo pipefail
 here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_VERSION="$(tr -d '[:space:]' < "$here/../../VERSION")"
 export PROJECT_VERSION
+PROJECT_COMMIT="$(git -C "$here/../.." rev-parse HEAD 2>/dev/null || printf 'unknown')"
+export PROJECT_COMMIT
 
 # Registry paths must be lowercase; the GitHub owner is not. Folded here so a
 # fork can export IMAGE_NAMESPACE in whatever case it uses.

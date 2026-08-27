@@ -13,14 +13,49 @@
  * the domain root instead.
  */
 
-import { defineConfig } from "vite";
 import vue from "@vitejs/plugin-vue";
+import { execFileSync } from "node:child_process";
+import { readFileSync } from "node:fs";
+import { dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
+import { defineConfig } from "vite";
+
+const DASHBOARD_DIR = dirname(fileURLToPath(import.meta.url));
+const REPO_ROOT = resolve(DASHBOARD_DIR, "..");
+const COMMIT = /^(?:[0-9a-f]{40}|[0-9a-f]{64})$/i;
+
+function buildVersion() {
+  try {
+    const value = readFileSync(resolve(REPO_ROOT, "VERSION"), "utf8").trim();
+    return /^\d+\.\d+\.\d+$/.test(value) ? value : "unknown";
+  } catch {
+    return "unknown";
+  }
+}
+
+function buildCommit() {
+  for (const value of [process.env.BUILD_COMMIT, process.env.GITHUB_SHA]) {
+    if (COMMIT.test(value ?? "")) return value.toLowerCase();
+  }
+  try {
+    const value = execFileSync("git", ["-C", REPO_ROOT, "rev-parse", "HEAD"], {
+      encoding: "utf8",
+      timeout: 2000,
+      stdio: ["ignore", "pipe", "ignore"],
+    }).trim();
+    return COMMIT.test(value) ? value.toLowerCase() : "unknown";
+  } catch {
+    return "unknown";
+  }
+}
 
 export default defineConfig(({ mode }) => ({
   plugins: [vue()],
   base: mode === "static" ? "./" : "/",
   define: {
     "import.meta.env.VITE_STATIC_BUILD": JSON.stringify(String(mode === "static")),
+    __DASHBOARD_VERSION__: JSON.stringify(buildVersion()),
+    __DASHBOARD_COMMIT__: JSON.stringify(buildCommit()),
   },
   build: {
     outDir: mode === "static" ? "dist-static" : "dist",

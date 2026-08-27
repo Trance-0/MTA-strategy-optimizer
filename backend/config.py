@@ -14,6 +14,11 @@ Data flow:
 from __future__ import annotations
 
 import os
+import platform
+import re
+import subprocess
+from functools import lru_cache
+from importlib.metadata import PackageNotFoundError, version as package_version
 from pathlib import Path
 
 from dashboard.config import (  # noqa: F401  (re-exported by design)
@@ -35,6 +40,55 @@ from dashboard.config import (  # noqa: F401  (re-exported by design)
 )
 
 _TRUE_VALUES = {"1", "true", "yes", "on"}
+_PROJECT_VERSION = re.compile(r"^\d+\.\d+\.\d+$")
+_COMMIT = re.compile(r"^(?:[0-9a-fA-F]{40}|[0-9a-fA-F]{64})$")
+
+
+@lru_cache(maxsize=1)
+def project_version() -> str:
+    """The tracked project version shipped with this backend."""
+    try:
+        value = (REPO_ROOT / "VERSION").read_text(encoding="utf-8").strip()
+    except OSError:
+        return "unknown"
+    return value if _PROJECT_VERSION.fullmatch(value) else "unknown"
+
+
+@lru_cache(maxsize=1)
+def project_commit() -> str:
+    """The full commit identifier supplied at build time or detected locally."""
+    for name in ("PROJECT_COMMIT", "GITHUB_SHA"):
+        value = os.getenv(name, "").strip()
+        if _COMMIT.fullmatch(value):
+            return value.lower()
+    try:
+        value = subprocess.run(  # noqa: S603 - fixed diagnostic command, no shell
+            ["git", "-C", str(REPO_ROOT), "rev-parse", "HEAD"],
+            check=True,
+            capture_output=True,
+            text=True,
+            timeout=2,
+        ).stdout.strip()
+    except (OSError, subprocess.SubprocessError):
+        return "unknown"
+    return value.lower() if _COMMIT.fullmatch(value) else "unknown"
+
+
+@lru_cache(maxsize=1)
+def backend_identity() -> dict:
+    """Project and runtime versions rendered by the Settings dialog."""
+    try:
+        flask_version = package_version("flask")
+    except PackageNotFoundError:
+        flask_version = "unknown"
+    return {
+        "version": project_version(),
+        "commit": project_commit(),
+        "runtime": {
+            "python": platform.python_version(),
+            "flask": flask_version,
+        },
+    }
 
 
 def _flag(name: str, default: str = "false") -> bool:

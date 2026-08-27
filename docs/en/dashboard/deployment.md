@@ -1,6 +1,6 @@
 ---
 title: Running Locally and Publishing
-compact: "Dashboard delivery contract: Bash and Windows launchers build Vue then start Flask, Vite hot reload proxies `/api`, a two-container Docker stack runs the client and API separately and can build them or pull `mta-backend` and `mta-dashboard` from GHCR, `publish-containers.yml` releases those images on a VERSION change, static publishing exports Flask's file-mode snapshot, GitHub Pages assembles dashboard and documentation, and production uses the Yunxiao AppStack image."
+compact: "Dashboard delivery contract: launchers and Vite inject frontend version and commit identity; Docker build metadata identifies independent backend and client images across the two-container stack, container-registry publishing, static GitHub Pages builds, and source-revision labels."
 lang: en-US
 source_files: dashboard/index.html, dashboard/vite.config.js, dashboard/run.sh, dashboard/run.bat, deploy/docker/compose.yaml, deploy/docker/defaults.env, deploy/docker/run.sh, deploy/docker/run.bat, deploy/docker/Dockerfile.api, deploy/docker/Dockerfile.dashboard, .github/workflows/publish-containers.yml, script/build_pages_site.mjs, script/export_dashboard_snapshot.py
 ---
@@ -34,6 +34,23 @@ npm run dev
 
 Vite proxies `/api` to `http://127.0.0.1:8501`. The client therefore exercises
 the real Python backend while Vue modules reload in place.
+
+### Build identity
+
+`dashboard/vite.config.js` reads the repository-root `VERSION` and resolves the
+frontend commit from `BUILD_COMMIT`, `GITHUB_SHA`, or the checkout's Git
+`HEAD`, in that order. It injects both as compile-time constants. A browser
+bundle is immutable, so reading a server environment variable at runtime would
+describe the container serving it rather than the source that produced it.
+
+The local launchers build from the checkout and need no extra input. The
+Docker launchers export `PROJECT_COMMIT` from Git and Compose passes it to both
+image builds as `BUILD_COMMIT`. Registry publishing passes the workflow commit
+to the same argument while retaining the Open Container Initiative (OCI)
+revision label. `.git` remains excluded from Docker contexts; copying it into
+an image to recover a commit would disclose repository history and destroy
+layer-cache stability. A build performed without either Git or `BUILD_COMMIT`
+uses `unknown`, which Settings reports as incomplete identity.
 
 ## Two-Container Docker Stack
 
@@ -122,7 +139,9 @@ One matrix job per image, from the same two Dockerfiles the local stack uses.
 Each pushes the version tag and `latest`, and carries an
 `org.opencontainers.image.source` label, which is what attaches the package to
 this repository and lets it inherit repository visibility rather than being an
-orphan in the owner's namespace.
+orphan in the owner's namespace. The workflow also passes the same full commit
+identifier as `BUILD_COMMIT`, so the visible application identity and image
+label cannot disagree.
 
 #### `verify`
 
@@ -262,9 +281,11 @@ Source: `.github/workflows/publish-containers.yml`
 - Responsibility: Test, build, publish, and verify `mta-backend` and
   `mta-dashboard` on GHCR when `VERSION` changes on `main`.
 - Inputs: The `VERSION` file; the repository root as build context; the
-  two `deploy/docker/` Dockerfiles; `GITHUB_TOKEN` with `packages: write`.
+  workflow commit as `BUILD_COMMIT`; the two `deploy/docker/` Dockerfiles;
+  `GITHUB_TOKEN` with `packages: write`.
 - Outputs: Two public images tagged with the version and `latest`, each
-  labelled with its source repository, revision, and version.
+  labelled with its source repository, revision, and version, and each carrying
+  the same revision inside its application identity.
 - Behavior contract: The trigger is `paths: VERSION` on `main` plus manual
   dispatch, never every commit. The `version` job rejects a `VERSION` that is
   not `major.minor.patch` and skips the run when both tags already resolve in

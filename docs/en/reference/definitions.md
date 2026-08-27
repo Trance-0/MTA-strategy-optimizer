@@ -1,7 +1,7 @@
 ---
 title: Terms and Abbreviations
 description: Attribution, advertising hierarchy, data, and optimization terminology
-compact: "Canonical glossary for attribution, advertising, evaluation, machine learning, optimization, data, and deployment terms, including GMV, MLP, R-squared, sMAPE, Kendall's tau, Huber loss, Adam, epoch, one-hot encoding, and elasticity."
+compact: "Canonical glossary for attribution, advertising, evaluation, machine learning, optimization, data, and deployment terminology, including Git commit identifiers, performance metrics, model types, loss functions, encoding, and elasticity."
 lang: en-US
 ---
 
@@ -156,6 +156,13 @@ A training loss that behaves like squared error for small residuals and absolute
 The sum of absolute differences between two vectors across all dimensions. In this project, [TVD](#tvd-total-variation-distance) is defined as half the L1 distance between share vectors, normalizing the result to [0, 1].
 
 ## Technical Terms <span class="status-label status-verified" aria-label="Verified"></span>
+
+### Secure Hash Algorithm (SHA) commit identifier
+
+The hexadecimal object identifier of one exact Git commit. Deployment identity
+uses the full value baked at build time, so two artifacts can prove whether
+they came from the same repository state; this is distinct from a content
+SHA-256 checksum.
 
 ### CSV (Comma-Separated Values)
 

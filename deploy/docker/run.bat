@@ -28,6 +28,8 @@ setlocal enabledelayedexpansion
 set "HERE=%~dp0"
 for /f "usebackq tokens=* delims= " %%v in ("%HERE%..\..\VERSION") do set "PROJECT_VERSION=%%v"
 set "PROJECT_VERSION=%PROJECT_VERSION: =%"
+set "PROJECT_COMMIT=unknown"
+for /f "usebackq delims=" %%c in (`git -C "%HERE%..\.." rev-parse HEAD 2^>nul`) do set "PROJECT_COMMIT=%%c"
 set "COMPOSE=docker compose --project-directory "%HERE%." -f "%HERE%compose.yaml""
 
 rem Registry paths must be lowercase; the GitHub owner is not. Folded here so

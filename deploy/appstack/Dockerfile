@@ -1,9 +1,14 @@
 # syntax=docker/dockerfile:1.7
 
+ARG BUILD_COMMIT=unknown
+
 # Build the unchanged Vue client first. The Flask image receives only its
 # static output; Node and npm do not exist in the runtime layer.
 FROM node:22.23.0-bookworm-slim AS client
+ARG BUILD_COMMIT
+ENV BUILD_COMMIT=${BUILD_COMMIT}
 WORKDIR /workspace/dashboard
+COPY VERSION /workspace/VERSION
 COPY dashboard/package.json dashboard/package-lock.json ./
 RUN --mount=type=cache,target=/root/.npm npm ci
 COPY dashboard/ ./
@@ -12,15 +17,18 @@ RUN npm run build
 # Install the locked Python environment independently so source-only edits do
 # not invalidate the dependency layer.
 FROM python:3.12.11-slim-bookworm AS runtime
+ARG BUILD_COMMIT
 COPY --from=ghcr.io/astral-sh/uv:0.12.2 /uv /uvx /bin/
 
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
+    PROJECT_COMMIT=${BUILD_COMMIT} \
     UV_PROJECT_ENVIRONMENT=/opt/venv \
     PATH=/opt/venv/bin:$PATH
 
 WORKDIR /application
 COPY pyproject.toml uv.lock ./
+COPY VERSION ./
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --frozen --extra backend --no-dev --no-install-project
 

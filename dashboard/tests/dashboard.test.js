@@ -60,6 +60,16 @@ const DIAGNOSTICS = readFileSync(
   "utf8",
 );
 const STYLE_CSS = readFileSync(resolve(HERE, "..", "src", "style.css"), "utf8");
+const CLIENT = readFileSync(resolve(HERE, "..", "src", "api", "client.js"), "utf8");
+const VITE_CONFIG = readFileSync(resolve(HERE, "..", "vite.config.js"), "utf8");
+const COMPOSE = readFileSync(
+  resolve(HERE, "..", "..", "deploy", "docker", "compose.yaml"),
+  "utf8",
+);
+const PUBLISH_WORKFLOW = readFileSync(
+  resolve(HERE, "..", "..", ".github", "workflows", "publish-containers.yml"),
+  "utf8",
+);
 const OPTIMIZATION_LOG = readFileSync(
   resolve(HERE, "..", "src", "views", "OptimizationLog.vue"),
   "utf8",
@@ -299,6 +309,30 @@ test("schema setup exposes discovery-driven initialization, parsing, and logs", 
   assert.match(client, /startSchemaOperation/);
   assert.match(client, /stopSchemaOperation/);
   assert.match(client, /\/api\/schema-operations/);
+});
+
+test("settings compares independently detected frontend and backend builds", () => {
+  assert.match(SETTINGS_DIALOG, /Deployment identity/);
+  assert.match(SETTINGS_DIALOG, /Dashboard version/);
+  assert.match(SETTINGS_DIALOG, /Dashboard commit SHA/);
+  assert.match(SETTINGS_DIALOG, /Backend version/);
+  assert.match(SETTINGS_DIALOG, /Backend commit SHA/);
+  assert.match(SETTINGS_DIALOG, /Backend Python/);
+  assert.match(SETTINGS_DIALOG, /Backend Flask/);
+  assert.match(SETTINGS_DIALOG, /Builds match/);
+  assert.match(SETTINGS_DIALOG, /Build mismatch/);
+  assert.match(SETTINGS_DIALOG, /Identity incomplete/);
+  assert.match(SETTINGS_DIALOG, /frontendIdentity\.version !== backend\.version/);
+  assert.match(SETTINGS_DIALOG, /frontendIdentity\.commit !== backend\.commit/);
+  assert.doesNotMatch(SETTINGS_DIALOG, /\.slice\(0, 12\)/);
+
+  assert.match(VITE_CONFIG, /__DASHBOARD_VERSION__/);
+  assert.match(VITE_CONFIG, /__DASHBOARD_COMMIT__/);
+  assert.match(VITE_CONFIG, /process\.env\.BUILD_COMMIT/);
+  assert.match(VITE_CONFIG, /rev-parse", "HEAD"/);
+  assert.match(CLIENT, /backendIdentity: null/);
+  assert.match(COMPOSE, /BUILD_COMMIT: \$\{PROJECT_COMMIT:-unknown\}/);
+  assert.match(PUBLISH_WORKFLOW, /BUILD_COMMIT=\$\{\{ github\.sha \}\}/);
 });
 
 test("the rail's status dot agrees with the deployment accent", async () => {

@@ -53,6 +53,54 @@ const LOG_LEVELS = ["DEBUG", "INFO", "WARNING", "ERROR"];
 
 const hosted = computed(() => state.value?.hosted ?? false);
 const readOnly = computed(() => hosted.value || (state.value?.readOnly ?? false));
+const frontendIdentity = Object.freeze({
+  version: __DASHBOARD_VERSION__,
+  commit: __DASHBOARD_COMMIT__,
+});
+const backendIdentity = computed(() => state.value?.backendIdentity ?? null);
+
+function knownIdentity(value) {
+  return Boolean(value && value !== "unknown");
+}
+
+const identityStatus = computed(() => {
+  const backend = backendIdentity.value;
+  if (!backend) {
+    return {
+      tone: "neutral",
+      label: "Backend not connected",
+      detail: "This dashboard build has no live backend identity to compare.",
+    };
+  }
+  const values = [
+    frontendIdentity.version,
+    frontendIdentity.commit,
+    backend.version,
+    backend.commit,
+  ];
+  if (!values.every(knownIdentity)) {
+    return {
+      tone: "warning",
+      label: "Identity incomplete",
+      detail: "At least one build did not receive complete version or commit metadata.",
+    };
+  }
+  if (
+    frontendIdentity.version !== backend.version ||
+    frontendIdentity.commit !== backend.commit
+  ) {
+    return {
+      tone: "bad",
+      label: "Build mismatch",
+      detail: "The dashboard and backend came from different project builds.",
+    };
+  }
+  return {
+    tone: "good",
+    label: "Builds match",
+    detail: "The dashboard and backend report the same version and commit.",
+  };
+});
 
 /**
  * The schemas the connected server offers.
@@ -356,6 +404,45 @@ function setLevel(level) {
       </div>
 
       <div class="modal-body">
+        <section class="deployment-identity" aria-label="Deployment identity">
+          <div class="identity-head">
+            <div>
+              <h3>Deployment identity</h3>
+              <p class="caption">Compare independently built frontend and backend artifacts.</p>
+            </div>
+            <span class="identity-status" :class="identityStatus.tone">
+              {{ identityStatus.label }}
+            </span>
+          </div>
+          <div class="identity-grid">
+            <div>
+              <span>Dashboard version</span>
+              <code>{{ frontendIdentity.version }}</code>
+            </div>
+            <div>
+              <span>Dashboard commit SHA</span>
+              <code>{{ frontendIdentity.commit }}</code>
+            </div>
+            <div>
+              <span>Backend version</span>
+              <code>{{ backendIdentity?.version ?? "not connected" }}</code>
+            </div>
+            <div>
+              <span>Backend commit SHA</span>
+              <code>{{ backendIdentity?.commit ?? "not connected" }}</code>
+            </div>
+            <div>
+              <span>Backend Python</span>
+              <code>{{ backendIdentity?.runtime?.python ?? "not connected" }}</code>
+            </div>
+            <div>
+              <span>Backend Flask</span>
+              <code>{{ backendIdentity?.runtime?.flask ?? "not connected" }}</code>
+            </div>
+          </div>
+          <p class="caption">{{ identityStatus.detail }}</p>
+        </section>
+
         <template v-if="tab === 'source'">
           <div v-if="state" class="source-banner">
             <b>{{ state.status.label }}</b>

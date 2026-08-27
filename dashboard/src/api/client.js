@@ -166,6 +166,7 @@ export async function fetchSettings() {
     return {
       hosted: true,
       useDatabase: false,
+      backendIdentity: null,
       connection: null,
       status: {
         // The rail dot matches the read-only deployment accent in

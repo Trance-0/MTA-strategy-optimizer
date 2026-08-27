@@ -1,6 +1,6 @@
 ---
 title: Dashboard Views and Visual Contract
-compact: "Vue view/component contract: six views, responsive navigation, paged entities, model runners, diagnostics, charts, accessibility, and settings controls for active-schema selection, initialization, source parsing, replacement confirmation, polling logs, and termination."
+compact: "Vue component contract: six views, navigation, paged entities, model runners, charts, schema setup, and Settings deployment identity comparing frontend and backend project versions and Git commit identifiers while listing backend Python and Flask versions."
 lang: en-US
 source_files: dashboard/src/theme.js, dashboard/src/style.css, dashboard/src/lib/deployment.js, dashboard/src/lib/diagnostics.js, dashboard/src/lib/useJobs.js, dashboard/src/views/CommandCenter.vue, dashboard/src/views/BudgetManager.vue, dashboard/src/views/Campaigns.vue, dashboard/src/views/CampaignOptimizer.vue, dashboard/src/views/OptimizationLog.vue, dashboard/src/views/KnowledgeBase.vue, dashboard/src/components/SidebarNav.vue, dashboard/src/components/TopBar.vue, dashboard/src/components/SettingsDialog.vue, dashboard/src/components/StageRunner.vue, dashboard/src/components/PlotlyChart.vue, dashboard/src/components/DataTable.vue, dashboard/src/components/EntityTable.vue, dashboard/src/components/ConfirmDialog.vue, dashboard/src/components/TableView.vue, dashboard/src/components/MetricRow.vue, dashboard/src/components/KeyValuePanel.vue, dashboard/src/components/ReliabilityBanner.vue, dashboard/src/lib/common.js
 ---
@@ -292,6 +292,18 @@ an operation runs, the dialog polls `/api/schema-operations` and shows its
 status, exact command, bounded timestamped output, dropped-line count, and stop
 control. Success refreshes the census so new targets immediately appear in the
 Dashboard schema selector.
+
+Settings begins with a **Deployment identity** block. It renders the dashboard
+bundle's project version and full commit
+[Secure Hash Algorithm (SHA)](/en/reference/definitions#secure-hash-algorithm-sha-commit-identifier),
+followed by the backend's independently detected project version and commit SHA and its
+Python and Flask runtime versions. The status is **Builds match** only when both
+project versions and both commit values are present and equal. Any unequal
+value is **Build mismatch**; a missing or `unknown` value is **Identity
+incomplete**. The values are selectable monospace text so an operator can copy
+them into a deployment report. A static build states that no backend is
+connected rather than comparing the dashboard against itself.
+
 - Dependencies: Vue 3 and `plotly.js-dist-min`.
 - Verification: Exercised in a real browser through the six views that mount them. `EntityTable.vue`'s paging, page sizes, and identity-keyed selection, `ConfirmDialog.vue`'s named rows, `SettingsDialog.vue`'s disabled-schema and census contracts, and `StageRunner.vue`'s progressbar contract are covered by `dashboard/tests/dashboard.test.js`.
 

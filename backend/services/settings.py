@@ -27,6 +27,7 @@ from typing import Any
 from backend.config import (
     DEFAULT_SCHEMA,
     REPO_ROOT,
+    backend_identity,
     config_read_only,
     is_hosted,
     use_database,
@@ -296,6 +297,7 @@ def settings_state() -> dict:
     return {
         "hosted": is_hosted(),
         "readOnly": config_read_only(),
+        "backendIdentity": backend_identity(),
         "useDatabase": use_database(),
         "connection": {
             "PG_HOST": values.get("PG_HOST", ""),
@@ -312,8 +314,11 @@ def settings_state() -> dict:
         "schemas": (
             available_schemas()
             if use_database()
-            else {"schemas": [], "selected": values.get("PG_SCHEMA") or DEFAULT_SCHEMA,
-                  "error": None}
+            else {
+                "schemas": [],
+                "selected": values.get("PG_SCHEMA") or DEFAULT_SCHEMA,
+                "error": None,
+            }
         ),
         "status": status(),
         "logging": log_state(),

@@ -1,7 +1,7 @@
 ---
 title: Backend Jobs and Settings
 description: Pipeline job polling and protected runtime settings contracts
-compact: "Contracts for `/api/jobs`, `/api/settings`, and `/api/schema-operations`: protected settings, schema discovery, initialization and simulator parsing, validated subprocess arguments, bounded polling logs, termination, cache invalidation, and read-only deployment refusals."
+compact: "Contracts for `/api/jobs`, `/api/settings`, and `/api/schema-operations`: settings include backend project, commit, Python, and Flask identity; schema setup uses validated subprocesses, bounded logs, termination, cache invalidation, and read-only refusals."
 lang: en-US
 source_files: backend/api/jobs.py, backend/api/settings.py, backend/api/schema_operations.py, backend/services/jobs.py, backend/services/settings.py, backend/services/schema_operations.py, backend/tests/test_settings.py, backend/tests/test_schema_operations.py
 ---
@@ -27,7 +27,8 @@ Read-only or file-mode deployments cannot start publishing jobs.
 ## Settings
 
 `GET /api/settings` returns non-secret connection state, source status, logging
-state, and bounded diagnostics. It never returns the stored password. Its
+state, bounded diagnostics, and `backendIdentity`. It never returns the stored
+password. Its
 `connection` object carries `PG_SCHEMA`, and a top-level `schemas` key carries
 the census of schemas the connected server offers. The census is enumerated
 only in database mode: in file mode there is no connection to ask, and opening
@@ -39,6 +40,12 @@ Connection tests use submitted values without persisting them. Save writes the
 root `.env` atomically, preserves a stored password when the form submits an
 empty password, disposes the old pool, invalidates configuration caches, and
 clears the snapshot.
+
+`backendIdentity` carries the repository-root project `version`, full build
+`commit`, and a `runtime` object containing detected `python` and `flask`
+versions. The backend resolves a supplied container `PROJECT_COMMIT` first and
+uses the checkout's Git `HEAD` only in a local source run. Missing metadata is
+the literal `unknown`, so the client cannot mistake absence for agreement.
 
 ### Schema selection
 
@@ -112,8 +119,9 @@ Source: `backend/api/settings.py`, `backend/services/settings.py`
   diagnostic ring.
 - Inputs: Logging settings or connection fields, including `PG_SCHEMA`; stored
   credentials are never echoed.
-- Outputs: Sanitized settings state carrying `connection.PG_SCHEMA` and a
-  `schemas` census, a probe result carrying the same census, or an
+- Outputs: Sanitized settings state carrying `connection.PG_SCHEMA`, a
+  `schemas` census, and `backendIdentity` project/runtime versions and commit;
+  a probe result carrying the same census; or an
   action-specific refusal including `400 invalid_schema`.
 - Behavior contract: `ENV_KEYS` includes `PG_SCHEMA`, so a selection persists
   across a restart rather than appearing to save and being forgotten. A schema
