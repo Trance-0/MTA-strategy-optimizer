@@ -39,6 +39,7 @@ const form = ref({
   PG_USER: "",
   PG_PASSWORD: "",
   PG_SSLMODE: "prefer",
+  PG_SCHEMA: "public",
 });
 
 const SSL_MODES = ["disable", "allow", "prefer", "require", "verify-ca", "verify-full"];
@@ -46,6 +47,60 @@ const LOG_LEVELS = ["DEBUG", "INFO", "WARNING", "ERROR"];
 
 const hosted = computed(() => state.value?.hosted ?? false);
 const readOnly = computed(() => hosted.value || (state.value?.readOnly ?? false));
+
+/**
+ * The schemas the connected server offers.
+ *
+ * Held apart from `state` because a connection test refreshes it without
+ * refreshing anything else: the reader edits the host, tests, and the list
+ * becomes that server's rather than the saved one's.
+ */
+const schemas = ref({ schemas: [], selected: "public", error: null });
+
+/**
+ * The stored schema, kept as an option even when the list does not contain it.
+ *
+ * A database that is unreachable enumerates nothing, and a dropdown that
+ * silently dropped the saved value would show the reader a selection they
+ * never made and save it on the next write.
+ */
+const schemaOptions = computed(() => {
+  const listed = schemas.value.schemas ?? [];
+  const current = form.value.PG_SCHEMA;
+  if (!current || listed.some((item) => item.name === current)) return listed;
+  return [
+    {
+      name: current,
+      selectable: true,
+      tableCount: null,
+      missingTables: [],
+      missingCount: 0,
+      detail: schemas.value.error
+        ? `Saved selection. The schema list is unavailable — ${schemas.value.error}`
+        : "Saved selection. Test the connection to list the schemas this server offers.",
+    },
+    ...listed,
+  ];
+});
+
+/** The help text under the dropdown: whichever schema the pointer is over. */
+const hoveredSchema = ref(null);
+const describedSchema = computed(() => {
+  const name = hoveredSchema.value ?? form.value.PG_SCHEMA;
+  return schemaOptions.value.find((item) => item.name === name) ?? null;
+});
+
+function schemaTitle(option) {
+  if (option.selectable) return option.detail;
+  const missing = option.missingTables.length
+    ? ` Missing: ${option.missingTables.join(", ")}${
+        option.missingCount > option.missingTables.length
+          ? ` and ${option.missingCount - option.missingTables.length} more`
+          : ""
+      }.`
+    : "";
+  return `Unavailable. ${option.detail}${missing}`;
+}
 
 async function refresh() {
   state.value = await fetchSettings();
@@ -56,6 +111,7 @@ async function refresh() {
       PG_PASSWORD: "",
     };
   }
+  if (state.value.schemas) schemas.value = state.value.schemas;
 }
 
 watch(
@@ -77,6 +133,7 @@ function connectionPayload() {
     PG_USER: form.value.PG_USER,
     PG_PASSWORD: form.value.PG_PASSWORD,
     PG_SSLMODE: form.value.PG_SSLMODE,
+    PG_SCHEMA: form.value.PG_SCHEMA,
   };
 }
 
@@ -92,6 +149,10 @@ async function send(action, extra = {}) {
     });
     if (action === "test") {
       message.value = { ok: result.ok, text: result.message };
+      // A successful test is the only moment the schema list is knowable, so
+      // it fills the dropdown from the server the reader just reached rather
+      // than from the one that happens to be saved.
+      if (result.schemas) schemas.value = result.schemas;
     } else if (action === "save") {
       message.value = {
         ok: result.ok !== false,
@@ -263,7 +324,62 @@ cp sample.env .env      # set DATABASE=true and the PG_* values
                   </option>
                 </select>
               </div>
+              <div class="field span-2">
+                <label for="pg-schema">Schema</label>
+                <!--
+                  A schema that cannot serve the dashboard is listed and
+                  disabled rather than omitted. Omitting it would leave a reader
+                  who knows the schema exists with no account of its absence;
+                  disabling it puts the reason where they would have chosen it.
+
+                  The option tooltip is the browser's own and some do not show
+                  it over an open dropdown, so the caption below carries the
+                  same explanation unconditionally rather than depending on a
+                  hover that may never arrive.
+                -->
+                <select
+                  id="pg-schema"
+                  v-model="form.PG_SCHEMA"
+                  aria-describedby="pg-schema-help"
+                  @mouseleave="hoveredSchema = null"
+                >
+                  <option
+                    v-for="option in schemaOptions"
+                    :key="option.name"
+                    :value="option.name"
+                    :disabled="!option.selectable"
+                    :title="schemaTitle(option)"
+                    @mouseenter="hoveredSchema = option.name"
+                  >
+                    {{ option.name }}{{ option.selectable ? "" : " — unavailable" }}
+                  </option>
+                </select>
+              </div>
             </div>
+
+            <p v-if="describedSchema" id="pg-schema-help" class="caption schema-help">
+              <b>{{ describedSchema.name }}</b> — {{ describedSchema.detail }}
+              <template v-if="describedSchema.missingTables.length">
+                <br />
+                Missing:
+                <code>{{ describedSchema.missingTables.join(", ") }}</code
+                ><template
+                  v-if="describedSchema.missingCount > describedSchema.missingTables.length"
+                >
+                  and
+                  {{ describedSchema.missingCount - describedSchema.missingTables.length }}
+                  more</template
+                >.
+              </template>
+            </p>
+            <p v-else id="pg-schema-help" class="caption schema-help">
+              <template v-if="schemas.error">
+                The schema list is unavailable — {{ schemas.error }}
+              </template>
+              <template v-else>
+                Test the connection to list the schemas this server offers.
+              </template>
+            </p>
 
             <div class="rec-actions">
               <button class="btn" :disabled="busy" @click="send('test')">

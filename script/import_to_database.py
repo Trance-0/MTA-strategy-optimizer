@@ -13,10 +13,17 @@ Data flow:
 The command refuses to overwrite a populated database unless `--replace` is
 given, so an accidental run cannot destroy existing rows.
 
+`--schema` chooses which schema of the instance receives the tables, so one
+database can hold several scenarios side by side. It defaults to `PG_SCHEMA`
+in `.env`, and to `public` when that is unset. A named schema is created if it
+does not exist; `--replace` then drops and rebuilds the tables within it and
+never touches another schema.
+
 Usage:
     uv run --extra dashboard python script/import_to_database.py --dry-run
     uv run --extra dashboard python script/import_to_database.py
     uv run --extra dashboard python script/import_to_database.py --replace
+    uv run --extra dashboard python script/import_to_database.py --schema mta --replace
 """
 
 from __future__ import annotations
@@ -25,6 +32,7 @@ import argparse
 import csv
 import json
 import sys
+from dataclasses import replace
 from datetime import datetime
 from pathlib import Path
 
@@ -32,7 +40,7 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from sqlalchemy import create_engine, func, select  # noqa: E402
+from sqlalchemy import create_engine, func, select, text  # noqa: E402
 from sqlalchemy.orm import Session  # noqa: E402
 
 from dashboard import config  # noqa: E402
@@ -563,6 +571,26 @@ def existing_row_count(engine) -> int:
         return 0
 
 
+def ensure_schema(engine, schema: str) -> bool:
+    """Create the target schema when it is absent. Returns whether it was created.
+
+    The name is quoted as an identifier rather than bound as a parameter,
+    because it names an object. `config.valid_schema_name()` has already
+    refused anything that is not a plain identifier, and the doubled quote
+    handles the one character that could still close it early.
+    """
+    quoted = '"' + schema.replace('"', '""') + '"'
+    with engine.begin() as connection:
+        existing = connection.execute(
+            text("select 1 from information_schema.schemata where schema_name = :name"),
+            {"name": schema},
+        ).scalar()
+        if existing:
+            return False
+        connection.execute(text(f"create schema {quoted}"))
+    return True
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
@@ -579,6 +607,14 @@ def main() -> int:
         "--full-events",
         action="store_true",
         help=f"Import every synthetic event rather than the first {DEFAULT_EVENT_LIMIT}.",
+    )
+    parser.add_argument(
+        "--schema",
+        default=None,
+        help=(
+            "Schema to create the tables in. Defaults to PG_SCHEMA from .env, "
+            "and to 'public' when that is unset."
+        ),
     )
     args = parser.parse_args()
 
@@ -606,8 +642,31 @@ def main() -> int:
         return 0
 
     settings = config.database_settings()
+    if args.schema:
+        settings = replace(settings, schema=args.schema.strip())
+    if not config.valid_schema_name(settings.schema):
+        print(
+            f"INVALID: {settings.schema!r} is not a valid PostgreSQL schema name.",
+            file=sys.stderr,
+        )
+        return 1
+
     print(f"Target: {settings.safe_summary()}")
-    engine = create_engine(settings.url(), connect_args={"connect_timeout": 20})
+    try:
+        connect_args = settings.connect_args()
+    except ValueError as error:
+        print(f"INVALID: {error}", file=sys.stderr)
+        return 1
+    engine = create_engine(settings.url(), connect_args=connect_args)
+
+    # The schema has to exist before `search_path` can resolve to it, and a
+    # connection carrying a path to a missing schema reports every table as
+    # absent rather than saying the schema is not there. Creating it here is
+    # what makes `--schema` able to build a new mirror rather than only write
+    # into one that was prepared by hand.
+    if settings.schema != config.DEFAULT_SCHEMA:
+        created = ensure_schema(engine, settings.schema)
+        print(f"Schema {settings.schema}: {'created' if created else 'already present'}")
 
     present = existing_row_count(engine)
     if present and not args.replace:

@@ -1,0 +1,21 @@
+{
+  "extends": "kfc-multi-provider.base.json",
+  "seed": 2026082603,
+  "advertiser_id": "synthetic_kfc_europe_experiment",
+  "marketplaces": [
+    {
+      "code": "EUROPE",
+      "currency_code": "EUR",
+      "traffic_multiplier": 0.92,
+      "price_multiplier": 0.92,
+      "internet_reach_rate": 0.93,
+      "target_audience_density": 0.075,
+      "economic_willingness_multiplier": 0.98,
+      "income_inequality_gini": 0.31
+    }
+  ],
+  "provenance": {
+    "region": "EUROPE",
+    "regional_parameters": "Illustrative synthetic assumptions, not measured regional or brand data."
+  }
+}

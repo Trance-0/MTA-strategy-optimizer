@@ -12,6 +12,10 @@ pgDatabase: mta_data
 pgUser: mta_backend
 pgPassword: CHANGE_ME_IN_APPSTACK
 pgSslMode: require
+# Which schema the backend reads. This deployment sets
+# DASHBOARD_CONFIG_READ_ONLY=true, so the browser cannot change it: the schema
+# is chosen here and takes effect on restart.
+pgSchema: public
 mtaSimDataDir: /data/mta-sim
 mtaSimPvc: marketing-roi-simulator-data
 requestCpu: 250m

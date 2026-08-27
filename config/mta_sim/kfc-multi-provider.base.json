@@ -1,0 +1,345 @@
+{
+  "seed": 2026082600,
+  "report_start_date": "2025-01-01",
+  "report_end_date": "2025-12-31",
+  "advertiser_id": "synthetic_kfc_multi_provider_experiment",
+  "base_product_price": 10.0,
+  "baseline_conversion_log_odds": -3.8,
+  "global_behavior": {
+    "weekly_traffic_multipliers": [0.92, 0.95, 0.98, 1.0, 1.12, 1.25, 1.18],
+    "daily_traffic_trend": 0.0005,
+    "conversion_probability_daily_noise_standard_deviation": 0.08,
+    "performance_volume_noise_standard_deviation": 0.07,
+    "path_audience_noise_standard_deviation": 0.06,
+    "performance_revenue_noise_standard_deviation": 0.02,
+    "path_revenue_noise_standard_deviation": 0.02,
+    "additional_unit_probability": 0.18,
+    "repeat_purchase_probability": 0.12
+  },
+  "regional_behavior": {
+    "reference_internet_reach_rate": 0.9,
+    "reference_target_audience_density": 0.08,
+    "reference_income_inequality_gini": 0.35,
+    "economic_willingness_log_odds_weight": 0.8,
+    "income_inequality_noise_weight": 0.6
+  },
+  "marketplaces": [
+    {
+      "code": "SYNTHETIC",
+      "currency_code": "USD",
+      "traffic_multiplier": 1.0,
+      "price_multiplier": 1.0,
+      "internet_reach_rate": 0.9,
+      "target_audience_density": 0.08,
+      "economic_willingness_multiplier": 1.0,
+      "income_inequality_gini": 0.35
+    }
+  ],
+  "providers": [
+    {
+      "provider": "AMAZON_ADS",
+      "supported_ad_products": ["SPONSORED_PRODUCTS", "SPONSORED_DISPLAY"],
+      "placement_availability": "AVAILABLE",
+      "creative_availability": "AVAILABLE",
+      "interaction_type_availability": "AVAILABLE"
+    },
+    {
+      "provider": "SYNTHETIC_FULL",
+      "supported_ad_products": ["SPONSORED_BRANDS", "AMAZON_DSP"],
+      "placement_availability": "NOT_PROVIDED",
+      "creative_availability": "AVAILABLE",
+      "interaction_type_availability": "AVAILABLE"
+    },
+    {
+      "provider": "SYNTHETIC_LIMITED_CREATIVE",
+      "supported_ad_products": ["SPONSORED_DISPLAY", "AMAZON_DSP"],
+      "placement_availability": "AVAILABLE",
+      "creative_availability": "NOT_PROVIDED",
+      "interaction_type_availability": "AVAILABLE"
+    }
+  ],
+  "touchpoints": [
+    {
+      "identifier": "amazon_sponsored_product",
+      "provider": "AMAZON_ADS",
+      "ad_product": "SPONSORED_PRODUCTS",
+      "ad_type": "PRODUCT_AD",
+      "creative_type": "PRODUCT_IMAGE",
+      "inventory_type": null,
+      "placement": "TOP_OF_SEARCH",
+      "base_impressions": 52000,
+      "click_through_rate": 0.032,
+      "platform_conversion_rate": 0.051,
+      "cost_per_click": 1.35,
+      "cost_per_thousand_impressions": null,
+      "conversion_log_odds_effect": 0.82
+    },
+    {
+      "identifier": "amazon_sponsored_display",
+      "provider": "AMAZON_ADS",
+      "ad_product": "SPONSORED_DISPLAY",
+      "ad_type": "DISPLAY",
+      "creative_type": "IMAGE",
+      "inventory_type": null,
+      "placement": "PRODUCT_PAGE",
+      "base_impressions": 41000,
+      "click_through_rate": 0.018,
+      "platform_conversion_rate": 0.034,
+      "cost_per_click": 0.95,
+      "cost_per_thousand_impressions": null,
+      "conversion_log_odds_effect": 0.56
+    },
+    {
+      "identifier": "google_paid_search",
+      "provider": "SYNTHETIC_FULL",
+      "ad_product": "SPONSORED_BRANDS",
+      "ad_type": "SEARCH_AD",
+      "creative_type": "RESPONSIVE_TEXT",
+      "inventory_type": null,
+      "placement": "SEARCH_RESULTS",
+      "base_impressions": 68000,
+      "click_through_rate": 0.041,
+      "platform_conversion_rate": 0.046,
+      "cost_per_click": 1.1,
+      "cost_per_thousand_impressions": null,
+      "conversion_log_odds_effect": 0.73
+    },
+    {
+      "identifier": "google_online_video",
+      "provider": "SYNTHETIC_FULL",
+      "ad_product": "AMAZON_DSP",
+      "ad_type": null,
+      "creative_type": "SHORT_VIDEO",
+      "inventory_type": "ONLINE_VIDEO",
+      "placement": "VIDEO_FEED",
+      "base_impressions": 75000,
+      "click_through_rate": 0.012,
+      "platform_conversion_rate": 0.021,
+      "cost_per_click": null,
+      "cost_per_thousand_impressions": 8.5,
+      "conversion_log_odds_effect": 0.48
+    },
+    {
+      "identifier": "meta_social_feed",
+      "provider": "SYNTHETIC_LIMITED_CREATIVE",
+      "ad_product": "SPONSORED_DISPLAY",
+      "ad_type": "SOCIAL_AD",
+      "creative_type": "CAROUSEL",
+      "inventory_type": null,
+      "placement": "SOCIAL_FEED",
+      "base_impressions": 82000,
+      "click_through_rate": 0.021,
+      "platform_conversion_rate": 0.029,
+      "cost_per_click": 0.78,
+      "cost_per_thousand_impressions": null,
+      "conversion_log_odds_effect": 0.54
+    },
+    {
+      "identifier": "meta_short_video",
+      "provider": "SYNTHETIC_LIMITED_CREATIVE",
+      "ad_product": "AMAZON_DSP",
+      "ad_type": null,
+      "creative_type": "VERTICAL_VIDEO",
+      "inventory_type": "ONLINE_VIDEO",
+      "placement": "SHORT_VIDEO_FEED",
+      "base_impressions": 90000,
+      "click_through_rate": 0.015,
+      "platform_conversion_rate": 0.024,
+      "cost_per_click": null,
+      "cost_per_thousand_impressions": 7.2,
+      "conversion_log_odds_effect": 0.5
+    }
+  ],
+  "path_scenarios": [
+    {
+      "identifier": "amazon_product_only",
+      "touchpoint_identifiers": ["amazon_sponsored_product"],
+      "base_users": 620,
+      "adjacent_synergy_log_odds": 0.0
+    },
+    {
+      "identifier": "google_search_only",
+      "touchpoint_identifiers": ["google_paid_search"],
+      "base_users": 710,
+      "adjacent_synergy_log_odds": 0.0
+    },
+    {
+      "identifier": "meta_feed_only",
+      "touchpoint_identifiers": ["meta_social_feed"],
+      "base_users": 580,
+      "adjacent_synergy_log_odds": 0.0
+    },
+    {
+      "identifier": "meta_google_amazon",
+      "touchpoint_identifiers": ["meta_social_feed", "google_paid_search", "amazon_sponsored_product"],
+      "base_users": 420,
+      "adjacent_synergy_log_odds": 0.18
+    },
+    {
+      "identifier": "video_google_amazon",
+      "touchpoint_identifiers": ["meta_short_video", "google_online_video", "amazon_sponsored_display"],
+      "base_users": 310,
+      "adjacent_synergy_log_odds": 0.16
+    },
+    {
+      "identifier": "google_then_amazon",
+      "touchpoint_identifiers": ["google_paid_search", "amazon_sponsored_product"],
+      "base_users": 540,
+      "adjacent_synergy_log_odds": 0.14
+    },
+    {
+      "identifier": "meta_then_amazon",
+      "touchpoint_identifiers": ["meta_social_feed", "amazon_sponsored_display"],
+      "base_users": 460,
+      "adjacent_synergy_log_odds": 0.12
+    }
+  ],
+  "products": [
+    {
+      "product_id": "KFC-FAMOUS-BOWL",
+      "sku_id": "SYN-KFC-BOWL",
+      "provider_ad_identifiers": {
+        "AMAZON_ADS": "SYN-AMZ-BOWL",
+        "SYNTHETIC_FULL": "SYN-GGL-BOWL",
+        "SYNTHETIC_LIMITED_CREATIVE": "SYN-META-BOWL"
+      },
+      "name": "Synthetic KFC Famous Bowl Scenario Product",
+      "category": "Prepared Food",
+      "brand": "KFC",
+      "status": "ACTIVE",
+      "inventory_units": 1000000,
+      "salable": true,
+      "organic_daily_units": 180.0,
+      "economics": [
+        {"currency": "USD", "unit_price": 7.99, "unit_cogs": 2.7, "variable_cost_per_unit": 1.1},
+        {"currency": "CNY", "unit_price": 57.0, "unit_cogs": 19.3, "variable_cost_per_unit": 7.9},
+        {"currency": "EUR", "unit_price": 7.35, "unit_cogs": 2.48, "variable_cost_per_unit": 1.01}
+      ]
+    },
+    {
+      "product_id": "KFC-CHICKEN-SANDWICH",
+      "sku_id": "SYN-KFC-SANDWICH",
+      "provider_ad_identifiers": {
+        "AMAZON_ADS": "SYN-AMZ-SANDWICH",
+        "SYNTHETIC_FULL": "SYN-GGL-SANDWICH",
+        "SYNTHETIC_LIMITED_CREATIVE": "SYN-META-SANDWICH"
+      },
+      "name": "Synthetic KFC Chicken Sandwich Scenario Product",
+      "category": "Prepared Food",
+      "brand": "KFC",
+      "status": "ACTIVE",
+      "inventory_units": 1000000,
+      "salable": true,
+      "organic_daily_units": 220.0,
+      "economics": [
+        {"currency": "USD", "unit_price": 6.49, "unit_cogs": 2.2, "variable_cost_per_unit": 0.9},
+        {"currency": "CNY", "unit_price": 46.4, "unit_cogs": 15.7, "variable_cost_per_unit": 6.4},
+        {"currency": "EUR", "unit_price": 5.97, "unit_cogs": 2.02, "variable_cost_per_unit": 0.83}
+      ]
+    },
+    {
+      "product_id": "KFC-FAMILY-BUCKET",
+      "sku_id": "SYN-KFC-BUCKET",
+      "provider_ad_identifiers": {
+        "AMAZON_ADS": "SYN-AMZ-BUCKET",
+        "SYNTHETIC_FULL": "SYN-GGL-BUCKET",
+        "SYNTHETIC_LIMITED_CREATIVE": "SYN-META-BUCKET"
+      },
+      "name": "Synthetic KFC Family Bucket Scenario Product",
+      "category": "Prepared Food",
+      "brand": "KFC",
+      "status": "ACTIVE",
+      "inventory_units": 1000000,
+      "salable": true,
+      "organic_daily_units": 95.0,
+      "economics": [
+        {"currency": "USD", "unit_price": 24.99, "unit_cogs": 8.5, "variable_cost_per_unit": 3.2},
+        {"currency": "CNY", "unit_price": 178.7, "unit_cogs": 60.8, "variable_cost_per_unit": 22.9},
+        {"currency": "EUR", "unit_price": 22.99, "unit_cogs": 7.82, "variable_cost_per_unit": 2.94}
+      ]
+    }
+  ],
+  "campaigns": [
+    {
+      "campaign_id": "KFC-AMAZON-SEARCH",
+      "campaign_name": "Synthetic KFC Amazon Search",
+      "provider": "AMAZON_ADS",
+      "ad_product": "SPONSORED_PRODUCTS",
+      "status": "ACTIVE",
+      "baseline_daily_budget": 650.0,
+      "touchpoint_identifiers": ["amazon_sponsored_product"]
+    },
+    {
+      "campaign_id": "KFC-AMAZON-DISPLAY",
+      "campaign_name": "Synthetic KFC Amazon Display",
+      "provider": "AMAZON_ADS",
+      "ad_product": "SPONSORED_DISPLAY",
+      "status": "ACTIVE",
+      "baseline_daily_budget": 520.0,
+      "touchpoint_identifiers": ["amazon_sponsored_display"]
+    },
+    {
+      "campaign_id": "KFC-GOOGLE-SEARCH",
+      "campaign_name": "Synthetic KFC Google-like Search",
+      "provider": "SYNTHETIC_FULL",
+      "ad_product": "SPONSORED_BRANDS",
+      "status": "ACTIVE",
+      "baseline_daily_budget": 720.0,
+      "touchpoint_identifiers": ["google_paid_search"]
+    },
+    {
+      "campaign_id": "KFC-GOOGLE-VIDEO",
+      "campaign_name": "Synthetic KFC Google-like Video",
+      "provider": "SYNTHETIC_FULL",
+      "ad_product": "AMAZON_DSP",
+      "status": "ACTIVE",
+      "baseline_daily_budget": 610.0,
+      "touchpoint_identifiers": ["google_online_video"]
+    },
+    {
+      "campaign_id": "KFC-META-FEED",
+      "campaign_name": "Synthetic KFC Meta-like Feed",
+      "provider": "SYNTHETIC_LIMITED_CREATIVE",
+      "ad_product": "SPONSORED_DISPLAY",
+      "status": "ACTIVE",
+      "baseline_daily_budget": 580.0,
+      "touchpoint_identifiers": ["meta_social_feed"]
+    },
+    {
+      "campaign_id": "KFC-META-VIDEO",
+      "campaign_name": "Synthetic KFC Meta-like Video",
+      "provider": "SYNTHETIC_LIMITED_CREATIVE",
+      "ad_product": "AMAZON_DSP",
+      "status": "ACTIVE",
+      "baseline_daily_budget": 540.0,
+      "touchpoint_identifiers": ["meta_short_video"]
+    }
+  ],
+  "campaign_product_links": [
+    {"campaign_id": "KFC-AMAZON-SEARCH", "product_id": "KFC-CHICKEN-SANDWICH", "eligibility_status": "ELIGIBLE", "link_status": "ACTIVE"},
+    {"campaign_id": "KFC-AMAZON-DISPLAY", "product_id": "KFC-FAMOUS-BOWL", "eligibility_status": "ELIGIBLE", "link_status": "ACTIVE"},
+    {"campaign_id": "KFC-AMAZON-DISPLAY", "product_id": "KFC-FAMILY-BUCKET", "eligibility_status": "ELIGIBLE", "link_status": "ACTIVE"},
+    {"campaign_id": "KFC-GOOGLE-SEARCH", "product_id": "KFC-FAMOUS-BOWL", "eligibility_status": "ELIGIBLE", "link_status": "ACTIVE"},
+    {"campaign_id": "KFC-GOOGLE-VIDEO", "product_id": "KFC-CHICKEN-SANDWICH", "eligibility_status": "ELIGIBLE", "link_status": "ACTIVE"},
+    {"campaign_id": "KFC-GOOGLE-VIDEO", "product_id": "KFC-FAMILY-BUCKET", "eligibility_status": "ELIGIBLE", "link_status": "ACTIVE"},
+    {"campaign_id": "KFC-META-FEED", "product_id": "KFC-FAMOUS-BOWL", "eligibility_status": "ELIGIBLE", "link_status": "ACTIVE"},
+    {"campaign_id": "KFC-META-VIDEO", "product_id": "KFC-CHICKEN-SANDWICH", "eligibility_status": "ELIGIBLE", "link_status": "ACTIVE"},
+    {"campaign_id": "KFC-META-VIDEO", "product_id": "KFC-FAMILY-BUCKET", "eligibility_status": "ELIGIBLE", "link_status": "ACTIVE"}
+  ],
+  "budget_experiment": {
+    "multipliers": [0.75, 1.0, 1.25],
+    "spend_capacity_multiplier": 0.9,
+    "saturation_spend": 500.0,
+    "assignment_type": "SCHEDULED"
+  },
+  "provenance": {
+    "classification": "synthetic_private_research_scenario",
+    "brand_usage": "KFC is used only as a recognizable synthetic scenario label.",
+    "data_origin": "All observations and commercial parameters are simulated; none came from KFC, Amazon, Google, or Meta.",
+    "provider_profile_mapping": {
+      "AMAZON_ADS": "Fully observed synthetic Amazon-compatible profile.",
+      "SYNTHETIC_FULL": "Google-like profile with placement intentionally not provided.",
+      "SYNTHETIC_LIMITED_CREATIVE": "Meta-like profile with creative intentionally not provided."
+    }
+  }
+}

@@ -241,6 +241,51 @@ test("a read-only deployment states why, and names its remedy", () => {
   assert.match(TOP_BAR, /deploymentLabel/);
 });
 
+test("the schema dropdown offers what it cannot select, and says why", () => {
+  const schemas = readFileSync(
+    resolve(HERE, "..", "..", "backend", "services", "schemas.py"),
+    "utf8",
+  );
+
+  // Listed and disabled rather than omitted: a reader who knows a schema exists
+  // would otherwise get no account of its absence.
+  assert.match(SETTINGS_DIALOG, /:disabled="!option\.selectable"/);
+  assert.match(SETTINGS_DIALOG, /v-for="option in schemaOptions"/);
+  assert.match(SETTINGS_DIALOG, /:title="schemaTitle\(option\)"/);
+
+  // The browser tooltip is not shown over an open dropdown everywhere, so the
+  // same explanation is rendered as text under the field.
+  assert.match(SETTINGS_DIALOG, /id="pg-schema-help"/);
+  assert.match(SETTINGS_DIALOG, /aria-describedby="pg-schema-help"/);
+  assert.match(SETTINGS_DIALOG, /describedSchema\.missingTables/);
+
+  // The reason and the remedy are the server's, not the client's: the dialog
+  // renders `detail` rather than reconstructing a message from table names.
+  assert.match(SETTINGS_DIALOG, /describedSchema\.detail/);
+  assert.match(schemas, /"--schema \{schema\} --replace"/);
+
+  // The saved selection survives an unreachable database, or the dropdown would
+  // show a schema the reader never chose and save it on the next write.
+  assert.match(SETTINGS_DIALOG, /listed\.some\(\(item\) => item\.name === current\)/);
+});
+
+test("the schema selection is sent, saved, and refilled from a live test", () => {
+  const settingsApi = readFileSync(
+    resolve(HERE, "..", "..", "backend", "api", "settings.py"),
+    "utf8",
+  );
+
+  assert.match(SETTINGS_DIALOG, /PG_SCHEMA: form\.value\.PG_SCHEMA/);
+  // A connection test is the only moment the list is knowable, so it fills the
+  // dropdown from the server just reached rather than from the saved one.
+  assert.match(SETTINGS_DIALOG, /if \(result\.schemas\) schemas\.value = result\.schemas/);
+
+  // A schema name reaches libpq as an identifier inside a connect option, so
+  // the route refuses it before anything is written to `.env`.
+  assert.match(settingsApi, /valid_schema_name\(updates\["PG_SCHEMA"\]\)/);
+  assert.match(settingsApi, /"invalid_schema"/);
+});
+
 test("the rail's status dot agrees with the deployment accent", async () => {
   const settings = readFileSync(
     resolve(HERE, "..", "..", "backend", "services", "settings.py"),

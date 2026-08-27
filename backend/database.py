@@ -31,10 +31,16 @@ _engine: Engine | None = None
 def engine() -> Engine:
     """Return the shared engine, created on first use.
 
+    Every connection it hands out carries the configured schema in its
+    `search_path`, so a statement built from `dashboard/models.py` and a
+    reflective read of an `mta_sim_*` table resolve against the same schema
+    without either naming one.
+
     Raises:
         RuntimeError: naming every missing `PG_*` variable, from
             `database_settings()`, rather than failing later at connection
             time with a misleading host-resolution error.
+        ValueError: if `PG_SCHEMA` is not a plain identifier.
     """
     global _engine
     if _engine is None:
@@ -47,9 +53,14 @@ def engine() -> Engine:
             max_overflow=0,
             pool_pre_ping=True,
             pool_recycle=1800,
-            connect_args={"connect_timeout": 20},
+            connect_args=settings.connect_args(),
         )
     return _engine
+
+
+def active_schema() -> str:
+    """The schema this service reads, as configured."""
+    return database_settings().schema
 
 
 def dispose_engine() -> None:
@@ -87,15 +98,19 @@ def orm_rows(statement: Any) -> list[dict]:
 
 
 def table_exists(name: str) -> bool:
-    """Whether a table is present in the connected database.
+    """Whether a table is present in the connected schema.
 
     Used before reading the MTA-SIM research tables, which a deployment that
     imported only this project's own artifacts will not have. Their absence is
     an ordinary state, not a fault, so it is probed rather than caught.
+
+    The name is resolved against the connection's own `search_path` rather
+    than against a schema named here, so the probe and the read that follows
+    it can never disagree about which schema they are asking about.
     """
     rows = sql(
-        "select to_regclass(:qualified)::text as table_name",
-        {"qualified": f"public.{name}"},
+        "select to_regclass(:name)::text as table_name",
+        {"name": name},
     )
     return bool(rows and rows[0].get("table_name"))
 
@@ -110,9 +125,30 @@ def database_available() -> tuple[bool, str]:
     if not use_database():
         return False, "DATABASE=false"
     try:
+        schema = active_schema()
+        if not table_exists("attribution_result"):
+            # Named apart from an empty table, because the remedies differ: a
+            # schema without the table has never been populated, and the reader
+            # most likely arrived here by selecting a schema that holds
+            # research history alone.
+            #
+            # The remedy named is the derivation rather than the fixture
+            # import. A schema reached this way already holds another account's
+            # history, and the importer carries its own advertiser and
+            # Campaigns with it, so pointing it here would staple the sample's
+            # entities onto that account's observations. The settings dialog
+            # chooses between the two on the same grounds; this message is
+            # reached by a reader who bypassed the dialog's disabled option, so
+            # it must not contradict it.
+            return False, (
+                f"Schema {schema!r} does not contain attribution_result. Select a "
+                f"schema that carries the dashboard tables, or derive one per "
+                f"scenario with: uv run --extra dashboard python "
+                f"script/derive_scenario_schemas.py --source {schema} --all --replace"
+            )
         rows = sql("select count(*)::int as count from attribution_result")
         if not rows or not rows[0].get("count"):
-            return False, "Connected, but attribution_result is empty."
+            return False, f"Connected to schema {schema!r}, but attribution_result is empty."
         from backend.config import safe_summary
 
         return True, f"Connected to {safe_summary()}"

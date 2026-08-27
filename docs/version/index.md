@@ -11,6 +11,11 @@ The project version is recorded in the repository-root `VERSION` file. Each page
 
 This section records **what** changed. See the [work log](../worklog/) for **who** did the work and when.
 
+## [0.9.31](0.9.31.md)
+
+- Date: 2026-08-27
+- Summary: Selected which schema of the PostgreSQL instance the dashboard reads and `import_to_database.py` writes, through a `PG_SCHEMA` dropdown backed by a privilege-filtered census that lists the schemas which cannot serve the dashboard as disabled options carrying what they lack and the command that would populate them, and added `derive_scenario_schemas.py`, which computes the dashboard model from a simulator-populated schema into one self-contained schema per scenario
+
 ## [0.9.30](0.9.30.md)
 
 - Date: 2026-08-26

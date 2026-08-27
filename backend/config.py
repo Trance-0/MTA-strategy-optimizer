@@ -19,6 +19,7 @@ from pathlib import Path
 from dashboard.config import (  # noqa: F401  (re-exported by design)
     ATTRIBUTION_MODULE,
     ATTRIBUTION_OUTPUT_DIR,
+    DEFAULT_SCHEMA,
     DESCRIPTION_ROW_MARKERS,
     REPO_ROOT,
     SIMULATED_DIR,
@@ -30,6 +31,7 @@ from dashboard.config import (  # noqa: F401  (re-exported by design)
     database_settings,
     is_hosted,
     use_database,
+    valid_schema_name,
 )
 
 _TRUE_VALUES = {"1", "true", "yes", "on"}

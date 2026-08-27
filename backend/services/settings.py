@@ -25,13 +25,16 @@ from pathlib import Path
 from typing import Any
 
 from backend.config import (
+    DEFAULT_SCHEMA,
     REPO_ROOT,
     config_read_only,
     is_hosted,
     use_database,
+    valid_schema_name,
 )
 from backend.database import database_available, dispose_engine
 from backend.repository.snapshot import clear_caches
+from backend.services.schemas import available_schemas, probe_schemas
 
 #: Written to `.env`. Order is preserved when the file is rewritten, so a
 #: hand-edited file keeps its shape.
@@ -43,6 +46,7 @@ ENV_KEYS: tuple[str, ...] = (
     "PG_USER",
     "PG_PASSWORD",
     "PG_SSLMODE",
+    "PG_SCHEMA",
 )
 
 ENV_PATH: Path = REPO_ROOT / ".env"
@@ -214,6 +218,10 @@ def test_connection(updates: dict[str, str]) -> dict:
     correction before committing it to `.env`. The probe connection is closed
     whether or not it succeeded, so a failed test cannot leave a socket open on
     the shared instance.
+
+    A successful test also carries the schema census back, because the dialog's
+    schema list is only knowable from a live connection: the reader tests, and
+    the dropdown fills with what that server actually offers.
     """
     missing = [
         key
@@ -222,6 +230,16 @@ def test_connection(updates: dict[str, str]) -> dict:
     ]
     if missing:
         return {"ok": False, "message": f"Missing {', '.join(missing)}."}
+
+    schema = (updates.get("PG_SCHEMA") or "").strip() or DEFAULT_SCHEMA
+    if not valid_schema_name(schema):
+        return {
+            "ok": False,
+            "message": (
+                f"{schema!r} is not a valid PostgreSQL schema name. Use letters, "
+                "digits, and underscores, beginning with a letter or underscore."
+            ),
+        }
 
     from urllib.parse import quote_plus
 
@@ -243,18 +261,23 @@ def test_connection(updates: dict[str, str]) -> dict:
         probe = create_engine(url, connect_args={"connect_timeout": 10})
         with probe.connect() as connection:
             version = connection.execute(text("select version()")).scalar_one()
+            # Counted in the schema the reader chose rather than always in
+            # `public`, so the number describes what selecting it would read.
             tables = connection.execute(
                 text(
                     "select count(*)::int from information_schema.tables "
-                    "where table_schema = 'public'"
-                )
+                    "where table_schema = :schema"
+                ),
+                {"schema": schema},
             ).scalar_one()
+        census = probe_schemas(updates)
         return {
             "ok": True,
             "message": (
                 f"Connected to {updates['PG_USER']}@{host}:{port}/{database} — "
-                f"{tables} table(s). {str(version).split(',')[0]}"
+                f"schema {schema}, {tables} table(s). {str(version).split(',')[0]}"
             ),
+            "schemas": census,
         }
     except Exception as error:  # noqa: BLE001 - reported to the dialog, not raised
         return {"ok": False, "message": f"{type(error).__name__}: {str(error)[:300]}"}
@@ -280,8 +303,18 @@ def settings_state() -> dict:
             "PG_DATABASE": values.get("PG_DATABASE", ""),
             "PG_USER": values.get("PG_USER", ""),
             "PG_SSLMODE": values.get("PG_SSLMODE") or "prefer",
+            "PG_SCHEMA": values.get("PG_SCHEMA") or DEFAULT_SCHEMA,
             "passwordStored": bool(values.get("PG_PASSWORD")),
         },
+        # Enumerated only in database mode: in file mode there is no connection
+        # to ask, and opening one to populate a dropdown the reader has not
+        # asked for would make every settings request pay for a round trip.
+        "schemas": (
+            available_schemas()
+            if use_database()
+            else {"schemas": [], "selected": values.get("PG_SCHEMA") or DEFAULT_SCHEMA,
+                  "error": None}
+        ),
         "status": status(),
         "logging": log_state(),
     }

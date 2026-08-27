@@ -1,0 +1,21 @@
+{
+  "extends": "kfc-multi-provider.base.json",
+  "seed": 2026082602,
+  "advertiser_id": "synthetic_kfc_us_experiment",
+  "marketplaces": [
+    {
+      "code": "US",
+      "currency_code": "USD",
+      "traffic_multiplier": 1.0,
+      "price_multiplier": 1.0,
+      "internet_reach_rate": 0.95,
+      "target_audience_density": 0.08,
+      "economic_willingness_multiplier": 1.0,
+      "income_inequality_gini": 0.42
+    }
+  ],
+  "provenance": {
+    "region": "US",
+    "regional_parameters": "Illustrative synthetic assumptions, not measured regional or brand data."
+  }
+}

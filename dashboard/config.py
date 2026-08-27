@@ -5,6 +5,12 @@ Reads `.env` at the repository root. The single switch that matters is
 directly, and when true it reads the PostgreSQL database described by the
 `PG_*` variables.
 
+`PG_SCHEMA` selects which schema within that database is read. One instance
+commonly holds several -- one per simulation scenario -- and they are not
+interchangeable: a schema may carry the simulator's research tables without
+this project's own. `public` is the fallback, because it is what every
+deployment that predates the setting was reading.
+
 `.env` is git-ignored. `sample.env` is the tracked template; copy it and fill
 in real values. Never put real credentials in a tracked file.
 """
@@ -12,6 +18,7 @@ in real values. Never put real credentials in a tracked file.
 from __future__ import annotations
 
 import os
+import re
 from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
@@ -37,6 +44,24 @@ DESCRIPTION_ROW_MARKERS = ("报告日期", "报告开始日期")
 
 _TRUE_VALUES = {"1", "true", "yes", "on"}
 
+#: The schema read when `PG_SCHEMA` is unset. Every deployment that predates
+#: the setting was reading this one, so it is the fallback rather than an
+#: arbitrary default.
+DEFAULT_SCHEMA = "public"
+
+#: A PostgreSQL unquoted identifier. A schema name cannot be a bound parameter
+#: -- it names an object rather than carrying a value -- so it is placed into
+#: `search_path` as text, and this is the shape that may be. The real defence
+#: is `backend/services/schemas.py`, which accepts only a name the connected
+#: server reports; this refuses the characters that would end the option and
+#: begin another before any connection is opened.
+SCHEMA_NAME = re.compile(r"^[A-Za-z_][A-Za-z0-9_$]{0,62}$")
+
+
+def valid_schema_name(value: str) -> bool:
+    """Whether `value` is safe to place into a `search_path` connect option."""
+    return bool(SCHEMA_NAME.match(value or ""))
+
 
 def _load_env() -> None:
     """Load `.env` from the repository root, without overriding real env vars."""
@@ -53,6 +78,7 @@ class DatabaseSettings:
     user: str
     password: str
     sslmode: str
+    schema: str = DEFAULT_SCHEMA
 
     def url(self) -> str:
         """Return a SQLAlchemy URL with credentials percent-encoded.
@@ -67,9 +93,42 @@ class DatabaseSettings:
             f"@{self.host}:{self.port}/{self.database}?sslmode={self.sslmode}"
         )
 
+    def connect_args(self, timeout: int = 20) -> dict[str, object]:
+        """Connection arguments that pin the session to the selected schema.
+
+        The schema is applied through libpq's `-c` option rather than by
+        qualifying every statement, because the statements are built from
+        `dashboard/models.py`, which names no schema, and from the reflective
+        reads of the external `mta_sim_*` tables, which name none either.
+        Setting it on the connection means both follow the selection without a
+        second definition of where a table lives.
+
+        The selected schema is the whole search path, with no fallback behind
+        it. A fallback would be the more forgiving choice and is the wrong one
+        here: a schema holding the simulator's research tables but not this
+        project's own would resolve the rest from `public` and put one
+        scenario's attribution beside another's history, with nothing on the
+        page saying so. Missing means missing. `pg_catalog` is searched
+        implicitly and holds every function these statements call, so pinning
+        costs nothing a read needs.
+
+        Raises:
+            ValueError: if the schema name is not a plain identifier, rather
+                than passing text that could close the option and open another.
+        """
+        arguments: dict[str, object] = {"connect_timeout": timeout}
+        if self.schema and self.schema != DEFAULT_SCHEMA:
+            if not valid_schema_name(self.schema):
+                raise ValueError(
+                    f"PG_SCHEMA is not a valid PostgreSQL identifier: {self.schema!r}"
+                )
+            arguments["options"] = f"-csearch_path={self.schema}"
+        return arguments
+
     def safe_summary(self) -> str:
         """Return a display string that never contains the password."""
-        return f"{self.user}@{self.host}:{self.port}/{self.database}"
+        summary = f"{self.user}@{self.host}:{self.port}/{self.database}"
+        return f"{summary} ({self.schema})" if self.schema != DEFAULT_SCHEMA else summary
 
 
 @lru_cache(maxsize=1)
@@ -122,4 +181,5 @@ def database_settings() -> DatabaseSettings:
         user=os.environ["PG_USER"],
         password=os.environ["PG_PASSWORD"],
         sslmode=os.getenv("PG_SSLMODE", "prefer"),
+        schema=os.getenv("PG_SCHEMA", "").strip() or DEFAULT_SCHEMA,
     )

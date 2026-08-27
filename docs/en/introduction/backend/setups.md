@@ -1,9 +1,9 @@
 ---
 title: Backend Setup and Deployment
 description: Local Flask startup and Yunxiao AppStack deployment configuration
-compact: "Setup contract for Flask and Yunxiao AppStack: `uv sync --extra backend`, Vue production build, Gunicorn image, AppStack value placeholders, ConfigMap and Secret inputs, health probes, authenticated Transport Layer Security ingress, and PostgreSQL connectivity."
+compact: "Setup contract for Flask and Yunxiao AppStack: `uv sync --extra backend`, Vue production build, Gunicorn image, `PG_SCHEMA` schema selection and its census, AppStack value placeholders, ConfigMap and Secret inputs, health probes, authenticated Transport Layer Security ingress, and PostgreSQL connectivity."
 lang: en-US
-source_files: backend/app.py, backend/config.py, backend/database.py, backend/wsgi.py, backend/tests/test_app.py, deploy/appstack/Dockerfile, deploy/appstack/orchestration.yaml, deploy/appstack/values.example.yaml, .dockerignore
+source_files: backend/app.py, backend/config.py, backend/database.py, backend/services/schemas.py, backend/wsgi.py, backend/tests/test_app.py, backend/tests/test_schemas.py, deploy/appstack/Dockerfile, deploy/appstack/orchestration.yaml, deploy/appstack/values.example.yaml, .dockerignore
 ---
 
 # Backend Setup and Deployment
@@ -34,6 +34,77 @@ database. `DATABASE=true` requires `PG_HOST`, `PG_PORT`, `PG_DATABASE`,
 
 For client hot reload, run `npm run dev` in `dashboard/` and run the Flask
 backend separately. Vite proxies `/api` to port 8501.
+
+## Schema Selection
+
+One PostgreSQL instance commonly holds several schemas, one per scenario, and
+they are not interchangeable. `PG_SCHEMA` names the single schema every
+connection reads and `script/import_to_database.py` writes. It defaults to
+`public`, which is what every deployment predating the setting was reading.
+
+### The connection carries the selection
+
+A non-default `PG_SCHEMA` is applied through the libpq connect option
+`-csearch_path=<schema>`, set once by `DatabaseSettings.connect_args()` in
+`dashboard/config.py` and passed to the single engine in `backend/database.py`.
+Applying it to the connection rather than to each statement is required,
+because statements are built two ways: from `dashboard/models.py`, which names
+no schema, and as reflective reads of the external `mta_sim_*` tables, which
+name none either. One connection-level setting makes both follow the selection
+without a second definition of where a table lives.
+
+### The selected schema is the whole search path
+
+Nothing sits behind the selection. `-csearch_path=mta` does not fall back to
+`public`. The forgiving choice would be wrong here: a schema holding research
+history but not this project's own tables would resolve the rest from `public`
+and place one scenario's attribution beside another's history, with nothing on
+the page saying so. A missing table must read as missing. `pg_catalog` is
+searched implicitly and holds every function these statements call, so pinning
+costs a read nothing.
+
+When the selected schema does not contain `attribution_result`,
+`database_available()` returns unusable with a message naming both remedies:
+select a schema that carries the dashboard tables, or derive one per scenario
+from this one. The derivation is named rather than the fixture import, because
+a schema reached this way already holds another account's history and the
+importer carries its own advertiser and Campaigns with it. That is distinguished
+from a schema whose `attribution_result` exists but is empty, because the two
+need different fixes.
+
+### A schema name is an identifier, never a bound value
+
+A schema names an object, so it cannot be passed as a query parameter. It is
+validated instead. `valid_schema_name()` in `dashboard/config.py` accepts only
+an unquoted PostgreSQL identifier — a letter or underscore, then up to
+sixty-two letters, digits, underscores, or dollar signs. Anything else is
+refused at three points before it can reach a connection: `POST /api/settings`
+returns `400 invalid_schema` before writing `.env`, `test_connection()` refuses
+before opening a socket, and `connect_args()` raises rather than building an
+option that could close and open another.
+
+### The census decides what may be selected
+
+`backend/services/schemas.py` enumerates schemas over `pg_namespace` and
+`pg_class` in one round trip, filtered by
+`has_schema_privilege(current_user, ..., 'USAGE')`, so the list can never
+advertise a schema the connected role cannot read. Each entry reports a
+capability rather than a name: the fourteen tables the dashboard's loaders read
+directly must all be present for the schema to be selectable. An incomplete
+schema is still listed, marked unselectable, and carries the tables it lacks
+and the command that would populate it.
+
+`GET /api/settings` returns the census under `schemas`, enumerated only in
+database mode. A connection test returns the census for the server just
+reached, which is the only moment the list is knowable for credentials that
+have not been saved.
+
+### Deployment
+
+`deploy/appstack/orchestration.yaml` binds `PG_SCHEMA` from the `pgSchema`
+placeholder. That deployment sets `DASHBOARD_CONFIG_READ_ONLY=true`, so the
+browser cannot change the schema: it is chosen in the AppStack environment and
+takes effect on restart.
 
 ## Production Process
 
@@ -136,15 +207,53 @@ Source: `backend/config.py`, `backend/database.py`
 - Verification: Snapshot tests in file mode plus the AppStack database-mode
   dashboard request.
 
-### `backend/tests/test_app.py`
+### `backend/services/schemas.py`
 
-Source: `backend/tests/test_app.py`
+Source: `backend/services/schemas.py`
+
+- Responsibility: Enumerate every schema the connected role may read and report
+  what each can serve. `REQUIRED_TABLES` is the fourteen tables a schema must
+  hold to be selectable; `RESEARCH_TABLES` is the four external history tables
+  whose presence distinguishes a scenario awaiting an import from an unrelated
+  schema. `available_schemas()` reads through the service engine and
+  `probe_schemas()` through a throwaway engine for credentials not yet saved.
+  Neither raises: each returns `{schemas, selected, error}` so an unreachable
+  database renders as a dialog that says so rather than a settings page that
+  fails to load. The probe deliberately pins no search path, since asking which
+  schemas exist must not depend on the answer.
+- Inputs: The configured connection, or a candidate `PG_*` mapping.
+- Outputs: Per schema — `name`, `selectable`, `selected`, `tableCount`,
+  `missingTables` (capped at eight), `missingCount`, `hasResearchTables`, and a
+  `detail` string naming the reason and the command that would populate the
+  schema. `tableCount` is the schema's whole relation count, not the matched
+  subset the census filters on: reporting the subset would describe a
+  fifty-three-table schema as holding fourteen, and a reader comparing that
+  against their database client would reasonably conclude the connection was
+  pointing elsewhere. The command offered depends on what the schema already
+  holds — one carrying research history is offered
+  `script/derive_scenario_schemas.py`, and only an empty one is offered
+  `script/import_to_database.py`, because the importer writes its own
+  advertiser and Campaigns and would otherwise attach them to another
+  account's observations. Selectable entries sort first, then by name. A schema
+  whose name is not a plain identifier is dropped rather than offered and later
+  refused. No `detail` describes how the account's history was produced.
+- Dependencies: `backend/config.py`, `backend/database.py`, SQLAlchemy.
+- Verification: `backend/tests/test_schemas.py`.
+
+### `backend/tests/test_app.py` and `backend/tests/test_schemas.py`
+
+Source: `backend/tests/test_app.py`, `backend/tests/test_schemas.py`
 
 - Responsibility: Verify liveness independence, JSON routing errors, and the
-  request-size boundary.
-- Inputs: Flask test-client requests.
+  request-size boundary; and separately that a schema name is accepted only as
+  a plain identifier, that the selected schema is the whole search path with no
+  fallback behind it, and that a schema is offered as selectable only when it
+  holds every required table.
+- Inputs: Flask test-client requests, and recorded census rows rather than a
+  live server, so the classification is proven without a database.
 - Outputs: `unittest` assertions.
-- Dependencies: The application factory.
+- Dependencies: The application factory, `dashboard/config.py`,
+  `backend/services/schemas.py`.
 - Verification: Backend discovery command.
 
 ### AppStack build and orchestration files

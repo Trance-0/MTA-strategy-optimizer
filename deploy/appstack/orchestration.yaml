@@ -18,6 +18,7 @@ data:
   PG_DATABASE: "{{ .Values.pgDatabase }}"
   PG_USER: "{{ .Values.pgUser }}"
   PG_SSLMODE: "{{ .Values.pgSslMode }}"
+  PG_SCHEMA: "{{ .Values.pgSchema }}"
   MTA_SIM_DATA_DIR: "{{ .Values.mtaSimDataDir }}"
 ---
 apiVersion: v1

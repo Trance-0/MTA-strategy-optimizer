@@ -20,6 +20,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
+from backend.app import create_app
 from backend.services.settings import (
     ENV_KEYS,
     LOG_CAPACITY,
@@ -88,6 +89,61 @@ class WriteEnvTests(unittest.TestCase):
         write_env({"PG_PASSWORD": "a=b=c"}, path)
 
         self.assertIn("PG_PASSWORD=a=b=c", path.read_text(encoding="utf-8"))
+
+    def test_the_schema_selection_is_persisted(self) -> None:
+        # Listed in ENV_KEYS or the dropdown would appear to work and forget its
+        # selection on the next start.
+        self.assertIn("PG_SCHEMA", ENV_KEYS)
+
+
+class SchemaRejectionTests(unittest.TestCase):
+    """Check the route refuses a schema name before anything is written.
+
+    A schema name reaches libpq as an identifier inside a connect option, so it
+    is refused at the edge rather than at the connection that would carry it.
+    The request under test returns before `.env` is read or written, so the
+    repository's own file is untouched.
+    """
+
+    def setUp(self) -> None:
+        from backend.config import config_read_only, is_hosted
+
+        if is_hosted() or config_read_only():
+            self.skipTest("this deployment refuses every settings write")
+        self.client = create_app().test_client()
+
+    def test_a_schema_that_could_close_the_connect_option_is_refused(self) -> None:
+        response = self.client.post(
+            "/api/settings",
+            json={
+                "action": "test",
+                "useDatabase": True,
+                "connection": {
+                    "PG_HOST": "db.example.com",
+                    "PG_DATABASE": "mta_data",
+                    "PG_USER": "reader",
+                    "PG_SCHEMA": "mta -c log_statement=all",
+                },
+            },
+        )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.get_json()["error"], "invalid_schema")
+
+    def test_an_absent_schema_falls_back_to_public_rather_than_failing(self) -> None:
+        # An older dialog, or a hand-written request, sends no schema at all.
+        # That is the state every deployment predating the setting was in.
+        response = self.client.post(
+            "/api/settings",
+            json={
+                "action": "unknown-so-nothing-is-written",
+                "useDatabase": False,
+                "connection": {"PG_HOST": "db.example.com"},
+            },
+        )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.get_json()["error"], "unknown_action")
 
 
 class DiagnosticLogTests(unittest.TestCase):

@@ -13,7 +13,7 @@ from __future__ import annotations
 
 from flask import Blueprint, jsonify, request
 
-from backend.config import config_read_only, is_hosted
+from backend.config import DEFAULT_SCHEMA, config_read_only, is_hosted, valid_schema_name
 from backend.services.settings import (
     apply_logging,
     clear_log,
@@ -37,8 +37,9 @@ def get_settings():
 def post_settings():
     """Apply a settings change.
 
-    `test` probes the entered values without saving them. `save` rewrites
-    `.env`. `logging` toggles the capture, and `clearLog` empties it.
+    `test` probes the entered values without saving them, and carries back the
+    schemas that connection offers. `save` rewrites `.env`. `logging` toggles
+    the capture, and `clearLog` empties it.
     """
     if is_hosted():
         return (
@@ -90,7 +91,28 @@ def post_settings():
         "PG_USER": str(connection.get("PG_USER") or "").strip(),
         "PG_PASSWORD": str(connection.get("PG_PASSWORD") or ""),
         "PG_SSLMODE": str(connection.get("PG_SSLMODE") or "prefer"),
+        "PG_SCHEMA": str(connection.get("PG_SCHEMA") or "").strip() or DEFAULT_SCHEMA,
     }
+
+    # A schema name reaches libpq as an identifier inside a connect option
+    # rather than as a bound value, so it is refused here before it is written
+    # to `.env`, rather than at the connection that would carry it. The dialog
+    # offers a list, so a name failing this arrived from something other than
+    # the dropdown.
+    if not valid_schema_name(updates["PG_SCHEMA"]):
+        return (
+            jsonify(
+                {
+                    "error": "invalid_schema",
+                    "message": (
+                        f"{updates['PG_SCHEMA']!r} is not a valid PostgreSQL schema "
+                        "name. Use letters, digits, and underscores, beginning with "
+                        "a letter or underscore."
+                    ),
+                }
+            ),
+            400,
+        )
 
     # An empty password field means "keep the stored one" rather than "clear
     # it", because the dialog never receives the stored value to echo back.

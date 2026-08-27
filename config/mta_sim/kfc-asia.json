@@ -1,0 +1,21 @@
+{
+  "extends": "kfc-multi-provider.base.json",
+  "seed": 2026082601,
+  "advertiser_id": "synthetic_kfc_asia_experiment",
+  "marketplaces": [
+    {
+      "code": "ASIA",
+      "currency_code": "CNY",
+      "traffic_multiplier": 1.15,
+      "price_multiplier": 7.15,
+      "internet_reach_rate": 0.88,
+      "target_audience_density": 0.1,
+      "economic_willingness_multiplier": 1.02,
+      "income_inequality_gini": 0.37
+    }
+  ],
+  "provenance": {
+    "region": "ASIA",
+    "regional_parameters": "Illustrative synthetic assumptions, not measured regional or brand data."
+  }
+}
