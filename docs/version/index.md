@@ -1,7 +1,7 @@
 ---
 title: Version Log
 description: Release history and material changes for the maintained project
-compact: "Routes release history from `VERSION` to one page per patch, keeping the latest four patches flat and older patches in minor-version folders; includes dates, summaries, historical group links, and planned follow-ups."
+compact: "Routes release history from VERSION to one page per patch, keeping 0.9.31–0.9.34 flat and older patches in minor-version folders; includes dates, material summaries, historical group links, and planned follow-ups."
 order: 1
 ---
 
@@ -10,6 +10,11 @@ order: 1
 The project version is recorded in the repository-root `VERSION` file. Each page here is one small patch description covering a coherent change set, rather than a reproduction of every commit message. Every patch keeps its own permanent page; older minor versions are grouped into a collapsed folder per minor version instead of being compacted away.
 
 This section records **what** changed. See the [work log](../worklog/) for **who** did the work and when.
+
+## [0.9.34](0.9.34.md)
+
+- Date: 2026-08-28
+- Summary: Made protected database deployments run all three pipeline stages through single-process, marketplace-scoped runtime artifacts, fixed research experiment grouping and evaluation scope, and replaced the Willow Sakura page iframe with native interactive Extended-27 widgets
 
 ## [0.9.33](0.9.33.md)
 
@@ -26,7 +31,7 @@ This section records **what** changed. See the [work log](../worklog/) for **who
 - Date: 2026-08-27
 - Summary: Selected which schema of the PostgreSQL instance the dashboard reads and `import_to_database.py` writes, through a `PG_SCHEMA` dropdown backed by a privilege-filtered census that lists the schemas which cannot serve the dashboard as disabled options carrying what they lack and the command that would populate them, and added `derive_scenario_schemas.py`, which computes the dashboard model from a simulator-populated schema into one self-contained schema per scenario
 
-## [0.9.30](0.9.30.md)
+## [0.9.30](0.9/0.9.30.md)
 
 - Date: 2026-08-26
 - Summary: Fixed the navigation rail flattening its three sections into one undifferentiated row below the wide breakpoint, and published `mta-backend` and `mta-dashboard` to the GitHub Container Registry from a workflow triggered by a `VERSION` change rather than by every commit, with a `pull` mode on the Docker stack that runs those images

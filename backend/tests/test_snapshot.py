@@ -7,12 +7,16 @@ client and the static exporter already consume.
 from __future__ import annotations
 
 import os
+import json
+import tempfile
 import unittest
+from pathlib import Path
 from unittest.mock import patch
 
 from backend.api import dashboard as dashboard_api
 from backend.app import create_app
 from backend.repository import snapshot
+from backend.repository import attribution, evaluation, strategy
 from backend.repository.master_data import derive_master_data
 
 
@@ -84,6 +88,55 @@ class SnapshotContractTests(unittest.TestCase):
         )
 
         self.assertEqual(catalogue["touchpoints"][0]["base_impressions"], 0)
+
+    def test_runtime_artifacts_take_precedence_only_when_complete(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            runtime = Path(temporary)
+            attribution_runtime = runtime / "attribution"
+            attribution_runtime.mkdir()
+            for name in attribution._RUNTIME_FILES[:-1]:
+                (attribution_runtime / name).touch()
+
+            with patch.object(
+                attribution, "pipeline_output_directory", return_value=runtime
+            ):
+                self.assertEqual(
+                    attribution._completed_output_directory(),
+                    attribution.ATTRIBUTION_OUTPUT_DIR,
+                )
+                (attribution_runtime / attribution._RUNTIME_FILES[-1]).touch()
+                self.assertEqual(
+                    attribution._completed_output_directory(), attribution_runtime
+                )
+
+            strategy_runtime = runtime / "strategy" / "campaign_strategy.json"
+            evaluation_runtime = runtime / "evaluation" / "strategy_evaluation.json"
+            strategy_runtime.parent.mkdir()
+            evaluation_runtime.parent.mkdir()
+            strategy_runtime.write_text(
+                json.dumps({"source": "runtime strategy"}), encoding="utf-8"
+            )
+            evaluation_runtime.write_text(
+                json.dumps({"source": "runtime evaluation"}), encoding="utf-8"
+            )
+            with (
+                patch.object(
+                    strategy,
+                    "pipeline_artifact_path",
+                    return_value=strategy_runtime,
+                ),
+                patch.object(
+                    evaluation,
+                    "pipeline_artifact_path",
+                    return_value=evaluation_runtime,
+                ),
+            ):
+                self.assertEqual(
+                    strategy.campaign_strategy()["source"], "runtime strategy"
+                )
+                self.assertEqual(
+                    evaluation.strategy_evaluation()["source"], "runtime evaluation"
+                )
 
 
 if __name__ == "__main__":

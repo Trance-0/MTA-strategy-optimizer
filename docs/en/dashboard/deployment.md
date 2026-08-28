@@ -1,6 +1,6 @@
 ---
 title: Running Locally and Publishing
-compact: "Dashboard delivery contract: launchers and Vite inject frontend version and commit identity; Docker build metadata identifies independent backend and client images across the two-container stack, container-registry publishing, static GitHub Pages builds, and source-revision labels."
+compact: "Dashboard delivery contract: launchers and Vite inject build identity; the single-worker Docker API stores pipeline results in a named volume; image metadata, registry publishing, static GitHub Pages builds, and source-revision labels remain reproducible."
 lang: en-US
 source_files: dashboard/index.html, dashboard/vite.config.js, dashboard/run.sh, dashboard/run.bat, deploy/docker/compose.yaml, deploy/docker/defaults.env, deploy/docker/run.sh, deploy/docker/run.bat, deploy/docker/Dockerfile.api, deploy/docker/Dockerfile.dashboard, .github/workflows/publish-containers.yml, script/build_pages_site.mjs, script/export_dashboard_snapshot.py
 ---
@@ -164,6 +164,14 @@ than for its start, because NGINX resolves the upstream name once at worker
 start. The API's health check calls `/api/health` with `urllib`, since the slim
 Python image carries no `curl` or `wget`.
 
+The API image runs one Gunicorn worker. Job state and its bounded log are held
+in process memory, so multiple workers could accept a start in one process and
+send the following poll to another. `compose.yaml` mounts the named
+`pipeline-output` volume at `/pipeline-output` and sets
+`PIPELINE_OUTPUT_DIR` to that path. Generated attribution, strategy, and
+evaluation results therefore survive an API container replacement without
+making the source tree writable; removing the volume deliberately resets them.
+
 ### The data source is detected, not configured
 
 `compose.yaml` layers two application environment files, last value winning:
@@ -262,9 +270,12 @@ Source: `deploy/docker/compose.yaml`, `deploy/docker/defaults.env`,
   `UV_CACHE_DIR` bakes a root-owned cache the service account is then denied;
   without them every pipeline stage fails at launch, since the unprivileged
   user's home is `/nonexistent` and uv initializes a cache before it runs
-  anything. The root `.env` is layered over `defaults.env` at run time and
-  never copied into an image. The client container holds no credential and
-  reaches the API by service name.
+  anything. Gunicorn uses one worker because live job state is process-local.
+  The named `pipeline-output` volume is the writable artifact root and
+  `defaults.env` enables the runner independently from settings protection.
+  The root `.env` is layered over `defaults.env` at run time and never copied
+  into an image. The client container holds no credential and reaches the API
+  by service name.
 - Dependencies: Docker with Compose v2. No local Node or uv.
 - Verification: `./deploy/docker/run.sh up`, then both containers reach
   `healthy`; `/api/health` answers directly and through the proxy;

@@ -45,6 +45,9 @@ from modules.mta_attribution.src.attribution_contract import (  # noqa: E402
     result_rows,
     write_csv_set_atomic,
 )
+from modules.mta_standard.src.dataloader import (  # noqa: E402
+    load_amazon_ads_daily_touchpoint_performance,
+)
 from modules.mta_attribution.src.attribution_model_comparison import (  # noqa: E402
     MODEL_OUTPUT_FIELDS,
     RECOMMENDED_FIELDS,
@@ -60,6 +63,28 @@ from modules.mta_attribution.src.shapley_attribution_model import (  # noqa: E40
     run_shapley_attribution,
 )
 from script.validate_data_alignment import validate_data_alignment_rows  # noqa: E402
+
+
+def read_attribution_ads_rows(path: Path) -> list[dict]:
+    """Read either the attribution or native MTA-SIM performance schema.
+
+    Native MTA-SIM rows encode the interaction in `normalizedTouchpoint` and
+    omit the two derived fields used by the attribution cost join. The standard
+    loader verifies the stored key against its component columns; this boundary
+    then restores the project's CLICK/CPC and IMPRESSION/CPM pairing.
+    """
+    rows = read_csv(path)
+    if not rows or "interaction_type" in rows[0]:
+        return rows
+    annotated = load_amazon_ads_daily_touchpoint_performance(path)
+    return [
+        {
+            **dict(row),
+            "cost_type": row.get("cost_type")
+            or ("CPC" if row["interaction_type"] == "CLICK" else "CPM"),
+        }
+        for row in annotated
+    ]
 
 
 def parse_args() -> argparse.Namespace:
@@ -109,7 +134,7 @@ def run_attribution_models(
     report = progress or (lambda _message: None)
     output_dir.mkdir(parents=True, exist_ok=True)
     amc_rows = read_amc_csv_strict(amc_report)
-    amazon_ads_rows = read_csv(amazon_ads_report)
+    amazon_ads_rows = read_attribution_ads_rows(amazon_ads_report)
 
     # Attribution and cost metrics are meaningful only when both reports cover
     # the same account, dates, and complete touchpoint set.

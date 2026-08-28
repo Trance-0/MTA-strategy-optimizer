@@ -1,7 +1,7 @@
 ---
 title: Running an Evaluation
 description: The evaluation pipeline stage, its command, its output artifact, and how the dashboard reads it
-compact: "Specifies script/evaluate_strategies.py, the strategy_evaluation.json artifact, the fourth `evaluation` stage in backend/services/jobs.py with its phase patterns, and the strategyEvaluation snapshot key. Explains why training runs on demand instead of shipping checkpoints."
+compact: "Specifies script/evaluate_strategies.py, the strategy_evaluation.json artifact, the dashboard `evaluation` stage with runtime output precedence and phase patterns, and the strategyEvaluation snapshot key. Explains why training runs on demand instead of shipping checkpoints."
 lang: en-US
 source_files: script/evaluate_strategies.py, backend/repository/evaluation.py
 ---
@@ -10,7 +10,7 @@ source_files: script/evaluate_strategies.py, backend/repository/evaluation.py
 
 ## Purpose <span class="status-label status-verified" aria-label="Verified"></span>
 
-The strategy evaluation layer runs as the pipeline's fourth stage, beside attribution and optimization, and is started the same way they are: as a documented command in a terminal, or from the dashboard's Campaign Optimizer, which spawns that identical command. This page specifies the command, the artifact, and the wiring.
+The strategy evaluation layer runs as one of the dashboard's three model stages, beside attribution and optimization, and is started the same way they are: as a documented command in a terminal, or from the dashboard's Campaign Optimizer, which spawns that identical command. This page specifies the command, the artifact, and the wiring.
 
 ## Why Train on Demand <span class="status-label status-verified" aria-label="Verified"></span>
 
@@ -22,7 +22,7 @@ Adding **upload and download endpoints** for checkpoints would mean accepting an
 
 **Training on demand** avoids both. The stage fits the model when it runs, from data already in the repository, and writes a JSON report. There is no checkpoint format to version, no upload endpoint to secure, and no binary in Git. The cost is that a run takes as long as the fit does; for these NumPy networks on a few hundred rows, that is seconds, and the stage runner already streams progress for runs measured in minutes.
 
-The mechanism is the existing one. `backend/services/jobs.py` already spawns a stage as a child process, streams its output, and matches phase patterns against what the script prints. The evaluation stage is a fourth entry in that same `STAGES` dictionary, so it inherits the streaming, the progress bar, the Stop control, the read-only refusal, and the cache invalidation on success without any of them being written again.
+The mechanism is the existing one. `backend/services/jobs.py` spawns a stage as a child process, streams its output, and matches phase patterns against what the script prints. The evaluation entry in that same `STAGES` dictionary therefore inherits the streaming, progress bar, Stop control, database-mode and execution-capability checks, runtime output isolation, and cache invalidation on success without any of them being written again.
 
 ## The Command <span class="status-label status-verified" aria-label="Verified"></span>
 
@@ -44,6 +44,14 @@ Where the two strategy artifacts are read from. Defaults to `modules/mta_strateg
 #### `--research-snapshot`
 
 An optional Multi-Touch Attribution Simulator (MTA-SIM) `simulation_research.json`. When supplied, the observed Campaign episodes are built from it and layer two can run. When omitted, the observations recorded inside `campaign_strategy.json` are used instead, so the stage still runs on a checkout with no simulator data.
+
+#### `--marketplace`
+
+Optional exact marketplace code used to partition a multi-marketplace research
+snapshot. Dashboard jobs always pass the marketplace of the advertiser in the
+connected schema. Evaluation also matches episodes to each projected
+strategy's marketplace and currency, so Campaign identifiers reused across
+markets can never attach the wrong observations to a decision.
 
 #### `--fit-contributed-model`
 
@@ -83,7 +91,7 @@ The stage declares no `requiresResearchSnapshot`, because it falls back to the o
 
 ### The snapshot key
 
-`backend/repository/evaluation.py` adds `strategy_evaluation()`, registered as `strategyEvaluation` in the `LOADERS` dictionary in `backend/repository/snapshot.py`. Like `campaignStrategy`, it is read in its own shape in both file and database modes, because the artifact is produced by a research command rather than by the import pipeline and has no table. An absent file returns an empty object, which the dashboard reads as "the evaluation has not run" — the honest reading in both modes.
+`backend/repository/evaluation.py` adds `strategy_evaluation()`, registered as `strategyEvaluation` in the `LOADERS` dictionary in `backend/repository/snapshot.py`. Like `campaignStrategy`, it is read in its own shape in both file and database modes, because the artifact is produced by a research command rather than by the import pipeline and has no table. When configured, a completed `PIPELINE_OUTPUT_DIR/evaluation/strategy_evaluation.json` takes precedence over the baseline artifact. An absent runtime and baseline file returns an empty object, which the dashboard reads as "the evaluation has not run" — the honest reading in both modes.
 
 The key set is asserted exactly by `backend/tests/test_snapshot.py`, so adding it there is part of the same change rather than a follow-up. `dashboard/src/api/client.js` returns the payload whole without enumerating keys, so the client needs no change to receive it.
 
@@ -94,7 +102,8 @@ The key set is asserted exactly by `backend/tests/test_snapshot.py`, so adding i
 Source: `script/evaluate_strategies.py`
 
 - Responsibility: Command-line entry point for the strategy evaluation layer. Projects the committed strategy artifacts, runs the three evaluation layers over each, optionally fits the contributed model, and writes one JSON artifact.
-- Inputs: `initial_budget_recommendation.json` and `campaign_strategy.json`; optionally an MTA-SIM research snapshot.
+- Inputs: `initial_budget_recommendation.json` and `campaign_strategy.json`;
+  optionally a marketplace-scoped MTA-SIM research snapshot.
 - Outputs: `modules/mta_strategy_evaluation/outputs/strategy_evaluation.json`, and progress lines on standard output that the stage runner matches phases against.
 - Public entry points: `main() -> int`, returning `0` on success and `1` when no strategy could be projected at all.
 - Error handling: a strategy that cannot be projected is reported and skipped, not fatal. A missing NumPy is reported as an unavailable contributed model naming the `uv sync` remedy, not as a failed run. Only an empty result set is an error.
@@ -106,8 +115,8 @@ Source: `script/evaluate_strategies.py`
 
 Source: `backend/repository/evaluation.py`
 
-- Responsibility: Serve the evaluation artifact as one snapshot key, returning an empty object when the stage has not run.
-- Inputs: `modules/mta_strategy_evaluation/outputs/strategy_evaluation.json`.
+- Responsibility: Serve the evaluation artifact as one snapshot key, preferring a completed runtime result and returning an empty object when the stage has not run.
+- Inputs: `PIPELINE_OUTPUT_DIR/evaluation/strategy_evaluation.json`, then `modules/mta_strategy_evaluation/outputs/strategy_evaluation.json` as fallback.
 - Outputs: `strategy_evaluation() -> dict`, registered as `strategyEvaluation`.
 - Dependencies: `backend/config.py`, `backend/repository/coercion.py`.
 - Verification: `backend/tests/test_snapshot.py`.
@@ -120,7 +129,7 @@ The stage runs and writes its artifact. Both committed strategies project and bo
 
 - Without a research snapshot the observed episodes come from `campaign_strategy.json`, so the evaluation covers only the two Campaigns the optimizer ran on, not the four in the deterministic seed. Those two are reported and the rest are named as unobserved.
 - The stage refits on every run rather than caching, which is the cost of holding no checkpoint.
-- No dashboard view renders `strategyEvaluation` yet; the key is served and the artifact is written, but reading it requires the API directly.
+- The dashboard's evaluation tab explains and runs the evaluation stage. Willow Sakura's native forecast panel is a separate contributed demonstration; it does not render or modify the production `strategyEvaluation` artifact.
 
 ## References
 

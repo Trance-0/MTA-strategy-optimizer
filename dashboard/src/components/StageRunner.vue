@@ -20,8 +20,6 @@ import { computed, ref, watch } from "vue";
 const props = defineProps({
   /** The stage descriptor from `GET /api/jobs`. */
   stage: { type: Object, required: true },
-  /** Whether this deployment may run anything at all. */
-  writable: { type: Boolean, default: false },
   busy: { type: Boolean, default: false },
   /** Extra controls this stage offers, as `{ key, label, type, options }`. */
   controls: { type: Array, default: () => [] },
@@ -40,10 +38,6 @@ const failed = computed(() => job.value?.state === "failed");
 /** Why the run control is disabled, or an empty string when it is not. */
 const blocked = computed(() => {
   if (!props.stage.available) return props.stage.unavailableReason ?? "";
-  if (!props.writable) {
-    return "Running a stage writes new outputs, so it needs a connected " +
-      "database deployment. This deployment reads committed files.";
-  }
   return "";
 });
 

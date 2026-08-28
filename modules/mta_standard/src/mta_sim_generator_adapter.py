@@ -115,7 +115,10 @@ def _import_generator_modules(
     loaded = sys.modules.get("simulations")
     if loaded is not None:
         loaded_file = getattr(loaded, "__file__", None)
-        if loaded_file is not None and zheyuanwu_root not in Path(loaded_file).resolve().parents:
+        if (
+            loaded_file is not None
+            and zheyuanwu_root not in Path(loaded_file).resolve().parents
+        ):
             raise RuntimeError(
                 "a different simulations package is already imported; start a clean "
                 "Python process before invoking the pinned MTA-SIM generator"
@@ -127,7 +130,9 @@ def _import_generator_modules(
             submodule_search_locations=[str(package_root)],
         )
         if specification is None or specification.loader is None:
-            raise ImportError(f"cannot load external simulations package: {package_root}")
+            raise ImportError(
+                f"cannot load external simulations package: {package_root}"
+            )
         loaded = importlib.util.module_from_spec(specification)
         sys.modules["simulations"] = loaded
         try:
@@ -177,9 +182,9 @@ def _simulator_config(configuration: object) -> SimulatorConfig:
             if capabilities is None:
                 key = touchpoint.normalized_key(interaction).rsplit(":", 1)[0]
             else:
-                key = touchpoint.normalized_key(
-                    interaction, capabilities
-                ).rsplit(":", 1)[0]
+                key = touchpoint.normalized_key(interaction, capabilities).rsplit(
+                    ":", 1
+                )[0]
         mapping[key] = "CPC" if has_cpc else "CPM"
     return SimulatorConfig.from_mapping(mapping)
 
@@ -201,20 +206,23 @@ def _write_csv(
 
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("w", encoding="utf-8", newline="") as handle:
-        writer = csv.DictWriter(
-            handle, fieldnames=fieldnames, lineterminator="\n"
-        )
+        writer = csv.DictWriter(handle, fieldnames=fieldnames, lineterminator="\n")
         writer.writeheader()
         writer.writerows(rows)
     return path
 
 
-def _prepare_single_scope_path_report(
+def prepare_single_scope_path_report(
     source_path_report: Path,
     performance_report: Path,
     destination: Path,
 ) -> Path:
-    """Aggregate generated daily path windows into one model report scope."""
+    """Aggregate uploaded daily path windows into one model report scope.
+
+    The source report is read only. Every row contributes to the per-path sum,
+    while the accompanying performance report supplies the complete inclusive
+    window and confirms the single marketplace and advertiser scope.
+    """
 
     path_fields, path_rows = _read_csv(source_path_report)
     _, performance_rows = _read_csv(performance_report)
@@ -237,9 +245,10 @@ def _prepare_single_scope_path_report(
 
     aggregates: dict[str, dict[str, object]] = {}
     for row in path_rows:
-        if row["marketplace"].strip() != marketplace or row[
-            "advertiser_id"
-        ].strip() != advertiser:
+        if (
+            row["marketplace"].strip() != marketplace
+            or row["advertiser_id"].strip() != advertiser
+        ):
             raise ValueError(
                 "generated path and performance tables do not share one scope"
             )
@@ -270,6 +279,66 @@ def _prepare_single_scope_path_report(
         row["revenue"] = format(Decimal(str(row["revenue"])), "f")
         rows.append(row)
     return _write_csv(destination, path_fields, rows)
+
+
+def prepare_single_scope_reports(
+    source_path_report: str | Path,
+    source_performance_report: str | Path,
+    destination_path_report: str | Path,
+    destination_performance_report: str | Path,
+    *,
+    marketplace: str | None = None,
+) -> tuple[Path, Path]:
+    """Partition uploaded reports and aggregate paths into one model scope.
+
+    A multi-marketplace upload requires an exact marketplace selection. Both
+    prepared files use that selection, so attribution can never join one
+    market's paths to another market's spend. Source files remain unchanged.
+    """
+    source_path = Path(source_path_report)
+    source_performance = Path(source_performance_report)
+    destination_path = Path(destination_path_report)
+    destination_performance = Path(destination_performance_report)
+    path_fields, path_rows = _read_csv(source_path)
+    performance_fields, performance_rows = _read_csv(source_performance)
+    if not path_rows or not performance_rows:
+        raise ValueError("uploaded path and performance tables must not be empty")
+
+    path_marketplaces = {row["marketplace"].strip() for row in path_rows}
+    performance_marketplaces = {row["marketplace"].strip() for row in performance_rows}
+    available = path_marketplaces & performance_marketplaces
+    selected = "" if marketplace is None else marketplace.strip()
+    if not selected:
+        if len(available) != 1:
+            raise ValueError(
+                "uploaded reports contain multiple marketplaces; select one "
+                f"from {sorted(available)}"
+            )
+        selected = next(iter(available))
+    if selected not in available:
+        raise ValueError(
+            f"selected marketplace {selected!r} is absent from both uploaded "
+            f"reports; available={sorted(available)}"
+        )
+
+    filtered_paths = [
+        row for row in path_rows if row["marketplace"].strip() == selected
+    ]
+    filtered_performance = [
+        row for row in performance_rows if row["marketplace"].strip() == selected
+    ]
+    _write_csv(destination_path, path_fields, filtered_paths)
+    _write_csv(
+        destination_performance,
+        performance_fields,
+        filtered_performance,
+    )
+    prepare_single_scope_path_report(
+        destination_path,
+        destination_performance,
+        destination_path,
+    )
+    return destination_path, destination_performance
 
 
 def _prepare_evaluation_ground_truth(
@@ -329,9 +398,7 @@ def generate_and_load_mta_sim_dataset(
             f"MTA-SIM configuration does not exist: {configuration_source}"
         )
     destination = Path(output_directory).resolve()
-    generator, configuration_module = _import_generator_modules(
-        project_root, variant
-    )
+    generator, configuration_module = _import_generator_modules(project_root, variant)
     resolved_configuration = configuration_module.load_configuration(
         configuration_source
     )
@@ -345,7 +412,7 @@ def generate_and_load_mta_sim_dataset(
     source_path_report = destination / PATH_REPORT_NAME
     performance_report = destination / PERFORMANCE_REPORT_NAME
     source_ground_truth = destination / GROUND_TRUTH_NAME
-    path_report = _prepare_single_scope_path_report(
+    path_report = prepare_single_scope_path_report(
         source_path_report,
         performance_report,
         destination / MODEL_PATH_REPORT_NAME,

@@ -1,7 +1,7 @@
 ---
 title: Backend Setup and Deployment
 description: Local Flask startup and Yunxiao AppStack deployment configuration
-compact: "Flask and AppStack setup: local commands, Gunicorn image, backend project and commit identity, Python and Flask detection, PostgreSQL schema census, protected deployment values, probes, ingress, connectivity, and Docker build metadata without copied Git history."
+compact: "Flask and AppStack setup: local commands, single-process pipeline execution, read-only root plus `/pipeline-output`, protected settings, backend build identity, PostgreSQL schema census, probes, ingress, connectivity, and Docker build metadata without copied Git history."
 lang: en-US
 source_files: backend/app.py, backend/config.py, backend/database.py, backend/services/schemas.py, backend/wsgi.py, backend/tests/test_app.py, backend/tests/test_schemas.py, deploy/appstack/Dockerfile, deploy/appstack/orchestration.yaml, deploy/appstack/values.example.yaml, .dockerignore
 ---
@@ -137,7 +137,7 @@ context.
 The production entry point is:
 
 ```text
-gunicorn --bind 0.0.0.0:8501 --workers 2 --threads 4 --timeout 120 backend.wsgi:application
+gunicorn --bind 0.0.0.0:8501 --workers 1 --threads 4 --timeout 120 backend.wsgi:application
 ```
 
 `GET /api/health` is the liveness and readiness probe. It proves that the
@@ -164,11 +164,25 @@ pull the private Alibaba Cloud Container Registry image. AppStack or the
 cluster administrator must create it before rollout; it is referenced, not
 materialized with credentials in this template.
 
-The orchestration creates one ConfigMap, one Secret, a rolling Deployment, a
-ClusterIP Service, and an Ingress. The pod has a read-only root filesystem,
-drops Linux capabilities, and mounts only `/tmp` as writable. Set
-`DASHBOARD_CONFIG_READ_ONLY=true`; deployed settings and pipeline mutations
-must be managed through AppStack rather than through the browser.
+The orchestration creates one ConfigMap, one Secret, a one-replica Deployment,
+a ClusterIP Service, and an Ingress. The container drops Linux capabilities,
+cannot escalate privileges, and keeps its root filesystem read-only. A
+pod-local `emptyDir` is mounted at `/pipeline-output`, the only location where
+the model commands write generated artifacts. Those writes are intentionally
+ephemeral: replacing the pod during a rollout clears the runtime results and
+restores the committed artifacts shipped in the image as the fallback. A
+container restart within the same pod retains its `emptyDir` contents.
+
+AppStack sets `DASHBOARD_CONFIG_READ_ONLY=true` and
+`PIPELINE_RUNS_ENABLED=true`. The first protects credentials and runtime
+configuration from browser edits; the second permits authenticated operators
+to execute the model stages. They are separate because protecting a database
+password says nothing about whether the application may write its own result
+files. An enabled runner requires exactly one pod and the image's single
+Gunicorn worker: active jobs, logs, and generated files are local process and
+container state, so load-balancing polls across replicas or workers would make
+a running job disappear. The Deployment uses `Recreate`, accepting a short
+rollout interruption so an old and new pod never overlap behind the Service.
 
 The optional simulator data directory is mounted from the Persistent Volume
 Claim named by `mtaSimPvc` at `/data/mta-sim`. The claim must exist in the
@@ -192,6 +206,9 @@ AppStack must run these gates in order:
 4. Deploy the orchestration to the target Kubernetes environment.
 5. Wait for the Deployment rollout, then request `/api/health` through the authenticated TLS address.
 6. Request `/api/dashboard` and `GET /api/models`; database mode is validated only when the dashboard response is `200` and names `mode: database`.
+7. Start attribution through `POST /api/jobs/attribution`, poll
+   `GET /api/jobs` through completion, then run optimization and evaluation in
+   order when the mounted research snapshot is available.
 
 A local build validates code and image composition. Only the final AppStack
 rollout proves Resource Access Management (RAM), registry pull, Persistent
@@ -297,6 +314,14 @@ Source: `.dockerignore`, `deploy/appstack/Dockerfile`,
   values, an image registry, and pre-existing registry-pull, TLS,
   authentication, and storage Secrets/claims.
 - Outputs: One deployable image and one AppStack orchestration template.
+- Behavior contract: Pipeline-enabled AppStack runs one replica and one
+  Gunicorn worker with a read-only root filesystem and a writable
+  `/pipeline-output` `emptyDir`. Its `Recreate` rollout strategy never serves
+  two process-local job stores at once. Configuration remains read-only through
+  `DASHBOARD_CONFIG_READ_ONLY`; pipeline permission comes only from
+  `PIPELINE_RUNS_ENABLED`. Generated outputs last until the pod is removed, and
+  each repository prefers a complete runtime result over its image or database
+  fallback.
 - Dependencies: Node 22.23.0, Python 3.12.11, uv 0.8.13, ACR, Kubernetes, and
   an NGINX Ingress controller.
 - Verification: Render placeholders with the example values, validate the

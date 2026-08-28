@@ -1,9 +1,10 @@
 """Start, watch, and stop a pipeline stage.
 
-Three routes over `backend/services/jobs.py`. Starting a stage writes new
-outputs under `modules/`, so it is refused in every read-only deployment --
-the published static build has no server at all, and a protected server
-deployment must not rewrite the configuration it was given.
+Three routes over `backend/services/jobs.py`. Starting a stage writes isolated
+runtime outputs when `PIPELINE_OUTPUT_DIR` is configured. Configuration
+protection and pipeline execution are separate permissions: AppStack
+credentials stay protected while its authenticated operator may run the model
+stages.
 
 Data flow:
     the Campaign Optimizer -> here -> backend/services/jobs.py -> uv run
@@ -13,7 +14,7 @@ from __future__ import annotations
 
 from flask import Blueprint, jsonify, request
 
-from backend.config import config_read_only, is_hosted, use_database
+from backend.config import is_hosted, pipeline_runs_enabled, use_database
 from backend.repository.snapshot import clear_caches
 from backend.services.jobs import (
     STAGE_KEYS,
@@ -36,7 +37,12 @@ def list_jobs():
     Polled by the Campaign Optimizer while a stage runs. All three stages come
     back in one response because the view shows three tabs at once.
     """
-    return jsonify(jobs_state())
+    return jsonify(
+        jobs_state(
+            execution_enabled=pipeline_runs_enabled(),
+            database_enabled=use_database(),
+        )
+    )
 
 
 @blueprint.post("/api/jobs/<stage>")
@@ -46,14 +52,14 @@ def start(stage: str):
     Returns as soon as the child process is spawned; the client polls
     `GET /api/jobs` for progress.
     """
-    if is_hosted() or config_read_only():
+    if is_hosted() or not pipeline_runs_enabled():
         return (
             jsonify(
                 {
-                    "error": "read_only_deployment",
+                    "error": "pipeline_disabled",
                     "message": (
-                        "This deployment cannot run pipeline stages. Run the "
-                        "dashboard locally against a PostgreSQL mirror to run them."
+                        "Pipeline execution is disabled on this server. Set "
+                        "PIPELINE_RUNS_ENABLED=true in its deployment configuration."
                     ),
                 }
             ),
@@ -65,7 +71,7 @@ def start(stage: str):
     except OptionError as error:
         return jsonify({"error": "invalid_options", "message": str(error)}), 400
 
-    refusal = start_refusal(stage, writable=use_database())
+    refusal = start_refusal(stage, writable=use_database(), options=options)
     if refusal is not None:
         return (
             jsonify({"error": refusal["code"], "message": refusal["message"]}),
@@ -80,7 +86,7 @@ def start(stage: str):
 
     job = start_job(stage, options, on_finish=on_finish)
     log("INFO", "jobs", f"{stage} started: {job.command}")
-    return jsonify(jobs_state()), 202
+    return jsonify(jobs_state(execution_enabled=True, database_enabled=True)), 202
 
 
 @blueprint.delete("/api/jobs/<stage>")
@@ -97,4 +103,12 @@ def stop(stage: str):
             404,
         )
     stopped = stop_job(stage)
-    return jsonify(jobs_state()), 200 if stopped else 409
+    return (
+        jsonify(
+            jobs_state(
+                execution_enabled=pipeline_runs_enabled(),
+                database_enabled=use_database(),
+            )
+        ),
+        200 if stopped else 409,
+    )

@@ -32,6 +32,7 @@ import PlotlyChart from "../components/PlotlyChart.vue";
 import ReliabilityBanner from "../components/ReliabilityBanner.vue";
 import StageRunner from "../components/StageRunner.vue";
 import TableView from "../components/TableView.vue";
+import WillowGmvForecast from "../components/WillowGmvForecast.vue";
 import {
   OUTCOME_LABELS,
   currencySymbol,
@@ -42,13 +43,10 @@ import {
   statusTone,
 } from "../lib/common.js";
 import { useDashboard } from "../lib/useDashboard.js";
-import { useDeployment } from "../lib/deployment.js";
 import { useJobs } from "../lib/useJobs.js";
 import * as theme from "../theme.js";
-import willowDemoSource from "../../../docs/en/strategy-evaluation/asin-gmv-nn-v1/demo 3.1.html?raw";
 
 const { data } = useDashboard();
-const { writable } = useDeployment();
 const {
   stages,
   busy: jobBusy,
@@ -524,11 +522,6 @@ const evaluationAvailable = computed(
   () => stages.value.evaluation?.available ?? false,
 );
 
-/** Willow-sakura's original self-contained demo, opened directly on GMV Forecast. */
-const willowStrategyEvaluationDemo = willowDemoSource.replace(
-  'document.getElementById("nav").addEventListener("click",e=>{const b=e.target.closest(".nav-item");if(b)go(b.dataset.page)});go("overview");',
-  'document.getElementById("nav").addEventListener("click",e=>{const b=e.target.closest(".nav-item");if(b)go(b.dataset.page)});go("gmv");',
-);
 </script>
 
 <template>
@@ -561,7 +554,6 @@ const willowStrategyEvaluationDemo = willowDemoSource.replace(
         <div v-if="jobError" class="notice bad">{{ jobError.message }}</div>
         <StageRunner
           :stage="stages[model]"
-          :writable="writable"
           :busy="jobBusy"
           :controls="STAGE_CONTROLS[model] ?? []"
           @start="startStage(model, $event)"
@@ -850,9 +842,9 @@ const willowStrategyEvaluationDemo = willowDemoSource.replace(
           </p>
           <p class="caption">
             Run the stage above to publish
-            <code>strategy_evaluation.json</code>. Willow-sakura’s original
-            interactive neural-network dashboard demo is embedded below as a
-            separate contributed demonstration.
+            <code>strategy_evaluation.json</code>. Willow Sakura’s contributed
+            interactive neural-network forecast is rendered below as native
+            dashboard widgets, separate from production recommendations.
           </p>
           <div v-if="!evaluationAvailable" class="notice">
             This deployment cannot start the evaluation command. Run the
@@ -862,21 +854,7 @@ const willowStrategyEvaluationDemo = willowDemoSource.replace(
         </div>
       </article>
 
-      <article class="card">
-        <div class="card-head">
-          <h2>Willow-sakura strategy-evaluation demo</h2>
-          <span class="sub">SK-II Extended-27 multilayer perceptron · contributed artifact</span>
-        </div>
-        <div class="card-body demo-embed-body">
-          <iframe
-            class="strategy-demo-frame"
-            title="Willow-sakura interactive strategy evaluation and GMV forecast dashboard demo"
-            :srcdoc="willowStrategyEvaluationDemo"
-            loading="lazy"
-            sandbox="allow-scripts"
-          ></iframe>
-        </div>
-      </article>
+      <WillowGmvForecast />
     </template>
   </section>
 </template>

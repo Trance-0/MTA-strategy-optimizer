@@ -58,9 +58,7 @@ INITIAL_BASIS_CONFIGURED_BASELINE = "CONFIGURED_BASELINE"
 
 def main() -> int:
     parser = argparse.ArgumentParser(
-        description=(
-            "Fit Campaign response models and optimize Campaign budgets."
-        )
+        description=("Fit Campaign response models and optimize Campaign budgets.")
     )
     parser.add_argument(
         "--research-snapshot",
@@ -73,6 +71,14 @@ def main() -> int:
         type=Path,
         default=MODULE_ROOT / "outputs" / "campaign_strategy.json",
         help="Destination for the campaign strategy artifact.",
+    )
+    parser.add_argument(
+        "--marketplace",
+        default=None,
+        help=(
+            "Exact marketplace to fit from a multi-marketplace snapshot. "
+            "Required when the snapshot carries more than one."
+        ),
     )
     parser.add_argument(
         "--total-budget",
@@ -104,8 +110,33 @@ def main() -> int:
     arguments = parser.parse_args()
 
     snapshot = load_mta_sim_research_snapshot(arguments.research_snapshot)
+    episodes = campaign_episodes_from_research_snapshot(snapshot)
+    marketplaces = sorted(
+        {episode.campaign.reporting_scope.marketplace for episode in episodes}
+    )
+    selected_marketplace = (
+        str(arguments.marketplace).strip() if arguments.marketplace else ""
+    )
+    if not selected_marketplace:
+        if len(marketplaces) != 1:
+            print(
+                "The research snapshot contains several marketplaces; pass "
+                f"--marketplace with one of {marketplaces}.",
+                file=sys.stderr,
+            )
+            return 1
+        selected_marketplace = marketplaces[0]
+    if selected_marketplace not in marketplaces:
+        print(
+            f"Marketplace {selected_marketplace!r} is not present in the "
+            f"research snapshot; available={marketplaces}.",
+            file=sys.stderr,
+        )
+        return 1
     dataset = build_campaign_response_dataset(
-        campaign_episodes_from_research_snapshot(snapshot)
+        episode
+        for episode in episodes
+        if episode.campaign.reporting_scope.marketplace == selected_marketplace
     )
     if not len(dataset):
         print(
@@ -129,9 +160,7 @@ def main() -> int:
             campaign_id=item["campaign_id"],
             constraints=BudgetConstraints(
                 campaign_id=item["campaign_id"],
-                budget_usage_policy=BudgetUsagePolicy(
-                    arguments.budget_usage_policy
-                ),
+                budget_usage_policy=BudgetUsagePolicy(arguments.budget_usage_policy),
                 minimum_daily_budget=arguments.minimum_budget,
                 maximum_daily_budget=arguments.maximum_budget,
             ),

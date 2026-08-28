@@ -1119,16 +1119,98 @@ tbody tr.selected:hover {
   min-height: 60px;
 }
 
-.demo-embed-body {
-  padding: 0;
+.willow-forecast-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(280px, 0.75fr);
+  gap: 18px;
+  align-items: start;
 }
 
-.strategy-demo-frame {
-  display: block;
-  width: 100%;
-  min-height: 880px;
-  border: 0;
-  background: var(--plane);
+.willow-inputs,
+.willow-prediction {
+  display: grid;
+  gap: 14px;
+}
+
+.willow-section-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.willow-section-head h3,
+.willow-prediction h3 {
+  margin: 0 0 2px;
+}
+
+.willow-field-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px 14px;
+}
+
+.willow-field-grid .field {
+  margin: 0;
+}
+
+.structure-head {
+  padding-top: 4px;
+  border-top: 1px solid var(--line);
+}
+
+.willow-prediction {
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: var(--bg);
+}
+
+.willow-primary-result {
+  display: grid;
+  gap: 4px;
+  padding: 16px;
+  border-radius: 9px;
+  color: #fff;
+  background: var(--blue);
+}
+
+.willow-primary-result span,
+.willow-metrics span,
+.willow-model-metrics span {
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.willow-primary-result span {
+  color: #ffffffcc;
+}
+
+.willow-primary-result b {
+  font-size: 26px;
+}
+
+.willow-metrics {
+  display: grid;
+  gap: 8px;
+}
+
+.willow-metrics > div {
+  display: grid;
+  gap: 2px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.willow-metrics b {
+  font-size: 16px;
+}
+
+.willow-model-metrics {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 7px 12px;
+  align-items: baseline;
 }
 
 /* ---------------------------------------------------------------------------
@@ -1846,6 +1928,15 @@ tbody tr.selected:hover {
 
   .identity-grid {
     grid-template-columns: 1fr;
+  }
+
+  .willow-forecast-body,
+  .willow-field-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .willow-section-head {
+    flex-direction: column;
   }
 }
 

@@ -195,14 +195,30 @@ class AggregationTest(unittest.TestCase):
         self.assertEqual(len(dataset), 2)
         self.assertEqual(len(dataset.for_campaign("CAMPAIGN-1")), 2)
 
-    def test_conflicting_interventions_in_one_period_are_rejected(self) -> None:
-        """One Campaign-period cannot observe two budget decisions."""
+    def test_experiment_arms_in_one_period_stay_separate(self) -> None:
+        """Parallel budget levels are distinct response observations."""
 
-        with self.assertRaisesRegex(ResponseDatasetError, "several distinct"):
+        dataset = build_campaign_response_dataset(
+            [
+                _episode(intervention_id="A", configured_budget=75),
+                _episode(intervention_id="B", configured_budget=125),
+            ]
+        )
+
+        self.assertEqual(len(dataset), 2)
+        self.assertEqual(
+            {item.intervention_id for item in dataset},
+            {"A", "B"},
+        )
+
+    def test_one_intervention_cannot_repeat_conflicting_budget_metadata(self) -> None:
+        """Product episodes repeating one decision must agree on its budget."""
+
+        with self.assertRaisesRegex(ResponseDatasetError, "configured_budget"):
             build_campaign_response_dataset(
                 [
-                    _episode(intervention_id="A"),
-                    _episode(intervention_id="B"),
+                    _episode(intervention_id="A", configured_budget=75),
+                    _episode(intervention_id="A", configured_budget=125),
                 ]
             )
 

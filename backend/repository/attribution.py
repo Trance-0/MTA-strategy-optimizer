@@ -19,7 +19,11 @@ from __future__ import annotations
 
 from sqlalchemy import select
 
-from backend.config import ATTRIBUTION_OUTPUT_DIR, use_database
+from backend.config import (
+    ATTRIBUTION_OUTPUT_DIR,
+    pipeline_output_directory,
+    use_database,
+)
 from backend.database import orm_rows
 from backend.repository.coercion import (
     boolean,
@@ -66,10 +70,30 @@ ATTRIBUTION_FIELDS: tuple[str, ...] = (
 #: Everything from `converted_user_share` onward is numeric.
 ATTRIBUTION_NUMERIC = ATTRIBUTION_FIELDS[7:]
 
+_RUNTIME_FILES = (
+    "amc_markov_attribution_results.csv",
+    "amc_shapley_attribution_results.csv",
+    "amc_mta_model_comparison_touchpoints.csv",
+    "amc_mta_model_comparison_summary.csv",
+    "amc_mta_recommended_attribution.csv",
+)
+
+
+def _completed_output_directory():
+    """Runtime attribution directory only after its atomic set is complete."""
+    runtime = pipeline_output_directory()
+    candidate = runtime / "attribution" if runtime else None
+    if candidate is not None and all(
+        (candidate / name).is_file() for name in _RUNTIME_FILES
+    ):
+        return candidate
+    return ATTRIBUTION_OUTPUT_DIR
+
 
 def attribution_results() -> list[dict]:
     """Per-model attributed outcomes, cost, and efficiency for each touchpoint."""
-    if use_database():
+    output_directory = _completed_output_directory()
+    if use_database() and output_directory == ATTRIBUTION_OUTPUT_DIR:
         statement = (
             select(
                 AttributionResult.attribution_model,
@@ -103,7 +127,7 @@ def attribution_results() -> list[dict]:
         rows = []
         for model in ("markov", "shapley"):
             rows.extend(
-                read_csv(ATTRIBUTION_OUTPUT_DIR / f"amc_{model}_attribution_results.csv")
+                read_csv(output_directory / f"amc_{model}_attribution_results.csv")
             )
         split_touchpoint(rows)
     return project(numeric(rows, ATTRIBUTION_NUMERIC), ATTRIBUTION_FIELDS)
@@ -144,7 +168,8 @@ COMPARISON_NUMERIC = (
 
 def comparison_touchpoints() -> list[dict]:
     """Markov against Shapley per touchpoint and outcome, with reliability."""
-    if use_database():
+    output_directory = _completed_output_directory()
+    if use_database() and output_directory == ATTRIBUTION_OUTPUT_DIR:
         statement = (
             select(
                 Touchpoint.touchpoint_key.label("touchpoint"),
@@ -172,9 +197,7 @@ def comparison_touchpoints() -> list[dict]:
         )
         rows = orm_rows(statement)
     else:
-        rows = read_csv(
-            ATTRIBUTION_OUTPUT_DIR / "amc_mta_model_comparison_touchpoints.csv"
-        )
+        rows = read_csv(output_directory / "amc_mta_model_comparison_touchpoints.csv")
         split_touchpoint(rows)
     numeric(rows, COMPARISON_NUMERIC)
     return project(boolean(rows), COMPARISON_FIELDS)
@@ -207,7 +230,8 @@ SUMMARY_NUMERIC = (
 
 def comparison_summary() -> list[dict]:
     """One diagnostic row per outcome: TVD, Spearman, and Top-K overlap."""
-    if use_database():
+    output_directory = _completed_output_directory()
+    if use_database() and output_directory == ATTRIBUTION_OUTPUT_DIR:
         statement = (
             select(
                 ModelComparisonSummary.outcome,
@@ -229,9 +253,7 @@ def comparison_summary() -> list[dict]:
         )
         rows = orm_rows(statement)
     else:
-        rows = read_csv(
-            ATTRIBUTION_OUTPUT_DIR / "amc_mta_model_comparison_summary.csv"
-        )
+        rows = read_csv(output_directory / "amc_mta_model_comparison_summary.csv")
     numeric(rows, SUMMARY_NUMERIC)
     return project(boolean(dates(rows)), SUMMARY_FIELDS)
 
@@ -263,7 +285,8 @@ RECOMMENDED_NUMERIC = ("official_share", "benchmark_share", "gap_pp", "relative_
 
 def recommended_attribution() -> list[dict]:
     """The governed view: official share, benchmark, and recommended value."""
-    if use_database():
+    output_directory = _completed_output_directory()
+    if use_database() and output_directory == ATTRIBUTION_OUTPUT_DIR:
         statement = (
             select(
                 Touchpoint.touchpoint_key.label("touchpoint"),
@@ -291,9 +314,7 @@ def recommended_attribution() -> list[dict]:
         )
         rows = orm_rows(statement)
     else:
-        rows = read_csv(
-            ATTRIBUTION_OUTPUT_DIR / "amc_mta_recommended_attribution.csv"
-        )
+        rows = read_csv(output_directory / "amc_mta_recommended_attribution.csv")
         split_touchpoint(rows)
     numeric(rows, RECOMMENDED_NUMERIC)
     return project(boolean(rows), RECOMMENDED_FIELDS)

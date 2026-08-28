@@ -1,9 +1,9 @@
 ---
 title: Dashboard Data Endpoints
 description: Snapshot, reload, master-object, and repository behavior
-compact: "Specifies Flask dashboard data routes and repositories: 15-key `/api/dashboard` snapshot including strategyEvaluation, ten-minute cache, reload, immutable observations, editable master drafts, SQLAlchemy queries, external simulator-table probes, and exact legacy Node coercion parity."
+compact: "Specifies Flask dashboard data routes and repositories: 15-key `/api/dashboard`, ten-minute cache, runtime artifact precedence, reload, immutable observations, editable master drafts, SQLAlchemy queries, simulator-table probes, and exact legacy Node coercion parity."
 lang: en-US
-source_files: backend/api/dashboard.py, backend/repository/attribution.py, backend/repository/coercion.py, backend/repository/history.py, backend/repository/master_data.py, backend/repository/research.py, backend/repository/snapshot.py, backend/repository/strategy.py, backend/tests/test_snapshot.py
+source_files: backend/api/dashboard.py, backend/repository/attribution.py, backend/repository/coercion.py, backend/repository/evaluation.py, backend/repository/history.py, backend/repository/master_data.py, backend/repository/research.py, backend/repository/snapshot.py, backend/repository/strategy.py, backend/tests/test_snapshot.py
 ---
 
 # Dashboard Data Endpoints
@@ -21,6 +21,17 @@ match the established file snapshot. Results are cached for ten minutes.
 `POST /api/reload` clears every loader cache. A successful pipeline stage also
 clears it. Database mode first probes reachability and a non-empty attribution
 result; failure returns `503 database_unavailable` as a page-level state.
+
+When `PIPELINE_OUTPUT_DIR` is configured, repositories prefer completed
+runtime model artifacts so a deployed run is visible without rewriting the
+image or importing generated files into PostgreSQL. Attribution switches only
+after all five Markov, Shapley, comparison, and recommendation files exist;
+this atomic-set rule prevents a request during publication from mixing one
+run's files with another source. Strategy and evaluation switch when their
+single JSON artifact exists. Until then, database rows or committed files
+remain the fallback. Runtime outputs never change the snapshot's database
+`mode`; they are model results for the connected deployment, not a new data
+source configuration.
 
 ## Master Objects
 
@@ -45,17 +56,23 @@ Source: `backend/api/dashboard.py`, `backend/repository/snapshot.py`
 - Dependencies: Backend repositories, settings log, and database probe.
 - Verification: `backend/tests/test_snapshot.py`.
 
-### Attribution, history, and strategy repositories
+### Attribution, history, strategy, and evaluation repositories
 
 Source: `backend/repository/attribution.py`,
-`backend/repository/history.py`, `backend/repository/strategy.py`
+`backend/repository/history.py`, `backend/repository/strategy.py`,
+`backend/repository/evaluation.py`
 
 - Responsibility: Reproduce each existing file loader in local mode and build
-  database statements from the shared SQLAlchemy models in database mode.
+  database statements from the shared SQLAlchemy models in database mode;
+  prefer a completed result below `PIPELINE_OUTPUT_DIR` after a deployed run.
 - Inputs: Committed CSV/JSON artifacts or PostgreSQL rows.
 - Outputs: Normalized lists and documents in stable first-seen or declared order.
 - Dependencies: `dashboard/models.py`, backend database helpers, and coercions.
-- Verification: Snapshot row counts and exact cross-language value comparison.
+- Behavior contract: Attribution requires its complete five-file runtime set
+  before switching. Strategy and evaluation require their named JSON artifact.
+  An absent or partial runtime result falls back without mixing sources.
+- Verification: Snapshot row counts, runtime-precedence tests, and exact
+  cross-language value comparison.
 
 ### `backend/repository/coercion.py`
 

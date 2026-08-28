@@ -1,9 +1,9 @@
 ---
 title: Backend Jobs and Settings
 description: Pipeline job polling and protected runtime settings contracts
-compact: "Contracts for `/api/jobs`, `/api/settings`, and `/api/schema-operations`: settings include backend project, commit, Python, and Flask identity; schema setup uses validated subprocesses, bounded logs, termination, cache invalidation, and read-only refusals."
+compact: "Contracts for `/api/jobs`, `/api/settings`, and `/api/schema-operations`: protected configuration is independent from pipeline execution; jobs use one process, isolated runtime outputs, validated subprocesses, bounded logs, termination, cache invalidation, and capability refusals."
 lang: en-US
-source_files: backend/api/jobs.py, backend/api/settings.py, backend/api/schema_operations.py, backend/services/jobs.py, backend/services/settings.py, backend/services/schema_operations.py, backend/tests/test_settings.py, backend/tests/test_schema_operations.py
+source_files: backend/api/jobs.py, backend/api/settings.py, backend/api/schema_operations.py, backend/services/jobs.py, backend/services/settings.py, backend/services/schema_operations.py, backend/tests/test_jobs.py, backend/tests/test_settings.py, backend/tests/test_schema_operations.py
 ---
 
 # Backend Jobs and Settings
@@ -17,12 +17,37 @@ spawning a fixed argument vector with no shell. `DELETE` requests termination
 of a running stage. Output keeps at most 600 lines and reports the number
 dropped.
 
-Attribution runs `script/run_pipeline.py`. Optimization runs
+Attribution normally runs `script/run_pipeline.py`. When `MTA_SIM_DATA_DIR`
+already contains both `amc_path_report.csv` and
+`amazon_ads_daily_touchpoint_performance.csv`, the runner aggregates every
+uploaded daily path window into one complete report scope below
+`PIPELINE_OUTPUT_DIR`. When an upload contains more than one marketplace, it
+selects the marketplace of the advertiser in the connected dashboard schema
+and writes a matching filtered performance input; an absent or unmatched
+database marketplace is a named failed job, never an arbitrary first-market
+choice. It then runs `script/run_attribution_models.py` against the two
+prepared inputs. A reporting date range is refused for this path because
+filtering the already-produced daily paths requires regenerating them from
+events; the runner never silently ignores a submitted range. Optimization runs
 `script/generate_campaign_strategy.py` and requires a research snapshot.
 Strategy evaluation runs `script/evaluate_strategies.py` without requiring a
 research snapshot,
 because it can use the response observations in `campaign_strategy.json`.
-Read-only or file-mode deployments cannot start publishing jobs.
+File-mode deployments and server deployments with `PIPELINE_RUNS_ENABLED=false`
+cannot start jobs. `DASHBOARD_CONFIG_READ_ONLY=true` protects connection and
+logging configuration only; it does not refuse a pipeline run. Conflating the
+two permissions made AppStack advertise a database-backed writable dashboard
+while every job start returned `403`.
+
+The runner keeps active jobs and bounded logs in process memory. A deployment
+that enables it therefore runs exactly one application process in exactly one
+pod. Otherwise a start request and its following poll can reach different
+memories, making a live run disappear. Generated artifacts are written inside
+the configured `PIPELINE_OUTPUT_DIR` and survive for that pod or volume's
+lifetime; AppStack uses the ephemeral `/pipeline-output` mount, while the
+two-container stack uses a named volume. A preparation or permission failure
+becomes a terminal failed job with its error in the bounded log instead of an
+uncaught server error.
 
 ## Settings
 
@@ -106,9 +131,20 @@ Source: `backend/api/jobs.py`, `backend/services/jobs.py`
 - Inputs: Stage key, International Organization for Standardization (ISO)
   date range, positive budget, and declared budget policy.
 - Outputs: `202` start responses, job snapshots, or specific refusal objects.
+- Behavior contract: `PIPELINE_RUNS_ENABLED` governs execution independently
+  of `DASHBOARD_CONFIG_READ_ONLY`; database mode is still required. Because
+  active state and artifacts are local to one application process, an enabled
+  deployment must use one pod and one Gunicorn worker. Outputs are isolated
+  below `PIPELINE_OUTPUT_DIR`; simulator uploads that contain the two daily
+  attribution tables are partitioned by the connected advertiser's
+  marketplace and aggregated into one model scope, select
+  `run_attribution_models.py`, and reject date filtering as unsupported rather
+  than dropping it. A successful child
+  clears the snapshot cache; a preparation failure is retained as a failed
+  job. AppStack falls back to committed image artifacts when a rollout removes
+  its runtime volume.
 - Dependencies: Root scripts, subprocess, research snapshot configuration.
-- Verification: Backend route tests plus direct job-service unit tests when a
-  stage contract changes.
+- Verification: `backend/tests/test_jobs.py` and the backend discovery command.
 
 ### `backend/api/settings.py` and `backend/services/settings.py`
 

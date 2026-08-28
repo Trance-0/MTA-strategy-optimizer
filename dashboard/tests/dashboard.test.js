@@ -82,6 +82,10 @@ const STAGE_RUNNER = readFileSync(
   resolve(HERE, "..", "src", "components", "StageRunner.vue"),
   "utf8",
 );
+const WILLOW_FORECAST = readFileSync(
+  resolve(HERE, "..", "src", "components", "WillowGmvForecast.vue"),
+  "utf8",
+);
 const RUN_PIPELINE_PY = readFileSync(
   resolve(HERE, "..", "..", "script", "run_pipeline.py"),
   "utf8",
@@ -333,6 +337,23 @@ test("settings compares independently detected frontend and backend builds", () 
   assert.match(CLIENT, /backendIdentity: null/);
   assert.match(COMPOSE, /BUILD_COMMIT: \$\{PROJECT_COMMIT:-unknown\}/);
   assert.match(PUBLISH_WORKFLOW, /BUILD_COMMIT=\$\{\{ github\.sha \}\}/);
+});
+
+test("pipeline capability comes from the server rather than settings protection", () => {
+  assert.doesNotMatch(STAGE_RUNNER, /props\.writable/);
+  assert.match(STAGE_RUNNER, /props\.stage\.available/);
+  assert.doesNotMatch(CAMPAIGN_OPTIMIZER, /:writable=/);
+});
+
+test("Willow Sakura renders native running widgets instead of a whole-page iframe", () => {
+  assert.match(CAMPAIGN_OPTIMIZER, /<WillowGmvForecast\s*\/>/);
+  assert.doesNotMatch(CAMPAIGN_OPTIMIZER, /iframe|srcdoc|willowDemoSource/);
+  assert.match(WILLOW_FORECAST, /Sponsored Products budget/);
+  assert.match(WILLOW_FORECAST, /Amazon Demand-Side Platform budget/);
+  assert.match(WILLOW_FORECAST, /Placement and creative structure/);
+  assert.match(WILLOW_FORECAST, /If all budgets increase 10%/);
+  assert.match(WILLOW_FORECAST, /predictWillowGmv/);
+  assert.match(WILLOW_FORECAST, /watch\(form, refreshPrediction/);
 });
 
 test("the rail's status dot agrees with the deployment accent", async () => {

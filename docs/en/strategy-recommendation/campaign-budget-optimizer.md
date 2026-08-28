@@ -1,7 +1,7 @@
 ---
 title: Campaign Budget Response Model and Optimizer
 description: Fitted two-stage Campaign response curves and the constrained allocation solved from them
-compact: "Implemented optimizer: `response_dataset` aggregation rules and forbidden features, two-stage `response_model` saturating fits with TARGET_HISTORY/POOLED_TRANSFER support, shadow-price `budget_optimizer` under SPEND_FULL_BUDGET/SPEND_UP_TO_BUDGET, `campaign_strategy.json` fields, structured refusals."
+compact: "Optimizer contract: response_dataset groups Campaign-period-intervention experiment arms and blocks forbidden features; response_model fits saturating curves with evidence labels; budget_optimizer uses shadow prices under declared policies; campaign_strategy.json records allocations, diagnostics, extrapolation, and structured refusals."
 lang: en-US
 source_files: modules/mta_strategy_recommendation/src/response_dataset.py, modules/mta_strategy_recommendation/src/response_model.py, modules/mta_strategy_recommendation/src/budget_optimizer.py, modules/mta_strategy_recommendation/src/episode_bridge.py, script/generate_campaign_strategy.py
 ---
@@ -32,21 +32,32 @@ The chain runs from the Multi-Touch Attribution Simulator (MTA-SIM) research sna
 
 `simulation_research.json` → `mta_sim_research_adapter` → `episode_bridge` → `response_dataset` → `response_model` → `budget_optimizer` → `outputs/campaign_strategy.json` → the dashboard's Optimization Log.
 
-Each stage narrows what the next may see. The adapter reads the simulator's file contract into canonical `mta_common` objects. The bridge joins those flat lists into `CampaignEpisode` records on Campaign, marketplace, and period, reading the *observed* records only. The dataset builder aggregates episodes into one row per Campaign-period. Only then does fitting begin.
+Each stage narrows what the next may see. The adapter reads the simulator's file contract into canonical `mta_common` objects. The bridge joins those flat lists into `CampaignEpisode` records on Campaign, marketplace, and period, reading the *observed* records only. The dataset builder aggregates episodes into one row per Campaign-period-intervention. Only then does fitting begin.
 
 ## 3. The Response Dataset
 
-One row represents one Campaign, one marketplace, and one period, carrying what was decided and what was then observed.
+One row represents one Campaign, marketplace, period, and assigned
+intervention, carrying what was decided and what was then observed. A budget
+experiment may deliberately assign several arms to the same Campaign and day;
+each distinct `intervention_id` remains a separate response observation so the
+budget variation the model needs is not collapsed or rejected.
 
 A row may hold decision-time context (Provider, ad product, marketplace, currency, Campaign status), the assigned intervention (configured budget, baseline budget, budget delta, assignment type, whether assignment was randomized), and the observation (actual spend, impressions, clicks, total revenue).
 
 ### Aggregation rules
 
-Several episodes covering the same Campaign, marketplace, and period are summed into one observation, which is how a Campaign advertising several Products still yields one Campaign-period revenue figure.
+Several episodes covering the same Campaign, marketplace, period, and
+intervention are summed into one observation, which is how a Campaign
+advertising several Products still yields one response figure for that
+experimental arm.
 
 Impressions, clicks, and revenue are **summed** across the episodes of that period. Configured budget and actual spend are **taken once**, not summed: they describe the Campaign-period itself, and episodes repeat the same budget decision rather than each contributing a share of it. Summing them would multiply one budget by the number of Products the Campaign advertised.
 
-A Campaign-period that mixes currencies is rejected. A Campaign-period carrying several distinct intervention identifiers is also rejected, because exactly one budget decision is observable per Campaign and period.
+A Campaign-period-intervention that mixes currencies or repeats one
+`intervention_id` with conflicting configured budget, actual spend, baseline,
+assignment type, or randomized flag is rejected. Distinct intervention
+identifiers in the same period are separate valid experiment arms rather than
+a conflict.
 
 ## 4. The Two-Stage Response Model
 
@@ -158,6 +169,14 @@ This matters most for a Campaign whose budget genuinely bound: its observed rang
 
 `script/generate_campaign_strategy.py` writes `modules/mta_strategy_recommendation/outputs/campaign_strategy.json` with JavaScript Object Notation (JSON) keys sorted, so two runs over one snapshot produce identical files.
 
+`--marketplace <code>` scopes a multi-marketplace research snapshot before the
+response dataset is built. Every observation, fitted model, currency, and
+allocation in one artifact therefore belongs to the same marketplace. Omitting
+the option is accepted only when the snapshot itself contains exactly one
+marketplace; the command refuses an ambiguous snapshot instead of choosing the
+first sorted currency. Dashboard jobs pass the connected advertiser's
+marketplace explicitly.
+
 ### `currency`
 
 The currency every monetary figure in the artifact is denominated in.
@@ -223,11 +242,17 @@ Source: `modules/mta_strategy_recommendation/src/response_dataset.py`
 
 **Responsibility.** Aggregate `CampaignEpisode` records into one Campaign-period row per assigned budget intervention, and enforce what a response feature may never be. The trainer, the optimizer, and the dashboard all read this builder rather than each re-deriving Campaign totals, so one definition of "what a Campaign spent and earned in a period" exists.
 
-**Public entry points.** `build_campaign_response_dataset(episodes) -> CampaignResponseDataset` and `assert_no_forbidden_response_features(feature_names) -> None`. `CampaignResponseDataset` exposes `campaign_ids`, `for_campaign()`, and `by_campaign()`; `CampaignResponseObservation` exposes `is_intervention` and `period_key`.
+**Public entry points.** `build_campaign_response_dataset(episodes) -> CampaignResponseDataset` and `assert_no_forbidden_response_features(feature_names) -> None`. `CampaignResponseDataset` exposes `campaign_ids`, `for_campaign()`, and `by_campaign()`; `CampaignResponseObservation` exposes `is_intervention` and the four-part Campaign, marketplace, period, intervention `period_key`.
 
-**Ordering and determinism.** Rows are ordered by Campaign, marketplace, and period start date. Revenue is rounded to six decimal places. The same episodes always produce the same dataset.
+**Ordering and determinism.** Rows are ordered by Campaign, marketplace,
+period start date, and intervention identifier. Revenue is rounded to six
+decimal places. The same episodes always produce the same dataset.
 
-**Errors.** `ResponseDatasetError` for an `EvaluationEpisode`, a non-`CampaignEpisode`, a missing budget observation, mixed currencies within one Campaign-period, several distinct interventions within one Campaign-period, or a forbidden feature name. Negative budget, spend, revenue, impressions, or clicks raise `ValueError`.
+**Errors.** `ResponseDatasetError` for an `EvaluationEpisode`, a
+non-`CampaignEpisode`, a missing budget observation, mixed currencies or
+conflicting decision metadata within one Campaign-period-intervention, or a
+forbidden feature name. Negative budget, spend, revenue, impressions, or
+clicks raise `ValueError`.
 
 **Verification.** `modules/mta_strategy_recommendation/tests/test_response_dataset.py`.
 

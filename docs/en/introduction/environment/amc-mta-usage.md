@@ -1,6 +1,6 @@
 ---
 title: AMC MTA Usage
-compact: "Command reference for `script/run_pipeline.py`, `build_path_report.py`, `run_attribution_models.py`, `compare_attribution_models.py`, `regenerate_simulated_dataset.py`, `validate_data_alignment.py` with their flags, plus the five output CSVs under `modules/mta_attribution/outputs/attribution/`, 14/13/15-column schemas, 51 rows, `recommended_value` semantics."
+compact: "Command reference for `run_pipeline.py`, `run_attribution_models.py`, comparison, regeneration, and alignment flags; native MTA-SIM performance annotation; and the five attribution CSV outputs, their governed schemas, reliability fields, and recommended_value semantics."
 lang: en-US
 ---
 
@@ -56,6 +56,23 @@ Run attribution only on an existing aggregated path report:
 ```bash
 uv run python -X utf8 -B script/run_attribution_models.py
 ```
+
+The Amazon Ads input may use either the maintained attribution-report schema,
+which carries explicit `interaction_type` and `cost_type`, or the native
+MTA-SIM daily-performance schema. Native rows carry the interaction in the
+fifth segment of `normalizedTouchpoint`; the command restores that field and
+the project's Click/Cost Per Click (CPC) or Impression/Cost Per Mille (CPM)
+pairing before validation. It then rebuilds the key from `adProduct`, the
+product-specific format column, placement, creative, and restored interaction,
+and refuses a stored key that disagrees. This is deterministic annotation of
+fields already encoded in the row, not a guessed touchpoint.
+
+Native MTA-SIM `amc_path_report.csv` contains multiple daily windows. A
+dashboard run first calls the standard generator adapter to sum every row per
+path into one scope whose start and end come from the accompanying performance
+report. The original upload is never rewritten. A direct invocation of
+`run_attribution_models.py` still requires its `--amc-report` to be that
+single-scope model input.
 
 Strictly recompute the three comparison artifacts from existing Markov/Shapley files:
 

@@ -1,7 +1,7 @@
 ---
 title: Zheyuan Wu (Trance-0)
 description: Project manager work log covering pipeline development, integration, and algorithm testing
-compact: "Zheyuan Wu's project-management work log: simulator integration, attribution and strategy pipelines, canonical models, PostgreSQL schema selection and setup, Vue and Flask delivery identity, specification-oriented documentation, GitHub Pages, and deployment automation."
+compact: "Zheyuan Wu's project-management work log: simulator integration, runnable attribution and strategy pipelines, canonical models, PostgreSQL schema setup, native Willow forecast widgets, Vue and Flask delivery identity, specification-oriented documentation, GitHub Pages, and deployment automation."
 order: 10
 lang: en-US
 ---
@@ -11,11 +11,17 @@ lang: en-US
 > Project: Marketing ROI Analysis
 > Handle: `Trance-0`
 > Role: Project manager — pipeline development, data simulation and integration, algorithm testing
-> Last updated: 2026-08-27
+> Last updated: 2026-08-28
 
 Entries are reconstructed from Git history. They record the change set behind each commit, not a separate narrative.
 
 ---
+
+## 2026-08-28
+
+### Completed
+
+- Diagnosed the deployed dashboard's contradictory pipeline state at the live boundary: `GET /api/jobs` advertised every model, while `POST /api/jobs/attribution` returned `403 read_only_deployment` solely because AppStack protects its settings. Split execution permission into `PIPELINE_RUNS_ENABLED`, constrained enabled deployments to one pod and one Gunicorn worker, changed AppStack rollouts to `Recreate`, and isolated generated results under `/pipeline-output` with complete-artifact precedence over database or image fallbacks. Exercising the actual job service against the 10,000-observation research bundle then found and fixed each deeper contract failure rather than stopping at the permission check: native simulator performance rows omit derived interaction and billing fields; daily uploads span US and CA; five budget experiment arms intentionally share a Campaign-day; and evaluation previously selected US episodes for a CAD plan by Campaign identifier alone. The selected database schema's advertiser now scopes attribution, optimization, and evaluation; uploads are partitioned and aggregated without rewriting them; experiment arms stay distinct while repeated metadata must agree; and strategy observations must match marketplace and currency. All three stages then completed in order — five attribution outputs, four optimized Campaign models from 5,000 US observations, and two conserved evaluations with no skips. Replaced the Willow Sakura whole-page `iframe` in the same evaluation tab with native, responsive Vue controls running the contributed Extended-27 weights for every budget, market, calendar, placement, and creative input plus the ten-percent comparison and held-out metrics, isolated from production recommendations. All 658 Python and 36 dashboard tests pass, both production builds complete, and the live pre-patch server still refuses the start as expected until this commit is deployed.
 
 ## 2026-08-27
 

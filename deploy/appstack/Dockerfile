@@ -46,4 +46,4 @@ RUN groupadd --gid 10001 app \
 USER 10001:10001
 EXPOSE 8501
 
-CMD ["gunicorn", "--bind", "0.0.0.0:8501", "--workers", "2", "--threads", "4", "--timeout", "120", "--access-logfile", "-", "--error-logfile", "-", "backend.wsgi:application"]
+CMD ["gunicorn", "--bind", "0.0.0.0:8501", "--workers", "1", "--threads", "4", "--timeout", "120", "--access-logfile", "-", "--error-logfile", "-", "backend.wsgi:application"]

@@ -123,10 +123,15 @@ class CampaignResponseObservation:
         return self.intervention_id is not None
 
     @property
-    def period_key(self) -> tuple[str, str, str]:
-        """Return the Campaign-period identity this observation aggregates."""
+    def period_key(self) -> tuple[str, str, str, str | None]:
+        """Return the Campaign-period-intervention identity this row aggregates."""
 
-        return (self.campaign_id, self.marketplace, self.report_start_date)
+        return (
+            self.campaign_id,
+            self.marketplace,
+            self.report_start_date,
+            self.intervention_id,
+        )
 
 
 @dataclass(frozen=True)
@@ -137,9 +142,7 @@ class CampaignResponseDataset:
         observations: Rows ordered by Campaign, marketplace, and period.
     """
 
-    observations: tuple[CampaignResponseObservation, ...] = field(
-        default_factory=tuple
-    )
+    observations: tuple[CampaignResponseObservation, ...] = field(default_factory=tuple)
 
     def __len__(self) -> int:
         return len(self.observations)
@@ -156,18 +159,14 @@ class CampaignResponseDataset:
             seen.setdefault(item.campaign_id, None)
         return tuple(seen)
 
-    def for_campaign(self, campaign_id: str) -> tuple[
-        CampaignResponseObservation, ...
-    ]:
+    def for_campaign(self, campaign_id: str) -> tuple[CampaignResponseObservation, ...]:
         """Return one Campaign's observations in period order."""
 
         return tuple(
             item for item in self.observations if item.campaign_id == campaign_id
         )
 
-    def by_campaign(self) -> Mapping[
-        str, tuple[CampaignResponseObservation, ...]
-    ]:
+    def by_campaign(self) -> Mapping[str, tuple[CampaignResponseObservation, ...]]:
         """Return every Campaign's observations keyed by Campaign identifier."""
 
         grouped: dict[str, list[CampaignResponseObservation]] = defaultdict(list)
@@ -183,20 +182,22 @@ def build_campaign_response_dataset(
 
     Args:
         episodes: Model-facing ``CampaignEpisode`` records. Several episodes
-            covering the same Campaign, marketplace, and period are summed
-            into one observation, which is how a Campaign advertising several
-            Products yields one Campaign-period revenue figure.
+            covering the same Campaign, marketplace, period, and assigned
+            intervention are summed into one observation, which is how a
+            Campaign advertising several Products yields one experimental-arm
+            revenue figure.
 
     Returns:
-        CampaignResponseDataset: One row per Campaign, marketplace, and period.
+        CampaignResponseDataset: One row per Campaign, marketplace, period,
+            and intervention.
 
     Raises:
         ResponseDatasetError: If an ``EvaluationEpisode`` is supplied, if an
             episode has no budget observation, or if one Campaign-period
-            carries conflicting currencies or several distinct interventions.
+            carries conflicting currency or decision metadata.
     """
 
-    grouped: dict[tuple[str, str, str], list[CampaignEpisode]] = defaultdict(list)
+    grouped: dict[tuple[str, str, str, str], list[CampaignEpisode]] = defaultdict(list)
     for episode in episodes:
         if isinstance(episode, EvaluationEpisode):
             raise ResponseDatasetError(
@@ -219,6 +220,7 @@ def build_campaign_response_dataset(
                 episode.campaign.campaign_id,
                 scope.marketplace,
                 scope.report_start_date,
+                observation.intervention_id or "",
             )
         ].append(episode)
 
@@ -229,11 +231,11 @@ def build_campaign_response_dataset(
 
 
 def _aggregate_period(
-    key: tuple[str, str, str], episodes: Sequence[CampaignEpisode]
+    key: tuple[str, str, str, str], episodes: Sequence[CampaignEpisode]
 ) -> CampaignResponseObservation:
-    """Sum one Campaign-period's episodes into a single response observation."""
+    """Sum one Campaign-period-intervention into a response observation."""
 
-    campaign_id, marketplace, report_start_date = key
+    campaign_id, marketplace, report_start_date, _intervention_key = key
     first = episodes[0]
     budget = first.budget_observation
     scope = budget.reporting_scope
@@ -245,24 +247,29 @@ def _aggregate_period(
         raise ResponseDatasetError(
             f"campaign-period {key!r} mixes currencies {sorted(currencies)}"
         )
-    interventions = {
-        episode.budget_observation.intervention_id for episode in episodes
-    }
-    if len(interventions) != 1:
-        raise ResponseDatasetError(
-            f"campaign-period {key!r} carries several distinct interventions "
-            f"{sorted(str(item) for item in interventions)}; exactly one budget "
-            "decision is observable per Campaign and period"
-        )
-
     # Budget and spend describe the Campaign-period itself, so they are taken
     # once rather than summed over episodes that repeat the same decision.
-    configured_budget = _first_number(
-        episode.budget_observation.configured_budget for episode in episodes
+    configured_budget = _consistent_value(
+        key,
+        "configured_budget",
+        (episode.budget_observation.configured_budget for episode in episodes),
     )
-    actual_spend = _first_number(
-        episode.budget_observation.actual_spend for episode in episodes
+    actual_spend = _consistent_value(
+        key,
+        "actual_spend",
+        (episode.budget_observation.actual_spend for episode in episodes),
     )
+    for name in (
+        "baseline_budget",
+        "budget_delta",
+        "assignment_type",
+        "randomized",
+    ):
+        _consistent_value(
+            key,
+            name,
+            (getattr(episode.budget_observation, name) for episode in episodes),
+        )
 
     impressions = 0
     clicks = 0
@@ -296,13 +303,21 @@ def _aggregate_period(
     )
 
 
-def _first_number(values: Iterable[float | None]) -> float:
-    """Return the first present value, treating absence as zero."""
-
-    for value in values:
-        if value is not None:
-            return float(value)
-    return 0.0
+def _consistent_value(
+    key: tuple[str, str, str, str], name: str, values: Iterable[object]
+):
+    """Return repeated decision metadata, refusing contradictory copies."""
+    items = list(values)
+    distinct = set(items)
+    if len(distinct) != 1:
+        raise ResponseDatasetError(
+            f"campaign-period-intervention {key!r} carries conflicting {name}: "
+            f"{sorted(str(item) for item in distinct)}"
+        )
+    value = items[0]
+    if name in {"configured_budget", "actual_spend"}:
+        return 0.0 if value is None else float(value)
+    return value
 
 
 def assert_no_forbidden_response_features(feature_names: Iterable[str]) -> None:

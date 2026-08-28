@@ -23,7 +23,12 @@ from typing import Any, Mapping, Sequence
 
 from sqlalchemy import select
 
-from backend.config import STRATEGY_INPUT_DIR, STRATEGY_OUTPUT_DIR, use_database
+from backend.config import (
+    STRATEGY_INPUT_DIR,
+    STRATEGY_OUTPUT_DIR,
+    pipeline_artifact_path,
+    use_database,
+)
 from backend.database import orm_rows
 from backend.repository.coercion import format_date, read_json, to_number
 from dashboard.models import (
@@ -54,7 +59,9 @@ def budget_recommendation() -> dict:
         return read_json(STRATEGY_OUTPUT_DIR / "initial_budget_recommendation.json")
 
     runs = orm_rows(
-        select(BudgetRecommendationRun).order_by(BudgetRecommendationRun.id.desc()).limit(1)
+        select(BudgetRecommendationRun)
+        .order_by(BudgetRecommendationRun.id.desc())
+        .limit(1)
     )
     if not runs:
         return {}
@@ -96,7 +103,9 @@ def rebuild_budget_document(
     campaign_records = [
         {
             "campaign_id": row["campaign_id"],
-            "recommended_ad_group_count": int(_float(row["recommended_ad_group_count"])),
+            "recommended_ad_group_count": int(
+                _float(row["recommended_ad_group_count"])
+            ),
             "count_rationale": {
                 "count_formula_version": row["count_formula_version"],
                 "capacity_required_count": int(_float(row["capacity_required_count"])),
@@ -175,7 +184,12 @@ def campaign_strategy() -> dict:
     representation: it is produced by `script/generate_campaign_strategy.py`
     rather than by the import pipeline.
     """
-    return read_json(STRATEGY_OUTPUT_DIR / "campaign_strategy.json")
+    return read_json(
+        pipeline_artifact_path(
+            "strategy/campaign_strategy.json",
+            STRATEGY_OUTPUT_DIR / "campaign_strategy.json",
+        )
+    )
 
 
 def strategy_request() -> dict:
@@ -299,7 +313,9 @@ def candidate_pool() -> dict:
         pool_id = pool_id or (row["candidate_pool_id"] or "")
         policy = policy or (row["candidate_usage_policy"] or "")
         version = version or (row["sample_version"] or "")
-        record = counts.setdefault(row["campaign_id"], {"campaign_id": row["campaign_id"]})
+        record = counts.setdefault(
+            row["campaign_id"], {"campaign_id": row["campaign_id"]}
+        )
         record[row["candidate_kind"]] = int(_float(row["eligible_count"]))
 
     group = orm_rows(select(CampaignGroup.campaign_group_id).limit(1))

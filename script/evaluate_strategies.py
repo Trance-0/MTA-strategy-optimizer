@@ -104,7 +104,9 @@ def main() -> int:
     )
 
     episodes = _load_observed_episodes(
-        arguments.strategy_directory, arguments.research_snapshot
+        arguments.strategy_directory,
+        arguments.research_snapshot,
+        marketplace=arguments.marketplace,
     )
     episodes_by_campaign = _episodes_by_campaign(episodes)
 
@@ -138,9 +140,7 @@ def main() -> int:
         for attempt in attempts
         if not attempt.succeeded
     ]
-    conserved = sum(
-        1 for result in contract_results.values() if result.is_conserving
-    )
+    conserved = sum(1 for result in contract_results.values() if result.is_conserving)
     artifact = {
         "strategies": strategies,
         "contributed_models": contributed_models,
@@ -185,6 +185,11 @@ def _parser() -> argparse.ArgumentParser:
         help="Optional MTA-SIM simulation_research.json observation source.",
     )
     parser.add_argument(
+        "--marketplace",
+        default=None,
+        help="Exact marketplace to select from a multi-marketplace snapshot.",
+    )
+    parser.add_argument(
         "--fit-contributed-model",
         action="store_true",
         help="Fit and report the contributed budget-to-revenue model.",
@@ -211,14 +216,24 @@ def _strategy_currency(path: Path) -> str | None:
 
 
 def _load_observed_episodes(
-    strategy_directory: Path, research_snapshot: Path | None
+    strategy_directory: Path,
+    research_snapshot: Path | None,
+    *,
+    marketplace: str | None = None,
 ) -> tuple[CampaignEpisode, ...]:
     """Load canonical observations from the selected source."""
 
     if research_snapshot is not None:
-        return campaign_episodes_from_research_snapshot(
+        episodes = campaign_episodes_from_research_snapshot(
             load_mta_sim_research_snapshot(research_snapshot)
         )
+        if marketplace:
+            episodes = tuple(
+                episode
+                for episode in episodes
+                if episode.campaign.reporting_scope.marketplace == marketplace
+            )
+        return episodes
 
     path = strategy_directory / CAMPAIGN_STRATEGY_ARTIFACT
     try:
@@ -228,7 +243,14 @@ def _load_observed_episodes(
     rows = document.get("response_observations") or []
     if not isinstance(rows, list):
         return ()
-    return tuple(_episode_from_response_row(row) for row in rows)
+    episodes = tuple(_episode_from_response_row(row) for row in rows)
+    if marketplace:
+        episodes = tuple(
+            episode
+            for episode in episodes
+            if episode.campaign.reporting_scope.marketplace == marketplace
+        )
+    return episodes
 
 
 def _episode_from_response_row(row: Mapping[str, Any]) -> CampaignEpisode:
@@ -346,10 +368,19 @@ def _evaluate_output(
 ) -> dict:
     """Run every available layer for one projected strategy."""
 
+    scoped_episodes = {
+        campaign_id: tuple(
+            episode
+            for episode in episodes
+            if episode.campaign.reporting_scope.marketplace == output.scope.marketplace
+            and episode.campaign.reporting_scope.currency == output.scope.currency
+        )
+        for campaign_id, episodes in episodes_by_campaign.items()
+    }
     missing = [
         decision.campaign_id
         for decision in output.campaigns
-        if decision.campaign_id not in episodes_by_campaign
+        if not scoped_episodes.get(decision.campaign_id)
     ]
     base = {
         "strategy_id": output.strategy_id,
@@ -380,7 +411,7 @@ def _evaluate_output(
     selected = tuple(
         episode
         for decision in output.campaigns
-        for episode in episodes_by_campaign[decision.campaign_id]
+        for episode in scoped_episodes[decision.campaign_id]
     )
     result = run_evaluation_layers(
         StrategyEvaluationEpisode(strategy_output=output, episodes=selected)

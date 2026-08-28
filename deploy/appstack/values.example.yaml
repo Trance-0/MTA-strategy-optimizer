@@ -4,7 +4,6 @@
 namespace: marketing-roi
 image: registry.cn-shanghai.aliyuncs.com/your-namespace/marketing-roi-analysis:REPLACE_WITH_COMMIT_SHA
 imagePullSecret: marketing-roi-acr-pull
-replicas: 2
 database: "true"
 pgHost: pg.example.rds.aliyuncs.com
 pgPort: "5432"

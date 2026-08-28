@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import csv
 import tempfile
 import unittest
 from pathlib import Path
@@ -20,11 +21,13 @@ SUBMODULE_ROOT = PROJECT_ROOT / "external" / "mta_sim_dataset"
 # is answerable for. The two tests below need no checkout and always run.
 SUBMODULE_AVAILABLE = (SUBMODULE_ROOT / "ZheyuanWu" / "simulations").is_dir()
 
-from modules.mta_standard.src.evaluation import load_simulation_ground_truth
-from modules.mta_standard.src.mta_sim_generator_adapter import (
+from modules.mta_standard.src.evaluation import load_simulation_ground_truth  # noqa: E402
+from modules.mta_standard.src.mta_sim_generator_adapter import (  # noqa: E402
     _simulator_config,
     generate_and_load_mta_sim_dataset,
+    prepare_single_scope_reports,
 )
+from modules.mta_standard.tests import mta_sim_fixtures as fixtures  # noqa: E402
 
 
 class MtaSimGeneratorAdapterTests(unittest.TestCase):
@@ -37,9 +40,7 @@ class MtaSimGeneratorAdapterTests(unittest.TestCase):
     def test_generates_and_loads_baseline_toy_dataset(self) -> None:
         """Generate the public toy fixture and keep ground truth evaluation-only."""
 
-        configuration = (
-            SUBMODULE_ROOT / "ZheyuanWu" / "examples" / "baseline.toy.json"
-        )
+        configuration = SUBMODULE_ROOT / "ZheyuanWu" / "examples" / "baseline.toy.json"
         with tempfile.TemporaryDirectory() as directory:
             generated = generate_and_load_mta_sim_dataset(
                 submodule_root=SUBMODULE_ROOT,
@@ -71,7 +72,10 @@ class MtaSimGeneratorAdapterTests(unittest.TestCase):
                 {"CPC", "CPM"},
             )
             self.assertEqual(
-                {key.rsplit(":", 1)[-1] for key in generated.dataset.five_segment_touchpoints()},
+                {
+                    key.rsplit(":", 1)[-1]
+                    for key in generated.dataset.five_segment_touchpoints()
+                },
                 {"CLICK", "IMPRESSION"},
             )
             ground_truth = load_simulation_ground_truth(
@@ -93,6 +97,30 @@ class MtaSimGeneratorAdapterTests(unittest.TestCase):
                     configuration_path=Path(directory) / "missing.json",
                     output_directory=Path(directory) / "output",
                 )
+
+    def test_existing_daily_upload_is_aggregated_without_rewriting_it(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            paths = fixtures.write_dataset(root)
+            source_before = paths["path_report"].read_bytes()
+            path_destination = root / "model_input_amc_path_report.csv"
+            ads_destination = root / "model_input_amazon_ads_report.csv"
+
+            prepare_single_scope_reports(
+                paths["path_report"],
+                paths["ads_performance"],
+                path_destination,
+                ads_destination,
+                marketplace=fixtures.MARKETPLACE,
+            )
+
+            with path_destination.open(encoding="utf-8", newline="") as handle:
+                rows = list(csv.DictReader(handle))
+            self.assertEqual(paths["path_report"].read_bytes(), source_before)
+            self.assertTrue(ads_destination.is_file())
+            self.assertTrue(rows)
+            self.assertEqual({row["report_start_date"] for row in rows}, {"2026-01-01"})
+            self.assertEqual({row["report_end_date"] for row in rows}, {"2026-01-02"})
 
     def test_provider_capabilities_are_forwarded_for_current_configs(self) -> None:
         """A synthetic Provider must not receive Amazon's default profile."""
@@ -120,9 +148,7 @@ class MtaSimGeneratorAdapterTests(unittest.TestCase):
         adapted = _simulator_config(configuration)
         self.assertIs(touchpoint.last_capabilities, capabilities)
         self.assertEqual(
-            adapted.cost_type_by_touchpoint[
-                "DISPLAY:IMAGE:UNSPECIFIED:UNSPECIFIED"
-            ],
+            adapted.cost_type_by_touchpoint["DISPLAY:IMAGE:UNSPECIFIED:UNSPECIFIED"],
             "CPM",
         )
 

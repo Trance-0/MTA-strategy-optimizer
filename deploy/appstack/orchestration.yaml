@@ -13,6 +13,8 @@ data:
   BACKEND_HOST: "0.0.0.0"
   BACKEND_PORT: "8501"
   DASHBOARD_CONFIG_READ_ONLY: "true"
+  PIPELINE_RUNS_ENABLED: "true"
+  PIPELINE_OUTPUT_DIR: "/pipeline-output"
   PG_HOST: "{{ .Values.pgHost }}"
   PG_PORT: "{{ .Values.pgPort }}"
   PG_DATABASE: "{{ .Values.pgDatabase }}"
@@ -40,13 +42,14 @@ metadata:
   labels:
     app.kubernetes.io/name: marketing-roi-backend
 spec:
-  replicas: {{ .Values.replicas }}
+  # Job state and generated artifacts are process-local. Keep one pod unless
+  # the runner is first moved to shared durable state.
+  replicas: 1
   revisionHistoryLimit: 5
   strategy:
-    type: RollingUpdate
-    rollingUpdate:
-      maxUnavailable: 0
-      maxSurge: 1
+    # Recreate avoids even a rollout-time overlap between two process-local
+    # job stores. The short interruption is safer than polling a different pod.
+    type: Recreate
   selector:
     matchLabels:
       app.kubernetes.io/name: marketing-roi-backend
@@ -109,12 +112,16 @@ spec:
             - name: simulator-data
               mountPath: /data/mta-sim
               readOnly: true
+            - name: pipeline-output
+              mountPath: /pipeline-output
       volumes:
         - name: temporary
           emptyDir: {}
         - name: simulator-data
           persistentVolumeClaim:
             claimName: "{{ .Values.mtaSimPvc }}"
+        - name: pipeline-output
+          emptyDir: {}
 ---
 apiVersion: v1
 kind: Service

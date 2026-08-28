@@ -1,8 +1,8 @@
 ---
 title: Dashboard Views and Visual Contract
-compact: "Vue component contract: six views, navigation, paged entities, model runners, charts, schema setup, and Settings deployment identity comparing frontend and backend project versions and Git commit identifiers while listing backend Python and Flask versions."
+compact: "Vue component contract: six views, model runners, charts, schema setup, deployment identity, and the native Willow Sakura forecast panel whose budget, calendar, marketplace, placement-share, prediction, and comparison widgets run the contributed Extended-27 network."
 lang: en-US
-source_files: dashboard/src/theme.js, dashboard/src/style.css, dashboard/src/lib/deployment.js, dashboard/src/lib/diagnostics.js, dashboard/src/lib/useJobs.js, dashboard/src/views/CommandCenter.vue, dashboard/src/views/BudgetManager.vue, dashboard/src/views/Campaigns.vue, dashboard/src/views/CampaignOptimizer.vue, dashboard/src/views/OptimizationLog.vue, dashboard/src/views/KnowledgeBase.vue, dashboard/src/components/SidebarNav.vue, dashboard/src/components/TopBar.vue, dashboard/src/components/SettingsDialog.vue, dashboard/src/components/StageRunner.vue, dashboard/src/components/PlotlyChart.vue, dashboard/src/components/DataTable.vue, dashboard/src/components/EntityTable.vue, dashboard/src/components/ConfirmDialog.vue, dashboard/src/components/TableView.vue, dashboard/src/components/MetricRow.vue, dashboard/src/components/KeyValuePanel.vue, dashboard/src/components/ReliabilityBanner.vue, dashboard/src/lib/common.js
+source_files: dashboard/src/theme.js, dashboard/src/style.css, dashboard/src/lib/deployment.js, dashboard/src/lib/diagnostics.js, dashboard/src/lib/useJobs.js, dashboard/src/lib/willowGmvModel.js, dashboard/src/views/CommandCenter.vue, dashboard/src/views/BudgetManager.vue, dashboard/src/views/Campaigns.vue, dashboard/src/views/CampaignOptimizer.vue, dashboard/src/views/OptimizationLog.vue, dashboard/src/views/KnowledgeBase.vue, dashboard/src/components/SidebarNav.vue, dashboard/src/components/TopBar.vue, dashboard/src/components/SettingsDialog.vue, dashboard/src/components/StageRunner.vue, dashboard/src/components/WillowGmvForecast.vue, dashboard/src/components/PlotlyChart.vue, dashboard/src/components/DataTable.vue, dashboard/src/components/EntityTable.vue, dashboard/src/components/ConfirmDialog.vue, dashboard/src/components/TableView.vue, dashboard/src/components/MetricRow.vue, dashboard/src/components/KeyValuePanel.vue, dashboard/src/components/ReliabilityBanner.vue, dashboard/src/lib/common.js
 ---
 
 # Dashboard Views and Visual Contract
@@ -95,13 +95,36 @@ Running a stage writes new outputs, so it is refused wherever the deployment can
 
 Options are validated at the same boundary: a date must be a plain ISO date, a total budget a positive number, and a budget usage policy one the `BudgetUsagePolicy` enum declares. Arguments are passed as a vector with `shell: false`, never as a string a shell would re-parse.
 
-### Strategy evaluation runs as the fourth stage
+Configuration protection does not block runs. A database-backed AppStack
+deployment may keep credentials read-only while enabling pipeline execution;
+the server's job capability is authoritative. The deployment uses one pod and
+one application process because job progress is process-local.
+
+### Strategy evaluation is a runnable model stage
 
 The evaluation tab starts `script/evaluate_strategies.py` through the same job
 runner as attribution and optimization. The script projects both strategy
 artifacts, checks conservation, compares only allocations whose Campaigns are
 observed, and publishes `strategyEvaluation`. The current view explains those
 layers and exposes the run; it does not yet render the report fields.
+
+### Willow Sakura forecast is a native panel
+
+The evaluation tab embeds Willow Sakura's contributed Gross Merchandise Value
+(GMV) forecast as dashboard widgets, not as a plain HyperText Markup Language
+(HTML) page in an `iframe`. The panel includes all four ad-product budgets,
+marketplace, day of week, weekend state, all seven placement and creative cost
+shares, placement-type count, the run control, predicted attributed revenue,
+total daily budget, the all-budgets-plus-ten-percent scenario, revenue delta,
+and held-out model metrics.
+
+`WillowGmvForecast.vue` owns the inputs and accessible labels.
+`willowGmvModel.js` owns only pure Extended-27 feature construction and forward
+inference using the contributor's exported JSON weights. Editing any input or
+pressing **Run prediction** recomputes both scenarios. The panel names the
+prediction as Amazon-attributed sales rather than organic GMV and reports the
+held-out error alongside it; it never feeds this forecast into the project's
+optimizer or presents it as realized uplift.
 
 ## Reliability is never a footnote <span class="status-label status-verified" aria-label="Verified"></span>
 
@@ -251,13 +274,13 @@ The five-segment vocabulary, the reliability contract, the Outcomes, capacity ru
 
 - Inputs: None. Each component takes no props and reads the shared snapshot through `useDashboard()`, so a view never holds a file path, a Structured Query Language (SQL) statement, or a `fetch` call.
 - Outputs: The rendered page. Nothing is returned and nothing is written.
-- Behavior contract: **No view recomputes attribution or predicts an outcome.** The Campaigns and Budget Manager views may aggregate displayed reported performance into descriptive totals and ratios such as Click-Through Rate (CTR), Cost Per Click (CPC), and Cost Per Mille (CPM); they do not alter source rows. The similarity modal uses only a transparent, equal-weight selector heuristic and its objects follow the presentation-only `SimilarityReference` fields. `CampaignOptimizer.vue` retains its labelled constant-total-budget restatement and refuses it for an unreliable Outcome. Reported performance is immutable, filters scope every related panel, and charts retain a table or direct-label alternative. A view may **start** a stage that rewrites those artifacts, through `StageRunner.vue`, but never computes their contents itself: the numbers still come from the pipeline. No view names the research simulator or calls its data generated — a test asserts this against the view sources — because a production deployment reads a live account and a reader told the numbers are invented cannot act on them.
+- Behavior contract: **No production view recomputes attribution or predicts an outcome.** The Campaigns and Budget Manager views may aggregate displayed reported performance into descriptive totals and ratios such as Click-Through Rate (CTR), Cost Per Click (CPC), and Cost Per Mille (CPM); they do not alter source rows. The labelled Willow Sakura contribution is the one isolated exception: its browser-only forecast demonstrates the contributed network and never enters a production artifact or recommendation. The similarity modal uses only a transparent, equal-weight selector heuristic and its objects follow the presentation-only `SimilarityReference` fields. `CampaignOptimizer.vue` retains its labelled constant-total-budget restatement and refuses it for an unreliable Outcome. Reported performance is immutable, filters scope every related panel, and charts retain a table or direct-label alternative. A view may **start** a stage that rewrites those artifacts, through `StageRunner.vue`, but never computes their contents itself: the numbers still come from the pipeline. No view names the research simulator or calls its data generated — a test asserts this against the view sources — because a production deployment reads a live account and a reader told the numbers are invented cannot act on them.
 - Dependencies: Vue 3 and Plotly, through `src/lib/useDashboard.js`, `src/lib/common.js`, `src/theme.js`, and the shared components.
 - Verification: Rendered in a real browser in all three deployments — the API against PostgreSQL, the API against the committed files, and the static build — with no console error, no failed request, and no error card in any of the six.
 
 ### The shared components
 
-Source: `dashboard/src/components/SidebarNav.vue`, `dashboard/src/components/TopBar.vue`, `dashboard/src/components/SettingsDialog.vue`, `dashboard/src/components/PlotlyChart.vue`, `dashboard/src/components/DataTable.vue`, `dashboard/src/components/EntityTable.vue`, `dashboard/src/components/ConfirmDialog.vue`, `dashboard/src/components/TableView.vue`, `dashboard/src/components/MetricRow.vue`, `dashboard/src/components/KeyValuePanel.vue`, `dashboard/src/components/ReliabilityBanner.vue`
+Source: `dashboard/src/components/SidebarNav.vue`, `dashboard/src/components/TopBar.vue`, `dashboard/src/components/SettingsDialog.vue`, `dashboard/src/components/WillowGmvForecast.vue`, `dashboard/src/components/PlotlyChart.vue`, `dashboard/src/components/DataTable.vue`, `dashboard/src/components/EntityTable.vue`, `dashboard/src/components/ConfirmDialog.vue`, `dashboard/src/components/TableView.vue`, `dashboard/src/components/MetricRow.vue`, `dashboard/src/components/KeyValuePanel.vue`, `dashboard/src/components/ReliabilityBanner.vue`
 
 - Responsibility: Hold the chrome and the repeated display shapes, so two views cannot render the same thing differently.
 - Inputs: Props from the view that mounts them.
@@ -303,6 +326,29 @@ value is **Build mismatch**; a missing or `unknown` value is **Identity
 incomplete**. The values are selectable monospace text so an operator can copy
 them into a deployment report. A static build states that no backend is
 connected rather than comparing the dashboard against itself.
+
+`WillowGmvForecast.vue` renders the contributed forecast inside the evaluation
+tab using the dashboard's cards, fields, and metric treatments. It contains no
+`iframe`, `srcdoc`, global event handler, or copied navigation shell. Every
+control has a stable label and every output updates through Vue state while
+remaining independent from the production strategy artifacts.
+
+### `src/lib/willowGmvModel.js`
+
+Source: `dashboard/src/lib/willowGmvModel.js`
+
+- Responsibility: Build the contributor's 27-feature vector and run its two
+  hidden rectified-linear layers and capped output entirely in the browser.
+- Inputs: The exported model JSON and Willow forecast form values.
+- Outputs: Deterministic predicted attributed revenue for the requested budget
+  scale, plus the exact feature vector for verification.
+- Behavior contract: Budget inputs are non-negative; day and marketplace are
+  one-hot encoded in the model's declared order; zero standard deviations are
+  treated as one; matrix dimensions must match or throw a named error. The
+  ten-percent comparison changes only the four budgets.
+- Dependencies: JavaScript standard library only.
+- Verification: `dashboard/tests/willow_gmv_model.test.js` and the production
+  Vue build.
 
 - Dependencies: Vue 3 and `plotly.js-dist-min`.
 - Verification: Exercised in a real browser through the six views that mount them. `EntityTable.vue`'s paging, page sizes, and identity-keyed selection, `ConfirmDialog.vue`'s named rows, `SettingsDialog.vue`'s disabled-schema and census contracts, and `StageRunner.vue`'s progressbar contract are covered by `dashboard/tests/dashboard.test.js`.

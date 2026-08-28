@@ -89,6 +89,8 @@ services:
     # container's proxy, so the client needs no backend URL of its own.
     ports:
       - "${API_PORT:-8501}:8501"
+    volumes:
+      - pipeline-output:/pipeline-output
     healthcheck:
       # `/api/health` is liveness only and deliberately does not require a
       # populated database, so this stays green in file mode. urllib is used
@@ -129,3 +131,7 @@ services:
       timeout: 3s
       retries: 6
       start_period: 5s
+
+volumes:
+  pipeline-output:
+    name: marketing-roi-analysis-pipeline-output

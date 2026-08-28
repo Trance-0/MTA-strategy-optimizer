@@ -108,6 +108,30 @@ def config_read_only() -> bool:
     return _flag("DASHBOARD_CONFIG_READ_ONLY")
 
 
+def pipeline_runs_enabled() -> bool:
+    """Whether this server may spawn the three model-stage commands.
+
+    This is independent from configuration protection: an AppStack operator
+    may keep credentials immutable from the browser while still allowing the
+    authenticated dashboard to execute its pipeline.
+    """
+    return _flag("PIPELINE_RUNS_ENABLED", "true")
+
+
+def pipeline_output_directory() -> Path | None:
+    """Optional writable root for generated stage artifacts."""
+    _load_env()
+    value = os.getenv("PIPELINE_OUTPUT_DIR", "").strip()
+    return Path(value).resolve() if value else None
+
+
+def pipeline_artifact_path(relative: str, fallback: Path) -> Path:
+    """Prefer a completed runtime artifact, otherwise use the baseline path."""
+    root = pipeline_output_directory()
+    candidate = root / relative if root else None
+    return candidate if candidate is not None and candidate.is_file() else fallback
+
+
 def server_host() -> str:
     """The interface the API binds. Loopback is the safe default.
 

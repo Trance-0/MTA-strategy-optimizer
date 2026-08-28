@@ -1,7 +1,7 @@
 ---
 title: Model Testing and Comparison
 description: How each attribution model is tested, and how the four are compared against each other
-compact: "Three assurance layers: 284 unittest cases per suite file under `modules/*/tests/`, per-run Markov vs Shapley governance, and `evaluation.py` scoring against `simulation_ground_truth`. Read when adding a model to MODEL_REGISTRY or running tests."
+compact: "Attribution assurance layers: shared model conformance, per-run Markov versus Shapley governance, evaluation against simulation_ground_truth, and the generator adapter that preserves uploads while producing one aggregated model path scope for pipeline execution."
 lang: en-US
 source_files: modules/mta_standard/src/evaluation.py, modules/mta_standard/src/mta_sim_generator_adapter.py
 ---
@@ -461,9 +461,21 @@ Source: `modules/mta_standard/src/evaluation.py`
 
 Source: `modules/mta_standard/src/mta_sim_generator_adapter.py`
 
-- Responsibility: Invoke the pinned ZheyuanWu generator and prepare framework-compatible model/evaluation views. Current provider-aware configurations receive their matching ProviderCapabilities when compatibility keys are requested; historical configuration objects retain the no-argument key path.
-- Inputs: Submodule path, configuration, output directory, and generator variant.
-- Outputs: Generated manifest, model dataset, and evaluation-only ground truth path.
+- Responsibility: Invoke the pinned ZheyuanWu generator and prepare
+  framework-compatible model/evaluation views. Public
+  `prepare_single_scope_reports(source_path_report, performance_report,
+  destination_path_report, destination_performance_report, marketplace)` also
+  partitions and aggregates an existing uploaded daily report without invoking
+  the generator. It refuses an ambiguous multi-marketplace upload when no
+  marketplace is supplied. Current provider-aware configurations receive their
+  matching ProviderCapabilities when compatibility keys are requested;
+  historical configuration objects retain the no-argument key path.
+- Inputs: Submodule path, configuration, output directory, and generator
+  variant; or explicit uploaded path, performance, destination paths, and an
+  optional exact marketplace selection.
+- Outputs: Generated manifest, model dataset, and evaluation-only ground truth
+  path; or deterministic matching single-scope path and performance reports
+  that preserve both source uploads.
 - Dependencies: External generator, dataloader, and touchpoint adapter.
 - Verification: `modules/mta_standard/tests/test_mta_sim_generator_adapter.py`.
 
