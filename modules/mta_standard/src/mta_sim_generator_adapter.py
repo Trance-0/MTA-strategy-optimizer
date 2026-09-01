@@ -20,6 +20,7 @@ from __future__ import annotations
 import importlib
 import importlib.util
 import csv
+import copy
 import sys
 from dataclasses import dataclass
 from decimal import Decimal
@@ -65,6 +66,58 @@ class GeneratedMtaSimRun:
     ground_truth: Path
     simulator_config: SimulatorConfig
     dataset: MtaSimDataset
+
+
+def load_resolved_mta_sim_configuration(
+    *,
+    submodule_root: str | Path,
+    configuration_path: str | Path,
+    variant: str = "baseline",
+) -> dict[str, Any]:
+    """Return one self-contained configuration resolved by the pinned package.
+
+    The returned copy contains no ``extends`` path, so an HTTP caller can edit
+    a reviewed preset without gaining a path from which the server will read.
+    """
+
+    project = _zheyuanwu_root(submodule_root)
+    _, configuration_module = _import_generator_modules(project, variant)
+    configuration = configuration_module.load_configuration(
+        Path(configuration_path).resolve()
+    )
+    return copy.deepcopy(configuration.source_payload)
+
+
+def export_mta_sim_dataset_to_postgresql(
+    *,
+    submodule_root: str | Path,
+    configuration_path: str | Path,
+    output_directory: str | Path,
+    database_url: str,
+    variant: str = "baseline",
+    reset: bool = False,
+) -> dict[str, Any]:
+    """Regenerate an accepted configuration through the explicit PG writer.
+
+    Connection information is supplied by the backend caller and is passed
+    directly to the pinned writer. It is not added to the returned manifest.
+    """
+
+    project = _zheyuanwu_root(submodule_root)
+    package, _ = _import_generator_modules(project, variant)
+    storage_module = importlib.import_module(
+        "simulations.baseline.mta_dataset.postgresql_storage"
+    )
+    writer = storage_module.PostgreSqlResearchWriter(
+        database_url,
+        reset=reset,
+    )
+    return package.run_pipeline(
+        Path(configuration_path).resolve(),
+        Path(output_directory).resolve(),
+        storage_mode="none",
+        writers=(writer,),
+    )
 
 
 def _zheyuanwu_root(submodule_root: str | Path) -> Path:

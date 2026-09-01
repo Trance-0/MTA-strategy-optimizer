@@ -1,6 +1,6 @@
 """The snapshot, the reload control, and the master-object routes.
 
-These four routes are what the six views read and write. `GET /api/dashboard`
+These four routes are what the seven views read and write. `GET /api/dashboard`
 is the one the client fetches on load; the others exist because a reader can
 change something from the interface.
 

@@ -7,7 +7,7 @@
  * browser-side counterpart of the loader cache the Python dashboard held.
  *
  * Data flow:
- *     src/api/client.js -> here -> the six views
+ *     src/api/client.js -> here -> the seven views
  */
 
 import { computed, readonly, ref } from "vue";
@@ -79,7 +79,7 @@ const EMPTY = {
 };
 
 async function load() {
-  // Concurrent callers share one request: the six views mount together on the
+  // Concurrent callers share one request: the seven views mount together on the
   // first paint and would otherwise each issue their own.
   if (inFlight) return inFlight;
   loading.value = true;

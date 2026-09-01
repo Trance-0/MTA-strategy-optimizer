@@ -123,11 +123,11 @@ class RouteTests(unittest.TestCase):
         response = self.client.get("/api/schema-operations")
         self.assertEqual(response.status_code, 200)
         self.assertIn("current", response.get_json())
+        self.assertIn("available", response.get_json())
 
     def test_file_mode_refuses_before_validation_or_spawn(self) -> None:
         with (
             patch("backend.api.schema_operations.is_hosted", return_value=False),
-            patch("backend.api.schema_operations.config_read_only", return_value=False),
             patch("backend.api.schema_operations.use_database", return_value=False),
         ):
             response = self.client.post(
@@ -138,11 +138,63 @@ class RouteTests(unittest.TestCase):
         self.assertEqual(response.status_code, 403)
         self.assertEqual(response.get_json()["error"], "schema_operations_unavailable")
 
+    def test_protected_configuration_does_not_refuse_schema_setup(self) -> None:
+        # Configuration protection governs whether a browser may rewrite the
+        # credentials the platform issued. Setup writes tables into the
+        # database that platform already pointed this service at and rewrites
+        # no credential, so it is not what that flag governs. Refusing it here
+        # made the one deployment whose readers have no shell the one
+        # deployment with no way to populate a schema at all.
+        with (
+            patch("backend.api.schema_operations.is_hosted", return_value=False),
+            patch("backend.api.schema_operations.use_database", return_value=True),
+            patch(
+                "backend.api.schema_operations.schema_setup_enabled", return_value=True
+            ),
+            patch("backend.config.config_read_only", return_value=True),
+            patch(
+                "backend.api.schema_operations.start_operation",
+                side_effect=OperationError("invalid_schema", "refused after the gate"),
+            ),
+        ):
+            response = self.client.post(
+                "/api/schema-operations",
+                json={"action": "initialize", "schema": "not a name"},
+            )
+
+        # Reached validation rather than being turned away at the door.
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.get_json()["error"], "invalid_schema")
+
+    def test_an_operator_can_still_withhold_schema_setup(self) -> None:
+        with (
+            patch("backend.api.schema_operations.is_hosted", return_value=False),
+            patch("backend.api.schema_operations.use_database", return_value=True),
+            patch(
+                "backend.api.schema_operations.schema_setup_enabled", return_value=False
+            ),
+        ):
+            response = self.client.post(
+                "/api/schema-operations",
+                json={"action": "initialize", "schema": "new_schema"},
+            )
+            poll = self.client.get("/api/schema-operations")
+
+        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.get_json()["error"], "schema_setup_disabled")
+        # The refusal travels with the poll as well, so the dialog disables its
+        # buttons from what the route would accept rather than from a rule it
+        # reconstructed from the deployment flags.
+        self.assertFalse(poll.get_json()["available"])
+        self.assertIn("SCHEMA_SETUP_ENABLED", poll.get_json()["reason"])
+
     def test_replace_must_be_a_boolean(self) -> None:
         with (
             patch("backend.api.schema_operations.is_hosted", return_value=False),
-            patch("backend.api.schema_operations.config_read_only", return_value=False),
             patch("backend.api.schema_operations.use_database", return_value=True),
+            patch(
+                "backend.api.schema_operations.schema_setup_enabled", return_value=True
+            ),
         ):
             response = self.client.post(
                 "/api/schema-operations",

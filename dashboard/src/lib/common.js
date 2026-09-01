@@ -6,7 +6,7 @@
  * produced, and these helpers group, sort, and format them.
  *
  * Data flow:
- *     the snapshot -> here -> the six views
+ *     the snapshot -> here -> the seven views
  */
 
 import { count, money, percent, ratio } from "../theme.js";

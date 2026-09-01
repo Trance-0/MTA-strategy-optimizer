@@ -16,8 +16,10 @@ Data flow:
 
 from __future__ import annotations
 
+import os
 import tempfile
 import unittest
+from types import SimpleNamespace
 from unittest.mock import patch
 from pathlib import Path
 
@@ -31,6 +33,7 @@ from backend.services.settings import (
     log,
     log_state,
     settings_state,
+    select_runtime_schema,
     write_env,
 )
 
@@ -180,6 +183,119 @@ class SchemaRejectionTests(unittest.TestCase):
 
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.get_json()["error"], "unknown_action")
+
+
+class RuntimeSchemaSelectionTests(unittest.TestCase):
+    """Check that a confirmed schema selection loads data or rolls back."""
+
+    def setUp(self) -> None:
+        """Reset the process-local configured-schema marker."""
+
+        from backend.services import settings
+
+        settings._configured_schema = None
+
+    def tearDown(self) -> None:
+        """Avoid leaking a test selection into later settings tests."""
+
+        from backend.services import settings
+
+        settings._configured_schema = None
+
+    def test_non_dashboard_schema_is_rejected_before_cache_changes(self) -> None:
+        """Only an exact selectable live-census entry may become active."""
+
+        with (
+            patch("backend.services.settings.use_database", return_value=True),
+            patch(
+                "backend.services.settings.available_schemas",
+                return_value={
+                    "schemas": [{"name": "raw", "selectable": False}],
+                    "selected": "public",
+                },
+            ),
+            patch(
+                "backend.config.database_settings",
+                return_value=SimpleNamespace(schema="public"),
+            ),
+            patch(
+                "backend.services.settings._invalidate_configuration_caches"
+            ) as invalidate,
+        ):
+            with self.assertRaisesRegex(ValueError, "dashboard-ready"):
+                select_runtime_schema("raw")
+
+        invalidate.assert_not_called()
+
+    def test_successful_selection_probes_data_and_returns_refreshed_state(self) -> None:
+        """A schema becomes visible only after its snapshot loads successfully."""
+
+        expected = {"connection": {"PG_SCHEMA": "mta_us"}}
+        with (
+            patch.dict(os.environ, {"PG_SCHEMA": "public"}),
+            patch("backend.services.settings.use_database", return_value=True),
+            patch(
+                "backend.services.settings.available_schemas",
+                return_value={
+                    "schemas": [{"name": "mta_us", "selectable": True}],
+                    "selected": "public",
+                },
+            ),
+            patch(
+                "backend.config.database_settings",
+                return_value=SimpleNamespace(schema="public"),
+            ),
+            patch(
+                "backend.services.settings._invalidate_configuration_caches"
+            ) as invalidate,
+            patch("backend.database.dispose_engine") as dispose,
+            patch("backend.repository.snapshot.clear_caches") as clear,
+            patch("backend.repository.snapshot.load_snapshot") as load,
+            patch("backend.services.settings.settings_state", return_value=expected),
+        ):
+            result = select_runtime_schema("mta_us")
+            self.assertEqual(os.environ["PG_SCHEMA"], "mta_us")
+
+        self.assertEqual(result, expected)
+        invalidate.assert_called_once_with()
+        dispose.assert_called_once_with()
+        clear.assert_called_once_with()
+        load.assert_called_once_with()
+
+    def test_failed_snapshot_restores_the_previous_schema(self) -> None:
+        """A load failure cannot strand subsequent requests on a broken schema."""
+
+        with (
+            patch.dict(os.environ, {"PG_SCHEMA": "public"}),
+            patch("backend.services.settings.use_database", return_value=True),
+            patch(
+                "backend.services.settings.available_schemas",
+                return_value={
+                    "schemas": [{"name": "mta_us", "selectable": True}],
+                    "selected": "public",
+                },
+            ),
+            patch(
+                "backend.config.database_settings",
+                return_value=SimpleNamespace(schema="public"),
+            ),
+            patch(
+                "backend.services.settings._invalidate_configuration_caches"
+            ) as invalidate,
+            patch("backend.database.dispose_engine") as dispose,
+            patch("backend.repository.snapshot.clear_caches") as clear,
+            patch(
+                "backend.repository.snapshot.load_snapshot",
+                side_effect=RuntimeError("probe failed"),
+            ),
+        ):
+            with self.assertRaisesRegex(RuntimeError, "probe failed"):
+                select_runtime_schema("mta_us")
+            self.assertEqual(os.environ["PG_SCHEMA"], "public")
+
+        self.assertEqual(invalidate.call_count, 2)
+        self.assertEqual(dispose.call_count, 2)
+        self.assertEqual(clear.call_count, 2)
 
 
 class DiagnosticLogTests(unittest.TestCase):

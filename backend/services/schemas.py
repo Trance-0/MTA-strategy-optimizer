@@ -97,6 +97,50 @@ IMPORT_COMMAND = (
 )
 
 
+#: What each classification means to a reader who has no shell. The census
+#: `detail` strings name a command, because a reader at a terminal can run one;
+#: these are what the browser shows instead, and they name a control on the
+#: page rather than a program. Both describe the same schema, so they are kept
+#: side by side rather than one being derived from the other.
+REMEDY_ACTIONS: dict[str, dict[str, str]] = {
+    "dashboard": {
+        "action": "select",
+        "label": "Load this schema",
+        "summary": "Ready. Every view can read it.",
+    },
+    "source": {
+        "action": "derive",
+        "label": "Build dashboard schemas from it",
+        "summary": (
+            "Holds the complete source model but none of the dashboard's own "
+            "tables. Building reads it without changing it, and writes one "
+            "dashboard schema per scenario."
+        ),
+    },
+    "partial_source": {
+        "action": "none",
+        "label": "",
+        "summary": (
+            "Holds part of a source model. Not enough to build dashboard "
+            "schemas from, and not a schema any view can read."
+        ),
+    },
+    "empty": {
+        "action": "initialize",
+        "label": "Load the sample data into it",
+        "summary": "Empty. The committed sample account can be written into it.",
+    },
+    "other": {
+        "action": "none",
+        "label": "",
+        "summary": (
+            "Belongs to another application. Nothing here would be safe to "
+            "write into it."
+        ),
+    },
+}
+
+
 def _describe(
     schema: str, present: set[str], total: int, selected: str
 ) -> dict[str, Any]:
@@ -161,6 +205,13 @@ def _describe(
         "canDerive": parse_source and not complete,
         "sourceMissingCount": len(source_missing),
         "detail": detail,
+        # The same classification stated without naming a command, for the
+        # browser. `detail` stays as it is: a reader at a terminal is still
+        # told exactly what to run.
+        "remedy": {
+            **REMEDY_ACTIONS[kind],
+            "schema": schema,
+        },
     }
 
 

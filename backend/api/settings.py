@@ -13,13 +13,19 @@ from __future__ import annotations
 
 from flask import Blueprint, jsonify, request
 
-from backend.config import DEFAULT_SCHEMA, config_read_only, is_hosted, valid_schema_name
+from backend.config import (
+    DEFAULT_SCHEMA,
+    config_read_only,
+    is_hosted,
+    valid_schema_name,
+)
 from backend.services.settings import (
     apply_logging,
     clear_log,
     log,
     read_env,
     settings_state,
+    select_runtime_schema,
     test_connection,
     write_env,
 )
@@ -121,7 +127,9 @@ def post_settings():
 
     if action == "test":
         result = test_connection(updates)
-        log("INFO", "settings", f"connection test: {'ok' if result['ok'] else 'failed'}")
+        log(
+            "INFO", "settings", f"connection test: {'ok' if result['ok'] else 'failed'}"
+        )
         return jsonify(result)
 
     if action == "save":
@@ -130,3 +138,33 @@ def post_settings():
         return jsonify({"ok": True, **settings_state()})
 
     return jsonify({"error": "unknown_action"}), 400
+
+
+@blueprint.post("/api/settings/schema-selection")
+def post_schema_selection():
+    """Select a live dashboard-ready schema for this backend process."""
+
+    body = request.get_json(silent=True) or {}
+    schema = str(body.get("schema") or "").strip()
+    try:
+        return jsonify(select_runtime_schema(schema))
+    except ValueError as error:
+        return (
+            jsonify({"error": "invalid_schema_selection", "message": str(error)}),
+            400,
+        )
+    except RuntimeError as error:
+        return (
+            jsonify({"error": "schema_selection_unavailable", "message": str(error)}),
+            409,
+        )
+    except Exception as error:  # noqa: BLE001 - bounded for the settings dialog
+        return (
+            jsonify(
+                {
+                    "error": "schema_selection_failed",
+                    "message": f"{type(error).__name__}: {str(error)[:300]}",
+                }
+            ),
+            503,
+        )

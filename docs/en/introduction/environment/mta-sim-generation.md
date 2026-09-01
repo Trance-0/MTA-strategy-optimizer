@@ -85,6 +85,14 @@ Owner: Local adapter. Role: Ground-truth scope normalized for separate evaluatio
 
 The original generator files are never rewritten by the adapter. Generated output is ignored by Git; only deliberately reviewed synthetic public fixtures may be committed.
 
+## Dashboard generation workflow <span class="status-label status-verified" aria-label="Verified"></span>
+
+The [Data Generator dashboard view](/en/dashboard/data-generator.md) calls the
+same pinned generator boundary. It accepts only a self-contained configuration
+object, writes it under the ignored runtime directory, and exposes two bounded
+previews. PostgreSQL credentials are accepted only by the backend export route
+and are never stored or returned to Vue.
+
 ## External verification note <span class="status-label status-external" aria-label="External"></span>
 
 At the pinned revision, the submodule's 10 baseline tests and six regional tests pass. Its contributor instructions also name a root `scripts/check_public_release.py` command, but that file is not present in the pinned repository tree, so that specific upstream check cannot be executed. This repository records the limitation rather than substituting a different check.

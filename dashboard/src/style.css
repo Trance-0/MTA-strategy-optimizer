@@ -785,6 +785,8 @@ select,
 input[type="text"],
 input[type="search"],
 input[type="password"],
+input[type="number"],
+input[type="date"],
 textarea {
   width: 100%;
   border: 1px solid var(--line2);
@@ -795,6 +797,83 @@ textarea {
   color: var(--text);
   font-weight: 500;
   line-height: 1.2;
+}
+
+.term-help {
+  display: inline-flex;
+  position: relative;
+  margin-left: 3px;
+  vertical-align: middle;
+}
+
+.term-help-button {
+  width: 15px;
+  height: 15px;
+  border: 1px solid var(--line2);
+  border-radius: 50%;
+  padding: 0;
+  background: #fff;
+  color: var(--blue);
+  font: 700 10px/13px system-ui, sans-serif;
+}
+
+.term-help-button:focus-visible {
+  outline: 2px solid var(--blue2);
+  outline-offset: 2px;
+}
+
+.term-help-popover {
+  position: absolute;
+  z-index: 80;
+  top: calc(100% + 6px);
+  left: 50%;
+  width: min(260px, 70vw);
+  transform: translateX(-50%);
+  padding: 9px 10px;
+  border: 1px solid var(--line2);
+  border-radius: 7px;
+  background: #fff;
+  color: var(--text);
+  box-shadow: 0 8px 24px #0b142a29;
+  font-size: 11px;
+  font-weight: 400;
+  line-height: 1.45;
+  text-align: left;
+  white-space: normal;
+}
+
+.term-help-popover a {
+  display: block;
+  margin-top: 5px;
+  color: var(--blue-strong);
+  font-weight: 650;
+}
+
+.generator-page .card-body,
+.generator-json-editor,
+.generator-export-form {
+  display: flex;
+  flex-direction: column;
+  gap: 13px;
+}
+
+.generator-json-editor textarea {
+  min-height: 420px;
+  resize: vertical;
+  font: 12px/1.55 ui-monospace, SFMono-Regular, Consolas, monospace;
+  tab-size: 2;
+}
+
+.generator-page .table-wrap {
+  max-height: 520px;
+}
+
+.schema-select-backdrop {
+  z-index: 90;
+}
+
+.settings-reload {
+  justify-content: flex-end;
 }
 
 select {
@@ -1553,6 +1632,61 @@ tbody tr.selected:hover {
   text-overflow: ellipsis;
 }
 
+/* The remedies under the error card. Left-aligned inside `.empty-card`, which
+   centres its text: a list of choices is read as a list, not as a caption. */
+.schema-recovery {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  text-align: left;
+  margin: 16px auto 0;
+  max-width: 620px;
+  width: 100%;
+}
+
+.recovery-group h3 {
+  margin: 0 0 7px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.recovery-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 10px 12px;
+}
+
+.recovery-option + .recovery-option {
+  margin-top: 7px;
+}
+
+.recovery-text {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.recovery-text b {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12px;
+  color: var(--text);
+}
+
+@media (max-width: 700px) {
+  .recovery-option {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
 /* ---------------------------------------------------------------------------
    Stage runner
    --------------------------------------------------------------------------- */
@@ -1745,10 +1879,11 @@ tbody tr.selected:hover {
 
   .nav {
     flex-direction: row;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     align-items: center;
     padding: 6px 0;
-    overflow: visible;
+    overflow-x: auto;
+    overflow-y: hidden;
     flex: 1 1 auto;
     gap: 2px;
   }

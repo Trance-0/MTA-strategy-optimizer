@@ -132,23 +132,23 @@ def database_available() -> tuple[bool, str]:
             # most likely arrived here by selecting a schema that holds
             # research history alone.
             #
-            # The remedy named is the derivation rather than the fixture
-            # import. A schema reached this way already holds another account's
-            # history, and the importer carries its own advertiser and
-            # Campaigns with it, so pointing it here would staple the sample's
-            # entities onto that account's observations. The settings dialog
-            # chooses between the two on the same grounds; this message is
-            # reached by a reader who bypassed the dialog's disabled option, so
-            # it must not contradict it.
+            # No command is named. This string is rendered on the client's
+            # error card, which offers the same remedies as controls the reader
+            # can press, and reading `attribution_result` out of the message is
+            # what tells that card which schema failed. The commands remain in
+            # `backend/services/schemas.py`, where an operator at a terminal
+            # sees them beside the schema they describe.
             return False, (
-                f"Schema {schema!r} does not contain attribution_result. Select a "
-                f"schema that carries the dashboard tables, or derive one per "
-                f"scenario with: uv run --extra dashboard python "
-                f"script/derive_scenario_schemas.py --source {schema} --all --replace"
+                f"Schema {schema!r} does not contain attribution_result, so no "
+                f"view can read it. Choose a schema that carries the dashboard "
+                f"tables, or build one from a source schema."
             )
         rows = sql("select count(*)::int as count from attribution_result")
         if not rows or not rows[0].get("count"):
-            return False, f"Connected to schema {schema!r}, but attribution_result is empty."
+            return (
+                False,
+                f"Connected to schema {schema!r}, but attribution_result is empty.",
+            )
         from backend.config import safe_summary
 
         return True, f"Connected to {safe_summary()}"

@@ -32,17 +32,21 @@ if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
 from flask import Flask, jsonify, send_from_directory  # noqa: E402
+from werkzeug.middleware.proxy_fix import ProxyFix  # noqa: E402
 
 from backend.api import dashboard as dashboard_api  # noqa: E402
+from backend.api import data_generator as data_generator_api  # noqa: E402
 from backend.api import jobs as jobs_api  # noqa: E402
 from backend.api import models as models_api  # noqa: E402
 from backend.api import schema_operations as schema_operations_api  # noqa: E402
+from backend.api import schema_recovery as schema_recovery_api  # noqa: E402
 from backend.api import settings as settings_api  # noqa: E402
 from backend.config import (  # noqa: E402
     client_dist_directory,
     open_browser,
     server_host,
     server_port,
+    trust_proxy_headers,
 )
 
 #: Requests larger than this are refused. The largest legitimate body is a
@@ -54,6 +58,8 @@ MAX_CONTENT_LENGTH = 256 * 1024
 def create_app() -> Flask:
     """Build the application with every blueprint registered."""
     app = Flask(__name__, static_folder=None)
+    if trust_proxy_headers():
+        app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1)
     app.config["MAX_CONTENT_LENGTH"] = MAX_CONTENT_LENGTH
     # Keys are emitted in the order the loaders produced them rather than
     # alphabetically, so the payload a reader inspects matches the order this
@@ -61,9 +67,11 @@ def create_app() -> Flask:
     app.config["JSON_SORT_KEYS"] = False
 
     app.register_blueprint(dashboard_api.blueprint)
+    app.register_blueprint(data_generator_api.blueprint)
     app.register_blueprint(jobs_api.blueprint)
     app.register_blueprint(settings_api.blueprint)
     app.register_blueprint(schema_operations_api.blueprint)
+    app.register_blueprint(schema_recovery_api.blueprint)
     app.register_blueprint(models_api.blueprint)
 
     _register_client(app)

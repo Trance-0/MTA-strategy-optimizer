@@ -1,9 +1,9 @@
 ---
 title: Backend Jobs and Settings
 description: Pipeline job polling and protected runtime settings contracts
-compact: "Contracts for `/api/jobs`, `/api/settings`, and `/api/schema-operations`: server-declared model datasets, direct-interpreter subprocesses, database report/research preparation, protected configuration, isolated outputs, bounded logs, termination, cache invalidation, and capability refusals."
+compact: "Contracts for jobs, settings, runtime schema selection, schema recovery, and schema operations: model datasets, protected credentials, browser-actionable database repair, isolated outputs, bounded logs, termination, cache invalidation, and independent capability flags."
 lang: en-US
-source_files: backend/api/jobs.py, backend/api/settings.py, backend/api/schema_operations.py, backend/services/jobs.py, backend/services/model_datasets.py, backend/services/settings.py, backend/services/schema_operations.py, backend/tests/test_jobs.py, backend/tests/test_settings.py, backend/tests/test_schema_operations.py
+source_files: backend/api/jobs.py, backend/api/settings.py, backend/api/schema_operations.py, backend/api/schema_recovery.py, backend/services/jobs.py, backend/services/model_datasets.py, backend/services/settings.py, backend/services/schema_operations.py, backend/services/schema_recovery.py, backend/tests/test_jobs.py, backend/tests/test_settings.py, backend/tests/test_schema_operations.py, backend/tests/test_schema_recovery.py
 ---
 
 # Backend Jobs and Settings
@@ -104,6 +104,22 @@ so a name failing this check arrived from something other than the dropdown.
 The census, its `selectable` rule, and the `search_path` behavior are specified
 in [Backend Setup and Deployment](./setups.md#schema-selection).
 
+### Runtime schema selection
+
+`POST /api/settings/schema-selection` accepts `{ "schema": string }` only in
+database mode. It is independent of protected deployment configuration because
+it changes neither credentials nor `.env`. The service re-runs the live census,
+requires an exact entry with `selectable: true`, sets that schema as the
+process-local runtime override, disposes every existing engine, clears core and
+research caches, and returns fresh Settings state.
+
+The route rejects a source, partial, empty, unrelated, missing, or malformed
+schema before any dashboard query is run. If the target cannot serve a probe
+snapshot, the service restores the prior schema, clears the failed target's
+state, and reports the failure. `GET /api/settings` marks the runtime selection
+active and carries the configured schema separately so the dialog can state
+that a restart returns to deployment configuration.
+
 AppStack sets `DASHBOARD_CONFIG_READ_ONLY=true`, so deployed save and test
 actions return `403`; operators change environment variables through AppStack
 and roll the Deployment. The schema is chosen there through the `pgSchema`
@@ -114,8 +130,11 @@ value and takes effect on restart.
 `GET /api/schema-operations` returns the running or most recent schema
 operation. `POST /api/schema-operations` accepts `initialize` or `derive`, a
 validated schema name, and an explicit Boolean `replace`. `DELETE
-/api/schema-operations` requests termination. Hosted, protected, and file-mode
-deployments refuse starts before spawning a process.
+/api/schema-operations` requests termination. Hosted and file-mode deployments
+refuse starts before spawning a process. `SCHEMA_SETUP_ENABLED` governs the
+write capability independently of `DASHBOARD_CONFIG_READ_ONLY`: protecting
+credentials does not by itself prohibit using the database connection the
+deployment already supplied.
 
 Initialization accepts a nonexistent or empty schema. It accepts a complete
 dashboard schema only with `replace: true`, and always refuses a populated
@@ -131,6 +150,23 @@ lines with a dropped-line count. The response is `202` once the process exists;
 the client polls the `GET` route until `succeeded`, `failed`, or `stopped`. A
 successful operation disposes the database pool and clears snapshot caches
 before the next census.
+
+## Schema Recovery
+
+When the configured schema cannot serve the snapshot, `GET
+/api/schema-recovery` turns the live census into browser actions. It excludes
+the failing active schema, incomplete and unrelated schemas, and any write
+action prohibited by `SCHEMA_SETUP_ENABLED`. It may offer:
+
+- `select` for another dashboard-ready schema;
+- `derive` for a complete MTA-SIM source schema; or
+- `initialize` for an empty schema.
+
+The route is read-only and grants no capability. `SchemaRecovery.vue` sends a
+chosen action to the existing schema-selection or schema-operation route, which
+repeats identifier, census, permission, and replacement validation immediately
+before acting. Recovery never proposes replacement; destructive rebuilding
+remains an explicit Settings action.
 
 ## Source Files
 
@@ -164,10 +200,10 @@ Source: `backend/api/jobs.py`, `backend/services/jobs.py`, `backend/services/mod
 Source: `backend/api/settings.py`, `backend/services/settings.py`
 
 - Responsibility: Serve protected settings actions, atomic environment-file
-  changes, database probes, the schema census, and a 400-entry in-memory
-  diagnostic ring.
-- Inputs: Logging settings or connection fields, including `PG_SCHEMA`; stored
-  credentials are never echoed.
+  changes, database probes, the schema census, confirmed process-local schema
+  selection, and a 400-entry in-memory diagnostic ring.
+- Inputs: Logging settings, connection fields including `PG_SCHEMA`, or an
+  exact dashboard-ready schema name; stored credentials are never echoed.
 - Outputs: Sanitized settings state carrying `connection.PG_SCHEMA`, a
   `schemas` census, and `backendIdentity` project/runtime versions and commit;
   a probe result carrying the same census; or an
@@ -177,7 +213,9 @@ Source: `backend/api/settings.py`, `backend/services/settings.py`
   name is validated before `.env` is read or written, because it becomes an
   identifier in a connect option rather than a bound value. An absent or blank
   schema resolves to `public`, which keeps every deployment that predates the
-  setting working unchanged.
+  setting working unchanged. Runtime selection rechecks `selectable: true`,
+  disposes the pool, clears caches, probes the target snapshot, and restores
+  the prior schema on failure without rewriting `.env`.
 - Dependencies: Shared dashboard configuration, `backend/services/schemas.py`,
   database pool disposal, and snapshot cache invalidation.
 - Verification: `backend/tests/test_settings.py`, plus Flask settings requests
@@ -208,3 +246,31 @@ Source: `backend/api/schema_operations.py`,
 - Verification: `backend/tests/test_schema_operations.py` proves argument
   construction, capability refusals, bounded logs, lifecycle state, and route
   protection without opening a live database.
+
+### `backend/api/schema_recovery.py` and `backend/services/schema_recovery.py`
+
+Source: `backend/api/schema_recovery.py`,
+`backend/services/schema_recovery.py`
+
+- Responsibility: Convert the current schema census into safe, actionable
+  recovery choices for a dashboard data-load failure.
+- Inputs: Database mode, the configured schema, `SCHEMA_SETUP_ENABLED`, and the
+  live schema census.
+- Outputs: A non-secret state containing the active schema, capability reason,
+  and zero or more select, derive, or initialize options.
+- Behavior contract: The active failing schema is never offered for selection.
+  Incomplete and unrelated schemas are omitted. Write options disappear when
+  setup is disabled, and every returned option has `replace: false`. The route
+  neither writes nor authorizes; the action route revalidates everything.
+- Dependencies: `backend/services/schemas.py` and backend configuration.
+- Verification: `backend/tests/test_schema_recovery.py`.
+
+### `backend/tests/test_schema_recovery.py`
+
+Source: `backend/tests/test_schema_recovery.py`
+
+- Responsibility: Prove recovery choice filtering and the read-only route.
+- Inputs: Mocked schema census and capability flags; no live database.
+- Outputs: `unittest` assertions.
+- Dependencies: Flask test client and `backend/services/schema_recovery.py`.
+- Verification: Backend discovery command.

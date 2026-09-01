@@ -1,14 +1,14 @@
 /**
- * The six views, their navigation grouping, and their rail icons.
+ * The seven views, their flat navigation order, and their rail icons.
  *
  * This is the single place a view is registered. A page key appears here, in
- * `PAGE_GROUPS`, and in `App.vue`'s component map; the test
- * `tests/pages.test.js` asserts the three agree, so a view cannot be added to
+ * `PAGE_KEYS`, and in `App.vue`'s component map; the test asserts the three
+ * agree, so a view cannot be added to
  * the rail without a component behind it.
  *
  * The grouping and the icon set are the reference prototype's
  * (`external/UI_design/brandlens-vue`, by Rouxin Jin), redrawn for this
- * project's six views.
+ * project's seven views.
  */
 
 export const PAGES = {
@@ -16,6 +16,11 @@ export const PAGES = {
     title: "Command Center",
     crumb: "AI-MTA / Overview",
     icon: '<path d="M4 4h6v6H4V4zm10 0h6v10h-6V4zM4 14h6v6H4v-6zm10 4h6v2h-6v-2z" stroke="currentColor" stroke-width="1.6"/>',
+  },
+  generator: {
+    title: "Data Generator",
+    crumb: "AI-MTA / Data Generator",
+    icon: '<path d="M7 4h10v4H7V4zm-2 7h14v9H5v-9zm4 3h6m-6 3h4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>',
   },
   budget: {
     title: "Budget Manager",
@@ -43,12 +48,7 @@ export const PAGES = {
     icon: '<path d="M4 5h7v14H4V5zm9 0h7v14h-7V5zM7 9h1m8 0h1" stroke="currentColor" stroke-width="1.6"/>',
   },
 
-  // The two foot controls. They are not views and are excluded from
-  // `PAGE_GROUPS`, but the rail draws them from the same icon set.
-  reload: {
-    title: "Reload data",
-    icon: '<path d="M20 12a8 8 0 11-2.34-5.66M20 4v4h-4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>',
-  },
+  // The foot control. It is not a view and is excluded from `PAGE_KEYS`.
   settings: {
     title: "Settings",
     icon:
@@ -57,15 +57,16 @@ export const PAGES = {
   },
 };
 
-/** Section label -> the views beneath it, in the prototype's order. */
-export const PAGE_GROUPS = [
-  { label: "OVERVIEW", pages: ["overview"] },
-  { label: "PLANNING", pages: ["budget", "campaigns", "optimizer"] },
-  { label: "INSIGHTS", pages: ["log", "knowledge"] },
+/** Every navigable page key in the rail's one-column order. */
+export const PAGE_KEYS = [
+  "overview",
+  "generator",
+  "budget",
+  "campaigns",
+  "optimizer",
+  "log",
+  "knowledge",
 ];
-
-/** Every navigable page key, flattened. */
-export const PAGE_KEYS = PAGE_GROUPS.flatMap((group) => group.pages);
 
 export const DEFAULT_PAGE = PAGE_KEYS[0];
 

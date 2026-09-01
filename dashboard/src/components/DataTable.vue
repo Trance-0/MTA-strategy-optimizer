@@ -9,6 +9,8 @@
 import { computed } from "vue";
 
 import { NUMERIC_FORMATS, renderCell } from "../lib/common.js";
+import { termFor } from "../lib/terms.js";
+import TermHelp from "./TermHelp.vue";
 
 const props = defineProps({
   /**
@@ -40,6 +42,7 @@ const hasRows = computed(() => props.rows.length > 0);
             :style="column.width ? { width: column.width } : null"
           >
             {{ column.label }}
+            <TermHelp v-if="termFor(column.label)" :term="termFor(column.label)" />
           </th>
         </tr>
       </thead>

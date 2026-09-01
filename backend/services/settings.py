@@ -63,6 +63,8 @@ _records: deque = deque(maxlen=LOG_CAPACITY)
 _logging_on = False
 _logging_level = "INFO"
 _log_lock = threading.Lock()
+_schema_switch_lock = threading.Lock()
+_configured_schema: str | None = None
 
 
 def log(level: str, source: str, message: Any) -> None:
@@ -163,7 +165,10 @@ def write_env(updates: dict[str, str], path: Path = ENV_PATH) -> None:
     # The values are exported into this process too, so the change takes effect
     # without a restart, and every cached read is dropped because it may have
     # come from the other source.
+    global _configured_schema
     os.environ.update(updates)
+    if "PG_SCHEMA" in updates:
+        _configured_schema = updates["PG_SCHEMA"]
     _invalidate_configuration_caches()
     clear_caches()
     dispose_engine()
@@ -294,6 +299,14 @@ def settings_state() -> dict:
     typed themselves.
     """
     values = read_env()
+    active_schema = values.get("PG_SCHEMA") or DEFAULT_SCHEMA
+    if use_database():
+        try:
+            from backend.config import database_settings
+
+            active_schema = database_settings().schema
+        except RuntimeError:
+            pass
     return {
         "hosted": is_hosted(),
         "readOnly": config_read_only(),
@@ -305,7 +318,7 @@ def settings_state() -> dict:
             "PG_DATABASE": values.get("PG_DATABASE", ""),
             "PG_USER": values.get("PG_USER", ""),
             "PG_SSLMODE": values.get("PG_SSLMODE") or "prefer",
-            "PG_SCHEMA": values.get("PG_SCHEMA") or DEFAULT_SCHEMA,
+            "PG_SCHEMA": active_schema,
             "passwordStored": bool(values.get("PG_PASSWORD")),
         },
         # Enumerated only in database mode: in file mode there is no connection
@@ -320,6 +333,56 @@ def settings_state() -> dict:
                 "error": None,
             }
         ),
+        "configuredSchema": _configured_schema or active_schema,
         "status": status(),
         "logging": log_state(),
     }
+
+
+def select_runtime_schema(schema: str) -> dict[str, Any]:
+    """Select one live dashboard-ready schema without rewriting credentials.
+
+    The selection is process-local and resets on restart. It is intentionally
+    allowed when deployment configuration is protected: no credential or
+    deployment record is changed.
+    """
+
+    global _configured_schema
+    if not use_database():
+        raise RuntimeError("Runtime schema selection requires database mode.")
+    if not valid_schema_name(schema):
+        raise ValueError("Schema is not a valid PostgreSQL identifier.")
+
+    from backend.config import database_settings
+    from backend.database import dispose_engine
+    from backend.repository.snapshot import clear_caches, load_snapshot
+
+    with _schema_switch_lock:
+        current = database_settings().schema
+        census = available_schemas()
+        option = next(
+            (item for item in census.get("schemas", []) if item.get("name") == schema),
+            None,
+        )
+        if option is None or not option.get("selectable"):
+            raise ValueError(
+                "The selected schema is not present and dashboard-ready in the live census."
+            )
+        if schema == current:
+            return settings_state()
+        if _configured_schema is None:
+            _configured_schema = current
+
+        os.environ["PG_SCHEMA"] = schema
+        _invalidate_configuration_caches()
+        clear_caches()
+        dispose_engine()
+        try:
+            load_snapshot()
+        except Exception:
+            os.environ["PG_SCHEMA"] = current
+            _invalidate_configuration_caches()
+            clear_caches()
+            dispose_engine()
+            raise
+        return settings_state()

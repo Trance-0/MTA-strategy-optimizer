@@ -18,6 +18,7 @@ import {
   fetchSchemaOperation,
   fetchSettings,
   postSettings,
+  selectRuntimeSchema,
   startSchemaOperation,
   stopSchemaOperation,
 } from "../api/client.js";
@@ -30,7 +31,7 @@ const props = defineProps({
   open: { type: Boolean, default: false },
 });
 
-const emit = defineEmits(["close", "changed"]);
+const emit = defineEmits(["close", "changed", "reload"]);
 
 const tab = ref("source");
 const state = ref(null);
@@ -115,6 +116,7 @@ const setupSchema = ref("");
 const newSchema = ref("");
 const replaceSchemas = ref(false);
 const schemaOperation = ref({ current: null });
+const pendingSchema = ref(null);
 let operationTimer = null;
 
 const setupOption = computed(() =>
@@ -127,13 +129,39 @@ const operation = computed(() => schemaOperation.value.current);
 const operationRunning = computed(() =>
   ["running", "stopping"].includes(operation.value?.state),
 );
+
+/**
+ * Whether setup is offered at all, as the server reports it.
+ *
+ * Read from the poll rather than reconstructed from `hosted` and `readOnly`.
+ * Protected configuration governs credentials, not the data in the database
+ * the platform already pointed this service at, so a dialog that inferred the
+ * rule from `readOnly` would hide the only remedy a reader with no shell has
+ * on exactly the deployment where they have no shell.
+ */
+const setupAvailable = computed(() => schemaOperation.value.available === true);
+const setupReason = computed(() => schemaOperation.value.reason ?? "");
+
+/**
+ * Whether the entered connection is the saved one.
+ *
+ * Setup always runs against what is in `.env`, so unsaved edits would target a
+ * different server than the fields on screen describe. On a protected
+ * deployment nothing here can be edited in the first place, so there is
+ * nothing to be out of step with and the check does not apply.
+ */
 const connectionSaved = computed(() => {
-  if (!state.value?.useDatabase || form.value.PG_PASSWORD) return false;
+  if (!state.value?.useDatabase) return false;
+  if (readOnly.value) return true;
+  if (form.value.PG_PASSWORD) return false;
   const saved = state.value.connection ?? {};
   return ["PG_HOST", "PG_PORT", "PG_DATABASE", "PG_USER", "PG_SSLMODE", "PG_SCHEMA"].every(
     (key) => String(form.value[key] ?? "") === String(saved[key] ?? ""),
   );
 });
+
+/** Setup is reachable whenever the server would accept it and a target is known. */
+const setupReady = computed(() => setupAvailable.value && connectionSaved.value);
 
 /**
  * The stored schema, kept as an option even when the list does not contain it.
@@ -210,6 +238,56 @@ function chooseSetupDefault() {
   }
 }
 
+function inspectSchema() {
+  proposeSchemaSelection(inspectedSchema.value);
+}
+
+function chooseDashboardSchema() {
+  proposeSchemaSelection(form.value.PG_SCHEMA);
+}
+
+function proposeSchemaSelection(name) {
+  const option = schemaOptions.value.find((item) => item.name === name);
+  if (option?.selectable && option.name !== schemas.value.selected) {
+    pendingSchema.value = option;
+  }
+}
+
+function cancelSchemaSelection() {
+  inspectedSchema.value = schemas.value.selected ?? form.value.PG_SCHEMA;
+  form.value.PG_SCHEMA = schemas.value.selected ?? form.value.PG_SCHEMA;
+  pendingSchema.value = null;
+}
+
+async function confirmSchemaSelection() {
+  const target = pendingSchema.value;
+  if (!target) return;
+  busy.value = true;
+  message.value = null;
+  try {
+    state.value = await selectRuntimeSchema(target.name);
+    schemas.value = state.value.schemas;
+    form.value.PG_SCHEMA = state.value.connection?.PG_SCHEMA ?? target.name;
+    inspectedSchema.value = target.name;
+    pendingSchema.value = null;
+    message.value = {
+      ok: true,
+      text: `Schema ${target.name} is active. Reloading every dashboard view.`,
+    };
+    emit("changed");
+  } catch (cause) {
+    message.value = { ok: false, text: `${cause.name}: ${cause.message}` };
+    cancelSchemaSelection();
+  } finally {
+    busy.value = false;
+  }
+}
+
+function requestReload() {
+  emit("reload");
+  message.value = { ok: true, text: "Reloading data from the active source." };
+}
+
 function scheduleOperationPoll() {
   if (operationTimer !== null) window.clearTimeout(operationTimer);
   operationTimer = null;
@@ -233,7 +311,21 @@ async function refreshOperation() {
   }
 }
 
+/**
+ * Re-enumerate the schemas after setup has changed what the server holds.
+ *
+ * A connection test is how the census is refreshed while credentials are being
+ * edited, because it asks the server the reader just typed. A protected
+ * deployment refuses that route and has nothing unsaved to ask about, so its
+ * census is re-read from the settings state instead.
+ */
 async function refreshSchemaCensus() {
+  if (readOnly.value) {
+    state.value = await fetchSettings();
+    if (state.value.schemas) schemas.value = state.value.schemas;
+    chooseSetupDefault();
+    return;
+  }
   const result = await postSettings({
     action: "test",
     useDatabase: form.value.useDatabase,
@@ -461,6 +553,9 @@ function setLevel(level) {
             <b>{{ state.status.label }}</b>
             <span>{{ state.status.detail }}</span>
           </div>
+          <div v-if="!hosted" class="rec-actions settings-reload">
+            <button class="btn" :disabled="busy" @click="requestReload">Reload data</button>
+          </div>
 
           <!--
             A view preference rather than a deployment setting, so it is
@@ -509,19 +604,20 @@ cp sample.env .env      # set DATABASE=true and the PG_* values
           <template v-else-if="state?.readOnly">
             <div class="notice">
               <b>This server reads protected deployment configuration.</b>
-              Change the data-source values in the server's deployment
-              environment and restart the dashboard service. Credentials cannot
-              be tested or rewritten from this page.
+              This page cannot change the server's credentials — change those in
+              the deployment environment and restart the service. Which schema is
+              loaded, and setting one up, remain available below: neither
+              rewrites a credential.
             </div>
             <h3>Database schemas</h3>
             <p class="caption">
-              Inspect the active and readable schemas. This selector changes
-              only the description below; it cannot change the server's
-              configured <code>PG_SCHEMA</code>.
+              Select a dashboard-ready schema to open a confirmation window and
+              load its actual data. Source and incomplete schemas remain
+              inspectable but cannot be activated.
             </p>
             <div class="field">
               <label for="protected-schema">Schema inventory</label>
-              <select id="protected-schema" v-model="inspectedSchema">
+              <select id="protected-schema" v-model="inspectedSchema" @change="inspectSchema">
                 <option
                   v-for="option in schemaOptions"
                   :key="option.name"
@@ -537,6 +633,13 @@ cp sample.env .env      # set DATABASE=true and the PG_* values
               database structure <b>{{ inspectedOption.databaseRevision ?? "not tracked" }}</b>.
               {{ inspectedOption.detail }}
             </p>
+            <p v-if="state.configuredSchema !== schemas.selected" class="caption">
+              Runtime selection only. A server restart returns to configured
+              schema <code>{{ state.configuredSchema }}</code>.
+            </p>
+            <div v-if="message" class="notice" :class="message.ok ? 'good' : 'bad'">
+              {{ message.text }}
+            </div>
             <p v-else class="caption schema-help">
               <template v-if="schemas.error">
                 The schema list is unavailable — {{ schemas.error }}
@@ -614,6 +717,7 @@ cp sample.env .env      # set DATABASE=true and the PG_* values
                   id="pg-schema"
                   v-model="form.PG_SCHEMA"
                   aria-describedby="pg-schema-help"
+                  @change="chooseDashboardSchema"
                   @mouseleave="hoveredSchema = null"
                 >
                   <option
@@ -657,17 +761,58 @@ cp sample.env .env      # set DATABASE=true and the PG_* values
               </template>
             </p>
 
-            <template v-if="form.useDatabase">
-              <h3>Schema setup</h3>
-              <p class="caption">
-                Manage every readable schema on the saved connection. Parse-ready
-                sources stay read-only and produce one dashboard schema per
-                scenario; empty or new schemas can receive the committed sample.
-              </p>
-              <p v-if="!connectionSaved" class="notice">
-                Save the database connection and active schema before running
-                setup. Operations always use the saved connection.
-              </p>
+            <div class="rec-actions">
+              <button class="btn" :disabled="busy" @click="send('test')">
+                Test connection
+              </button>
+              <button class="btn primary" :disabled="busy" @click="send('save')">
+                Save to .env
+              </button>
+            </div>
+
+            <div v-if="message" class="notice" :class="message.ok ? 'good' : 'bad'">
+              {{ message.text }}
+            </div>
+
+            <p class="caption">
+              Credentials are written to <code>.env</code> at the repository
+              root, which is git-ignored. <code>sample.env</code> is the tracked
+              template and must never hold a real credential. The password is
+              never rendered back to this page.
+            </p>
+          </template>
+
+          <!--
+            Outside the three branches above rather than inside the writable
+            one, which is where it used to be and where a protected deployment
+            never reached it. Setup writes tables into the database this
+            service was already pointed at; it rewrites no credential, so it is
+            not what `readOnly` governs, and hiding it there left the readers
+            with no shell -- the deployed ones -- with no way to populate a
+            schema at all. `setupAvailable` comes from the server, so the
+            buttons and the route cannot disagree.
+          -->
+          <template v-if="!hosted && state">
+            <h3>Schema setup</h3>
+            <p class="caption">
+              Build or populate a schema on the connected database. A source
+              schema stays unchanged and produces one dashboard schema per
+              scenario; an empty schema can receive the committed sample
+              account.
+            </p>
+            <p v-if="!state.useDatabase" class="notice">
+              Setup needs database mode. Turn on <b>Read from the database</b>
+              above, save the connection, then return here.
+            </p>
+            <p v-else-if="!setupAvailable" class="notice">
+              {{ setupReason || "This server does not offer schema setup." }}
+            </p>
+            <p v-else-if="!connectionSaved" class="notice">
+              Save the database connection and active schema before running
+              setup. Operations always use the saved connection.
+            </p>
+
+            <template v-if="state.useDatabase">
               <div class="form-grid">
                 <div class="field span-2">
                   <label for="setup-schema">Existing schema</label>
@@ -693,7 +838,7 @@ cp sample.env .env      # set DATABASE=true and the PG_* values
               </div>
 
               <p v-if="setupOption" class="caption schema-help">
-                <b>{{ setupOption.name }}</b> — {{ setupOption.detail }}
+                <b>{{ setupOption.name }}</b> — {{ setupOption.remedy?.summary }}
               </p>
 
               <label class="toggle">
@@ -710,14 +855,14 @@ cp sample.env .env      # set DATABASE=true and the PG_* values
               <div class="rec-actions">
                 <button
                   class="btn"
-                  :disabled="busy || operationRunning || !connectionSaved || (!newSchema.trim() && !setupOption?.canInitialize)"
+                  :disabled="busy || operationRunning || !setupReady || (!newSchema.trim() && !setupOption?.canInitialize)"
                   @click="runSchemaOperation('initialize')"
                 >
                   Initialize sample model
                 </button>
                 <button
                   class="btn primary"
-                  :disabled="busy || operationRunning || !connectionSaved || !setupOption?.canDerive"
+                  :disabled="busy || operationRunning || !setupReady || !setupOption?.canDerive"
                   @click="runSchemaOperation('derive')"
                 >
                   Parse all scenarios
@@ -768,26 +913,6 @@ cp sample.env .env      # set DATABASE=true and the PG_* values
                 </div>
               </section>
             </template>
-
-            <div class="rec-actions">
-              <button class="btn" :disabled="busy" @click="send('test')">
-                Test connection
-              </button>
-              <button class="btn primary" :disabled="busy" @click="send('save')">
-                Save to .env
-              </button>
-            </div>
-
-            <div v-if="message" class="notice" :class="message.ok ? 'good' : 'bad'">
-              {{ message.text }}
-            </div>
-
-            <p class="caption">
-              Credentials are written to <code>.env</code> at the repository
-              root, which is git-ignored. <code>sample.env</code> is the tracked
-              template and must never hold a real credential. The password is
-              never rendered back to this page.
-            </p>
           </template>
         </template>
 
@@ -853,6 +978,31 @@ cp sample.env .env      # set DATABASE=true and the PG_* values
             </template>
           </template>
         </template>
+      </div>
+    </div>
+
+    <div v-if="pendingSchema" class="modal-backdrop schema-select-backdrop">
+      <div class="modal confirm-modal" role="dialog" aria-modal="true" aria-label="Select database schema">
+        <div class="modal-head">
+          <h2>Load another database schema?</h2>
+        </div>
+        <div class="modal-body">
+          <p>
+            Change every dashboard view from <b>{{ schemas.selected }}</b> to
+            <b>{{ pendingSchema.name }}</b> and reload its actual data.
+          </p>
+          <p class="caption">
+            {{ pendingSchema.detail }} Database structure
+            {{ pendingSchema.databaseRevision ?? "not tracked" }}. The selection
+            lasts until this backend process restarts.
+          </p>
+          <div class="rec-actions">
+            <button class="btn" :disabled="busy" @click="cancelSchemaSelection">Cancel</button>
+            <button class="btn primary" :disabled="busy" @click="confirmSchemaSelection">
+              Select and reload
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   </div>

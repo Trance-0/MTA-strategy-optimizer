@@ -3,7 +3,7 @@ title: Dashboard
 description: The Vue dashboard's architecture, its dual data source contract, and where each topic is documented
 compact: "Vue and Flask dashboard boundary: `client.js` and `useDashboard.js` stream the 15-key core snapshot, lazy research observations, and delayed byte progress; Python alone owns data access, while static builds read equivalent generated JSON files."
 lang: en-US
-source_files: dashboard/src/api/client.js, dashboard/src/lib/useDashboard.js, dashboard/tests/dashboard.test.js, backend/repository/coercion.py, backend/tests/test_coercion.py, backend/tests/test_settings.py
+source_files: dashboard/src/api/client.js, dashboard/src/lib/useDashboard.js, dashboard/tests/dashboard.test.js, backend/repository/coercion.py, backend/tests/test_coercion.py
 ---
 
 # Dashboard
@@ -57,7 +57,7 @@ Lives in `dashboard/src/`. Knows about the snapshot shape. Nothing about where i
 ### Why the core snapshot arrives at once
 
 `GET /api/dashboard` returns the complete core snapshot in one response.
-Sending that core whole rather than paginating is what lets the six views share
+Sending that core whole rather than paginating is what lets the data-backed views share
 one read: two views cannot show two different model artifacts, and switching
 among views that need only core data costs nothing because it is already there.
 
@@ -71,7 +71,7 @@ they never read. The lazy response uses the same cache and reload boundary as
 the core, then merges into the one shared client snapshot. It is not a second
 source of truth.
 
-`src/lib/useDashboard.js` holds that single copy. The six views mount together on first paint, so concurrent callers share one in-flight request rather than issuing six.
+`src/lib/useDashboard.js` holds that single copy. The data-backed views share one in-flight request rather than issuing one request per view.
 
 ### Progress for a slow dataset
 
@@ -141,15 +141,27 @@ Three groups of fields exist in the JSON artifacts and in no table: the capacity
 
 When `DATABASE=true` but the database is unreachable or empty, the API answers `503` with a named reason and the client renders it as a page stating both remedies, rather than surfacing a connection error from inside whichever chart happened to read it first.
 
+When the reason is the schema, those remedies are rendered as controls rather
+than described. `GET /api/schema-recovery` lists the schemas that can be loaded,
+parsed, or initialized from where the reader is standing, so a deployment whose
+readers have no shell is not told to run one. See
+[Recovering from a schema that cannot be read](./database-import.md#recovering-from-a-schema-that-cannot-be-read).
+
 Continue with [Populating PostgreSQL](./database-import.md) for the importer that writes this schema.
 
-## The Six Views <span class="status-label status-verified" aria-label="Verified"></span>
+## The Seven Views <span class="status-label status-verified" aria-label="Verified"></span>
 
 The navigation mirrors the reference prototype in `external/UI_design/brandlens-vue`, by Rouxin Jin. Each view is one Single-File Component under `dashboard/src/views/` that takes no props and reads the shared snapshot.
 
 ### Command Center
 
 What was spent and returned, which touchpoints earned credit, and is that credit trustworthy?
+
+### Data Generator
+
+How can a reviewed MTA-SIM configuration generate two model-facing tables,
+preview them, and hand them to CSV download or backend-only PostgreSQL export?
+See [Data Generator](./data-generator.md).
 
 ### Budget Manager
 
@@ -169,7 +181,9 @@ Which run produced these numbers, from which inputs, and can it be reproduced?
 
 ### Knowledge Base
 
-What do the terms mean and which rules do the numbers obey?
+Reserved for a future backend-owned knowledge service. Until that contract is
+implemented, the Vue view contains only an unavailable notice and does not
+derive an ontology from the current snapshot.
 
 Continue with [Views and visual contract](./views.md) for the reliability rule every view honors, the colour and chart system, and the per-component specification. The rail that switches between them, and its settings module, are specified on [Navigation rail and settings](./navigation.md).
 
@@ -186,7 +200,7 @@ Source: `dashboard/src/api/client.js`, `dashboard/src/lib/useDashboard.js`
 - Outputs: `IS_STATIC`, dashboard and lazy-research loaders with byte progress, reload/settings calls, `saveMasterObject()`, `archiveMasterObject()`, `fetchJobs()`, `startJob()`, `stopJob()`, `fetchSchemaOperation()`, `startSchemaOperation()`, and `stopSchemaOperation()`; and `useDashboard()`, including per-dataset loading, loaded, error, retry, and progress state. Static settings carry `backendIdentity: null` so the interface reports no connected backend instead of constructing a false match.
 - Behavior contract: `IS_STATIC` is baked in at build time by `vite build --mode static`, and it alone decides whether core and lazy requests read Application Programming Interface routes or relative generated files; **no view branches on it.** A response that is not JSON is reported by status rather than as a parse error naming character 0. `useDashboard()` holds one module-level snapshot and one in-flight promise per dataset, so concurrent callers share each request. Research observations merge only after their complete response parses successfully. Reload clears both datasets. Progress is byte-based where possible, indeterminate otherwise, hidden for the first three seconds, and reset on completion or failure. Empty core and lazy arrays are exposed before loading so views render named loading or empty states rather than crashing.
 - Dependencies: Vue's reactivity.
-- Verification: Driven in a real browser against both the API and the static snapshot; both render the six views identically with no console error.
+- Verification: Driven in a real browser against both the API and the static snapshot; the data-backed views render identically and the backend-only generator names its unavailable state in static mode.
 
 ### `tests/dashboard.test.js`
 
@@ -197,14 +211,14 @@ Source: `dashboard/tests/dashboard.test.js`
 - Outputs: Pass or fail per test. Run with `npm test` in `dashboard/`.
 - Behavior contract: Every test runs without a database and without a browser, so a clean checkout can run the whole suite. It covers the navigation registration contract; the entity table's paging and identity-keyed selection; the run options and refusals; and the snapshot invariants — real booleans rather than the string `"false"`, dates as `YYYY-MM-DD`, absent text as `null` rather than `""`, finite numbers rather than strings, the five touchpoint segments, and that the whole snapshot survives JSON serialisation unchanged. Several tests assert against **source text** rather than a rendered component, because the suite runs without a Document Object Model (DOM): they pin contracts a reader cannot see in a screenshot — that a progress bar's `aria-valuenow` and its visible percentage read one value, that a phase pattern still matches a line the Python actually prints, that the offered budget policies are the ones the enum declares. Two of those read Python sources directly, because the contract they pin is now owned by `backend/services/`; the reader is the client, so the test stays here.
 - Dependencies: Node's built-in test runner. No database.
-- Verification: `npm test` in `dashboard/`. Twenty-six tests pass against the committed artifacts.
+- Verification: `npm test` in `dashboard/`. Forty-five tests pass against the committed artifacts and source contracts.
 
-### `backend/tests/test_coercion.py` and `backend/tests/test_settings.py`
+### `backend/tests/test_coercion.py`
 
-Source: `backend/tests/test_coercion.py`, `backend/tests/test_settings.py`
+Source: `backend/tests/test_coercion.py`
 
-- Responsibility: Hold the reader and settings contracts that the deleted Node
-  suite proved, so removing that code did not remove the coverage.
+- Responsibility: Hold the CSV reader contracts that the deleted Node suite
+  proved, so removing that code did not remove the coverage.
 - Inputs: Temporary files only. Neither test reads the repository's own `.env`
   or opens a connection.
 - Outputs: Pass or fail per test, under `uv run --extra backend python -m unittest`.
@@ -216,11 +230,6 @@ Source: `backend/tests/test_coercion.py`, `backend/tests/test_settings.py`
   header name, keeps quoting, embedded newlines, and Carriage Return Line Feed
   (CRLF) intact, discards the empty row a trailing newline produces, and
   returns no rows rather than raising for an artifact that has not been
-  produced. `write_env` replaces a key in place, appends a missing one exactly
-  once, preserves comments and unrelated keys, does not grow the file over
-  repeated saves, and keeps a password containing `=` intact. Diagnostic
-  logging is off by default, drops records below the active level rather than
-  storing and filtering them on display, truncates one message at 400
-  characters, and bounds the buffer at `LOG_CAPACITY`.
+  produced.
 - Dependencies: The backend dependency extra. No database.
 - Verification: `uv run --extra backend python -m unittest discover -s backend/tests -t .`. Thirty-two tests pass.

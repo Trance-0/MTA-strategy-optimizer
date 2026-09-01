@@ -105,7 +105,13 @@ counts that would produce one.
 
 ## Initializing and Parsing from the Dashboard
 
-The local dashboard settings separate the active **Dashboard schema** from the
+Everything above this line is the command-line route, and it remains the route
+for an operator at a terminal. This section is the same two operations for a
+reader who has only a browser — the deployed case, where the commands above are
+not available at all. Both start the same argument vectors and are governed by
+the same census.
+
+The dashboard settings separate the active **Dashboard schema** from the
 **Schema setup** target. The active selector contains only schemas that already
 hold the complete dashboard model. The setup menu contains every readable,
 plain-identifier schema returned by PostgreSQL, including empty schemas,
@@ -137,6 +143,26 @@ caches and refreshes the schema census, so newly initialized or derived
 schemas become available in the active selector without restarting the
 dashboard. Closing the dialog does not stop an operation; the operator may
 request termination explicitly.
+
+Setup is available on a protected server. `DASHBOARD_CONFIG_READ_ONLY` keeps
+the browser from rewriting credentials; it does not decide whether the database
+those credentials already name may be populated. `SCHEMA_SETUP_ENABLED=false`
+is how an operator withholds these two operations, and the dialog then says so
+rather than offering a button the route would refuse.
+
+### Recovering from a schema that cannot be read
+
+Selecting a schema that lacks the dashboard tables makes every view fail with
+one page-level error. Under that error the dashboard lists the schemas
+something can be done with, from `GET /api/schema-recovery`, and each entry is
+the same select, parse, or initialize action described above. The list omits the
+schema that just failed and omits any schema with no available action, since it
+exists only to be acted on.
+
+Nothing offered there replaces anything. Replacement stays in the settings
+dialog behind the explicit checkbox and its confirmation, because a reader
+recovering from an error is the reader least placed to judge what is about to
+be overwritten.
 
 ## Source Files <span class="status-label status-verified" aria-label="Verified"></span>
 

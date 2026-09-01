@@ -102,6 +102,13 @@ a partly uploaded source is visible but cannot start a parser that is already
 known to fail. These fields are capability data rather than a hard-coded menu,
 so an additional readable schema appears automatically.
 
+Every entry also carries a `remedy` object — an `action` of `select`, `derive`,
+`initialize`, or `none`, with a label and a one-sentence summary. This is the
+same classification restated for a reader rather than an operator: `detail`
+names the command that would populate the schema, and `remedy` names the button
+that would do it. Both are derived from the one census, so a browser and a
+terminal cannot be told different things about the same schema.
+
 `GET /api/settings` returns the census under `schemas`, enumerated only in
 database mode. A connection test returns the census for the server just
 reached, which is the only moment the list is knowable for credentials that
@@ -111,11 +118,19 @@ have not been saved.
 
 `deploy/appstack/orchestration.yaml` binds `PG_SCHEMA` from the `pgSchema`
 placeholder. That deployment sets `DASHBOARD_CONFIG_READ_ONLY=true`, so the
-browser cannot change the schema: it is chosen in the AppStack environment and
-takes effect on restart. Protected Settings still exposes the active schema
-and the readable schema inventory for diagnosis. The current database
-structure has no migration ledger, so every schema is labelled **not tracked**
-rather than borrowing the unrelated strategy artifact's `schema_version`.
+browser cannot change the configured schema: it is chosen in the AppStack
+environment and takes effect on restart. The current database structure has no
+migration ledger, so every schema is labelled **not tracked** rather than
+borrowing the unrelated strategy artifact's `schema_version`.
+
+Protected configuration does not make that deployment read-only about data.
+Runtime schema selection and schema setup both remain available there, because
+each acts on the database the platform already pointed the service at and
+neither rewrites a credential. `SCHEMA_SETUP_ENABLED` is the flag that governs
+setup, on the same grounds as `PIPELINE_RUNS_ENABLED` — see
+[Backend Operations](./operations.md#schema-operations). Withholding setup with
+the configuration flag would leave the one deployment whose readers have no
+shell as the one deployment with no way to prepare a schema at all.
 
 The staged replacement for `create_all()` and destructive `drop_all()` rebuilds
 is specified in [Database Migration and Continuous Deployment Plan](./database-migrations.md).
@@ -179,12 +194,14 @@ ephemeral: replacing the pod during a rollout clears the runtime results and
 restores the committed artifacts shipped in the image as the fallback. A
 container restart within the same pod retains its `emptyDir` contents.
 
-AppStack sets `DASHBOARD_CONFIG_READ_ONLY=true` and
-`PIPELINE_RUNS_ENABLED=true`. The first protects credentials and runtime
+AppStack sets `DASHBOARD_CONFIG_READ_ONLY=true`, `PIPELINE_RUNS_ENABLED=true`,
+and `SCHEMA_SETUP_ENABLED=true`. The first protects credentials and runtime
 configuration from browser edits; the second permits authenticated operators
-to execute the model stages. They are separate because protecting a database
-password says nothing about whether the application may write its own result
-files. An enabled runner requires exactly one pod and the image's single
+to execute the model stages; the third permits them to initialize or parse a
+schema in the database those credentials already name. They are separate
+because protecting a database password says nothing about whether the
+application may write its own result files, or populate the database it was
+handed. An enabled runner requires exactly one pod and the image's single
 Gunicorn worker: active jobs, logs, and generated files are local process and
 container state, so load-balancing polls across replicas or workers would make
 a running job disappear. The Deployment uses `Recreate`, accepting a short
@@ -221,6 +238,15 @@ rollout proves Resource Access Management (RAM), registry pull, Persistent
 Volume Claim, Ingress, TLS, authentication, Virtual Private Cloud routing, and
 PostgreSQL credentials in the Alibaba account.
 
+AppStack also sets `TRUST_PROXY_HEADERS=true` because exactly one managed
+Ingress hop terminates Transport Layer Security (TLS) before forwarding the
+request to Flask. The application then trusts one forwarded protocol value and
+uses it to determine whether credential-bearing routes arrived over HTTPS. The
+default is false: a directly exposed backend must ignore a caller-supplied
+`X-Forwarded-Proto` header, so remote plain HTTP cannot impersonate secure
+transport. Localhost remains the only HTTP exception for the Data Generator's
+write-only PostgreSQL export form.
+
 ## Source Files
 
 ### `backend/app.py` and `backend/wsgi.py`
@@ -252,6 +278,9 @@ Source: `backend/config.py`, `backend/database.py`
   `git rev-parse HEAD`, and returns `unknown` when none is valid. Runtime
   dependency versions are detected from the running interpreter and installed
   Flask distribution rather than copied from dependency declarations.
+  `trust_proxy_headers()` defaults false. When explicitly true, `create_app()`
+  applies exactly one Werkzeug `ProxyFix` protocol hop; it does not trust
+  forwarded host or client-address fields.
 - Dependencies: `dashboard/config.py`, `dashboard/models.py`, SQLAlchemy, and
   Psycopg.
 - Verification: Snapshot tests in file mode plus the AppStack database-mode
@@ -275,7 +304,8 @@ Source: `backend/services/schemas.py`
 - Inputs: The configured connection, or a candidate `PG_*` mapping.
 - Outputs: Per schema — `name`, `selectable`, `selected`, `tableCount`,
   `missingTables` (capped at eight), `missingCount`, `hasResearchTables`, and a
-  `kind`, `canInitialize`, `canDerive`, `sourceMissingCount`, and `detail`
+  `kind`, `canInitialize`, `canDerive`, `sourceMissingCount`, `detail`, and a
+  `remedy` object with browser action, label, summary, and schema,
   string naming its capability and safe next action. `tableCount` is the
   schema's whole relation count, not the matched
   subset the census filters on: reporting the subset would describe a
@@ -325,7 +355,8 @@ Source: `.dockerignore`, `deploy/appstack/Dockerfile`,
   `/pipeline-output` `emptyDir`. Its `Recreate` rollout strategy never serves
   two process-local job stores at once. Configuration remains read-only through
   `DASHBOARD_CONFIG_READ_ONLY`; pipeline permission comes only from
-  `PIPELINE_RUNS_ENABLED`. The runtime installs both backend and strategy
+  `PIPELINE_RUNS_ENABLED`, and schema-setup permission only from
+  `SCHEMA_SETUP_ENABLED`. The runtime installs both backend and strategy
   evaluation extras; model jobs call that environment's Python executable
   directly and do not require `uv` at run time. Generated outputs last until the pod is removed, and
   each repository prefers a complete runtime result over its image or database

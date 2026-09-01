@@ -234,11 +234,135 @@ export async function postSettings(payload) {
   return readJson(response);
 }
 
-/** Poll the active or most recent database-schema setup operation. */
+/** Confirm a server-side runtime schema selection. */
+export async function selectRuntimeSchema(schema) {
+  if (IS_STATIC) throw new Error("Schema selection requires a live backend.");
+  const response = await fetch("/api/settings/schema-selection", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ schema }),
+  });
+  const result = await readJson(response);
+  if (!response.ok) throw new Error(result.message ?? "The schema was not selected.");
+  return result;
+}
+
+/** Return generator capability and the default self-contained configuration. */
+export async function fetchGeneratorOverview() {
+  if (IS_STATIC) {
+    return {
+      available: false,
+      reason: "The static build has no backend to run MTA-SIM.",
+      variants: [],
+      configuration: {},
+    };
+  }
+  const response = await fetch("/api/data-generator");
+  return readJson(response);
+}
+
+/** Load one reviewed generator preset. */
+export async function fetchGeneratorPreset(variant, preset) {
+  const response = await fetch(
+    `/api/data-generator/presets/${encodeURIComponent(variant)}/${encodeURIComponent(preset)}`,
+  );
+  const result = await readJson(response);
+  if (!response.ok) throw new Error(result.message ?? "The preset was not loaded.");
+  return result;
+}
+
+/** Start a configured generator run. */
+export async function startGeneratorRun(variant, configuration) {
+  const response = await fetch("/api/data-generator/runs", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ variant, configuration }),
+  });
+  const result = await readJson(response);
+  if (!response.ok) throw new Error(result.message ?? "Generation was not started.");
+  return result;
+}
+
+/** Poll one configured generator run. */
+export async function fetchGeneratorRun(runId) {
+  const response = await fetch(`/api/data-generator/runs/${encodeURIComponent(runId)}`);
+  const result = await readJson(response);
+  if (!response.ok) throw new Error(result.message ?? "The generator run was not found.");
+  return result;
+}
+
+/** Start backend-only PostgreSQL export for a completed run. */
+export async function exportGeneratorRun(runId, connection, replace = false) {
+  const response = await fetch(
+    `/api/data-generator/runs/${encodeURIComponent(runId)}/postgresql`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ connection, replace }),
+    },
+  );
+  const result = await readJson(response);
+  if (!response.ok) throw new Error(result.message ?? "PostgreSQL export was not started.");
+  return result;
+}
+
+/** URL for one declared generated table download. */
+export function generatorDownloadUrl(runId, table) {
+  return `/api/data-generator/runs/${encodeURIComponent(runId)}/files/${encodeURIComponent(table)}`;
+}
+
+/**
+ * Poll the active or most recent database-schema setup operation.
+ *
+ * Carries `available` and `reason` beside the record, so the dialog enables
+ * its buttons from what the server would actually accept rather than from a
+ * rule it reconstructs from the deployment flags.
+ */
 export async function fetchSchemaOperation() {
-  if (IS_STATIC) return { current: null };
+  if (IS_STATIC) {
+    return {
+      current: null,
+      available: false,
+      reason:
+        "The published build reads the repository's committed sample files " +
+        "and has no database to set up.",
+    };
+  }
   const response = await fetch("/api/schema-operations");
   return readJson(response);
+}
+
+/**
+ * What can be clicked when the loaded schema cannot serve the dashboard.
+ *
+ * Returns a state rather than throwing: this is fetched precisely when
+ * something is already wrong, and a failed recovery fetch would leave the
+ * error card with nothing under it.
+ */
+export async function fetchSchemaRecovery() {
+  if (IS_STATIC) {
+    return {
+      available: false,
+      reason:
+        "The published build reads the repository's committed sample files " +
+        "and has no database to repair.",
+      active: null,
+      setupEnabled: false,
+      options: [],
+    };
+  }
+  try {
+    const response = await fetch("/api/schema-recovery");
+    return await readJson(response);
+  } catch (cause) {
+    return {
+      available: false,
+      reason: `The schema options could not be listed — ${cause.message}`,
+      active: null,
+      setupEnabled: false,
+      options: [],
+    };
+  }
 }
 
 /** Start initialization or simulator parsing for one validated schema name. */

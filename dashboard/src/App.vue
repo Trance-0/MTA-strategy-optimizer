@@ -5,7 +5,7 @@
  * The layout is the reference prototype's App.vue
  * (`external/UI_design/brandlens-vue`, by Rouxin Jin) -- an `.app-shell` grid
  * of the navigation rail beside a main column, hash routing, and a toast for
- * transient confirmations. The six views behind it are this project's own.
+ * transient confirmations. The seven views behind it are this project's own.
  *
  * Data flow:
  *     src/lib/useDashboard.js -> here -> the selected view
@@ -20,8 +20,10 @@ import BudgetManager from "./views/BudgetManager.vue";
 import CampaignOptimizer from "./views/CampaignOptimizer.vue";
 import Campaigns from "./views/Campaigns.vue";
 import CommandCenter from "./views/CommandCenter.vue";
+import DataGenerator from "./views/DataGenerator.vue";
 import KnowledgeBase from "./views/KnowledgeBase.vue";
 import OptimizationLog from "./views/OptimizationLog.vue";
+import SchemaRecovery from "./components/SchemaRecovery.vue";
 import { IS_STATIC, fetchSettings } from "./api/client.js";
 import { useDashboard } from "./lib/useDashboard.js";
 import { useDeployment } from "./lib/deployment.js";
@@ -29,6 +31,7 @@ import { DEFAULT_PAGE, DOCS_URL, PAGES, PAGE_KEYS, REPO_URL } from "./pages.js";
 
 const VIEWS = {
   overview: CommandCenter,
+  generator: DataGenerator,
   budget: BudgetManager,
   campaigns: Campaigns,
   optimizer: CampaignOptimizer,
@@ -166,7 +169,6 @@ const docsHref = computed(() => (IS_STATIC ? "./docs/" : `${DOCS_URL}/`));
       :docs-href="docsHref"
       :repo-href="REPO_URL"
       @go="go"
-      @reload="onReload"
       @settings="settingsOpen = true"
     />
 
@@ -198,13 +200,17 @@ const docsHref = computed(() => (IS_STATIC ? "./docs/" : `${DOCS_URL}/`));
         <div v-else-if="error" class="card empty-card error-card">
           <h2>The dashboard data could not be loaded</h2>
           <p class="error-detail">{{ error.message }}</p>
-          <p v-if="error.code === 'database_unavailable'">
-            <code>DATABASE=true</code>, but the database cannot be used. Open
-            <b>Settings</b> in the rail to correct the credentials or switch back
-            to the committed files, or run
-            <code>uv run --extra dashboard python script/import_to_database.py</code>
-            to populate the database.
-          </p>
+          <!--
+            The remedies are rendered as controls rather than as a command to
+            paste into a terminal. A reader reaching this page has a browser
+            and, on a deployed instance, nothing else; naming a shell command
+            here would describe a fix they cannot carry out.
+          -->
+          <SchemaRecovery
+            v-if="error.code === 'database_unavailable'"
+            @recovered="onReload"
+            @settings="settingsOpen = true"
+          />
           <div class="rec-actions">
             <button class="btn" @click="onReload">Try again</button>
             <button class="btn primary" @click="settingsOpen = true">Settings</button>
@@ -219,6 +225,7 @@ const docsHref = computed(() => (IS_STATIC ? "./docs/" : `${DOCS_URL}/`));
       :open="settingsOpen"
       @close="settingsOpen = false"
       @changed="onSettingsChanged"
+      @reload="onReload"
     />
 
     <div class="toast" :class="{ show: toast }">{{ toast }}</div>

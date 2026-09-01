@@ -63,6 +63,24 @@ A billing model where the advertiser pays for each click on their ad. In this pr
 
 A billing model where the advertiser pays per thousand impressions. In this project, `CPM` cost is assigned only to `IMPRESSION` interaction types.
 
+### CTR (Click-Through Rate)
+
+Clicks divided by impressions for rows that share a valid denominator. The
+dashboard does not derive CTR across separate interaction rows when their
+impressions and clicks do not describe the same population.
+
+### Database Schema
+
+A named PostgreSQL namespace containing one self-consistent set of dashboard or
+simulation tables. Changing the dashboard schema changes the complete data
+source for every view; schemas are never mixed through a fallback search path.
+
+### Reliability
+
+The governed decision on whether an attribution result has valid arithmetic,
+sufficient data support, and acceptable agreement between the registered
+models. All required flags must pass before a result is labelled reliable.
+
 ### DSP (Demand-Side Platform)
 
 Amazon's programmatic advertising platform that allows advertisers to buy display, video, and audio ads programmatically. In this project, DSP is one of the four ad products alongside SP, SB, and SD.

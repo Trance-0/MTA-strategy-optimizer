@@ -118,6 +118,25 @@ def pipeline_runs_enabled() -> bool:
     return _flag("PIPELINE_RUNS_ENABLED", "true")
 
 
+def trust_proxy_headers() -> bool:
+    """Whether exactly one managed proxy hop may declare HTTPS transport."""
+
+    return _flag("TRUST_PROXY_HEADERS", "false")
+
+
+def schema_setup_enabled() -> bool:
+    """Whether this server may run the schema initializer and the parser.
+
+    Independent from configuration protection, on the same grounds as
+    `pipeline_runs_enabled()`. Protecting configuration means the browser may
+    not rewrite the credentials the platform issued; it says nothing about
+    whether the connected database may be populated. Conflating the two leaves
+    a reader with an unusable schema and no remedy at all, because the only
+    other way to populate one is a shell they do not have.
+    """
+    return _flag("SCHEMA_SETUP_ENABLED", "true")
+
+
 def pipeline_output_directory() -> Path | None:
     """Optional writable root for generated stage artifacts."""
     _load_env()

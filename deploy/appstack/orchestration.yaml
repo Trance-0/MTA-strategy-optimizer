@@ -14,6 +14,11 @@ data:
   BACKEND_PORT: "8501"
   DASHBOARD_CONFIG_READ_ONLY: "true"
   PIPELINE_RUNS_ENABLED: "true"
+  # Credentials stay immutable from the browser above; the data in the database
+  # they point at does not. Readers here have no shell, so this is the only way
+  # they can build a dashboard schema or recover from one that cannot be read.
+  SCHEMA_SETUP_ENABLED: "true"
+  TRUST_PROXY_HEADERS: "true"
   PIPELINE_OUTPUT_DIR: "/pipeline-output"
   PG_HOST: "{{ .Values.pgHost }}"
   PG_PORT: "{{ .Values.pgPort }}"

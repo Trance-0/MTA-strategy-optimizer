@@ -279,7 +279,7 @@ Source: `deploy/docker/compose.yaml`, `deploy/docker/defaults.env`,
 - Dependencies: Docker with Compose v2. No local Node or uv.
 - Verification: `./deploy/docker/run.sh up`, then both containers reach
   `healthy`; `/api/health` answers directly and through the proxy;
-  `/api/dashboard` returns fifteen keys; and the six views render in a browser
+  `/api/dashboard` returns fifteen keys; and the seven views render in a browser
   with no console, page, or network error. Verified in both file mode and
   against the live PostgreSQL instance. `./deploy/docker/run.sh pull` reaches
   the same state without building, and reports a missing version rather than

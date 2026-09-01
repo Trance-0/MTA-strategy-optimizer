@@ -19,7 +19,8 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import test from "node:test";
 
-const { PAGES, PAGE_GROUPS, PAGE_KEYS, DEFAULT_PAGE } = await import("../src/pages.js");
+const { PAGES, PAGE_KEYS, DEFAULT_PAGE } = await import("../src/pages.js");
+const { TERM_HELP: TERM_REGISTRY } = await import("../src/lib/terms.js");
 
 const HERE = resolve(import.meta.dirname);
 const APP_VUE = readFileSync(resolve(HERE, "..", "src", "App.vue"), "utf8");
@@ -47,6 +48,23 @@ const SETTINGS_DIALOG = readFileSync(
   resolve(HERE, "..", "src", "components", "SettingsDialog.vue"),
   "utf8",
 );
+const DATA_GENERATOR = readFileSync(
+  resolve(HERE, "..", "src", "views", "DataGenerator.vue"),
+  "utf8",
+);
+const KNOWLEDGE_BASE = readFileSync(
+  resolve(HERE, "..", "src", "views", "KnowledgeBase.vue"),
+  "utf8",
+);
+const TERM_HELP = readFileSync(
+  resolve(HERE, "..", "src", "components", "TermHelp.vue"),
+  "utf8",
+);
+const SCHEMA_RECOVERY = readFileSync(
+  resolve(HERE, "..", "src", "components", "SchemaRecovery.vue"),
+  "utf8",
+);
+const TERMS = readFileSync(resolve(HERE, "..", "src", "lib", "terms.js"), "utf8");
 const SIDEBAR_NAV = readFileSync(
   resolve(HERE, "..", "src", "components", "SidebarNav.vue"),
   "utf8",
@@ -109,17 +127,20 @@ test("every navigable page has an icon, a title, and a component", () => {
   }
 });
 
-test("the two foot controls are drawn but are not navigable pages", () => {
-  for (const key of ["reload", "settings"]) {
-    assert.ok(PAGES[key], `${key} has no icon entry`);
-    assert.ok(!PAGE_KEYS.includes(key), `${key} must not be a navigable page`);
-  }
+test("Settings is the only foot control and Reload lives inside it", () => {
+  assert.ok(PAGES.settings, "settings has no icon entry");
+  assert.ok(!PAGE_KEYS.includes("settings"), "settings must not be a navigable page");
+  assert.ok(!PAGES.reload, "reload must not retain a sidebar page entry");
+  assert.doesNotMatch(SIDEBAR_NAV, /Reload data|emit\("reload"\)/);
+  assert.match(SETTINGS_DIALOG, />Reload data</);
 });
 
-test("page keys are unique and the default is one of them", () => {
+test("page keys are unique, flat, and place Data Generator after Command Center", () => {
   assert.equal(new Set(PAGE_KEYS).size, PAGE_KEYS.length);
   assert.ok(PAGE_KEYS.includes(DEFAULT_PAGE));
-  assert.equal(PAGE_GROUPS.flatMap((group) => group.pages).length, PAGE_KEYS.length);
+  assert.deepEqual(PAGE_KEYS.slice(0, 2), ["overview", "generator"]);
+  assert.match(SIDEBAR_NAV, /v-for="key in PAGE_KEYS"/);
+  assert.doesNotMatch(SIDEBAR_NAV, /PAGE_GROUPS|nav-group|nav-label|OVERVIEW|INSIGHTS/);
 });
 
 // ---------------------------------------------------------------------------
@@ -291,7 +312,70 @@ test("protected settings exposes schema versions without enabling configuration"
   assert.match(SETTINGS_DIALOG, /v-for="option in schemaOptions"/);
   assert.match(SETTINGS_DIALOG, /option\.selected \? " — active"/);
   assert.match(SETTINGS_DIALOG, /database structure/);
-  assert.match(SETTINGS_DIALOG, /cannot change the server's/);
+  assert.match(SETTINGS_DIALOG, /protected deployment configuration/);
+});
+
+test("schema setup survives protected configuration, which governs credentials", () => {
+  // The section used to sit inside the writable branch, which the read-only
+  // branch pre-empts, so the one deployment whose readers have no shell was the
+  // one deployment offering no way to populate a schema. It is now a sibling of
+  // all three branches, gated only on there being a backend at all.
+  const setup = SETTINGS_DIALOG.indexOf("<h3>Schema setup</h3>");
+  const writable = SETTINGS_DIALOG.indexOf('<template v-else-if="state">');
+  assert.ok(setup > 0, "the Schema setup section is rendered");
+  assert.ok(
+    setup > writable && writable > 0,
+    "Schema setup follows the branch a protected deployment never reaches",
+  );
+  assert.match(SETTINGS_DIALOG, /<template v-if="!hosted && state">/);
+
+  // The capability is the server's answer rather than a rule the dialog
+  // reconstructs from the deployment flags, so the buttons and the route that
+  // would carry them out cannot disagree.
+  assert.match(SETTINGS_DIALOG, /schemaOperation\.value\.available === true/);
+  assert.match(SETTINGS_DIALOG, /setupReason/);
+  assert.match(SETTINGS_DIALOG, /setupAvailable\.value && connectionSaved\.value/);
+
+  // Nothing on the page can be edited when configuration is protected, so
+  // there is no unsaved edit for setup to be out of step with.
+  assert.match(SETTINGS_DIALOG, /if \(readOnly\.value\) return true;/);
+
+  const operations = readFileSync(
+    resolve(HERE, "..", "..", "backend", "api", "schema_operations.py"),
+    "utf8",
+  );
+  assert.match(operations, /schema_setup_enabled/);
+  assert.doesNotMatch(operations, /config_read_only/);
+});
+
+test("a schema that cannot be read offers controls, not a shell command", () => {
+  const recovery = readFileSync(
+    resolve(HERE, "..", "src", "components", "SchemaRecovery.vue"),
+    "utf8",
+  );
+
+  // A reader who reaches the error card has a browser and, on a deployed
+  // instance, nothing else, so the remedies are rendered as controls.
+  assert.match(APP_VUE, /<SchemaRecovery/);
+  assert.match(APP_VUE, /error\.code === 'database_unavailable'/);
+  assert.doesNotMatch(APP_VUE, /uv run --extra dashboard/);
+
+  // The three actions the backend already implements, named as instructions.
+  assert.match(recovery, /Load a schema that is ready/);
+  assert.match(recovery, /Build dashboard schemas from a source/);
+  assert.match(recovery, /Start from the sample account/);
+  assert.match(recovery, /selectRuntimeSchema/);
+  assert.match(recovery, /startSchemaOperation/);
+
+  // Overwriting destroys data and stays behind the Settings checkbox that says
+  // so, rather than behind a button pressed to escape an error page.
+  assert.match(recovery, /option\.replace/);
+  assert.doesNotMatch(recovery, /replace: true|replaceSchemas/);
+
+  // Fetched precisely when something is already wrong, so a failed fetch must
+  // not leave the card with nothing under it.
+  assert.match(CLIENT, /fetchSchemaRecovery/);
+  assert.match(CLIENT, /\/api\/schema-recovery/);
 });
 
 test("the schema selection is sent, saved, and refilled from a live test", () => {
@@ -478,66 +562,73 @@ test("the rail becomes a bar, not a tall block, below the wide breakpoint", () =
   assert.match(narrow, /\.sidebar \{[^}]*flex-direction: row/);
   assert.match(narrow, /\.sidebar \{[^}]*position: sticky/);
   assert.match(narrow, /\.nav \{[^}]*flex-direction: row/);
+  assert.match(narrow, /\.nav \{[^}]*overflow-x: auto/);
 
   // Labels are dropped only at the narrowest width, so the buttons must carry
   // their own accessible name rather than relying on the visible text.
   assert.match(STYLE_CSS, /@media \(max-width: 620px\)/);
   assert.match(SIDEBAR_NAV, /:aria-label="PAGES\[key\]\.title"/);
   assert.match(SIDEBAR_NAV, /aria-label="Settings"/);
-  assert.match(SIDEBAR_NAV, /aria-label="Reload data"/);
 });
 
-test("the bar collapses each multi-page group instead of flattening it", () => {
-  // Hiding the group headings dropped OVERVIEW, PLANNING, and INSIGHTS from the
-  // bar entirely, leaving six views as one undifferentiated strip. The bar now
-  // carries a labelled disclosure per group, so the sections survive the
-  // breakpoint.
-  const narrow = STYLE_CSS.slice(STYLE_CSS.indexOf("@media (max-width: 1024px)"));
+test("Data Generator keeps execution and storage behind backend APIs", () => {
+  assert.match(DATA_GENERATOR, /editorMode = ref\("guided"\)/);
+  assert.doesNotMatch(DATA_GENERATOR, /structuredClone/);
+  assert.match(DATA_GENERATOR, /chooseMode\(['"]json['"]\)/);
+  assert.match(DATA_GENERATOR, /JSON configuration/);
+  assert.match(DATA_GENERATOR, /preview\.rows/);
+  assert.match(DATA_GENERATOR, /maximum 20/i);
+  assert.match(DATA_GENERATOR, /generatorDownloadUrl/);
+  assert.match(DATA_GENERATOR, /exportGeneratorRun/);
+  assert.match(DATA_GENERATOR, /autocomplete="new-password"/);
+  assert.match(DATA_GENERATOR, /exportForm\.value\.password = ""/);
+  assert.match(DATA_GENERATOR, /window\.location\.protocol === "https:"/);
+  assert.doesNotMatch(DATA_GENERATOR, /psycopg|postgresql:\/\//i);
 
-  // The group is a positioned box only in the bar; the column leaves its
-  // children directly in `.nav`, which is the layout it has always had.
-  assert.match(STYLE_CSS, /\.nav-group,\s*\.nav-group-items \{\s*display: contents/);
-  assert.match(narrow, /\.nav-group\.collapsible \{[^}]*position: relative/);
-
-  // The panel floats over the content rather than growing the bar back into
-  // the tall block the bar exists to avoid.
-  assert.match(narrow, /\.nav-group\.collapsible > \.nav-group-items \{[^}]*position: absolute/);
-
-  // A group with one page is not worth a disclosure, and a heading that does
-  // nothing is not a button.
-  assert.match(SIDEBAR_NAV, /group\.pages\.length > 1/);
-  assert.match(SIDEBAR_NAV, /v-if="!isCollapsible\(group\)" class="nav-label"/);
-
-  // The disclosure state is real state, so the component owns it rather than
-  // the stylesheet, and the breakpoint it watches is the stylesheet's own.
-  const breakpoint = SIDEBAR_NAV.match(/BAR_BREAKPOINT = "\(max-width: (\d+)px\)"/);
-  assert.ok(breakpoint, "SidebarNav must state the breakpoint it collapses at");
-  assert.ok(
-    STYLE_CSS.includes(`@media (max-width: ${breakpoint[1]}px)`),
-    "the rail's collapse breakpoint has drifted from the stylesheet's",
-  );
-
-  // A disclosure has to announce itself, say which panel it owns, and close on
-  // the routes a reader expects.
-  assert.match(SIDEBAR_NAV, /:aria-expanded="openGroup === group\.label"/);
-  assert.match(SIDEBAR_NAV, /:aria-controls="panelId\(group\)"/);
-  assert.match(SIDEBAR_NAV, /:hidden="isCollapsible\(group\) && openGroup !== group\.label"/);
-  assert.match(SIDEBAR_NAV, /event\.key === "Escape"/);
-  assert.match(SIDEBAR_NAV, /pointerdown/);
-
-  // A closed group still shows the reader is inside it, and widening the
-  // window cannot leave a panel open over an already-expanded column.
-  assert.match(SIDEBAR_NAV, /currentGroup === group\.label/);
-  assert.match(SIDEBAR_NAV, /if \(!event\.matches\) openGroup\.value = ""/);
-
-  // Every listener the component adds is removed again.
-  for (const event of ["pointerdown", "keydown"]) {
-    assert.ok(
-      SIDEBAR_NAV.includes(`document.removeEventListener("${event}"`),
-      `SidebarNav leaks its ${event} listener`,
-    );
+  for (const route of [
+    "/api/data-generator",
+    "/api/data-generator/preset",
+    "/api/data-generator/runs",
+  ]) {
+    assert.ok(CLIENT.includes(route), `${route} is absent from the API client`);
   }
-  assert.match(SIDEBAR_NAV, /query\?\.removeEventListener\("change"/);
+});
+
+test("Knowledge Base contains only the backend-integration notice", () => {
+  assert.match(KNOWLEDGE_BASE, /remain unavailable/i);
+  assert.doesNotMatch(KNOWLEDGE_BASE, /DataTable|fetchData|computed|ref\(/);
+});
+
+test("term help is accessible and links only into English documentation", () => {
+  assert.match(TERM_HELP, /aria-describedby/);
+  assert.match(TERM_HELP, /@mouseenter|@pointerenter/);
+  assert.match(TERM_HELP, /@focusin/);
+  assert.match(TERM_HELP, /@keydown\.esc/);
+  assert.match(TERM_HELP, /target="_blank"/);
+
+  const paths = TERM_REGISTRY.map((term) => term.href);
+  assert.ok(paths.length > 0, "the term registry has no documentation links");
+  assert.ok(paths.every((path) => path.startsWith("/en/")));
+});
+
+test("schema selection confirms, calls the backend, and reloads dashboard data", () => {
+  assert.match(SETTINGS_DIALOG, /pendingSchema/);
+  assert.match(SETTINGS_DIALOG, /Load another database schema\?/);
+  assert.match(SETTINGS_DIALOG, /selectRuntimeSchema\(target\.name\)/);
+  assert.match(SETTINGS_DIALOG, /@change="chooseDashboardSchema"/);
+  assert.match(SETTINGS_DIALOG, /form\.value\.PG_SCHEMA = schemas\.value\.selected/);
+  assert.match(SETTINGS_DIALOG, /emit\("changed"/);
+  assert.match(CLIENT, /\/api\/settings\/schema-selection/);
+});
+
+test("database load recovery offers only backend-declared non-replacement actions", () => {
+  assert.match(APP_VUE, /error\.code === 'database_unavailable'/);
+  assert.match(APP_VUE, /<SchemaRecovery/);
+  assert.match(SCHEMA_RECOVERY, /fetchSchemaRecovery/);
+  assert.match(SCHEMA_RECOVERY, /selectRuntimeSchema/);
+  assert.match(SCHEMA_RECOVERY, /startSchemaOperation/);
+  assert.doesNotMatch(SCHEMA_RECOVERY, /replace\s*=\s*true|window\.confirm/);
+  assert.match(CLIENT, /\/api\/schema-recovery/);
 });
 
 test("data-run diagnostics are a preference, off by default", () => {

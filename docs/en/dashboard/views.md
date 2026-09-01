@@ -1,15 +1,40 @@
 ---
 title: Dashboard Views and Visual Contract
-compact: "Vue component contract: six views, delayed LoadingProgress, lazy research observations, server-declared model dataset selectors, large-history-safe charts, schema setup, deployment identity, and the native Willow Sakura forecast panel running the contributed Extended-27 network."
+compact: "Vue visual contract: seven views, empty Knowledge Base placeholder, accessible TermHelp links, delayed LoadingProgress, lazy research observations, server-declared model selectors, schema switching, large-history-safe charts, and native Willow forecasting."
 lang: en-US
-source_files: dashboard/src/theme.js, dashboard/src/style.css, dashboard/src/lib/deployment.js, dashboard/src/lib/diagnostics.js, dashboard/src/lib/useJobs.js, dashboard/src/lib/willowGmvModel.js, dashboard/src/views/CommandCenter.vue, dashboard/src/views/BudgetManager.vue, dashboard/src/views/Campaigns.vue, dashboard/src/views/CampaignOptimizer.vue, dashboard/src/views/OptimizationLog.vue, dashboard/src/views/KnowledgeBase.vue, dashboard/src/components/SidebarNav.vue, dashboard/src/components/TopBar.vue, dashboard/src/components/SettingsDialog.vue, dashboard/src/components/StageRunner.vue, dashboard/src/components/LoadingProgress.vue, dashboard/src/components/WillowGmvForecast.vue, dashboard/src/components/PlotlyChart.vue, dashboard/src/components/DataTable.vue, dashboard/src/components/EntityTable.vue, dashboard/src/components/ConfirmDialog.vue, dashboard/src/components/TableView.vue, dashboard/src/components/MetricRow.vue, dashboard/src/components/KeyValuePanel.vue, dashboard/src/components/ReliabilityBanner.vue, dashboard/src/lib/common.js
+source_files: dashboard/src/theme.js, dashboard/src/style.css, dashboard/src/lib/deployment.js, dashboard/src/lib/diagnostics.js, dashboard/src/lib/useJobs.js, dashboard/src/lib/willowGmvModel.js, dashboard/src/lib/terms.js, dashboard/src/views/CommandCenter.vue, dashboard/src/views/BudgetManager.vue, dashboard/src/views/Campaigns.vue, dashboard/src/views/CampaignOptimizer.vue, dashboard/src/views/OptimizationLog.vue, dashboard/src/views/KnowledgeBase.vue, dashboard/src/components/SidebarNav.vue, dashboard/src/components/TopBar.vue, dashboard/src/components/StageRunner.vue, dashboard/src/components/LoadingProgress.vue, dashboard/src/components/TermHelp.vue, dashboard/src/components/WillowGmvForecast.vue, dashboard/src/components/PlotlyChart.vue, dashboard/src/components/DataTable.vue, dashboard/src/components/EntityTable.vue, dashboard/src/components/ConfirmDialog.vue, dashboard/src/components/TableView.vue, dashboard/src/components/MetricRow.vue, dashboard/src/components/KeyValuePanel.vue, dashboard/src/components/ReliabilityBanner.vue, dashboard/src/lib/common.js
 ---
 
 # Dashboard Views and Visual Contract
 
-The six views are listed on [Dashboard](./index.md#the-six-views). This page specifies what they share beyond the question each one answers: how the two prototype views without backing data were repointed, the reliability rule every view honors, and the colour, chart, and formatting system every one of them draws from.
+The seven views are listed on [Dashboard](./index.md#the-seven-views). This page specifies what they share beyond the question each one answers: the reliability rule every data view honors and the colour, chart, formatting, and key-term help system they draw from.
 
-Two of the prototype's views had no backing data in this project. Rather than ship placeholder content, each was pointed at the real record that answers the same question: Optimization Log shows run provenance and pipeline stage state; Knowledge Base is populated from the data in use, so it cannot drift from the charts beside it.
+Optimization Log is backed by run provenance and pipeline stage state.
+Knowledge Base has no backend-owned knowledge contract yet, so its former
+snapshot-derived ontology is removed. The view renders one unavailable notice
+and no vocabulary, rules, entity, or artifact tabs until a backend endpoint is
+specified and implemented.
+
+## Key-Term Help <span class="status-label status-verified" aria-label="Verified"></span>
+
+`TermHelp.vue` adds an accessible help button after declared key terms in metric
+labels, key/value labels, and table headers. Hover, focus, or activation reveals
+a short definition. When the term needs more context, the popover links to the
+specific English definition or owning specification page; a generic Docs link
+is not substituted for a precise reference.
+
+`src/lib/terms.js` is the only term registry. Each entry contains a normalized
+label, plain-language definition, and optional documentation path. The initial
+registry covers Return on Ad Spend (ROAS), Click-Through Rate (CTR), Cost Per
+Click (CPC), Cost Per Mille (CPM), attribution, touchpoint, reliability,
+configured budget, actual spend, contribution profit, conversion path,
+database schema, and ground truth. The visible label remains in the page, so a
+tooltip is never the only source of a value or column name.
+
+The button uses `aria-describedby`; the popover opens on keyboard focus as well
+as pointer hover; Escape and focus departure close it. Documentation links open
+normally and remain keyboard reachable. Tests assert every registered path is
+an English documentation path.
 
 Optimization Log's fifth stage now reports the [Campaign budget optimizer](/en/strategy-recommendation/campaign-budget-optimizer.md) from its artifact rather than from a constant. When `outputs/campaign_strategy.json` is absent — the state of any checkout that has not run the research command — the stage reads `NOT RUN` and the initializer's seed remains the current recommendation. When the artifact is present the view shows the optimized allocation beside its evidence, and when the optimizer refused it shows the refusal and its reasons instead of an allocation. Every Campaign optimized outside the budget range its fit observed, and every Campaign whose curve was pooled from comparable Campaigns rather than its own history, is named rather than left implicit in a number.
 
@@ -302,12 +327,12 @@ The five-segment vocabulary, the reliability contract, the Outcomes, capacity ru
 
 ### The shared components
 
-Source: `dashboard/src/components/SidebarNav.vue`, `dashboard/src/components/TopBar.vue`, `dashboard/src/components/SettingsDialog.vue`, `dashboard/src/components/WillowGmvForecast.vue`, `dashboard/src/components/PlotlyChart.vue`, `dashboard/src/components/DataTable.vue`, `dashboard/src/components/EntityTable.vue`, `dashboard/src/components/ConfirmDialog.vue`, `dashboard/src/components/TableView.vue`, `dashboard/src/components/MetricRow.vue`, `dashboard/src/components/KeyValuePanel.vue`, `dashboard/src/components/ReliabilityBanner.vue`
+Source: `dashboard/src/components/SidebarNav.vue`, `dashboard/src/components/TopBar.vue`, `dashboard/src/components/WillowGmvForecast.vue`, `dashboard/src/components/PlotlyChart.vue`, `dashboard/src/components/DataTable.vue`, `dashboard/src/components/EntityTable.vue`, `dashboard/src/components/ConfirmDialog.vue`, `dashboard/src/components/TableView.vue`, `dashboard/src/components/MetricRow.vue`, `dashboard/src/components/KeyValuePanel.vue`, `dashboard/src/components/ReliabilityBanner.vue`
 
 - Responsibility: Hold the chrome and the repeated display shapes, so two views cannot render the same thing differently.
 - Inputs: Props from the view that mounts them.
 - Outputs: The rendered fragment, plus events for the rail's navigation, reload, and settings actions.
-- Behavior contract: `SidebarNav.vue` draws the rail from `src/pages.js` and pins the settings module to the foot, ruled off from the view navigation above it, so it never reads as a seventh destination. Below the `1024px` breakpoint it collapses each multi-page group into a labelled disclosure rather than flattening the six views into one undifferentiated row, keeping OVERVIEW, PLANNING, and INSIGHTS legible on a narrow screen; it owns that open/closed state itself, watching the breakpoint with `matchMedia`, because a disclosure is behaviour rather than appearance. A single-page group stays a button on the bar, a closed group carries the active state when the current view is inside it, and the panel closes on Escape, on an outside click, on choosing a view, and on widening past the breakpoint. `SettingsDialog.vue` never renders a stored password and never sends one back; in the published build it replaces both forms with the local-run instructions, while a protected team-server deployment replaces the credential form with the server-configuration instruction and disables every logging mutation. `PlotlyChart.vue` is the only component that touches Plotly, so the chart defaults in `src/theme.js` cannot be bypassed, and it disposes the plot on unmount so switching views does not leak a chart instance. `TableView.vue` exists so that every chart can be paired with the values behind it, which is what keeps a tooltip an enhancement rather than the only way to read a number. `ReliabilityBanner.vue` always renders the status word beside its colour. `TopBar.vue` leads its tag row with the deployment, because which deployment this is governs how every other number on the page may be used.
+- Behavior contract: `SidebarNav.vue` draws the flat seven-view rail from `src/pages.js` and pins the settings module to the foot. It renders no section label, group container, disclosure, or reload button. Below `1024px` the same order becomes a horizontally scrollable bar. `SettingsDialog.vue` owns reload and confirmed runtime schema switching; it never renders a stored password or sends one back. In the published build it replaces backend operations with local-run instructions, while a protected team-server deployment keeps credential mutation unavailable. `SchemaRecovery.vue` replaces terminal-only advice on a database load error with backend-declared select, derive, or initialize buttons; it never offers replacement and polls the existing bounded operation log. `TermHelp.vue` and `src/lib/terms.js` provide keyboard-accessible definitions and precise English documentation links without hiding the original labels. `PlotlyChart.vue` is the only component that touches Plotly, so chart defaults in `src/theme.js` cannot be bypassed, and it disposes the plot on unmount. `TableView.vue` keeps every chart paired with readable values. `ReliabilityBanner.vue` always renders the status word beside its colour. `TopBar.vue` leads its tag row with the deployment.
 
 `EntityTable.vue` owns paging, page size, free-text filtering, selection, and the two row controls, and owns nothing about what a row means: columns are declared by the mounting view exactly as `DataTable`'s are. Its default page size is 15, offering 15, 30, 50, and 100. **Selection is keyed by a caller-supplied row identity rather than by page index**, so a batch action cannot act on whatever record happens to occupy that index after the page turns; the selection Set is reassigned rather than mutated, because a Set mutated in place is the same object and Vue's reactivity would not repaint the checkboxes. The header checkbox acts on the current page, which is what it can show. Both components read `renderCell` from `src/lib/common.js`, so one column declaration cannot mean two things in two tables.
 
@@ -336,12 +361,12 @@ when the census is empty, so an unreachable database cannot make the dialog
 display a schema the reader never chose and then save it.
 
 A protected team-server deployment does not hide that census. It renders a
-separate **Database schemas** inspection dropdown whose choices name the active
-schema, capability kind, and database structure version. The dropdown changes
-only which inventory entry is described; it cannot change `PG_SCHEMA`. Until a
-migration ledger exists, the version is displayed as **not tracked**. This is
-an observability control, not a configuration control, so it remains available
-while credential fields and schema setup stay unavailable.
+separate **Database schemas** dropdown whose choices name the active schema,
+capability kind, and database structure version. Choosing another
+dashboard-ready schema opens the same confirmation window as the editable
+selector and reloads actual data without rewriting `PG_SCHEMA` in deployment
+configuration. Until a migration ledger exists, the version is displayed as
+**not tracked**.
 
 The **Schema setup** menu lists every censused schema, including disabled
 active-schema choices, and labels its detected kind and available action.
@@ -352,6 +377,18 @@ an operation runs, the dialog polls `/api/schema-operations` and shows its
 status, exact command, bounded timestamped output, dropped-line count, and stop
 control. Success refreshes the census so new targets immediately appear in the
 Dashboard schema selector.
+
+**Setup is a sibling of the protected connection form, not a child of it.**
+It renders on every deployment with a backend, because writing tables into the
+database the platform already named is not the same act as rewriting the
+credential that names it; nesting it inside the editable-configuration branch
+is what previously made it unreachable on exactly the deployment whose readers
+have no other way to prepare a schema. Whether the buttons are enabled comes
+from the `available` and `reason` fields the server returns beside the
+operation record, so the dialog cannot offer an action the route would refuse,
+and a withheld one is explained rather than silently absent. Each option's
+summary is the census `remedy`, written for a reader; the `detail` command
+stays in the dropdown's `title` for an operator.
 
 Settings begins with a **Deployment identity** block. It renders the dashboard
 bundle's project version and full commit
@@ -388,7 +425,7 @@ Source: `dashboard/src/lib/willowGmvModel.js`
   Vue build.
 
 - Dependencies: Vue 3 and `plotly.js-dist-min`.
-- Verification: Exercised in a real browser through the six views that mount them. `EntityTable.vue`'s paging, page sizes, and identity-keyed selection, `ConfirmDialog.vue`'s named rows, `SettingsDialog.vue`'s disabled-schema and census contracts, and `StageRunner.vue`'s progressbar contract are covered by `dashboard/tests/dashboard.test.js`.
+- Verification: Exercised in a real browser through the seven views that mount them. `EntityTable.vue`'s paging, page sizes, and identity-keyed selection, `ConfirmDialog.vue`'s named rows, `SettingsDialog.vue`'s schema-selection and census contracts, `TermHelp.vue`'s registry, and `StageRunner.vue`'s progressbar contract are covered by `dashboard/tests/dashboard.test.js`.
 
 ### `src/lib/common.js`
 

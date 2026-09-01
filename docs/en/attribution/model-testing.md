@@ -469,13 +469,19 @@ Source: `modules/mta_standard/src/mta_sim_generator_adapter.py`
   the generator. It refuses an ambiguous multi-marketplace upload when no
   marketplace is supplied. Current provider-aware configurations receive their
   matching ProviderCapabilities when compatibility keys are requested;
-  historical configuration objects retain the no-argument key path.
+  historical configuration objects retain the no-argument key path. Public
+  `export_mta_sim_dataset_to_postgresql(...)` invokes the external package's
+  explicit PostgreSQL writer for an already accepted configuration; it accepts
+  connection information only from the backend and never from a browser path
+  or dynamically supplied writer reference.
 - Inputs: Submodule path, configuration, output directory, and generator
   variant; or explicit uploaded path, performance, destination paths, and an
-  optional exact marketplace selection.
+  optional exact marketplace selection; or a backend-owned PostgreSQL
+  connection string plus explicit reset Boolean.
 - Outputs: Generated manifest, model dataset, and evaluation-only ground truth
   path; or deterministic matching single-scope path and performance reports
-  that preserve both source uploads.
+  that preserve both source uploads; or the external writer's database
+  manifest with no credential retained in the adapter result.
 - Dependencies: External generator, dataloader, and touchpoint adapter.
 - Verification: `modules/mta_standard/tests/test_mta_sim_generator_adapter.py`.
 

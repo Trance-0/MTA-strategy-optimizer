@@ -29,6 +29,12 @@ job clear both caches together.
 clears it. Database mode first probes reachability and a non-empty attribution
 result; failure returns `503 database_unavailable` as a page-level state.
 
+That state names no shell command. A schema is one of the reasons the probe
+fails, and it is the reason a reader can act on, so the client answers the
+error card with the actionable schemas from
+[`GET /api/schema-recovery`](./operations.md#schema-recovery) instead of an
+instruction that assumes a terminal.
+
 When `PIPELINE_OUTPUT_DIR` is configured, repositories prefer completed
 runtime model artifacts so a deployed run is visible without rewriting the
 image or importing generated files into PostgreSQL. Attribution switches only
