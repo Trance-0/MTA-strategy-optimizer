@@ -7,15 +7,17 @@
  * filters sit in a single row above the charts, so every panel on the page
  * shows the same slice.
  */
-import { computed, ref } from "vue";
+import { computed, onMounted, ref } from "vue";
 
 import DataTable from "../components/DataTable.vue";
 import EntityTable from "../components/EntityTable.vue";
 import MetricRow from "../components/MetricRow.vue";
+import LoadingProgress from "../components/LoadingProgress.vue";
 import PlotlyChart from "../components/PlotlyChart.vue";
 import {
   distinct,
   groupSum,
+  maxOf,
   pretty,
   shortDate,
   shortTouchpoint,
@@ -26,8 +28,16 @@ import { useDashboard } from "../lib/useDashboard.js";
 import { useDiagnostics } from "../lib/diagnostics.js";
 import * as theme from "../theme.js";
 
-const { data } = useDashboard();
+const {
+  data,
+  researchLoaded,
+  researchError,
+  researchProgress,
+  ensureResearchHistory,
+} = useDashboard();
 const { diagnosticsOn } = useDiagnostics();
+
+onMounted(ensureResearchHistory);
 
 const tab = ref("history");
 const TABS = [
@@ -179,10 +189,7 @@ const budgetHistoryTraces = computed(() => {
   });
 });
 const budgetHistoryLayout = computed(() => {
-  const highest = Math.max(
-    1,
-    ...scopedHistory.value.flatMap((row) => [row.configured_budget, row.actual_spend].map(Number)),
-  );
+  const highest = maxOf(scopedHistory.value, ["configured_budget", "actual_spend"], 1);
   return theme.layout({
     height: 360,
     xaxis: { title: { text: "Configured budget" }, range: [0, highest * 1.04] },
@@ -650,6 +657,12 @@ const scopedRowKey = (row) =>
       Campaigns and Ad Groups.
     </p>
 
+    <LoadingProgress :progress="researchProgress" />
+    <div v-if="researchError" class="notice bad">
+      <b>Research observations could not be loaded.</b> {{ researchError.message }}
+      <button class="btn small" @click="ensureResearchHistory">Try again</button>
+    </div>
+
     <div class="tabs" role="tablist">
       <button
         v-for="entry in TABS"
@@ -685,7 +698,7 @@ const scopedRowKey = (row) =>
         </div>
       </article>
 
-      <template v-if="scopedHistory.length">
+      <template v-if="researchLoaded && scopedHistory.length">
         <MetricRow :items="historyTiles" />
         <article class="card">
           <div class="card-head"><h2>Budget delivery response</h2><span class="sub">Configured budget vs actual spend · dashed line is full delivery</span></div>
@@ -715,7 +728,7 @@ const scopedRowKey = (row) =>
           </div>
         </article>
       </template>
-      <article v-else class="card empty-card">
+      <article v-else-if="researchLoaded" class="card empty-card">
         <h2>No Campaign budget history</h2>
         <p>
           No Campaign has a recorded budget-versus-spend history in the current

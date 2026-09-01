@@ -1586,6 +1586,36 @@ tbody tr.selected:hover {
   background: var(--red);
 }
 
+.load-progress {
+  display: grid;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.load-progress-track {
+  height: 8px;
+  border-radius: 999px;
+  background: var(--line);
+  overflow: hidden;
+}
+
+.load-progress-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: var(--blue);
+  transition: width 0.2s ease;
+}
+
+.load-progress-fill.indeterminate {
+  width: 34%;
+  animation: load-progress-indeterminate 1.15s ease-in-out infinite;
+}
+
+@keyframes load-progress-indeterminate {
+  from { transform: translateX(-110%); }
+  to { transform: translateX(300%); }
+}
+
 .run-status {
   display: flex;
   align-items: baseline;

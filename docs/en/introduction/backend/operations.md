@@ -1,9 +1,9 @@
 ---
 title: Backend Jobs and Settings
 description: Pipeline job polling and protected runtime settings contracts
-compact: "Contracts for `/api/jobs`, `/api/settings`, and `/api/schema-operations`: protected configuration is independent from pipeline execution; jobs use one process, isolated runtime outputs, validated subprocesses, bounded logs, termination, cache invalidation, and capability refusals."
+compact: "Contracts for `/api/jobs`, `/api/settings`, and `/api/schema-operations`: server-declared model datasets, direct-interpreter subprocesses, database report/research preparation, protected configuration, isolated outputs, bounded logs, termination, cache invalidation, and capability refusals."
 lang: en-US
-source_files: backend/api/jobs.py, backend/api/settings.py, backend/api/schema_operations.py, backend/services/jobs.py, backend/services/settings.py, backend/services/schema_operations.py, backend/tests/test_jobs.py, backend/tests/test_settings.py, backend/tests/test_schema_operations.py
+source_files: backend/api/jobs.py, backend/api/settings.py, backend/api/schema_operations.py, backend/services/jobs.py, backend/services/model_datasets.py, backend/services/settings.py, backend/services/schema_operations.py, backend/tests/test_jobs.py, backend/tests/test_settings.py, backend/tests/test_schema_operations.py
 ---
 
 # Backend Jobs and Settings
@@ -17,27 +17,40 @@ spawning a fixed argument vector with no shell. `DELETE` requests termination
 of a running stage. Output keeps at most 600 lines and reports the number
 dropped.
 
-Attribution normally runs `script/run_pipeline.py`. When `MTA_SIM_DATA_DIR`
-already contains both `amc_path_report.csv` and
-`amazon_ads_daily_touchpoint_performance.csv`, the runner aggregates every
-uploaded daily path window into one complete report scope below
-`PIPELINE_OUTPUT_DIR`. When an upload contains more than one marketplace, it
-selects the marketplace of the advertiser in the connected dashboard schema
-and writes a matching filtered performance input; an absent or unmatched
-database marketplace is a named failed job, never an arbitrary first-market
-choice. It then runs `script/run_attribution_models.py` against the two
-prepared inputs. A reporting date range is refused for this path because
-filtering the already-produced daily paths requires regenerating them from
-events; the runner never silently ignores a submitted range. Optimization runs
-`script/generate_campaign_strategy.py` and requires a research snapshot.
-Strategy evaluation runs `script/evaluate_strategies.py` without requiring a
-research snapshot,
-because it can use the response observations in `campaign_strategy.json`.
+Each stage descriptor carries `datasets` and `defaultDataset`. Dataset
+identifiers are opaque server-issued choices, not browser-supplied paths.
+Attribution choices name a report window, marketplace, and advertiser scope.
+Optimization and evaluation choices name a Multi-Touch Attribution Simulator
+(MTA-SIM) research run and marketplace. A stage is available only when
+execution and database mode are enabled and at least one compatible dataset
+exists.
+
+`POST` requires `datasetId`. The service resolves it again against current
+database state immediately before starting, then writes the selected rows to
+an isolated input directory below `PIPELINE_OUTPUT_DIR`. Attribution receives
+one aggregated path report and matching daily performance dataset. Research
+selections contain observed budget, delivery, and outcome records;
+evaluation-only simulator outcomes are excluded from model input. No arbitrary
+schema, query, or filesystem path reaches the command line from the client.
+
+Attribution runs `script/run_attribution_models.py` against path and daily
+performance files materialized from the selected database report scope.
+Optimization runs `script/generate_campaign_strategy.py` against the selected
+research run and marketplace. Strategy evaluation runs
+`script/evaluate_strategies.py` against the same kind of selected research
+scope and the current strategy artifacts.
 File-mode deployments and server deployments with `PIPELINE_RUNS_ENABLED=false`
 cannot start jobs. `DASHBOARD_CONFIG_READ_ONLY=true` protects connection and
 logging configuration only; it does not refuse a pipeline run. Conflating the
 two permissions made AppStack advertise a database-backed writable dashboard
 while every job start returned `403`.
+
+Model jobs invoke the already-running environment's `sys.executable` directly
+instead of nesting `uv run`. The container image has already installed the
+locked environment; resolving `uv` again adds no dependency isolation and made
+online runs fail before Python started when the executable was absent from the
+deployed path. Strategy evaluation's numerical dependencies are installed in
+every pipeline-enabled runtime image.
 
 The runner keeps active jobs and bounded logs in process memory. A deployment
 that enables it therefore runs exactly one application process in exactly one
@@ -121,29 +134,29 @@ before the next census.
 
 ## Source Files
 
-### `backend/api/jobs.py` and `backend/services/jobs.py`
+### `backend/api/jobs.py`, `backend/services/jobs.py`, and `backend/services/model_datasets.py`
 
-Source: `backend/api/jobs.py`, `backend/services/jobs.py`
+Source: `backend/api/jobs.py`, `backend/services/jobs.py`, `backend/services/model_datasets.py`
 
-- Responsibility: Validate stage requests, expose polling state, spawn fixed
-  `uv run python` commands, capture bounded output, advance regex-based phases,
-  stop processes, and clear caches after success.
-- Inputs: Stage key, International Organization for Standardization (ISO)
-  date range, positive budget, and declared budget policy.
+- Responsibility: Discover and revalidate stage-compatible datasets, prepare
+  marketplace-scoped model inputs, validate requests, expose polling state,
+  spawn the fixed current-interpreter command, capture bounded output, advance
+  regex-based phases, stop processes, and clear caches after success.
+- Inputs: Stage key, server-issued dataset identifier, positive budget, and
+  declared budget policy.
 - Outputs: `202` start responses, job snapshots, or specific refusal objects.
 - Behavior contract: `PIPELINE_RUNS_ENABLED` governs execution independently
   of `DASHBOARD_CONFIG_READ_ONLY`; database mode is still required. Because
   active state and artifacts are local to one application process, an enabled
   deployment must use one pod and one Gunicorn worker. Outputs are isolated
-  below `PIPELINE_OUTPUT_DIR`; simulator uploads that contain the two daily
-  attribution tables are partitioned by the connected advertiser's
-  marketplace and aggregated into one model scope, select
-  `run_attribution_models.py`, and reject date filtering as unsupported rather
-  than dropping it. A successful child
+  below `PIPELINE_OUTPUT_DIR`; every submitted dataset identifier is resolved
+  from the current catalogue and prepared as one model scope. The subprocess
+  begins with `sys.executable`, never a shell or environment-manager lookup. A successful child
   clears the snapshot cache; a preparation failure is retained as a failed
   job. AppStack falls back to committed image artifacts when a rollout removes
   its runtime volume.
-- Dependencies: Root scripts, subprocess, research snapshot configuration.
+- Dependencies: Root scripts, subprocess, database repositories, and the
+  configured runtime output directory.
 - Verification: `backend/tests/test_jobs.py` and the backend discovery command.
 
 ### `backend/api/settings.py` and `backend/services/settings.py`

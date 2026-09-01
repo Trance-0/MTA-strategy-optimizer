@@ -21,7 +21,11 @@ from backend.repository.research import (
     archive_master_object,
     save_master_object,
 )
-from backend.repository.snapshot import clear_caches, load_snapshot
+from backend.repository.snapshot import (
+    clear_caches,
+    load_research_history,
+    load_snapshot,
+)
 from backend.services.settings import log
 
 blueprint = Blueprint("dashboard", __name__)
@@ -66,10 +70,34 @@ def dashboard():
                 )
         snapshot = load_snapshot()
         elapsed = (time.perf_counter() - started) * 1000
-        log("INFO", "data_source", f"snapshot from {snapshot['mode']} in {elapsed:.0f} ms")
+        log(
+            "INFO",
+            "data_source",
+            f"snapshot from {snapshot['mode']} in {elapsed:.0f} ms",
+        )
         return jsonify(snapshot)
     except Exception as error:  # noqa: BLE001 - reported as a page-level state
         log("ERROR", "data_source", f"{type(error).__name__}: {error}")
+        return (
+            jsonify(
+                {
+                    "error": "load_failed",
+                    "message": f"{type(error).__name__}: {str(error)[:400]}",
+                }
+            ),
+            500,
+        )
+
+
+@blueprint.get("/api/dashboard/research-history")
+def research_history():
+    """Observation-heavy research arrays, fetched only by views that use them."""
+    try:
+        return jsonify(load_research_history())
+    except Exception as error:  # noqa: BLE001 - same page-level error contract
+        log(
+            "ERROR", "data_source", f"research history: {type(error).__name__}: {error}"
+        )
         return (
             jsonify(
                 {

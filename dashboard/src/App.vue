@@ -13,6 +13,7 @@
 import { computed, onMounted, onUnmounted, ref } from "vue";
 
 import SettingsDialog from "./components/SettingsDialog.vue";
+import LoadingProgress from "./components/LoadingProgress.vue";
 import SidebarNav from "./components/SidebarNav.vue";
 import TopBar from "./components/TopBar.vue";
 import BudgetManager from "./views/BudgetManager.vue";
@@ -35,7 +36,7 @@ const VIEWS = {
   knowledge: KnowledgeBase,
 };
 
-const { data, loading, error, loaded, ensureLoaded, reload } = useDashboard();
+const { data, loading, error, loaded, loadingProgress, ensureLoaded, reload } = useDashboard();
 const {
   writable,
   theme: deploymentTheme,
@@ -191,6 +192,7 @@ const docsHref = computed(() => (IS_STATIC ? "./docs/" : `${DOCS_URL}/`));
         <div v-if="loading && !loaded" class="card empty-card">
           <h2>Loading the pipeline's artifacts…</h2>
           <p>Reading the attribution outputs, the budget seed, and the history.</p>
+          <LoadingProgress :progress="loadingProgress" />
         </div>
 
         <div v-else-if="error" class="card empty-card error-card">

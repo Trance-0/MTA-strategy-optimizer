@@ -1,8 +1,8 @@
 ---
 title: Dashboard Views and Visual Contract
-compact: "Vue component contract: six views, model runners, charts, schema setup, deployment identity, and the native Willow Sakura forecast panel whose budget, calendar, marketplace, placement-share, prediction, and comparison widgets run the contributed Extended-27 network."
+compact: "Vue component contract: six views, delayed LoadingProgress, lazy research observations, server-declared model dataset selectors, large-history-safe charts, schema setup, deployment identity, and the native Willow Sakura forecast panel running the contributed Extended-27 network."
 lang: en-US
-source_files: dashboard/src/theme.js, dashboard/src/style.css, dashboard/src/lib/deployment.js, dashboard/src/lib/diagnostics.js, dashboard/src/lib/useJobs.js, dashboard/src/lib/willowGmvModel.js, dashboard/src/views/CommandCenter.vue, dashboard/src/views/BudgetManager.vue, dashboard/src/views/Campaigns.vue, dashboard/src/views/CampaignOptimizer.vue, dashboard/src/views/OptimizationLog.vue, dashboard/src/views/KnowledgeBase.vue, dashboard/src/components/SidebarNav.vue, dashboard/src/components/TopBar.vue, dashboard/src/components/SettingsDialog.vue, dashboard/src/components/StageRunner.vue, dashboard/src/components/WillowGmvForecast.vue, dashboard/src/components/PlotlyChart.vue, dashboard/src/components/DataTable.vue, dashboard/src/components/EntityTable.vue, dashboard/src/components/ConfirmDialog.vue, dashboard/src/components/TableView.vue, dashboard/src/components/MetricRow.vue, dashboard/src/components/KeyValuePanel.vue, dashboard/src/components/ReliabilityBanner.vue, dashboard/src/lib/common.js
+source_files: dashboard/src/theme.js, dashboard/src/style.css, dashboard/src/lib/deployment.js, dashboard/src/lib/diagnostics.js, dashboard/src/lib/useJobs.js, dashboard/src/lib/willowGmvModel.js, dashboard/src/views/CommandCenter.vue, dashboard/src/views/BudgetManager.vue, dashboard/src/views/Campaigns.vue, dashboard/src/views/CampaignOptimizer.vue, dashboard/src/views/OptimizationLog.vue, dashboard/src/views/KnowledgeBase.vue, dashboard/src/components/SidebarNav.vue, dashboard/src/components/TopBar.vue, dashboard/src/components/SettingsDialog.vue, dashboard/src/components/StageRunner.vue, dashboard/src/components/LoadingProgress.vue, dashboard/src/components/WillowGmvForecast.vue, dashboard/src/components/PlotlyChart.vue, dashboard/src/components/DataTable.vue, dashboard/src/components/EntityTable.vue, dashboard/src/components/ConfirmDialog.vue, dashboard/src/components/TableView.vue, dashboard/src/components/MetricRow.vue, dashboard/src/components/KeyValuePanel.vue, dashboard/src/components/ReliabilityBanner.vue, dashboard/src/lib/common.js
 ---
 
 # Dashboard Views and Visual Contract
@@ -74,6 +74,15 @@ Pipeline-run detail therefore sits behind one preference, `Show data run diagnos
 ## Running a Stage from the Dashboard <span class="status-label status-verified" aria-label="Verified"></span>
 
 Campaign Optimizer carries one tab per model — MTA attribution, MTA strategy optimization, MTA strategy evaluation — and Optimization Log carries the same three beside the provenance it already showed. Each model tab has its own runner, and each log tab its own output.
+
+Every runner begins with a **Data** selector populated by its stage descriptor
+from `GET /api/jobs`. Attribution choices name an available dashboard report
+scope. Optimization choices name a research run and marketplace. Evaluation
+choices name either current strategy observations or a research run and
+marketplace. The client never invents a filesystem path or assumes that the
+first marketplace is intended. A run cannot start until an available choice
+is selected, and the server revalidates the identifier immediately before
+preparing inputs.
 
 **The dashboard runs the project's own command.** A run started here and one started in a terminal execute the same script with the same arguments, so the dashboard cannot drift from the pipeline it reports on. The command is shown verbatim beneath the log, so a reader who wants to reproduce a run, or to check what the dashboard actually did, can copy it.
 
@@ -243,6 +252,19 @@ because it is a fixed short list inside a dialog rather than a page of records.
 When no attribution artifact exists, the view displays “Attribution not
 available.”
 
+Database histories may contain 100,000 rows and the view renders that complete
+selected history. Chart extrema therefore scan rows and fields iteratively with
+constant call-stack usage. They must never spread a history-sized array into
+`Math.max()` or `Math.min()`: JavaScript engines impose an argument limit below
+the supported history size, and exceeding it aborts the Vue render with a
+`RangeError` after the snapshot has loaded.
+
+Budget Manager and Campaigns request research observations on entry rather
+than making Command Center or Knowledge Base download them. Their observation
+panels render `LoadingProgress` while that shared request is unresolved, show
+the bar only after three seconds, and expose a retry after failure. Navigating
+between the two views reuses the completed or in-flight request.
+
 The four tabs are one `v-if`/`v-else-if`/`v-else` chain, not several. A second
 `v-if` opened mid-way ends the first chain, and the trailing `v-else` then
 renders under whichever tab is selected — which is exactly the defect 0.9.27
@@ -289,7 +311,14 @@ Source: `dashboard/src/components/SidebarNav.vue`, `dashboard/src/components/Top
 
 `EntityTable.vue` owns paging, page size, free-text filtering, selection, and the two row controls, and owns nothing about what a row means: columns are declared by the mounting view exactly as `DataTable`'s are. Its default page size is 15, offering 15, 30, 50, and 100. **Selection is keyed by a caller-supplied row identity rather than by page index**, so a batch action cannot act on whatever record happens to occupy that index after the page turns; the selection Set is reassigned rather than mutated, because a Set mutated in place is the same object and Vue's reactivity would not repaint the checkboxes. The header checkbox acts on the current page, which is what it can show. Both components read `renderCell` from `src/lib/common.js`, so one column declaration cannot mean two things in two tables.
 
-`StageRunner.vue` is one stage's controls, progress bar, and log, and is mounted once per model tab in both Campaign Optimizer and Optimization Log — so the two views cannot show a run differently. It takes the stage descriptor whole rather than a set of flags, so a stage that becomes runnable does so on the server without a change here, and it declares its extra controls as data rather than as markup. **The bar reads `job.percent` for both `aria-valuenow` and the visible percentage**, so a screen reader and the bar cannot report different progress, and the command is rendered verbatim beside it. The log follows its tail only while the run is going: scrolling a finished log to the bottom would fight a reader who scrolled up to read why it failed. A blocked stage renders its reason in place of an enabled control rather than failing when pressed.
+`StageRunner.vue` is one stage's controls, dataset selector, progress bar, and log, and is mounted once per model tab in both Campaign Optimizer and Optimization Log — so the two views cannot show a run differently. It takes the stage descriptor whole rather than a set of flags, so available datasets and capability changes come from the server without a view edit. The selected dataset identifier is emitted as `datasetId` beside declared extra options. **The bar reads `job.percent` for both `aria-valuenow` and the visible percentage**, so a screen reader and the bar cannot report different progress, and the command is rendered verbatim beside it. The log follows its tail only while the run is going. A blocked stage or a stage with no dataset renders its reason in place of an enabled control rather than failing when pressed.
+
+`LoadingProgress.vue` is the corresponding reader for dataset loads rather
+than model runs. It accepts the shared progress object, uses a determinate
+width and `aria-valuenow` only when total bytes are known, otherwise renders an
+indeterminate bar, and states received versus total bytes where possible. It
+does not own the three-second timer; the store owns timing so two mounted views
+cannot disagree about whether the same request is slow.
 
 `ConfirmDialog.vue` is the only route to a deletion. It **names the affected identifiers rather than reporting a count alone**, because a count is not something a reader can check and a batch selected across several pages is exactly the case where a reader cannot see their own selection. The list is capped at twelve with the remainder stated rather than dropped, and the dialog stays open on failure carrying the reason.
 
@@ -305,6 +334,14 @@ and the same explanation — the reason and tables the schema lacks — is
 rendered as help text under the field. The stored selection stays in the list
 when the census is empty, so an unreachable database cannot make the dialog
 display a schema the reader never chose and then save it.
+
+A protected team-server deployment does not hide that census. It renders a
+separate **Database schemas** inspection dropdown whose choices name the active
+schema, capability kind, and database structure version. The dropdown changes
+only which inventory entry is described; it cannot change `PG_SCHEMA`. Until a
+migration ledger exists, the version is displayed as **not tracked**. This is
+an observability control, not a configuration control, so it remains available
+while credential fields and schema setup stay unavailable.
 
 The **Schema setup** menu lists every censused schema, including disabled
 active-schema choices, and labels its detected kind and available action.
@@ -359,7 +396,7 @@ Source: `dashboard/src/lib/common.js`
 
 - Responsibility: Hold the label vocabulary and the small aggregations more than one view needs, so two views cannot name the same thing differently.
 - Inputs: Rows from the snapshot, plus the reader's selections.
-- Outputs: The `OUTCOME_LABELS`, `OUTCOME_SHARE_COLUMNS`, and `OUTCOME_VALUE_COLUMNS` maps; `NUMERIC_FORMATS` and `renderCell()`; `currencySymbol()`, `pretty()`, `shortTouchpoint()`, `shortDate()`, `statusTone()`; and the `sum()`, `groupSum()`, `distinct()`, and `sortBy()` helpers.
-- Behavior contract: Only presentation lives here; **nothing in this module computes an attribution or budget number** — the values are read from the snapshot and these helpers group, sort, and format them. The three `OUTCOME_*` maps are the single binding between an Outcome key as the pipeline writes it, its display label, and the fields that carry it, so a renamed field is corrected in one place. `shortTouchpoint()` drops the `UNSPECIFIED` segments, which carry no information and would otherwise make every axis label the same length and unreadable. `groupSum()` returns an array in first-seen order rather than a Map, so a chart's category order is stable across reloads. `sortBy()` sorts a copy and pushes non-finite values last, so a missing number never wins a comparison. `renderCell()` is the **single** cell renderer behind both `DataTable` and `EntityTable`, so one column declaration cannot render two ways; it returns `--` for an absent value so a missing number is visibly missing rather than blank, and it flattens an array to a comma-joined list and an object to JSON — the canonical entity records carry both, and `String(value)` renders the first correctly only by accident and the second as `[object Object]`.
+- Outputs: The `OUTCOME_LABELS`, `OUTCOME_SHARE_COLUMNS`, and `OUTCOME_VALUE_COLUMNS` maps; `NUMERIC_FORMATS` and `renderCell()`; `currencySymbol()`, `pretty()`, `shortTouchpoint()`, `shortDate()`, `statusTone()`; and the `sum()`, `maxOf()`, `groupSum()`, `distinct()`, and `sortBy()` helpers.
+- Behavior contract: Only presentation lives here; **nothing in this module computes an attribution or budget number** — the values are read from the snapshot and these helpers group, sort, and format them. The three `OUTCOME_*` maps are the single binding between an Outcome key as the pipeline writes it, its display label, and the fields that carry it, so a renamed field is corrected in one place. `shortTouchpoint()` drops the `UNSPECIFIED` segments, which carry no information and would otherwise make every axis label the same length and unreadable. `maxOf()` scans iteratively, ignores non-finite results, and retains its finite floor, so a chart may find an extremum across a 100,000-row history without turning the rows into function arguments. `groupSum()` returns an array in first-seen order rather than a Map, so a chart's category order is stable across reloads. `sortBy()` sorts a copy and pushes non-finite values last, so a missing number never wins a comparison. `renderCell()` is the **single** cell renderer behind both `DataTable` and `EntityTable`, so one column declaration cannot render two ways; it returns `--` for an absent value so a missing number is visibly missing rather than blank, and it flattens an array to a comma-joined list and an object to JSON — the canonical entity records carry both, and `String(value)` renders the first correctly only by accident and the second as `[object Object]`.
 - Dependencies: `src/theme.js`, for the four value formatters `renderCell()` dispatches to.
 - Verification: Exercised through the views that call it.

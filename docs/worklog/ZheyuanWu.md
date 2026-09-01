@@ -11,9 +11,19 @@ lang: en-US
 > Project: Marketing ROI Analysis
 > Handle: `Trance-0`
 > Role: Project manager — pipeline development, data simulation and integration, algorithm testing
-> Last updated: 2026-08-28
+> Last updated: 2026-09-01
 
 Entries are reconstructed from Git history. They record the change set behind each commit, not a separate narrative.
+
+---
+
+## 2026-09-01
+
+### Completed
+
+- Diagnosed the remote service through direct no-proxy requests: Settings already returned five schemas with `public` active, but the protected client hid the census and the served bundle lacked even the earlier schema and deployment-identity UI. Added a read-only schema inspection dropdown that names the active schema, capability, and honest **not tracked** structure version, then wrote the phased Alembic and continuous deployment plan covering baseline drift audits, expand-contract releases, advisory-locked migration Jobs, compatibility gates, and forward recovery.
+- Traced Campaigns failing to the 51.7-megabyte initial snapshot, which embedded 100,000 budget observations and 7,000 delivery rows in every page load. Split those arrays to a shared lazy endpoint, added delayed streamed-byte progress and retries, replaced history-sized `Math.max()` spreads with iterative scans, and verified the patched Campaigns page against the configured database in a real browser: all 100,000 rows populated the filters, metrics, chart, and paged table with no console error while the core fell to 0.81 megabytes.
+- Reviewed and completed the pending model-run deployment changes: each stage now advertises server-issued datasets, materializes and revalidates the selected scope, invokes the current interpreter, and installs the evaluation dependencies in both container runtimes. All 85 backend, 577 module, and 39 dashboard tests pass with the production client build; Python UTF-8 mode keeps the module suite's text fixtures consistent on Windows.
 
 ---
 

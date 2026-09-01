@@ -108,6 +108,16 @@ class SchemaDescriptionTests(unittest.TestCase):
         self.assertTrue(described["selectable"])
         self.assertTrue(described["selected"])
         self.assertEqual(described["missingCount"], 0)
+        self.assertEqual(described["databaseRevision"], "not tracked")
+
+    def test_artifact_schema_version_is_not_reported_as_database_revision(self) -> None:
+        described = _describe("public", set(REQUIRED_TABLES), 53, "public")
+
+        # No migration ledger exists yet. A strategy artifact happens to carry
+        # its own schema_version, but using it here would claim columns and
+        # constraints were migrated when nothing has checked them.
+        self.assertNotIn("schema_version", described)
+        self.assertEqual(described["databaseRevision"], "not tracked")
 
     def test_the_count_is_the_whole_schema_not_the_matched_subset(self) -> None:
         # The census matches only the tables selectability turns on, so the

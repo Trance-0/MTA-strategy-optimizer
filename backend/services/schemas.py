@@ -143,6 +143,11 @@ def _describe(
 
     return {
         "name": schema,
+        # No database-structure migration ledger exists yet. Say so rather
+        # than borrowing BudgetRecommendationRun.schema_version, which versions
+        # one JSON artifact and says nothing about columns or constraints.
+        # The migration plan replaces this marker with the applied revision.
+        "databaseRevision": "not tracked",
         "selectable": complete,
         "selected": schema == selected,
         "tableCount": total,

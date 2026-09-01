@@ -21,11 +21,27 @@ from pathlib import Path
 os.environ["DATABASE"] = "false"
 os.environ["DASHBOARD_HOSTED"] = "true"
 
-from backend.repository.snapshot import clear_caches, load_snapshot
+from backend.repository.snapshot import (
+    clear_caches,
+    load_research_history,
+    load_snapshot,
+)
 
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 OUTPUT = REPO_ROOT / "dashboard" / "public" / "data" / "snapshot.json"
+RESEARCH_OUTPUT = REPO_ROOT / "dashboard" / "public" / "data" / "research-history.json"
+
+
+def _write_json(path: Path, payload: dict) -> None:
+    """Atomically write one minified static dashboard payload."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temporary = path.with_suffix(f"{path.suffix}.tmp")
+    temporary.write_text(
+        json.dumps(payload, ensure_ascii=False, separators=(",", ":")) + "\n",
+        encoding="utf-8",
+    )
+    temporary.replace(path)
 
 
 def main() -> None:
@@ -36,14 +52,14 @@ def main() -> None:
         raise RuntimeError(
             "Refusing to export a snapshot not read from committed local files."
         )
-    OUTPUT.parent.mkdir(parents=True, exist_ok=True)
-    temporary = OUTPUT.with_suffix(".json.tmp")
-    temporary.write_text(
-        json.dumps(payload, ensure_ascii=False, separators=(",", ":")) + "\n",
-        encoding="utf-8",
-    )
-    temporary.replace(OUTPUT)
+    research = load_research_history()
+    _write_json(OUTPUT, payload)
+    _write_json(RESEARCH_OUTPUT, research)
     print(f"Wrote {OUTPUT.relative_to(REPO_ROOT)} ({OUTPUT.stat().st_size} bytes)")
+    print(
+        f"Wrote {RESEARCH_OUTPUT.relative_to(REPO_ROOT)} "
+        f"({RESEARCH_OUTPUT.stat().st_size} bytes)"
+    )
 
 
 if __name__ == "__main__":

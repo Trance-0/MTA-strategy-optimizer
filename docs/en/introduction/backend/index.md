@@ -20,7 +20,9 @@ snapshot is exported at build time through the same Python repositories.
 
 Read [setups](./setups.md) for local and Alibaba Cloud operation,
 [dashboard data](./dashboard-data.md) for the snapshot and master-object
-routes, and [operations](./operations.md) for jobs and protected settings.
+routes, [operations](./operations.md) for jobs and protected settings, and the
+[database migration and continuous deployment plan](./database-migrations.md)
+for replacing destructive schema rebuilds with versioned upgrades.
 The three model families have separate request configuration pages:
 
 - [Attribution](./attribution.md) fits one or more registered attribution models.

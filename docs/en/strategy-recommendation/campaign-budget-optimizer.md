@@ -1,7 +1,7 @@
 ---
 title: Campaign Budget Response Model and Optimizer
 description: Fitted two-stage Campaign response curves and the constrained allocation solved from them
-compact: "Optimizer contract: response_dataset groups Campaign-period-intervention experiment arms and blocks forbidden features; response_model fits saturating curves with evidence labels; budget_optimizer uses shadow prices under declared policies; campaign_strategy.json records allocations, diagnostics, extrapolation, and structured refusals."
+compact: "Optimizer contract: selected MTA-SIM sidecar or snapshot-shaped database export feeds episode_bridge without evaluation truth; response_dataset groups intervention arms; response_model fits evidence-labelled curves; budget_optimizer uses shadow prices; generate_campaign_strategy selects one marketplace."
 lang: en-US
 source_files: modules/mta_strategy_recommendation/src/response_dataset.py, modules/mta_strategy_recommendation/src/response_model.py, modules/mta_strategy_recommendation/src/budget_optimizer.py, modules/mta_strategy_recommendation/src/episode_bridge.py, script/generate_campaign_strategy.py
 ---
@@ -30,7 +30,10 @@ Attribution divides credit for outcomes that already happened. A touchpoint may 
 
 The chain runs from the Multi-Touch Attribution Simulator (MTA-SIM) research snapshot to the dashboard:
 
-`simulation_research.json` → `mta_sim_research_adapter` → `episode_bridge` → `response_dataset` → `response_model` → `budget_optimizer` → `outputs/campaign_strategy.json` → the dashboard's Optimization Log.
+`simulation_research.json`, whether configured directly or materialized from a
+selected dashboard database research scope → `mta_sim_research_adapter` →
+`episode_bridge` → `response_dataset` → `response_model` → `budget_optimizer` →
+`outputs/campaign_strategy.json` → the dashboard's Optimization Log.
 
 Each stage narrows what the next may see. The adapter reads the simulator's file contract into canonical `mta_common` objects. The bridge joins those flat lists into `CampaignEpisode` records on Campaign, marketplace, and period, reading the *observed* records only. The dataset builder aggregates episodes into one row per Campaign-period-intervention. Only then does fitting begin.
 
@@ -292,7 +295,7 @@ Source: `modules/mta_strategy_recommendation/src/episode_bridge.py`
 
 **Public entry point.** `campaign_episodes_from_research_snapshot(snapshot) -> tuple[CampaignEpisode, ...]`, one episode per Campaign, marketplace, and period holding a budget observation.
 
-**Contract.** Reads the snapshot's *observed* records only. `evaluation_outcome_observations` carry organic and incremental splits the simulator knows because it generated them, and are never composed into an episode; attribution evidence is likewise not attached. A budget observation naming an unknown Campaign is skipped. Each Campaign is restated in its observed period's reporting scope, because `CampaignEpisode` requires one currency across every scope it composes.
+**Contract.** Reads the snapshot's *observed* records only. `evaluation_outcome_observations` carry organic and incremental splits the simulator knows because it generated them, and are never composed into an episode; a database materializer therefore omits rows whose `evaluation_only` flag is true. Attribution evidence is likewise not attached. A budget observation naming an unknown Campaign is skipped. Each Campaign is restated in its observed period's reporting scope, because `CampaignEpisode` requires one currency across every scope it composes.
 
 **Verification.** `modules/mta_strategy_recommendation/tests/test_response_pipeline.py`.
 
@@ -302,6 +305,14 @@ Source: `script/generate_campaign_strategy.py`
 
 **Responsibility.** Command-line entry point running the full chain and writing the artifact holding both strategies.
 
-**Contract.** Requires `--research-snapshot`. Writes sorted-key JSON with a trailing newline and `\n` line endings to `outputs/campaign_strategy.json` by default. Returns exit code 1 with a message on standard error when the snapshot yields no Campaign-period observations. The Initial Strategy's basis is `CONFIGURED_BASELINE` when a baseline budget exists and `EQUAL_NO_HISTORY` otherwise; a Campaign is active when its status is `ACTIVE`, case-insensitively.
+**Contract.** Requires `--research-snapshot`; a dashboard run may prepare that
+file from its selected database research scope before invoking this unchanged
+command. `--marketplace` selects one scope and is mandatory when the input
+contains several. Writes sorted-key JSON with a trailing newline and
+`\n` line endings to `outputs/campaign_strategy.json` by default. Returns exit
+code 1 with a message on standard error when the selected input yields no
+Campaign-period observations. The Initial Strategy's basis is
+`CONFIGURED_BASELINE` when a baseline budget exists and `EQUAL_NO_HISTORY`
+otherwise; a Campaign is active when its status is `ACTIVE`, case-insensitively.
 
 **Verification.** `modules/mta_strategy_recommendation/tests/test_response_pipeline.py` covers the chain this command wraps.

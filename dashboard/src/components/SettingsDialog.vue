@@ -110,6 +110,7 @@ const identityStatus = computed(() => {
  * becomes that server's rather than the saved one's.
  */
 const schemas = ref({ schemas: [], selected: "public", error: null });
+const inspectedSchema = ref("");
 const setupSchema = ref("");
 const newSchema = ref("");
 const replaceSchemas = ref(false);
@@ -118,6 +119,9 @@ let operationTimer = null;
 
 const setupOption = computed(() =>
   (schemas.value.schemas ?? []).find((item) => item.name === setupSchema.value),
+);
+const inspectedOption = computed(() =>
+  schemaOptions.value.find((item) => item.name === inspectedSchema.value),
 );
 const operation = computed(() => schemaOperation.value.current);
 const operationRunning = computed(() =>
@@ -145,6 +149,7 @@ const schemaOptions = computed(() => {
   return [
     {
       name: current,
+      databaseRevision: "not tracked",
       selectable: true,
       tableCount: null,
       missingTables: [],
@@ -188,6 +193,14 @@ function schemaKind(option) {
 
 function chooseSetupDefault() {
   const listed = schemas.value.schemas ?? [];
+  const inspectable = schemaOptions.value;
+  if (!inspectable.some((item) => item.name === inspectedSchema.value)) {
+    inspectedSchema.value =
+      inspectable.find((item) => item.selected)?.name ??
+      form.value.PG_SCHEMA ??
+      inspectable[0]?.name ??
+      "";
+  }
   if (!listed.some((item) => item.name === setupSchema.value)) {
     setupSchema.value =
       listed.find((item) => item.canDerive)?.name ??
@@ -500,6 +513,36 @@ cp sample.env .env      # set DATABASE=true and the PG_* values
               environment and restart the dashboard service. Credentials cannot
               be tested or rewritten from this page.
             </div>
+            <h3>Database schemas</h3>
+            <p class="caption">
+              Inspect the active and readable schemas. This selector changes
+              only the description below; it cannot change the server's
+              configured <code>PG_SCHEMA</code>.
+            </p>
+            <div class="field">
+              <label for="protected-schema">Schema inventory</label>
+              <select id="protected-schema" v-model="inspectedSchema">
+                <option
+                  v-for="option in schemaOptions"
+                  :key="option.name"
+                  :value="option.name"
+                >
+                  {{ option.name }}{{ option.selected ? " — active" : "" }}
+                  — database {{ option.databaseRevision ?? "not tracked" }}
+                </option>
+              </select>
+            </div>
+            <p v-if="inspectedOption" class="caption schema-help">
+              <b>{{ inspectedOption.name }}</b> — {{ schemaKind(inspectedOption) }};
+              database structure <b>{{ inspectedOption.databaseRevision ?? "not tracked" }}</b>.
+              {{ inspectedOption.detail }}
+            </p>
+            <p v-else class="caption schema-help">
+              <template v-if="schemas.error">
+                The schema list is unavailable — {{ schemas.error }}
+              </template>
+              <template v-else>No readable schemas were returned.</template>
+            </p>
           </template>
 
           <template v-else-if="state">
@@ -581,7 +624,10 @@ cp sample.env .env      # set DATABASE=true and the PG_* values
                     :title="schemaTitle(option)"
                     @mouseenter="hoveredSchema = option.name"
                   >
-                    {{ option.name }}{{ option.selectable ? "" : " — unavailable" }}
+                    {{ option.name }} — database
+                    {{ option.databaseRevision ?? "not tracked" }}{{
+                      option.selectable ? "" : " — unavailable"
+                    }}
                   </option>
                 </select>
               </div>

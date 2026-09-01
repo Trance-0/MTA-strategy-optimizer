@@ -277,10 +277,21 @@ test("the schema dropdown offers what it cannot select, and says why", () => {
   // renders `detail` rather than reconstructing a message from table names.
   assert.match(SETTINGS_DIALOG, /describedSchema\.detail/);
   assert.match(schemas, /"--schema \{schema\} --replace"/);
+  assert.match(schemas, /"databaseRevision": "not tracked"/);
+  assert.match(SETTINGS_DIALOG, /option\.databaseRevision \?\? "not tracked"/);
 
   // The saved selection survives an unreachable database, or the dropdown would
   // show a schema the reader never chose and save it on the next write.
   assert.match(SETTINGS_DIALOG, /listed\.some\(\(item\) => item\.name === current\)/);
+});
+
+test("protected settings exposes schema versions without enabling configuration", () => {
+  assert.match(SETTINGS_DIALOG, /v-else-if="state\?\.readOnly"/);
+  assert.match(SETTINGS_DIALOG, /id="protected-schema"/);
+  assert.match(SETTINGS_DIALOG, /v-for="option in schemaOptions"/);
+  assert.match(SETTINGS_DIALOG, /option\.selected \? " — active"/);
+  assert.match(SETTINGS_DIALOG, /database structure/);
+  assert.match(SETTINGS_DIALOG, /cannot change the server's/);
 });
 
 test("the schema selection is sent, saved, and refilled from a live test", () => {
@@ -609,6 +620,19 @@ test("Campaigns exposes history filters and presentation-only similarity", () =>
   assert.match(CAMPAIGNS, /Attribution not available\./);
 });
 
+test("Campaigns chart bounds support the full database history", async () => {
+  const { maxOf } = await import("../src/lib/common.js");
+  const history = Array.from({ length: 100_000 }, (_, index) => ({
+    configured_budget: index,
+    actual_spend: index === 99_999 ? 125_000 : index + 0.5,
+  }));
+
+  assert.equal(maxOf(history, ["configured_budget", "actual_spend"], 1), 125_000);
+  assert.equal(maxOf([{ value: null }, { value: Number.NaN }], ["value"], 1), 1);
+  assert.match(CAMPAIGNS, /maxOf\(scopedHistory\.value/);
+  assert.doesNotMatch(CAMPAIGNS, /\.\.\.scopedHistory\.value/);
+});
+
 test("Campaigns reads through the same paged table Budget Manager uses", () => {
   // One table component across both views, so a reader who learns to page and
   // search in one already knows the other.
@@ -639,6 +663,29 @@ test("a stage reports the phase it is in, not a timer", () => {
   assert.match(STAGE_RUNNER, /job\.command/);
 });
 
+test("large dashboard payloads load lazily with delayed byte progress", () => {
+  const client = readFileSync(
+    resolve(HERE, "..", "src", "api", "client.js"),
+    "utf8",
+  );
+  const dashboardStore = readFileSync(
+    resolve(HERE, "..", "src", "lib", "useDashboard.js"),
+    "utf8",
+  );
+  const progress = readFileSync(
+    resolve(HERE, "..", "src", "components", "LoadingProgress.vue"),
+    "utf8",
+  );
+  assert.match(client, /\/api\/dashboard\/research-history/);
+  assert.match(client, /response\.body\.getReader/);
+  assert.match(client, /Content-Length/);
+  assert.match(dashboardStore, /setTimeout\(\(\) => \{/);
+  assert.match(dashboardStore, /\}, 3000\)/);
+  assert.match(progress, /role="progressbar"/);
+  assert.match(CAMPAIGNS, /ensureResearchHistory/);
+  assert.match(BUDGET_MANAGER, /ensureResearchHistory/);
+});
+
 test("the offered budget policies are the ones the optimizer accepts", () => {
   const enums = readFileSync(
     resolve(HERE, "..", "..", "modules", "mta_common", "src", "enums.py"),
@@ -653,7 +700,7 @@ test("the offered budget policies are the ones the optimizer accepts", () => {
   }
 });
 
-test("a narrowed run filters both inputs and names what it excluded", () => {
+test("each model run uses a server-issued dataset selection", () => {
   // Filtering the Ads report alone fails validation: every conversion must
   // fall inside the window the Ads report implies.
   assert.match(RUN_PIPELINE_PY, /_windowed_copy\(/);
@@ -666,14 +713,15 @@ test("a narrowed run filters both inputs and names what it excluded", () => {
     /if report_start_date is not None or report_end_date is not None:\s*\n\s*amazon_ads_report, excluded = _reconcile_windowed_ads_report/,
   );
   assert.match(RUN_PIPELINE_PY, /Excluded \{touchpoint\}/);
-  // The dashboard passes the window through as the documented flags rather
-  // than narrowing anything itself.
+  // The dashboard sends only a server-issued dataset identifier; the service
+  // materializes the selected scope and invokes the current interpreter.
   const jobs = readFileSync(
     resolve(HERE, "..", "..", "backend", "services", "jobs.py"),
     "utf8",
   );
-  assert.match(jobs, /"--report-start-date", options\["startDate"\]/);
-  assert.match(jobs, /"--report-end-date", options\["endDate"\]/);
-  assert.match(RUN_PIPELINE_PY, /"--report-start-date"/);
-  assert.match(RUN_PIPELINE_PY, /"--report-end-date"/);
+  assert.match(STAGE_RUNNER, />Data<\/label>/);
+  assert.match(STAGE_RUNNER, /options\.datasetId/);
+  assert.match(jobs, /sys\.executable/);
+  assert.match(jobs, /prepare_dataset\(stage, selected\)/);
+  assert.doesNotMatch(CAMPAIGN_OPTIMIZER, /startDate|endDate/);
 });

@@ -8,12 +8,13 @@
  * link, because a budget number without its basis invites the reader to trust
  * it blindly.
  */
-import { computed, ref, watch } from "vue";
+import { computed, onMounted, ref, watch } from "vue";
 
 import ConfirmDialog from "../components/ConfirmDialog.vue";
 import DataTable from "../components/DataTable.vue";
 import EntityTable from "../components/EntityTable.vue";
 import KeyValuePanel from "../components/KeyValuePanel.vue";
+import LoadingProgress from "../components/LoadingProgress.vue";
 import MasterObjectForm from "../components/MasterObjectForm.vue";
 import MetricRow from "../components/MetricRow.vue";
 import PlotlyChart from "../components/PlotlyChart.vue";
@@ -29,11 +30,20 @@ import {
 } from "../api/client.js";
 import * as theme from "../theme.js";
 
-const { data, reload } = useDashboard();
+const {
+  data,
+  reload,
+  researchLoaded,
+  researchError,
+  researchProgress,
+  ensureResearchHistory,
+} = useDashboard();
 const { writable, readOnlyReason } = useDeployment();
 const { diagnosticsOn } = useDiagnostics();
 const research = computed(() => data.value.simulationResearch ?? {});
 const section = ref("overview");
+
+onMounted(ensureResearchHistory);
 
 /**
  * The catalogue sections, in the order a reader works down the account.
@@ -672,6 +682,12 @@ const slotColumns = [
       is a seed, not an optimiser result.
     </p>
 
+    <LoadingProgress :progress="researchProgress" />
+    <div v-if="researchError" class="notice bad">
+      <b>Research observations could not be loaded.</b> {{ researchError.message }}
+      <button class="btn small" @click="ensureResearchHistory">Try again</button>
+    </div>
+
     <div class="tabs" role="tablist" aria-label="Budget Manager sections">
       <button
         v-for="[key, label] in SECTIONS"
@@ -687,7 +703,7 @@ const slotColumns = [
     </div>
 
     <div v-show="section === 'overview'" class="page-grid">
-      <template v-if="(research.history ?? []).length">
+      <template v-if="researchLoaded && (research.history ?? []).length">
         <MetricRow :items="researchTiles" />
         <p class="caption">
           Reported performance is a record of what the account already

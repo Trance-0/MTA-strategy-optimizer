@@ -1,6 +1,6 @@
 ---
 title: Running Locally and Publishing
-compact: "Dashboard delivery contract: launchers and Vite inject build identity; the single-worker Docker API stores pipeline results in a named volume; image metadata, registry publishing, static GitHub Pages builds, and source-revision labels remain reproducible."
+compact: "Dashboard delivery contract: launchers and Vite inject build identity; Docker stores pipeline results; static builds export core snapshot and lazy research JSON separately; image metadata, publishing, AppStack, and source-revision labels remain reproducible."
 lang: en-US
 source_files: dashboard/index.html, dashboard/vite.config.js, dashboard/run.sh, dashboard/run.bat, deploy/docker/compose.yaml, deploy/docker/defaults.env, deploy/docker/run.sh, deploy/docker/run.bat, deploy/docker/Dockerfile.api, deploy/docker/Dockerfile.dashboard, .github/workflows/publish-containers.yml, script/build_pages_site.mjs, script/export_dashboard_snapshot.py
 ---
@@ -197,8 +197,9 @@ port.
 
 GitHub Pages cannot run Flask, so the published client uses static mode.
 `script/export_dashboard_snapshot.py` forces local-file mode and writes the
-same fourteen-key JavaScript Object Notation (JSON) object as Flask to
-`dashboard/public/data/snapshot.json`. `vite build --mode static` copies it
+same core JavaScript Object Notation (JSON) object as Flask to
+`dashboard/public/data/snapshot.json`, plus the lazy observation object to
+`dashboard/public/data/research-history.json`. `vite build --mode static` copies them
 into the build and sets the one client flag that makes
 `dashboard/src/api/client.js` fetch the relative data file.
 
@@ -265,12 +266,11 @@ Source: `deploy/docker/compose.yaml`, `deploy/docker/defaults.env`,
   `dashboard/dist`, so `client_dist_directory()` returns None and the service
   registers API routes only — the client is the other image. It builds with
   `npm run build`, not `--mode static`, which would bake a snapshot and make
-  Flask unreachable. `HOME` and `UV_CACHE_DIR` are set to `/tmp` *after*
-  `uv sync` and the `useradd`, because the build runs as root and an earlier
-  `UV_CACHE_DIR` bakes a root-owned cache the service account is then denied;
-  without them every pipeline stage fails at launch, since the unprivileged
-  user's home is `/nonexistent` and uv initializes a cache before it runs
-  anything. Gunicorn uses one worker because live job state is process-local.
+  Flask unreachable. The runtime installs both the `backend` and
+  `strategy-evaluation` dependency extras, and model jobs invoke that
+  environment's Python interpreter directly; no runtime uv cache or writable
+  home directory is required. Gunicorn uses one worker because live job state
+  is process-local.
   The named `pipeline-output` volume is the writable artifact root and
   `defaults.env` enables the runner independently from settings protection.
   The root `.env` is layered over `defaults.env` at run time and never copied
@@ -335,7 +335,8 @@ Source: `script/export_dashboard_snapshot.py`
 - Responsibility: Export the Flask snapshot repositories in forced file mode
   to the generated static-client data path using an atomic replacement.
 - Inputs: Committed module artifacts only.
-- Outputs: Minified UTF-8 `dashboard/public/data/snapshot.json`.
+- Outputs: Minified UTF-8 `dashboard/public/data/snapshot.json` and
+  `dashboard/public/data/research-history.json`, each replaced atomically.
 - Dependencies: `backend.repository.snapshot` and the backend dependency extra.
 - Verification: `uv run --extra backend python -X utf8 -B -m script.export_dashboard_snapshot`;
   assert the result reports `mode: local files` and fourteen keys.

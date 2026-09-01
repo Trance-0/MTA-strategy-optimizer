@@ -121,6 +121,26 @@ export function sum(rows, field) {
 }
 
 /**
+ * Find the greatest finite value across one or more row fields.
+ *
+ * This is an iterative scan rather than `Math.max(...values)`: the database
+ * history legitimately reaches 100,000 rows, which is more arguments than a
+ * browser permits in one function call. The floor keeps an empty or entirely
+ * absent series useful as a chart bound.
+ */
+export function maxOf(rows, fields, floor = 0) {
+  let highest = Number(floor);
+  if (!Number.isFinite(highest)) highest = 0;
+  for (const row of rows) {
+    for (const field of fields) {
+      const value = Number(row[field]);
+      if (Number.isFinite(value) && value > highest) highest = value;
+    }
+  }
+  return highest;
+}
+
+/**
  * Group rows by a key and sum the named fields within each group.
  *
  * Returns an array rather than a Map so a template can iterate it directly,

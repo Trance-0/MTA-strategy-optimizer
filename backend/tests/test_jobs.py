@@ -8,6 +8,8 @@ server reports unavailable stages before a disabled run is attempted.
 from __future__ import annotations
 
 import csv
+import json
+import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -16,6 +18,7 @@ from unittest.mock import patch
 
 from backend.app import create_app
 from backend.services.jobs import (
+    OptionError,
     arguments_for,
     jobs_state,
     normalize_options,
@@ -23,6 +26,8 @@ from backend.services.jobs import (
     start_job,
     start_refusal,
 )
+from backend.services.model_datasets import DatasetError, PreparedDataset
+from backend.services import model_datasets
 from modules.mta_standard.src.dataloader import MTA_SIM_ADS_FIELDS
 from script.run_attribution_models import read_attribution_ads_rows
 
@@ -34,8 +39,15 @@ class JobServiceTests(unittest.TestCase):
         reset_state()
 
     def test_job_state_separates_server_permission_from_database_mode(self) -> None:
-        disabled = jobs_state(execution_enabled=False, database_enabled=True)
-        file_mode = jobs_state(execution_enabled=True, database_enabled=False)
+        with (
+            patch("backend.services.jobs.datasets_for", return_value=[{"id": "scope"}]),
+            patch(
+                "backend.services.jobs.pipeline_output_directory",
+                return_value=Path("runtime"),
+            ),
+        ):
+            disabled = jobs_state(execution_enabled=False, database_enabled=True)
+            file_mode = jobs_state(execution_enabled=True, database_enabled=False)
 
         self.assertFalse(disabled["stages"]["attribution"]["available"])
         self.assertIn(
@@ -48,18 +60,58 @@ class JobServiceTests(unittest.TestCase):
             file_mode["stages"]["attribution"]["unavailableReason"],
         )
 
+    def test_available_stage_declares_datasets_and_default(self) -> None:
+        choices = [
+            {"id": "scope-a", "label": "Scope A"},
+            {"id": "scope-b", "label": "Scope B"},
+        ]
+        with (
+            patch("backend.services.jobs.datasets_for", return_value=choices),
+            patch(
+                "backend.services.jobs.pipeline_output_directory",
+                return_value=Path("runtime"),
+            ),
+        ):
+            stage = jobs_state()["stages"]["attribution"]
+
+        self.assertTrue(stage["available"])
+        self.assertEqual(stage["datasets"], choices)
+        self.assertEqual(stage["defaultDataset"], "scope-a")
+
     def test_database_attribution_has_no_refusal(self) -> None:
-        self.assertIsNone(start_refusal("attribution", writable=True))
+        with patch(
+            "backend.services.jobs.resolve_dataset", return_value={"id": "scope"}
+        ):
+            self.assertIsNone(
+                start_refusal(
+                    "attribution", writable=True, options={"datasetId": "scope"}
+                )
+            )
 
     def test_options_become_fixed_command_arguments(self) -> None:
-        options = normalize_options(
-            {"startDate": "2026-01-01", "endDate": "2026-01-31"}
+        options = normalize_options({"datasetId": "server-scope", "totalBudget": "125"})
+        prepared = PreparedDataset(
+            dataset_id="server-scope",
+            marketplace="US",
+            path_report=Path("path.csv"),
+            performance_report=Path("ads.csv"),
         )
-        arguments = arguments_for("attribution", options)
+        arguments = arguments_for("attribution", options, prepared)
 
-        self.assertEqual(arguments[:6], ["uv", "run", "python", "-X", "utf8", "-B"])
-        self.assertIn("--report-start-date", arguments)
-        self.assertIn("2026-01-31", arguments)
+        self.assertEqual(
+            arguments[:5],
+            [
+                sys.executable,
+                "-X",
+                "utf8",
+                "-B",
+                "script/run_attribution_models.py",
+            ],
+        )
+        self.assertEqual(arguments[arguments.index("--amc-report") + 1], "path.csv")
+        self.assertEqual(
+            arguments[arguments.index("--amazon-ads-report") + 1], "ads.csv"
+        )
 
     def test_runtime_paths_are_passed_to_every_stage(self) -> None:
         runtime = Path("pipeline-test-output").resolve()
@@ -69,14 +121,15 @@ class JobServiceTests(unittest.TestCase):
                 "backend.services.jobs.pipeline_output_directory",
                 return_value=runtime,
             ),
-            patch("backend.services.jobs.simulator_data_directory", return_value=None),
-            patch(
-                "backend.services.jobs.research_snapshot_path", return_value=snapshot
-            ),
         ):
-            attribution = arguments_for("attribution", {})
-            optimization = arguments_for("optimization", {"_marketplace": "US"})
-            evaluation = arguments_for("evaluation", {"_marketplace": "US"})
+            attribution = arguments_for(
+                "attribution",
+                {"datasetId": "a"},
+                PreparedDataset("a", "US", Path("path.csv"), Path("ads.csv")),
+            )
+            research = PreparedDataset("r", "US", research_snapshot=snapshot)
+            optimization = arguments_for("optimization", {"datasetId": "r"}, research)
+            evaluation = arguments_for("evaluation", {"datasetId": "r"}, research)
 
         self.assertEqual(
             attribution[attribution.index("--output-dir") + 1],
@@ -93,39 +146,32 @@ class JobServiceTests(unittest.TestCase):
         self.assertEqual(optimization[optimization.index("--marketplace") + 1], "US")
         self.assertEqual(evaluation[evaluation.index("--marketplace") + 1], "US")
 
-    def test_aggregated_simulator_input_uses_direct_attribution_command(self) -> None:
-        with tempfile.TemporaryDirectory() as temporary:
-            simulator = Path(temporary)
-            (simulator / "amc_path_report.csv").touch()
-            (simulator / "amazon_ads_daily_touchpoint_performance.csv").touch()
-            with patch(
-                "backend.services.jobs.simulator_data_directory",
-                return_value=simulator,
-            ):
-                arguments = arguments_for("attribution", {})
-                refusal = start_refusal(
-                    "attribution",
-                    writable=True,
-                    options={"startDate": "2026-01-01"},
-                )
-
-        self.assertIn("script/run_attribution_models.py", arguments)
-        self.assertIn("--amc-report", arguments)
-        self.assertEqual(refusal["code"], "unsupported_options")
-        self.assertIn("uploaded simulator", refusal["message"])
+    def test_missing_dataset_is_rejected_before_spawn(self) -> None:
+        with self.assertRaisesRegex(OptionError, "datasetId is required"):
+            normalize_options({})
+        with patch(
+            "backend.services.jobs.resolve_dataset",
+            side_effect=DatasetError("stale dataset"),
+        ):
+            refusal = start_refusal(
+                "attribution", writable=True, options={"datasetId": "stale"}
+            )
+        self.assertEqual(refusal["code"], "missing_input")
+        self.assertIn("stale dataset", refusal["message"])
 
     def test_unwritable_runtime_directory_is_a_failed_job(self) -> None:
         with (
-            patch("backend.services.jobs.arguments_for", return_value=["uv", "run"]),
-            patch("backend.services.jobs.simulator_data_directory", return_value=None),
-            patch("backend.services.jobs.research_snapshot_path", return_value=None),
+            patch(
+                "backend.services.jobs.resolve_dataset",
+                return_value={"id": "scope", "label": "Scope"},
+            ),
             patch(
                 "backend.services.jobs.prepare_runtime_inputs",
                 side_effect=PermissionError("read-only mount"),
             ),
             patch("backend.services.jobs.subprocess.Popen") as popen,
         ):
-            job = start_job("attribution", {})
+            job = start_job("attribution", {"datasetId": "scope"})
 
         self.assertEqual(job.state, "failed")
         self.assertIn("Could not prepare", job.error)
@@ -163,6 +209,82 @@ class JobServiceTests(unittest.TestCase):
         self.assertEqual(parsed[0]["interaction_type"], "CLICK")
         self.assertEqual(parsed[0]["cost_type"], "CPC")
 
+    def test_research_materialization_excludes_evaluation_only_outcomes(self) -> None:
+        statements = []
+
+        def rows(statement, _parameters=None):
+            statements.append(statement)
+            if "from mta_simulation_run" in statement:
+                return [
+                    {
+                        "run_id": "run-1",
+                        "seed": 7,
+                        "configuration_sha256": "abc",
+                        "effective_configuration": {},
+                    }
+                ]
+            if "min(report_date)" in statement:
+                return [
+                    {
+                        "advertiser_id": "adv",
+                        "currency": "USD",
+                        "report_start_date": "2026-01-01",
+                        "report_end_date": "2026-01-01",
+                    }
+                ]
+            if "from mta_sim_budget_observation" in statement:
+                return [
+                    {
+                        "id": 1,
+                        "run_id": "run-1",
+                        "campaign_id": "C1",
+                        "marketplace": "US",
+                        "advertiser_id": "adv",
+                        "currency": "USD",
+                        "report_date": "2026-01-01",
+                        "budget_level": 1.0,
+                        "configured_budget": 10.0,
+                        "actual_spend": 9.0,
+                    }
+                ]
+            if "from mta_sim_outcome_observation" in statement:
+                return [
+                    {
+                        "id": 2,
+                        "run_id": "run-1",
+                        "campaign_id": "C1",
+                        "product_id": None,
+                        "marketplace": "US",
+                        "advertiser_id": "adv",
+                        "currency": "USD",
+                        "report_date": "2026-01-01",
+                        "provider": "AMAZON_ADS",
+                        "touchpoint_key": "SPONSORED_PRODUCTS:PRODUCT_AD:TOP_OF_SEARCH:IMAGE:CLICK",
+                        "placement_availability": "AVAILABLE",
+                        "creative_availability": "AVAILABLE",
+                        "interaction_type_availability": "AVAILABLE",
+                        "total_units": 1,
+                        "total_revenue": 20.0,
+                        "evaluation_only": False,
+                    }
+                ]
+            return []
+
+        dataset = {"id": "research|run-1|US", "runId": "run-1", "marketplace": "US"}
+        with (
+            tempfile.TemporaryDirectory() as temporary,
+            patch.object(model_datasets, "sql", side_effect=rows),
+        ):
+            destination = Path(temporary) / "research.json"
+            model_datasets._write_research_snapshot(dataset, destination)
+            payload = json.loads(destination.read_text(encoding="utf-8"))
+
+        self.assertEqual(len(payload["outcome_observations"]), 1)
+        self.assertEqual(payload["evaluation_outcome_observations"], [])
+        self.assertTrue(
+            any("evaluation_only = false" in statement for statement in statements)
+        )
+
 
 class JobRouteTests(unittest.TestCase):
     """Check protected settings no longer block an enabled pipeline route."""
@@ -178,9 +300,19 @@ class JobRouteTests(unittest.TestCase):
             patch("backend.api.jobs.use_database", return_value=True),
             patch("backend.api.jobs.start_refusal", return_value=None),
             patch("backend.api.jobs.start_job", return_value=job) as start,
+            patch(
+                "backend.services.jobs.datasets_for",
+                return_value=[{"id": "scope", "label": "Scope"}],
+            ),
+            patch(
+                "backend.services.jobs.pipeline_output_directory",
+                return_value=Path("runtime"),
+            ),
             patch("backend.api.jobs.log"),
         ):
-            response = self.client.post("/api/jobs/attribution", json={})
+            response = self.client.post(
+                "/api/jobs/attribution", json={"datasetId": "scope"}
+            )
 
         self.assertEqual(response.status_code, 202)
         start.assert_called_once()

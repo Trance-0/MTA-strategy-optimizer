@@ -64,6 +64,23 @@ class SnapshotContractTests(unittest.TestCase):
         self.assertEqual(len(payload["attributionResults"]), 34)
         self.assertEqual(len(payload["pathReport"]), 153)
         self.assertEqual(len(payload["simulationResearch"]), 13)
+        self.assertEqual(payload["simulationResearch"]["history"], [])
+        self.assertEqual(payload["simulationResearch"]["delivery"], [])
+        self.assertEqual(payload["simulationResearch"]["touchpointObservations"], [])
+
+    def test_research_history_is_a_separate_three_array_contract(self) -> None:
+        expected = {
+            "history": [{"campaign_id": "C1"}],
+            "delivery": [{"campaign_id": "C1"}],
+            "touchpointObservations": [],
+        }
+        with patch.object(
+            dashboard_api, "load_research_history", return_value=expected
+        ):
+            response = self.client.get("/api/dashboard/research-history")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.get_json(), expected)
 
     def test_reload_clears_the_snapshot_cache(self) -> None:
         with patch.object(dashboard_api, "clear_caches") as clear:

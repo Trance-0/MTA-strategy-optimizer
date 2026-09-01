@@ -30,6 +30,17 @@ const emit = defineEmits(["start", "stop", "reload"]);
 const options = ref({});
 const logEnd = ref(null);
 
+watch(
+  () => [props.stage.key, props.stage.defaultDataset],
+  () => {
+    const ids = new Set((props.stage.datasets ?? []).map((item) => item.id));
+    if (!ids.has(options.value.datasetId)) {
+      options.value.datasetId = props.stage.defaultDataset ?? "";
+    }
+  },
+  { immediate: true },
+);
+
 const job = computed(() => props.stage.current);
 const running = computed(() => job.value?.state === "running");
 const succeeded = computed(() => job.value?.state === "succeeded");
@@ -38,6 +49,7 @@ const failed = computed(() => job.value?.state === "failed");
 /** Why the run control is disabled, or an empty string when it is not. */
 const blocked = computed(() => {
   if (!props.stage.available) return props.stage.unavailableReason ?? "";
+  if (!options.value.datasetId) return "Choose a compatible dataset before running.";
   return "";
 });
 
@@ -70,6 +82,24 @@ function elapsed(record) {
 
 <template>
   <div class="stage-runner">
+    <div class="filter-row">
+      <div class="field">
+        <label :for="`stage-${stage.key}-dataset`">Data</label>
+        <select
+          :id="`stage-${stage.key}-dataset`"
+          v-model="options.datasetId"
+          :disabled="running || !(stage.datasets ?? []).length"
+        >
+          <option v-if="!(stage.datasets ?? []).length" value="">
+            No compatible dataset
+          </option>
+          <option v-for="item in stage.datasets ?? []" :key="item.id" :value="item.id">
+            {{ item.label }} · {{ item.description }}
+          </option>
+        </select>
+      </div>
+    </div>
+
     <div v-if="blocked" class="notice">{{ blocked }}</div>
 
     <template v-else>

@@ -30,7 +30,7 @@ WORKDIR /application
 COPY pyproject.toml uv.lock ./
 COPY VERSION ./
 RUN --mount=type=cache,target=/root/.cache/uv \
-    uv sync --frozen --extra backend --no-dev --no-install-project
+    uv sync --frozen --extra backend --extra strategy-evaluation --no-dev --no-install-project
 
 COPY backend/ backend/
 COPY dashboard/config.py dashboard/models.py dashboard/

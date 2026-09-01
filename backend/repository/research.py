@@ -65,7 +65,13 @@ HISTORY_NUMERIC = (
     "contribution_profit",
 )
 
-DELIVERY_NUMERIC = ("impressions", "clicks", "cost", "reported_purchases", "reported_sales")
+DELIVERY_NUMERIC = (
+    "impressions",
+    "clicks",
+    "cost",
+    "reported_purchases",
+    "reported_sales",
+)
 
 EMPTY_RESEARCH: dict[str, Any] = {
     "runs": [],
@@ -205,7 +211,7 @@ def _derived_master_data() -> dict:
     return derive_master_data(ads_daily(), entity_bridge(), strategy_request())
 
 
-def _local_simulation_research() -> dict:
+def _local_simulation_research(*, include_observations: bool = True) -> dict:
     """Research history read from a configured MTA-SIM run, or from the reports."""
     directory = simulator_data_directory()
     if directory is None:
@@ -215,8 +221,12 @@ def _local_simulation_research() -> dict:
     configuration = read_json(directory / "effective_configuration.json")
     runs = research.get("simulation_runs") or []
     run = runs[0] if runs else {}
-    budget = research.get("budget_observations") or []
-    evaluations = research.get("evaluation_outcome_observations") or []
+    budget = (research.get("budget_observations") or []) if include_observations else []
+    evaluations = (
+        (research.get("evaluation_outcome_observations") or [])
+        if include_observations
+        else []
+    )
 
     outcomes = {}
     for item in evaluations:
@@ -266,10 +276,14 @@ def _local_simulation_research() -> dict:
         "productEconomics": run.get("product_economics") or [],
         "campaignProductLinks": run.get("campaign_product_links") or [],
         "history": history,
-        "delivery": [
-            _flatten_observation(item)
-            for item in (research.get("delivery_observations") or [])
-        ],
+        "delivery": (
+            [
+                _flatten_observation(item)
+                for item in (research.get("delivery_observations") or [])
+            ]
+            if include_observations
+            else []
+        ),
         "generationConfigs": [
             {
                 "run_id": item.get("run_id"),
@@ -279,15 +293,22 @@ def _local_simulation_research() -> dict:
             }
             for item in runs
         ],
-        "touchpointObservations": research.get("touchpoint_observations") or [],
+        "touchpointObservations": (
+            research.get("touchpoint_observations") or []
+            if include_observations
+            else []
+        ),
         "masterObjects": [],
     }
 
 
-def _database_simulation_research() -> dict:
+def _database_simulation_research(*, include_observations: bool = True) -> dict:
     """Research history read from the external simulator's own tables."""
     if not table_exists("mta_simulation_run"):
-        return {**_local_simulation_research(), "masterObjects": master_objects()}
+        return {
+            **_local_simulation_research(include_observations=include_observations),
+            "masterObjects": master_objects(),
+        }
 
     runs = sql(
         "select run_id, seed, configuration_sha256, effective_configuration "
@@ -327,25 +348,28 @@ def _database_simulation_research() -> dict:
         "select * from mta_sim_campaign_product_link "
         "order by run_id, campaign_id, product_id"
     )
-    history = sql(
-        """
-        select b.run_id, b.campaign_id, b.marketplace, b.advertiser_id,
-               b.currency, b.report_date, b.budget_level, b.configured_budget,
-               b.actual_spend, o.product_id, o.total_units, o.total_revenue,
-               o.expected_organic_units, o.expected_organic_revenue,
-               o.incremental_units, o.incremental_revenue, o.contribution_profit
-          from mta_sim_budget_observation b
-          left join mta_sim_outcome_observation o
-            on o.run_id = b.run_id and o.campaign_id = b.campaign_id
-           and o.marketplace = b.marketplace and o.report_date = b.report_date
-           and o.budget_level = b.budget_level and o.evaluation_only = true
-         order by b.run_id, b.report_date, b.campaign_id, b.budget_level
-        """
-    )
-    delivery = sql(
-        "select * from mta_sim_delivery_observation "
-        "order by run_id, report_date, campaign_id, id"
-    )
+    history = []
+    delivery = []
+    if include_observations:
+        history = sql(
+            """
+            select b.run_id, b.campaign_id, b.marketplace, b.advertiser_id,
+                   b.currency, b.report_date, b.budget_level, b.configured_budget,
+                   b.actual_spend, o.product_id, o.total_units, o.total_revenue,
+                   o.expected_organic_units, o.expected_organic_revenue,
+                   o.incremental_units, o.incremental_revenue, o.contribution_profit
+              from mta_sim_budget_observation b
+              left join mta_sim_outcome_observation o
+                on o.run_id = b.run_id and o.campaign_id = b.campaign_id
+               and o.marketplace = b.marketplace and o.report_date = b.report_date
+               and o.budget_level = b.budget_level and o.evaluation_only = true
+             order by b.run_id, b.report_date, b.campaign_id, b.budget_level
+            """
+        )
+        delivery = sql(
+            "select * from mta_sim_delivery_observation "
+            "order by run_id, report_date, campaign_id, id"
+        )
 
     dates(history, ["report_date"])
     dates(delivery, ["report_date"])
@@ -374,7 +398,28 @@ def _database_simulation_research() -> dict:
 
 def simulation_research() -> dict:
     """Immutable MTA-SIM history and editable master/configuration entities."""
-    return _database_simulation_research() if use_database() else _local_simulation_research()
+    return (
+        _database_simulation_research()
+        if use_database()
+        else _local_simulation_research()
+    )
+
+
+def simulation_research_core() -> dict:
+    """Research metadata and catalogues without observation-heavy arrays."""
+    if use_database():
+        return _database_simulation_research(include_observations=False)
+    return _local_simulation_research(include_observations=False)
+
+
+def simulation_research_history() -> dict:
+    """The three observation arrays loaded lazily by history-facing views."""
+    research = simulation_research()
+    return {
+        "history": research.get("history") or [],
+        "delivery": research.get("delivery") or [],
+        "touchpointObservations": research.get("touchpointObservations") or [],
+    }
 
 
 # ---------------------------------------------------------------------------

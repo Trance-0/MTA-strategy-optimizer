@@ -1,7 +1,7 @@
 ---
 title: Backend Setup and Deployment
 description: Local Flask startup and Yunxiao AppStack deployment configuration
-compact: "Flask and AppStack setup: local commands, single-process pipeline execution, read-only root plus `/pipeline-output`, protected settings, backend build identity, PostgreSQL schema census, probes, ingress, connectivity, and Docker build metadata without copied Git history."
+compact: "Flask and AppStack setup: local commands, direct-interpreter model jobs with evaluation dependencies, read-only root plus `/pipeline-output`, protected settings, build identity, PostgreSQL schema census, probes, ingress, connectivity, and Docker metadata without copied Git history."
 lang: en-US
 source_files: backend/app.py, backend/config.py, backend/database.py, backend/services/schemas.py, backend/wsgi.py, backend/tests/test_app.py, backend/tests/test_schemas.py, deploy/appstack/Dockerfile, deploy/appstack/orchestration.yaml, deploy/appstack/values.example.yaml, .dockerignore
 ---
@@ -112,13 +112,19 @@ have not been saved.
 `deploy/appstack/orchestration.yaml` binds `PG_SCHEMA` from the `pgSchema`
 placeholder. That deployment sets `DASHBOARD_CONFIG_READ_ONLY=true`, so the
 browser cannot change the schema: it is chosen in the AppStack environment and
-takes effect on restart.
+takes effect on restart. Protected Settings still exposes the active schema
+and the readable schema inventory for diagnosis. The current database
+structure has no migration ledger, so every schema is labelled **not tracked**
+rather than borrowing the unrelated strategy artifact's `schema_version`.
+
+The staged replacement for `create_all()` and destructive `drop_all()` rebuilds
+is specified in [Database Migration and Continuous Deployment Plan](./database-migrations.md).
 
 ## Production Process
 
 Build `deploy/appstack/Dockerfile` with the repository root as its build
 context. Its Node stage produces `dashboard/dist`; its Python stage installs
-the locked `backend` dependency extra and runs Gunicorn as unprivileged user
+the locked `backend` and `strategy-evaluation` dependency extras and runs Gunicorn as unprivileged user
 `10001`. The image contains no Node runtime and no environment file.
 
 Pass the source revision while building:
@@ -319,7 +325,9 @@ Source: `.dockerignore`, `deploy/appstack/Dockerfile`,
   `/pipeline-output` `emptyDir`. Its `Recreate` rollout strategy never serves
   two process-local job stores at once. Configuration remains read-only through
   `DASHBOARD_CONFIG_READ_ONLY`; pipeline permission comes only from
-  `PIPELINE_RUNS_ENABLED`. Generated outputs last until the pod is removed, and
+  `PIPELINE_RUNS_ENABLED`. The runtime installs both backend and strategy
+  evaluation extras; model jobs call that environment's Python executable
+  directly and do not require `uv` at run time. Generated outputs last until the pod is removed, and
   each repository prefers a complete runtime result over its image or database
   fallback.
 - Dependencies: Node 22.23.0, Python 3.12.11, uv 0.8.13, ACR, Kubernetes, and

@@ -12,13 +12,38 @@
 
 import { computed, readonly, ref } from "vue";
 
-import { fetchDashboard, reloadData } from "../api/client.js";
+import { fetchDashboard, fetchResearchHistory, reloadData } from "../api/client.js";
 
 const snapshot = ref(null);
 const loading = ref(false);
 const error = ref(null);
 
 let inFlight = null;
+let researchInFlight = null;
+
+const researchLoading = ref(false);
+const researchLoaded = ref(false);
+const researchError = ref(null);
+const loadingProgress = ref({
+  label: "Loading dashboard data", visible: false, loaded: 0, total: null, percent: null,
+});
+const researchProgress = ref({
+  label: "Loading research observations", visible: false, loaded: 0, total: null, percent: null,
+});
+
+async function withProgress(state, action) {
+  state.value = { ...state.value, visible: false, loaded: 0, total: null, percent: null };
+  const timer = setTimeout(() => {
+    state.value = { ...state.value, visible: true };
+  }, 3000);
+  try {
+    return await action((value) => {
+      state.value = { ...state.value, ...value };
+    });
+  } finally {
+    clearTimeout(timer);
+  }
+}
 
 /** An empty snapshot, so a view can render its own empty state rather than crash. */
 const EMPTY = {
@@ -59,7 +84,7 @@ async function load() {
   if (inFlight) return inFlight;
   loading.value = true;
   error.value = null;
-  inFlight = fetchDashboard()
+  inFlight = withProgress(loadingProgress, fetchDashboard)
     .then((payload) => {
       snapshot.value = payload;
       return payload;
@@ -75,6 +100,31 @@ async function load() {
   return inFlight.catch(() => null);
 }
 
+async function loadResearchHistory() {
+  if (researchInFlight) return researchInFlight;
+  researchLoading.value = true;
+  researchError.value = null;
+  researchInFlight = withProgress(researchProgress, fetchResearchHistory)
+    .then((payload) => {
+      const current = snapshot.value?.simulationResearch ?? {};
+      snapshot.value = {
+        ...snapshot.value,
+        simulationResearch: { ...current, ...payload },
+      };
+      researchLoaded.value = true;
+      return payload;
+    })
+    .catch((cause) => {
+      researchError.value = cause;
+      throw cause;
+    })
+    .finally(() => {
+      researchLoading.value = false;
+      researchInFlight = null;
+    });
+  return researchInFlight.catch(() => null);
+}
+
 export function useDashboard() {
   const data = computed(() => snapshot.value ?? EMPTY);
 
@@ -83,13 +133,24 @@ export function useDashboard() {
     loading: readonly(loading),
     error: readonly(error),
     loaded: computed(() => snapshot.value !== null),
+    loadingProgress: readonly(loadingProgress),
+    researchLoading: readonly(researchLoading),
+    researchLoaded: readonly(researchLoaded),
+    researchError: readonly(researchError),
+    researchProgress: readonly(researchProgress),
     ensureLoaded() {
       if (snapshot.value === null && !inFlight) return load();
       return inFlight ?? Promise.resolve(snapshot.value);
     },
+    ensureResearchHistory() {
+      if (researchLoaded.value) return Promise.resolve(data.value.simulationResearch);
+      return loadResearchHistory();
+    },
     async reload() {
       await reloadData();
       snapshot.value = null;
+      researchLoaded.value = false;
+      researchError.value = null;
       return load();
     },
   };

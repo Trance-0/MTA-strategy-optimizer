@@ -28,7 +28,7 @@ WORKDIR /application
 COPY pyproject.toml uv.lock ./
 COPY VERSION ./
 RUN --mount=type=cache,target=/root/.cache/uv \
-    uv sync --frozen --extra backend --no-dev --no-install-project
+    uv sync --frozen --extra backend --extra strategy-evaluation --no-dev --no-install-project
 
 COPY backend/ backend/
 COPY dashboard/config.py dashboard/models.py dashboard/
@@ -39,20 +39,6 @@ RUN groupadd --gid 10001 app \
     && useradd --uid 10001 --gid app --no-create-home \
         --home-dir /nonexistent --shell /usr/sbin/nologin app \
     && chown -R app:app /application
-
-# A pipeline stage started from Budget Manager runs `uv run python ...`, and uv
-# initializes a cache under HOME before it runs anything. The service account
-# has no home directory, so without these the three stages the jobs API
-# advertises as available all fail at launch with "Failed to initialize cache
-# at /nonexistent/.cache/uv". /tmp is the one writable path in the production
-# posture this image mirrors.
-#
-# These are set after `uv sync`, not beside the other ENV lines above: the
-# build runs as root, so an earlier UV_CACHE_DIR would leave a root-owned
-# /tmp/uv-cache baked into the image and the app user would be denied the
-# directory it was given to fix the original problem.
-ENV HOME=/tmp \
-    UV_CACHE_DIR=/tmp/uv-cache
 
 USER 10001:10001
 EXPOSE 8501

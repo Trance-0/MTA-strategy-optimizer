@@ -67,18 +67,8 @@ const MODEL_TABS = [
 ];
 const model = ref("attribution");
 
-/**
- * The date range narrows which reporting days the attribution stage reads.
- *
- * Offered as free text rather than a picker over the loaded snapshot, because
- * the stage reads the source reports rather than the snapshot: a window the
- * snapshot cannot show may still be present in the files.
- */
 const STAGE_CONTROLS = {
-  attribution: [
-    { key: "startDate", label: "From (YYYY-MM-DD)", type: "text", placeholder: "Earliest" },
-    { key: "endDate", label: "To (YYYY-MM-DD)", type: "text", placeholder: "Latest" },
-  ],
+  attribution: [],
   optimization: [
     {
       key: "budgetUsagePolicy",

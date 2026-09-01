@@ -1,7 +1,7 @@
 ---
 title: Dashboard Data Endpoints
 description: Snapshot, reload, master-object, and repository behavior
-compact: "Specifies Flask dashboard data routes and repositories: 15-key `/api/dashboard`, ten-minute cache, runtime artifact precedence, reload, immutable observations, editable master drafts, SQLAlchemy queries, simulator-table probes, and exact legacy Node coercion parity."
+compact: "Specifies Flask dashboard routes and repositories: 15-key core `/api/dashboard`, lazy `/api/dashboard/research-history`, separate ten-minute caches, runtime artifact precedence, reload, immutable observations, editable master drafts, SQLAlchemy queries, and normalized JSON types."
 lang: en-US
 source_files: backend/api/dashboard.py, backend/repository/attribution.py, backend/repository/coercion.py, backend/repository/evaluation.py, backend/repository/history.py, backend/repository/master_data.py, backend/repository/research.py, backend/repository/snapshot.py, backend/repository/strategy.py, backend/tests/test_snapshot.py
 ---
@@ -17,6 +17,13 @@ source_files: backend/api/dashboard.py, backend/repository/attribution.py, backe
 `candidatePool`, `simulationResearch`, and `strategyEvaluation`. Row ordering and JavaScript Object
 Notation (JSON) scalar types
 match the established file snapshot. Results are cached for ten minutes.
+
+The core response keeps `simulationResearch` metadata and entity catalogues but
+sets its `history`, `delivery`, and `touchpointObservations` arrays empty.
+`GET /api/dashboard/research-history` returns exactly those three arrays on
+demand. Its result has its own ten-minute cache entry, so loading the core does
+not execute the observation queries. `POST /api/reload` and a successful model
+job clear both caches together.
 
 `POST /api/reload` clears every loader cache. A successful pipeline stage also
 clears it. Database mode first probes reachability and a non-empty attribution
@@ -49,10 +56,12 @@ never rewrite external `mta_sim_*` evidence tables.
 
 Source: `backend/api/dashboard.py`, `backend/repository/snapshot.py`
 
-- Responsibility: Serve health, snapshot, reload, and master routes and
-  assemble the ordered fifteen-key cached payload.
+- Responsibility: Serve health, the core snapshot, lazy research observations,
+  reload, and master routes; assemble the ordered fifteen-key core payload and
+  the separate three-array observation payload.
 - Inputs: Data-source mode and repository loader results.
-- Outputs: JSON responses with stable keys and status-specific error objects.
+- Outputs: JSON responses with stable keys and status-specific error objects;
+  the core never serializes the observation-heavy arrays.
 - Dependencies: Backend repositories, settings log, and database probe.
 - Verification: `backend/tests/test_snapshot.py`.
 
@@ -91,8 +100,9 @@ Source: `backend/repository/coercion.py`
 Source: `backend/repository/master_data.py`, `backend/repository/research.py`
 
 - Responsibility: Derive account master data from reports, read configured
-  simulator research, reflect external MTA-SIM tables, and isolate editable
-  future-run drafts from immutable observations.
+  simulator research, reflect external Multi-Touch Attribution Simulator
+  (MTA-SIM) tables, split metadata from lazy observations without changing row
+  shapes, and isolate editable future-run drafts from immutable observations.
 - Inputs: Normalized reports, optional simulator sidecars, external tables,
   and validated master payloads.
 - Outputs: The `simulationResearch` object and saved/archived draft records.

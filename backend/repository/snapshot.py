@@ -29,7 +29,10 @@ from backend.repository.attribution import (
     recommended_attribution,
 )
 from backend.repository.history import ads_daily, entity_bridge, path_report
-from backend.repository.research import simulation_research
+from backend.repository.research import (
+    simulation_research_core,
+    simulation_research_history,
+)
 from backend.repository.strategy import (
     budget_recommendation,
     campaign_strategy,
@@ -82,7 +85,7 @@ LOADERS: dict[str, Callable[[], Any]] = {
     "campaignStrategy": campaign_strategy,
     "strategyRequest": strategy_request,
     "candidatePool": candidate_pool,
-    "simulationResearch": simulation_research,
+    "simulationResearch": simulation_research_core,
     "strategyEvaluation": strategy_evaluation,
 }
 
@@ -100,3 +103,8 @@ def load_snapshot() -> dict:
     for key, loader in LOADERS.items():
         payload[key] = cached(key, loader)
     return payload
+
+
+def load_research_history() -> dict:
+    """Return and cache the observation-heavy research arrays separately."""
+    return cached("researchHistory", simulation_research_history)

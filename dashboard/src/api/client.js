@@ -29,9 +29,31 @@ export const IS_STATIC = import.meta.env.VITE_STATIC_BUILD === "true";
  * domain root.
  */
 const SNAPSHOT_URL = IS_STATIC ? "data/snapshot.json" : "/api/dashboard";
+const RESEARCH_HISTORY_URL = IS_STATIC
+  ? "data/research-history.json"
+  : "/api/dashboard/research-history";
 
-async function readJson(response) {
-  const text = await response.text();
+async function readJson(response, onProgress = null) {
+  let text;
+  if (onProgress && response.body?.getReader) {
+    const totalHeader = Number(response.headers.get("Content-Length"));
+    const total = Number.isFinite(totalHeader) && totalHeader > 0 ? totalHeader : null;
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    const parts = [];
+    let loaded = 0;
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      loaded += value.byteLength;
+      parts.push(decoder.decode(value, { stream: true }));
+      onProgress({ loaded, total, percent: total ? Math.min(100, loaded / total * 100) : null });
+    }
+    parts.push(decoder.decode());
+    text = parts.join("");
+  } else {
+    text = await response.text();
+  }
   try {
     return JSON.parse(text);
   } catch {
@@ -45,15 +67,25 @@ async function readJson(response) {
 }
 
 /** Fetch the whole dashboard snapshot. */
-export async function fetchDashboard() {
+export async function fetchDashboard(onProgress = null) {
   const response = await fetch(SNAPSHOT_URL, { headers: { Accept: "application/json" } });
-  const payload = await readJson(response);
+  const payload = await readJson(response, onProgress);
   if (!response.ok) {
     const error = new Error(payload.message || "Failed to load the dashboard data.");
     error.code = payload.error;
     error.source = payload.source;
     throw error;
   }
+  return payload;
+}
+
+/** Fetch the observation-heavy research arrays only when a view needs them. */
+export async function fetchResearchHistory(onProgress = null) {
+  const response = await fetch(RESEARCH_HISTORY_URL, {
+    headers: { Accept: "application/json" },
+  });
+  const payload = await readJson(response, onProgress);
+  if (!response.ok) throw new Error(payload.message || "Failed to load research history.");
   return payload;
 }
 
@@ -118,7 +150,8 @@ export async function fetchJobs() {
         script: null,
         available: false,
         unavailableReason: unavailable,
-        requiresResearchSnapshot: false,
+        datasets: [],
+        defaultDataset: null,
         current: null,
       };
     }

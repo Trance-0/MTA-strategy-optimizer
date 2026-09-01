@@ -1,7 +1,7 @@
 ---
 title: Dashboard
 description: The Vue dashboard's architecture, its dual data source contract, and where each topic is documented
-compact: "Vue and Flask dashboard boundary: Python owns data access; browser views issue no database statements. `client.js` covers snapshots, models, jobs, settings, schema operations, and the static-host response whose null backend identity distinguishes no backend from mismatched builds."
+compact: "Vue and Flask dashboard boundary: `client.js` and `useDashboard.js` stream the 15-key core snapshot, lazy research observations, and delayed byte progress; Python alone owns data access, while static builds read equivalent generated JSON files."
 lang: en-US
 source_files: dashboard/src/api/client.js, dashboard/src/lib/useDashboard.js, dashboard/tests/dashboard.test.js, backend/repository/coercion.py, backend/tests/test_coercion.py, backend/tests/test_settings.py
 ---
@@ -54,11 +54,34 @@ tables, model modules, and deployment configuration. Nothing about rendering.
 
 Lives in `dashboard/src/`. Knows about the snapshot shape. Nothing about where it came from.
 
-### Why the whole snapshot arrives at once
+### Why the core snapshot arrives at once
 
-`GET /api/dashboard` returns every loader's result in one response — roughly 720 KB of JSON, smaller than the artifacts it was read from. Sending it whole rather than paginating is what lets the six views share one read: two views on the same screen cannot show two different states of the same source, and switching views costs nothing because the data is already there.
+`GET /api/dashboard` returns the complete core snapshot in one response.
+Sending that core whole rather than paginating is what lets the six views share
+one read: two views cannot show two different model artifacts, and switching
+among views that need only core data costs nothing because it is already there.
+
+The observation-heavy arrays inside `simulationResearch` are the one
+exception: `history`, `delivery`, and `touchpointObservations` are empty in the
+core response and load from `GET /api/dashboard/research-history` only when a
+view asks for research observations. A database-scale history may hold 100,000
+rows and exceed 50 megabytes as JavaScript Object Notation (JSON); making every
+landing page download and parse it would make unrelated views pay for data
+they never read. The lazy response uses the same cache and reload boundary as
+the core, then merges into the one shared client snapshot. It is not a second
+source of truth.
 
 `src/lib/useDashboard.js` holds that single copy. The six views mount together on first paint, so concurrent callers share one in-flight request rather than issuing six.
+
+### Progress for a slow dataset
+
+The initial snapshot and every lazy dataset use the same streamed reader in
+`src/api/client.js`. The client counts received bytes against `Content-Length`
+when the server provides it; without a length it reports an indeterminate
+load. A progress bar appears only after a request remains unresolved for three
+seconds, so a fast request does not flash transient interface chrome. The bar
+and its accessible value read the same progress state. A failed lazy request
+remains retryable and never marks the section loaded.
 
 ### Dependency boundary
 
@@ -160,8 +183,8 @@ Source: `dashboard/src/api/client.js`, `dashboard/src/lib/useDashboard.js`
 
 - Responsibility: Be the client's single route to the data, and hold the single shared copy of it.
 - Inputs: `/api/dashboard` in a local run, or `data/snapshot.json` in the published build.
-- Outputs: `IS_STATIC`, dashboard/reload/settings calls, `saveMasterObject()`, `archiveMasterObject()`, `fetchJobs()`, `startJob()`, `stopJob()`, `fetchSchemaOperation()`, `startSchemaOperation()`, and `stopSchemaOperation()`; and `useDashboard()`, including empty `simulationResearch` and `strategyEvaluation` shapes before loading. Static settings carry `backendIdentity: null` so the interface reports no connected backend instead of constructing a false match.
-- Behavior contract: `IS_STATIC` is baked in at build time by `vite build --mode static`, and it is the only thing that decides which of the two sources is read; **no view branches on it.** The static path is relative because Pages serves a project site from a subdirectory. A response that is not JSON — a proxy page or a 404 — is reported by status rather than as a parse error naming character 0. In the static build settings and schema-operation functions return hosted refusals without issuing requests that would 404. Live schema starts send only `action`, `schema`, and an explicit replacement Boolean; errors retain the backend message. `useDashboard()` holds one module-level snapshot, so the six views that mount together share one in-flight request rather than issuing six, and two views can never show two different reads. An empty snapshot is exposed until the first load resolves, so a view renders its own empty state rather than crashing on a missing field.
+- Outputs: `IS_STATIC`, dashboard and lazy-research loaders with byte progress, reload/settings calls, `saveMasterObject()`, `archiveMasterObject()`, `fetchJobs()`, `startJob()`, `stopJob()`, `fetchSchemaOperation()`, `startSchemaOperation()`, and `stopSchemaOperation()`; and `useDashboard()`, including per-dataset loading, loaded, error, retry, and progress state. Static settings carry `backendIdentity: null` so the interface reports no connected backend instead of constructing a false match.
+- Behavior contract: `IS_STATIC` is baked in at build time by `vite build --mode static`, and it alone decides whether core and lazy requests read Application Programming Interface routes or relative generated files; **no view branches on it.** A response that is not JSON is reported by status rather than as a parse error naming character 0. `useDashboard()` holds one module-level snapshot and one in-flight promise per dataset, so concurrent callers share each request. Research observations merge only after their complete response parses successfully. Reload clears both datasets. Progress is byte-based where possible, indeterminate otherwise, hidden for the first three seconds, and reset on completion or failure. Empty core and lazy arrays are exposed before loading so views render named loading or empty states rather than crashing.
 - Dependencies: Vue's reactivity.
 - Verification: Driven in a real browser against both the API and the static snapshot; both render the six views identically with no console error.
 

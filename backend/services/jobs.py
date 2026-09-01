@@ -16,7 +16,7 @@ deployment is read-only, and refused before anything is spawned so a refusal
 never leaves a half-started run behind.
 
 Data flow:
-    POST /api/jobs/<stage> -> here -> uv run script/&#42;.py -> modules/&#42;/outputs
+    POST /api/jobs/<stage> -> here -> python script/&#42;.py -> modules/&#42;/outputs
     GET  /api/jobs         -> here -> the Campaign Optimizer's log tabs
 """
 
@@ -25,25 +25,25 @@ from __future__ import annotations
 import re
 import shutil
 import subprocess
+import sys
 import threading
 from datetime import datetime, timezone
 from typing import Any, Callable
 
-from sqlalchemy import distinct, select
 from sqlalchemy.exc import SQLAlchemyError
 
 from backend.config import (
     ATTRIBUTION_OUTPUT_DIR,
     REPO_ROOT,
     pipeline_output_directory,
-    research_snapshot_path,
-    simulator_data_directory,
 )
-from backend.database import orm_rows
-from modules.mta_standard.src.mta_sim_generator_adapter import (
-    prepare_single_scope_reports,
+from backend.services.model_datasets import (
+    DatasetError,
+    PreparedDataset,
+    datasets_for,
+    prepare_dataset,
+    resolve_dataset,
 )
-from dashboard.models import Advertiser
 
 _STRATEGY_OUTPUT_DIR = REPO_ROOT / "modules" / "mta_strategy_recommendation" / "outputs"
 
@@ -66,12 +66,7 @@ MAX_HISTORY = 6
 STAGES: dict[str, dict[str, Any]] = {
     "attribution": {
         "label": "MTA attribution",
-        # `run_pipeline.py` rather than `run_attribution_models.py`: the
-        # pipeline script rebuilds the path report from the touchpoint events
-        # first and publishes all five outputs atomically, which is what the
-        # documented command does and what keeps a failed run from leaving half
-        # a result.
-        "script": "script/run_pipeline.py",
+        "script": "script/run_attribution_models.py",
         "phases": [
             (
                 8,
@@ -103,11 +98,6 @@ STAGES: dict[str, dict[str, Any]] = {
     "optimization": {
         "label": "MTA strategy optimization",
         "script": "script/generate_campaign_strategy.py",
-        # Needs a research snapshot to fit budget response against, which is
-        # the one input the committed reports do not supply: fitting a
-        # budget-to-revenue curve needs the same Campaign observed at several
-        # budget levels, and a single reporting window carries one.
-        "requiresResearchSnapshot": True,
         "phases": [
             (
                 10,
@@ -167,8 +157,6 @@ STAGES: dict[str, dict[str, Any]] = {
 
 STAGE_KEYS: tuple[str, ...] = tuple(STAGES)
 
-ISO_DATE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
-
 #: Exactly the values `BudgetUsagePolicy` declares in
 #: modules/mta_common/src/enums.py. Anything else would reach argparse's
 #: `choices` and fail the run after it had already started.
@@ -197,19 +185,10 @@ def normalize_options(body: dict | None = None) -> dict:
     body = body or {}
     options: dict[str, Any] = {}
 
-    for key in ("startDate", "endDate"):
-        value = str(body.get(key) or "").strip()
-        if value == "":
-            continue
-        if not ISO_DATE.match(value):
-            raise OptionError(f"{key} must be a YYYY-MM-DD date.")
-        options[key] = value
-    if (
-        options.get("startDate")
-        and options.get("endDate")
-        and options["startDate"] > options["endDate"]
-    ):
-        raise OptionError("startDate must not be after endDate.")
+    dataset_id = str(body.get("datasetId") or "").strip()
+    if not dataset_id:
+        raise OptionError("datasetId is required for every model run.")
+    options["datasetId"] = dataset_id
 
     total_budget = body.get("totalBudget")
     if total_budget not in (None, ""):
@@ -230,55 +209,30 @@ def normalize_options(body: dict | None = None) -> dict:
     return options
 
 
-def arguments_for(stage: str, options: dict) -> list[str]:
+def arguments_for(
+    stage: str, options: dict, prepared: PreparedDataset | None = None
+) -> list[str]:
     """Build the argument vector for a stage.
 
-    A date range narrows the reporting window the stage reads. It is validated
-    to `YYYY-MM-DD` before it reaches the command line rather than passed
-    through, so a value from the browser cannot become part of a command.
+    The dataset paths come only from ``prepare_dataset``. Browser values never
+    become paths or query fragments in the argument vector.
     """
     runtime = pipeline_output_directory()
     script = script_for(stage)
-    simulator_inputs = _simulator_attribution_inputs()
-    if (
-        stage == "attribution"
-        and simulator_inputs is not None
-        and (options.get("startDate") or options.get("endDate"))
-    ):
-        raise OptionError(
-            "Reporting date filters cannot be applied to an uploaded simulator "
-            "path report. Remove the date range or provide the "
-            "unaggregated attribution inputs."
-        )
-    args = ["uv", "run", "python", "-X", "utf8", "-B", script]
-    if stage == "attribution" and script == "script/run_attribution_models.py":
-        simulator_path, simulator_ads = simulator_inputs
+    if prepared is None:
+        raise DatasetError("A prepared server dataset is required.")
+    args = [sys.executable, "-X", "utf8", "-B", script]
+    if stage == "attribution":
         args += [
             "--amc-report",
-            str(_prepared_attribution_path()),
+            str(prepared.path_report),
             "--amazon-ads-report",
-            str(_prepared_performance_path()),
+            str(prepared.performance_report),
         ]
         args += ["--output-dir", str(_attribution_output_directory())]
-    elif stage == "attribution" and runtime is not None:
-        args += [
-            "--path-report",
-            str(runtime / "attribution" / "amc_mta_path_report_raw_sample.csv"),
-            "--output-dir",
-            str(runtime / "attribution"),
-        ]
-    if stage == "attribution":
-        # The window narrows both the Ads report and the touchpoint events, so
-        # the two stay coherent: the pipeline rejects a conversion whose event
-        # time falls outside the window its Ads report infers.
-        if options.get("startDate"):
-            args += ["--report-start-date", options["startDate"]]
-        if options.get("endDate"):
-            args += ["--report-end-date", options["endDate"]]
     if stage == "optimization":
-        args += ["--research-snapshot", str(research_snapshot_path())]
-        if options.get("_marketplace"):
-            args += ["--marketplace", options["_marketplace"]]
+        args += ["--research-snapshot", str(prepared.research_snapshot)]
+        args += ["--marketplace", prepared.marketplace]
         if runtime is not None:
             args += ["--output", str(runtime / "strategy" / "campaign_strategy.json")]
         if options.get("totalBudget"):
@@ -292,26 +246,9 @@ def arguments_for(stage: str, options: dict) -> list[str]:
             "--output",
             str(runtime / "evaluation" / "strategy_evaluation.json"),
         ]
-        snapshot = research_snapshot_path()
-        if snapshot is not None:
-            args += ["--research-snapshot", str(snapshot)]
-        if options.get("_marketplace"):
-            args += ["--marketplace", options["_marketplace"]]
+        args += ["--research-snapshot", str(prepared.research_snapshot)]
+        args += ["--marketplace", prepared.marketplace]
     return args
-
-
-def _simulator_attribution_inputs():
-    """Return a complete aggregated simulator input pair, or None."""
-    simulator = simulator_data_directory()
-    if simulator is None:
-        return None
-    path_report = simulator / "amc_path_report.csv"
-    ads_report = simulator / "amazon_ads_daily_touchpoint_performance.csv"
-    return (
-        (path_report, ads_report)
-        if path_report.is_file() and ads_report.is_file()
-        else None
-    )
 
 
 def _attribution_output_directory():
@@ -320,55 +257,18 @@ def _attribution_output_directory():
     return runtime / "attribution" if runtime else ATTRIBUTION_OUTPUT_DIR
 
 
-def _prepared_attribution_path():
-    """Single-scope model input derived from uploaded daily path windows."""
-    return _attribution_output_directory() / "model_input_amc_path_report.csv"
-
-
-def _prepared_performance_path():
-    """Marketplace-scoped performance input paired with the prepared paths."""
-    return _attribution_output_directory() / "model_input_amazon_ads_report.csv"
-
-
-def _selected_marketplace() -> str:
-    """The one advertiser marketplace in the selected dashboard schema."""
-    rows = orm_rows(select(distinct(Advertiser.marketplace).label("marketplace")))
-    marketplaces = sorted(
-        {str(row.get("marketplace") or "").strip() for row in rows} - {""}
-    )
-    if len(marketplaces) != 1:
-        raise ValueError(
-            "the selected dashboard schema must contain exactly one advertiser "
-            f"marketplace before attribution can select an upload scope; found "
-            f"{marketplaces}"
-        )
-    return marketplaces[0]
-
-
 def script_for(stage: str) -> str | None:
     """The command entry point this deployment will actually execute."""
-    if stage == "attribution" and _simulator_attribution_inputs() is not None:
-        return "script/run_attribution_models.py"
     return STAGES[stage]["script"]
 
 
-def prepare_runtime_inputs(stage: str, marketplace: str | None = None) -> None:
+def prepare_runtime_inputs(stage: str) -> None:
     """Create isolated output folders and seed evaluation's strategy inputs."""
     runtime = pipeline_output_directory()
     if runtime is not None:
         (runtime / "attribution").mkdir(parents=True, exist_ok=True)
         (runtime / "strategy").mkdir(parents=True, exist_ok=True)
         (runtime / "evaluation").mkdir(parents=True, exist_ok=True)
-    simulator_inputs = _simulator_attribution_inputs()
-    if stage == "attribution" and simulator_inputs is not None:
-        path_report, performance_report = simulator_inputs
-        prepare_single_scope_reports(
-            path_report,
-            performance_report,
-            _prepared_attribution_path(),
-            _prepared_performance_path(),
-            marketplace=marketplace,
-        )
     if runtime is None:
         return
     if stage != "evaluation":
@@ -467,7 +367,17 @@ def jobs_state(execution_enabled: bool = True, database_enabled: bool = True) ->
         definition = STAGES[key]
         script = script_for(key)
         job = _running.get(key)
-        available = bool(script) and execution_enabled and database_enabled
+        try:
+            datasets = datasets_for(key) if database_enabled else []
+        except (OSError, ValueError, SQLAlchemyError):
+            datasets = []
+        available = (
+            bool(script)
+            and execution_enabled
+            and database_enabled
+            and pipeline_output_directory() is not None
+            and bool(datasets)
+        )
         stages[key] = {
             "key": key,
             "label": definition["label"],
@@ -483,12 +393,19 @@ def jobs_state(execution_enabled: bool = True, database_enabled: bool = True) ->
                     "Running a stage writes new outputs, so it needs a connected "
                     "database deployment. This deployment reads committed files."
                     if not database_enabled
-                    else definition.get("unavailableReason")
+                    else (
+                        "PIPELINE_OUTPUT_DIR must name a writable runtime directory."
+                        if pipeline_output_directory() is None
+                        else (
+                            "No compatible database dataset is available for this model."
+                            if not datasets
+                            else definition.get("unavailableReason")
+                        )
+                    )
                 )
             ),
-            "requiresResearchSnapshot": bool(
-                definition.get("requiresResearchSnapshot")
-            ),
+            "datasets": datasets,
+            "defaultDataset": datasets[0]["id"] if datasets else None,
             "current": job.public_view() if job else None,
         }
     return {"stages": stages, "history": [job.public_view() for job in _history]}
@@ -515,33 +432,17 @@ def start_refusal(
                 "database deployment. This deployment reads committed files."
             ),
         }
-    if (
-        stage == "attribution"
-        and _simulator_attribution_inputs() is not None
-        and ((options or {}).get("startDate") or (options or {}).get("endDate"))
-    ):
-        return {
-            "code": "unsupported_options",
-            "message": (
-                "Reporting date filters cannot be applied to an already "
-                "uploaded simulator path report. Remove the date range or "
-                "provide the unaggregated attribution inputs."
-            ),
-        }
     if active_job(stage) is not None:
         return {
             "code": "already_running",
             "message": f"{definition['label']} is already running.",
         }
-    if definition.get("requiresResearchSnapshot") and research_snapshot_path() is None:
+    try:
+        resolve_dataset(stage, (options or {}).get("datasetId"))
+    except DatasetError as error:
         return {
             "code": "missing_input",
-            "message": (
-                "Fitting a budget response curve needs the same Campaign "
-                "observed at several budget levels, which a single reporting "
-                "window does not carry. Configure MTA_SIM_DATA_DIR with a "
-                "research snapshot to fit against."
-            ),
+            "message": str(error),
         }
     return None
 
@@ -563,39 +464,13 @@ def start_job(
     _running[stage] = job
 
     try:
-        needs_marketplace = (
-            stage == "attribution" and _simulator_attribution_inputs() is not None
-        ) or (
-            stage in {"optimization", "evaluation"}
-            and research_snapshot_path() is not None
-        )
-        marketplace = _selected_marketplace() if needs_marketplace else None
-        execution_options = {
-            **options,
-            **({"_marketplace": marketplace} if marketplace else {}),
-        }
-        args = arguments_for(stage, execution_options)
+        selected = resolve_dataset(stage, options.get("datasetId"))
+        prepare_runtime_inputs(stage)
+        prepared = prepare_dataset(stage, selected)
+        args = arguments_for(stage, options, prepared)
         job.command = " ".join(args)
         job.append("meta", f"$ {job.command}")
-        if options.get("startDate") or options.get("endDate"):
-            job.append(
-                "meta",
-                "Reporting window: "
-                f"{options.get('startDate') or 'earliest'} to "
-                f"{options.get('endDate') or 'latest'}",
-            )
-        if stage == "attribution" and _simulator_attribution_inputs() is not None:
-            job.append(
-                "meta",
-                "Preparing every uploaded daily path window as one model scope.",
-            )
-        prepare_runtime_inputs(stage, marketplace=marketplace)
-        if stage == "attribution" and _simulator_attribution_inputs() is not None:
-            job.append(
-                "meta",
-                "Prepared marketplace-scoped attribution inputs: "
-                f"{_prepared_attribution_path()} and {_prepared_performance_path()}",
-            )
+        job.append("meta", f"Selected dataset: {selected['label']}")
     except (OSError, ValueError, SQLAlchemyError) as error:
         _finish(
             job,
@@ -624,9 +499,8 @@ def start_job(
         _finish(
             job,
             error=(
-                "The `uv` command was not found on this server. The dashboard "
-                "runs pipeline stages through uv, exactly as the documented "
-                "commands do; install uv, or run the stage in a terminal instead."
+                "The server's Python interpreter could not be started. Rebuild "
+                "the deployment with the project's backend dependencies."
             ),
             on_finish=on_finish,
         )
