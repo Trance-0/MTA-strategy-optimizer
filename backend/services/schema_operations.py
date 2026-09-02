@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import os
 import subprocess
+import sys
 import threading
 from datetime import datetime, timezone
 from typing import Any, Callable
@@ -95,11 +96,7 @@ def arguments_for(action: str, schema: str, replace: bool = False) -> list[str]:
     """Build the fixed command argument vector for one validated request."""
     if action == "initialize":
         args = [
-            "uv",
-            "run",
-            "--extra",
-            "dashboard",
-            "python",
+            sys.executable,
             "-X",
             "utf8",
             "-B",
@@ -109,11 +106,7 @@ def arguments_for(action: str, schema: str, replace: bool = False) -> list[str]:
         ]
     elif action == "derive":
         args = [
-            "uv",
-            "run",
-            "--extra",
-            "dashboard",
-            "python",
+            sys.executable,
             "-X",
             "utf8",
             "-B",

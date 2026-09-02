@@ -1,7 +1,7 @@
 ---
 title: Backend Jobs and Settings
 description: Pipeline job polling and protected runtime settings contracts
-compact: "Contracts for jobs, settings, runtime schema selection, schema recovery, and schema operations: model datasets, protected credentials, browser-actionable database repair, isolated outputs, bounded logs, termination, cache invalidation, and independent capability flags."
+compact: "Contracts for jobs, settings, runtime schema selection, schema recovery, and current-interpreter child operations: model datasets, protected credentials, browser-actionable database repair, isolated outputs, bounded logs, termination, cache invalidation, and independent capability flags."
 lang: en-US
 source_files: backend/api/jobs.py, backend/api/settings.py, backend/api/schema_operations.py, backend/api/schema_recovery.py, backend/services/jobs.py, backend/services/model_datasets.py, backend/services/settings.py, backend/services/schema_operations.py, backend/services/schema_recovery.py, backend/tests/test_jobs.py, backend/tests/test_settings.py, backend/tests/test_schema_operations.py, backend/tests/test_schema_recovery.py
 ---
@@ -143,8 +143,12 @@ currently holds every simulator source table required by
 `derive_scenario_schemas.py`. This classification is repeated immediately
 before the process starts rather than trusting an earlier browser census.
 
-Both actions spawn the documented root command as a fixed argument vector with
-no shell. Standard output and standard error are combined in order,
+Both actions spawn the documented root script as a fixed argument vector with
+no shell. The vector begins with the already-running environment's
+`sys.executable`; it never performs an environment-manager lookup, because a
+deployed runtime has already installed the required backend dependencies and
+need not carry `uv` on its executable path. Standard output and standard error
+are combined in order,
 timestamped, truncated to 500 characters per line, and bounded to 600 retained
 lines with a dropped-line count. The response is `202` once the process exists;
 the client polls the `GET` route until `succeeded`, `failed`, or `stopped`. A
@@ -236,7 +240,8 @@ Source: `backend/api/schema_operations.py`,
   refusals, `409` capability or concurrency refusals, and terminal operation
   state with exit code and detailed output.
 - Behavior contract: Browser input is passed only through a fixed argument
-  vector. An initializer never writes to a populated non-dashboard schema; a
+  vector beginning with `sys.executable`, never an environment-manager lookup.
+  An initializer never writes to a populated non-dashboard schema; a
   parser never writes to its source; replacement is absent unless explicitly
   requested. Logs retain 600 lines of at most 500 characters each and report
   truncation.

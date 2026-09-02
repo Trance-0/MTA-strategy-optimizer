@@ -1,7 +1,7 @@
 ---
 title: Version Log
 description: Release history and material changes for the maintained project
-compact: "Routes release history from VERSION to one page per patch, keeping 0.9.35–0.9.38 flat and older patches in minor-version folders; includes dates, material summaries, historical group links, and planned follow-ups."
+compact: "Routes release history from VERSION to one page per patch, keeping 0.9.36–0.9.39 flat and older patches in minor-version folders; includes dates, material summaries, historical group links, and planned follow-ups."
 order: 1
 ---
 
@@ -10,6 +10,11 @@ order: 1
 The project version is recorded in the repository-root `VERSION` file. Each page here is one small patch description covering a coherent change set, rather than a reproduction of every commit message. Every patch keeps its own permanent page; older minor versions are grouped into a collapsed folder per minor version instead of being compacted away.
 
 This section records **what** changed. See the [work log](../worklog/) for **who** did the work and when.
+
+## [0.9.39](0.9.39.md)
+
+- Date: 2026-09-02
+- Summary: Made dashboard schema initialization and derivation use the backend's active Python interpreter instead of requiring `uv` on the deployed executable path
 
 ## [0.9.38](0.9.38.md)
 
@@ -26,7 +31,7 @@ This section records **what** changed. See the [work log](../worklog/) for **who
 - Date: 2026-09-01
 - Summary: Added the backend-owned MTA-SIM Data Generator, confirmed live schema switching and recovery, flat navigation, Settings-owned reload, accessible term documentation, and an intentionally empty Knowledge Base
 
-## [0.9.35](0.9.35.md)
+## [0.9.35](0.9/0.9.35.md)
 
 - Date: 2026-09-01
 - Summary: Split large research observations from the core dashboard load, made Campaigns safe for 100,000 rows, exposed active schema inventory in protected Settings, documented versioned database migration/CD adoption, and made model runs select server-issued datasets

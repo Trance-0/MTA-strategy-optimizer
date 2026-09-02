@@ -10,6 +10,7 @@ Data flow:
 
 from __future__ import annotations
 
+import sys
 import unittest
 from unittest.mock import patch
 
@@ -38,6 +39,7 @@ class ArgumentTests(unittest.TestCase):
     def test_initializer_targets_the_requested_schema(self) -> None:
         args = arguments_for("initialize", "public")
 
+        self.assertEqual(args[:4], [sys.executable, "-X", "utf8", "-B"])
         self.assertIn("script/import_to_database.py", args)
         self.assertEqual(args[args.index("--schema") + 1], "public")
         self.assertNotIn("--replace", args)
@@ -45,6 +47,7 @@ class ArgumentTests(unittest.TestCase):
     def test_parser_reads_every_scenario_and_replacement_is_explicit(self) -> None:
         args = arguments_for("derive", "mta", replace=True)
 
+        self.assertEqual(args[:4], [sys.executable, "-X", "utf8", "-B"])
         self.assertIn("script/derive_scenario_schemas.py", args)
         self.assertEqual(args[args.index("--source") + 1], "mta")
         self.assertIn("--all", args)

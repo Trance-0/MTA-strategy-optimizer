@@ -1,6 +1,6 @@
 ---
 title: Populating PostgreSQL
-compact: "PostgreSQL schema initialization and simulator parsing through `import_to_database.py`, `derive_scenario_schemas.py`, `PG_SCHEMA`, and dashboard schema-setup controls, including replacement safeguards, derived marketplace schemas, and streamed operation logs."
+compact: "PostgreSQL schema initialization and simulator parsing through `import_to_database.py`, `derive_scenario_schemas.py`, `PG_SCHEMA`, and current-interpreter dashboard schema setup, including replacement safeguards, derived marketplace schemas, and streamed operation logs."
 lang: en-US
 source_files: dashboard/config.py, dashboard/models.py, script/import_to_database.py, script/derive_scenario_schemas.py
 ---
@@ -108,8 +108,10 @@ counts that would produce one.
 Everything above this line is the command-line route, and it remains the route
 for an operator at a terminal. This section is the same two operations for a
 reader who has only a browser — the deployed case, where the commands above are
-not available at all. Both start the same argument vectors and are governed by
-the same census.
+not available at all. Both use the same root scripts and are governed by the
+same census. The server prefixes the script arguments with its current Python
+interpreter rather than looking up `uv`; its deployed environment already
+contains the required dependencies.
 
 The dashboard settings separate the active **Dashboard schema** from the
 **Schema setup** target. The active selector contains only schemas that already
