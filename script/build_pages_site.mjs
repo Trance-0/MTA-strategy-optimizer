@@ -3,8 +3,8 @@
  * under `/docs/`.
  *
  * Pages serves static files only, so the published dashboard is the Vue client
- * built in static mode: it fetches `data/snapshot.json`, exported from the
- * committed artifacts at build time, instead of the Flask API. The client
+ * built in static mode: it fetches files below `data/resources/`, exported
+ * from committed artifacts at build time, instead of the Flask API. The client
  * source is the same one the local run serves — the published build is a
  * different data path, never a different codebase.
  *
@@ -67,13 +67,13 @@ if (!existsSync(dashboardBuild)) {
   );
 }
 
-// The snapshot is the published build's only data source. Without it every
+// The shell resource is required by every route. Without it every
 // view renders its error card, which would reach a visitor as a broken page
 // rather than as a failed build.
-const snapshot = resolve(dashboardBuild, "data", "snapshot.json");
-if (!existsSync(snapshot)) {
+const shellResource = resolve(dashboardBuild, "data", "resources", "shell.json");
+if (!existsSync(shellResource)) {
   fail(
-    "The static build carries no data/snapshot.json. Run " +
+    "The static build carries no data/resources/shell.json. Run " +
       "`uv run --extra backend python -m script.export_dashboard_snapshot` " +
       "before building the client.",
   );

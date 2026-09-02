@@ -1,6 +1,6 @@
 ---
 title: Navigation Rail and Settings
-compact: "Navigation and settings contract: one-column hash routing without section separators, Settings-owned reload, confirmed runtime PostgreSQL schema selection, browser schema setup and recovery on a protected deployment, write-only passwords, and bounded logging."
+compact: "Navigation contract for canonical `#/page/section` deep links, back/forward history, route-owned lazy resources, legacy-hash normalization, the flat rail, Settings-owned reload, runtime PostgreSQL schema selection, protected schema recovery, write-only passwords, and bounded logging."
 lang: en-US
 source_files: dashboard/src/pages.js, dashboard/src/App.vue, dashboard/src/main.js, dashboard/src/components/SettingsDialog.vue, dashboard/src/components/SchemaRecovery.vue
 ---
@@ -21,7 +21,69 @@ there, in `PAGE_KEYS`, and in `App.vue`'s component map;
 `tests/dashboard.test.js` asserts the three agree, so the rail cannot offer a
 destination the shell cannot render.
 
-The rail writes the selected page into the location hash, so a view is linkable and survives a refresh. It is written with `replaceState` rather than assignment, so switching views does not fill the browser's back stack with intermediate pages.
+The location hash identifies both a page and the subsection visible inside it.
+The canonical form is `#/page/section`: examples are
+`#/budget/product-economics`, `#/campaigns/paths`, and
+`#/optimizer/optimization`. Every destination has a default subsection, so a
+single-panel page is still explicit: Command Center is `#/overview/summary`,
+Data Generator is `#/generator/configure`, and Knowledge Base is
+`#/knowledge/notice`.
+
+Clicking the rail opens that page's default subsection. Clicking an in-page tab
+pushes another history entry, and browser Back and Forward restore both the
+page and its selected tab. A direct deep link renders the same state after a
+refresh. A legacy hash such as `#campaigns` is accepted once and replaced with
+its canonical default, while an unknown page falls back to Command Center and
+an unknown subsection falls back to that page's declared default. Normalizing
+a legacy or invalid location uses `replaceState`; reader navigation uses
+`pushState`.
+
+`src/pages.js` owns the route registry as well as the rail registry. Each
+subsection declares the allow-listed dashboard resources it requires. The
+shell loads those resources before mounting the selected view; it does not
+load resources declared only by sibling tabs. Completed resources remain in a
+client cache, so revisiting a tab is immediate until Reload invalidates the
+cache.
+
+### Route and resource declarations
+
+The exact declarations are part of the navigation contract. Every entry starts
+with `shell`, which supplies deployment and report context.
+
+#### Command Center, Data Generator, and Knowledge Base
+
+- `overview/summary`: `performance`, `attribution`, and `budget`.
+- `generator/configure`: no dashboard data beyond `shell`; the generator uses
+  its own backend capability endpoint only after this route mounts.
+- `knowledge/notice`: no dashboard data beyond `shell`.
+
+#### Budget Manager
+
+- `budget/overview`: `budget` and `research-overview`.
+- `budget/providers`: `research-providers`.
+- `budget/products`: `research-products`.
+- `budget/campaigns`: `research-campaigns`.
+- `budget/ad-groups`: `research-ad-groups`.
+- `budget/touchpoints`: `research-touchpoints`.
+- `budget/product-economics`: `research-product-economics`.
+- `budget/generation-configs`: `research-generation-configs`; this route
+  normalizes to Overview while diagnostic mode is off.
+
+#### Campaigns
+
+- `campaigns/history`: `research-campaign-history`.
+- `campaigns/performance`: `performance`.
+- `campaigns/bridge`: `entity-bridge`.
+- `campaigns/paths`: `path-report`.
+
+#### Campaign Optimizer and Optimization Log
+
+- `optimizer/attribution`: `attribution`.
+- `optimizer/optimization`: `strategy`.
+- `optimizer/evaluation`: `evaluation`.
+- `log/provenance`: `attribution`, `budget`, and `strategy`.
+- `log/attribution`, `log/optimization`, and `log/evaluation`: no dashboard
+  data beyond `shell`; each requests the jobs endpoint only when selected.
 
 ### Below the wide breakpoint
 
@@ -129,9 +191,9 @@ The code-level specification for the files this page describes. Each entry state
 Source: `dashboard/src/main.js`, `dashboard/src/App.vue`, `dashboard/src/pages.js`
 
 - Responsibility: Register the seven views, draw the shell around them, and dispatch to the selected one.
-- Inputs: The location hash. Nothing else; each view reads the shared snapshot.
+- Inputs: The location hash and the selected route's declared resource keys.
 - Outputs: The rendered application. `PAGES` carries each view's title, breadcrumb, and inline icon; `PAGE_KEYS` is the one-column order; `REPO_URL` and `DOCS_URL` are where the app points a reader who wants the source or the specification.
-- Behavior contract: `src/pages.js` is the single place a view is registered, and `tests/dashboard.test.js` asserts that `PAGES`, `PAGE_KEYS`, and `App.vue`'s component map agree. Data Generator follows Command Center. No group label or group container is rendered. Settings is a foot control rather than a page, and reload exists only inside its dialog. The page is written into the hash with `replaceState`, so a view is linkable and survives a refresh without filling the back stack. `App.vue` renders the loading, error, and loaded states itself rather than leaving each data-backed view to do it, and a `database_unavailable` error carries `SchemaRecovery.vue` beneath it so the state that stops every view also offers the way out of it. The report window and marketplace in the header are read from the selected schema's data rather than fixed in markup.
+- Behavior contract: `src/pages.js` is the single place a view and its subsections are registered, and `tests/dashboard.test.js` asserts that `PAGES`, `PAGE_KEYS`, route parsing, canonical serialization, defaults, and `App.vue`'s component map agree. Data Generator follows Command Center. No group label or group container is rendered. Settings is a foot control rather than a page, and reload exists only inside its dialog. Canonical hashes have the form `#/page/section`; reader navigation uses `pushState`, normalization uses `replaceState`, and Back and Forward restore the selected subsection. `App.vue` requests only the current route's resource declaration before mounting that view and passes the selected subsection plus a navigation event to tabbed views. It renders loading, error, and loaded states itself, and a `database_unavailable` error carries `SchemaRecovery.vue` beneath it. Header context comes from the small `shell` resource rather than forcing a view payload to load.
 - Dependencies: Vue 3.
 - Verification: `dashboard/tests/dashboard.test.js` for the registration contract; the rendered result is verified in a real browser for all seven views.
 

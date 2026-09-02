@@ -38,6 +38,26 @@ EXPECTED_KEYS = {
     "strategyEvaluation",
 }
 
+EXPECTED_RESOURCES = {
+    "shell",
+    "performance",
+    "attribution",
+    "budget",
+    "strategy",
+    "evaluation",
+    "entity-bridge",
+    "path-report",
+    "research-overview",
+    "research-providers",
+    "research-products",
+    "research-campaigns",
+    "research-ad-groups",
+    "research-touchpoints",
+    "research-product-economics",
+    "research-generation-configs",
+    "research-campaign-history",
+}
+
 
 class SnapshotContractTests(unittest.TestCase):
     """Exercise the whole local-file snapshot through HTTP."""
@@ -68,19 +88,44 @@ class SnapshotContractTests(unittest.TestCase):
         self.assertEqual(payload["simulationResearch"]["delivery"], [])
         self.assertEqual(payload["simulationResearch"]["touchpointObservations"], [])
 
-    def test_research_history_is_a_separate_three_array_contract(self) -> None:
+    def test_research_history_is_a_route_owned_resource(self) -> None:
         expected = {
             "history": [{"campaign_id": "C1"}],
             "delivery": [{"campaign_id": "C1"}],
             "touchpointObservations": [],
         }
         with patch.object(
-            dashboard_api, "load_research_history", return_value=expected
+            dashboard_api,
+            "load_resource",
+            return_value={"simulationResearch": expected},
         ):
-            response = self.client.get("/api/dashboard/research-history")
+            response = self.client.get(
+                "/api/dashboard/resources/research-campaign-history"
+            )
 
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.get_json(), expected)
+        self.assertEqual(response.get_json(), {"simulationResearch": expected})
+
+    def test_unknown_resource_is_rejected_before_loading(self) -> None:
+        with patch.object(dashboard_api, "load_resource") as load:
+            response = self.client.get("/api/dashboard/resources/private-table")
+
+        self.assertEqual(response.status_code, 404)
+        self.assertEqual(response.get_json()["error"], "resource_not_found")
+        load.assert_not_called()
+
+    def test_each_registered_resource_returns_a_mergeable_object(self) -> None:
+        self.assertEqual(set(snapshot.RESOURCE_LOADERS), EXPECTED_RESOURCES)
+        for resource in snapshot.RESOURCE_LOADERS:
+            with self.subTest(resource=resource):
+                payload = snapshot.load_resource(resource)
+                self.assertIsInstance(payload, dict)
+                self.assertTrue(payload)
+
+    def test_campaign_history_carries_its_delivery_filter_bridge(self) -> None:
+        payload = snapshot.load_resource("research-campaign-history")
+
+        self.assertIn("campaignProductLinks", payload["simulationResearch"])
 
     def test_reload_clears_the_snapshot_cache(self) -> None:
         with patch.object(dashboard_api, "clear_caches") as clear:

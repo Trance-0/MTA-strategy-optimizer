@@ -3,10 +3,10 @@
  *
  * Two build targets share one source tree:
  *
- *   vite build                  the local build, which fetches `/api/dashboard`
- *                               from the Flask backend beside it
+ *   vite build                  the local build, which fetches dashboard
+ *                               resources from the Flask backend beside it
  *   vite build --mode static    the published build, which fetches
- *                               `data/snapshot.json` written at build time
+ *                               `data/resources/*.json` written at build time
  *
  * `base` is relative in the static build because GitHub Pages serves a project
  * site from a subdirectory, and an absolute asset path would resolve against

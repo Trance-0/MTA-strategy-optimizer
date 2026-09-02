@@ -47,6 +47,8 @@ import { useJobs } from "../lib/useJobs.js";
 import * as theme from "../theme.js";
 
 const { data } = useDashboard();
+const props = defineProps({ section: { type: String, default: "attribution" } });
+const emit = defineEmits(["navigate"]);
 const {
   stages,
   busy: jobBusy,
@@ -65,7 +67,7 @@ const MODEL_TABS = [
   { key: "optimization", label: "MTA strategy optimization" },
   { key: "evaluation", label: "MTA strategy evaluation" },
 ];
-const model = ref("attribution");
+const model = computed(() => props.section);
 
 const STAGE_CONTROLS = {
   attribution: [],
@@ -529,7 +531,7 @@ const evaluationAvailable = computed(
         role="tab"
         :aria-selected="model === entry.key"
         :class="{ active: model === entry.key }"
-        @click="model = entry.key"
+        @click="emit('navigate', entry.key)"
       >
         {{ entry.label }}
       </button>

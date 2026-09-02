@@ -1,15 +1,13 @@
 /**
  * The client's single route to the data.
  *
- * Two deployments share one contract. A local run fetches `/api/dashboard`
- * from the Flask backend beside it; the published static build has no server,
- * so `script/export_dashboard_snapshot.py` writes the same payload to
- * `data/snapshot.json` at build time and this module fetches that instead.
+ * Two deployments share one contract. A local run fetches allow-listed
+ * resources from Flask; the static build fetches equivalent generated files.
  * A view sees no difference, which is the browser-side counterpart of the
  * `DATABASE=true/false` contract the loaders keep.
  *
  * Data flow:
- *     server/data_source.js (or data/snapshot.json) -> here -> useDashboard()
+ *     Flask resources (or data/resources/*.json) -> here -> useDashboard()
  */
 
 /**
@@ -19,20 +17,17 @@
  * `vite build --mode static`; a normal build leaves it undefined and the API
  * is used.
  */
+import { DASHBOARD_RESOURCES } from "../pages.js";
+
 export const IS_STATIC = import.meta.env.VITE_STATIC_BUILD === "true";
 
 /**
- * Where the snapshot comes from.
+ * How static resource paths resolve.
  *
  * The static path is relative, not absolute, because GitHub Pages serves a
  * project site from a subdirectory and an absolute path would resolve to the
  * domain root.
  */
-const SNAPSHOT_URL = IS_STATIC ? "data/snapshot.json" : "/api/dashboard";
-const RESEARCH_HISTORY_URL = IS_STATIC
-  ? "data/research-history.json"
-  : "/api/dashboard/research-history";
-
 async function readJson(response, onProgress = null) {
   let text;
   if (onProgress && response.body?.getReader) {
@@ -66,26 +61,22 @@ async function readJson(response, onProgress = null) {
   }
 }
 
-/** Fetch the whole dashboard snapshot. */
-export async function fetchDashboard(onProgress = null) {
-  const response = await fetch(SNAPSHOT_URL, { headers: { Accept: "application/json" } });
+/** Fetch one declared dashboard resource. */
+export async function fetchDashboardResource(resource, onProgress = null) {
+  if (!DASHBOARD_RESOURCES.includes(resource)) {
+    throw new Error(`Unknown dashboard resource: ${resource}`);
+  }
+  const url = IS_STATIC
+    ? `data/resources/${resource}.json`
+    : `/api/dashboard/resources/${encodeURIComponent(resource)}`;
+  const response = await fetch(url, { headers: { Accept: "application/json" } });
   const payload = await readJson(response, onProgress);
   if (!response.ok) {
-    const error = new Error(payload.message || "Failed to load the dashboard data.");
+    const error = new Error(payload.message || `Failed to load dashboard resource ${resource}.`);
     error.code = payload.error;
     error.source = payload.source;
     throw error;
   }
-  return payload;
-}
-
-/** Fetch the observation-heavy research arrays only when a view needs them. */
-export async function fetchResearchHistory(onProgress = null) {
-  const response = await fetch(RESEARCH_HISTORY_URL, {
-    headers: { Accept: "application/json" },
-  });
-  const payload = await readJson(response, onProgress);
-  if (!response.ok) throw new Error(payload.message || "Failed to load research history.");
   return payload;
 }
 

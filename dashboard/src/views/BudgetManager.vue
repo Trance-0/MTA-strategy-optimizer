@@ -8,13 +8,12 @@
  * link, because a budget number without its basis invites the reader to trust
  * it blindly.
  */
-import { computed, onMounted, ref, watch } from "vue";
+import { computed, ref, watch } from "vue";
 
 import ConfirmDialog from "../components/ConfirmDialog.vue";
 import DataTable from "../components/DataTable.vue";
 import EntityTable from "../components/EntityTable.vue";
 import KeyValuePanel from "../components/KeyValuePanel.vue";
-import LoadingProgress from "../components/LoadingProgress.vue";
 import MasterObjectForm from "../components/MasterObjectForm.vue";
 import MetricRow from "../components/MetricRow.vue";
 import PlotlyChart from "../components/PlotlyChart.vue";
@@ -30,20 +29,22 @@ import {
 } from "../api/client.js";
 import * as theme from "../theme.js";
 
-const {
-  data,
-  reload,
-  researchLoaded,
-  researchError,
-  researchProgress,
-  ensureResearchHistory,
-} = useDashboard();
+const props = defineProps({ section: { type: String, default: "overview" } });
+const emit = defineEmits(["navigate"]);
+const { data, reload } = useDashboard();
 const { writable, readOnlyReason } = useDeployment();
 const { diagnosticsOn } = useDiagnostics();
 const research = computed(() => data.value.simulationResearch ?? {});
-const section = ref("overview");
-
-onMounted(ensureResearchHistory);
+const ROUTE_TO_SECTION = {
+  overview: "overview", providers: "providers", products: "products",
+  campaigns: "campaigns", "ad-groups": "adGroups", touchpoints: "touchpoints",
+  "product-economics": "productEconomics", "generation-configs": "generationConfigs",
+};
+const SECTION_TO_ROUTE = Object.fromEntries(
+  Object.entries(ROUTE_TO_SECTION).map(([route, key]) => [key, route]),
+);
+const section = computed(() => ROUTE_TO_SECTION[props.section] ?? "overview");
+const navigateSection = (key) => emit("navigate", SECTION_TO_ROUTE[key] ?? "overview");
 
 /**
  * The catalogue sections, in the order a reader works down the account.
@@ -71,8 +72,8 @@ const SECTIONS = computed(() =>
 // Switching diagnostics off while its section is open would otherwise leave
 // the reader on a tab that no longer has a button, with no way back.
 watch(SECTIONS, (sections) => {
-  if (!sections.some(([key]) => key === section.value)) section.value = "overview";
-});
+  if (!sections.some(([key]) => key === section.value)) navigateSection("overview");
+}, { immediate: true });
 const entityTypes = {
   providers: "provider",
   products: "product",
@@ -682,12 +683,6 @@ const slotColumns = [
       is a seed, not an optimiser result.
     </p>
 
-    <LoadingProgress :progress="researchProgress" />
-    <div v-if="researchError" class="notice bad">
-      <b>Research observations could not be loaded.</b> {{ researchError.message }}
-      <button class="btn small" @click="ensureResearchHistory">Try again</button>
-    </div>
-
     <div class="tabs" role="tablist" aria-label="Budget Manager sections">
       <button
         v-for="[key, label] in SECTIONS"
@@ -696,14 +691,14 @@ const slotColumns = [
         role="tab"
         :aria-selected="section === key"
         :class="{ active: section === key }"
-        @click="section = key"
+        @click="navigateSection(key)"
       >
         {{ label }}
       </button>
     </div>
 
     <div v-show="section === 'overview'" class="page-grid">
-      <template v-if="researchLoaded && (research.history ?? []).length">
+      <template v-if="(research.history ?? []).length">
         <MetricRow :items="researchTiles" />
         <p class="caption">
           Reported performance is a record of what the account already

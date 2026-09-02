@@ -1,7 +1,7 @@
 ---
 title: Dashboard
 description: The Vue dashboard's architecture, its dual data source contract, and where each topic is documented
-compact: "Vue and Flask dashboard boundary: `client.js` and `useDashboard.js` stream the 15-key core snapshot, lazy research observations, and delayed byte progress; Python alone owns data access, while static builds read equivalent generated JSON files."
+compact: "Vue and Flask dashboard boundary: routes declare allow-listed lazy resources, `client.js` and `useDashboard.js` fetch, merge, cache, deduplicate, and invalidate them with delayed byte progress; Python alone owns data access and static builds read equivalent per-resource JSON files."
 lang: en-US
 source_files: dashboard/src/api/client.js, dashboard/src/lib/useDashboard.js, dashboard/tests/dashboard.test.js, backend/repository/coercion.py, backend/tests/test_coercion.py
 ---
@@ -54,28 +54,35 @@ tables, model modules, and deployment configuration. Nothing about rendering.
 
 Lives in `dashboard/src/`. Knows about the snapshot shape. Nothing about where it came from.
 
-### Why the core snapshot arrives at once
+### Route-owned resources
 
-`GET /api/dashboard` returns the complete core snapshot in one response.
-Sending that core whole rather than paginating is what lets the data-backed views share
-one read: two views cannot show two different model artifacts, and switching
-among views that need only core data costs nothing because it is already there.
+There is no mandatory whole-dashboard response in the browser data path.
+Every canonical subsection in `src/pages.js` declares one or more resource
+keys, and `GET /api/dashboard/resources/<resource>` returns only that
+allow-listed payload. The small `shell` resource carries deployment and report
+context. Performance, attribution, budget, strategy, entity bridge, paths,
+evaluation, and each research catalogue or history slice cross the network
+only when a route declares them.
 
-The observation-heavy arrays inside `simulationResearch` are the one
-exception: `history`, `delivery`, and `touchpointObservations` are empty in the
-core response and load from `GET /api/dashboard/research-history` only when a
-view asks for research observations. A database-scale history may hold 100,000
-rows and exceed 50 megabytes as JavaScript Object Notation (JSON); making every
-landing page download and parse it would make unrelated views pay for data
-they never read. The lazy response uses the same cache and reload boundary as
-the core, then merges into the one shared client snapshot. It is not a second
-source of truth.
+This is delivery partitioning, not a second source of truth. Every resource is
+assembled from the same repository loaders and ten-minute backend cache, then
+merged into one client object. `src/lib/useDashboard.js` keeps one completed
+entry and one in-flight promise per resource. Parallel callers share the same
+promise; switching to a sibling tab requests only keys not already completed;
+returning to a completed tab makes no request. Reload clears the backend cache,
+the completed client set, every per-resource error, and the merged data before
+loading the current route again.
 
-`src/lib/useDashboard.js` holds that single copy. The data-backed views share one in-flight request rather than issuing one request per view.
+Research resources return only the named `simulationResearch` fields. The
+Campaign history route receives its history, delivery, Campaign, Product, and
+Campaign-to-Product bridge fields, while a Budget Manager entity route receives
+its own catalogue and the drafts needed by its editor. A database-scale history may hold 100,000 rows and
+exceed 50 megabytes as JavaScript Object Notation (JSON); unrelated routes
+never download or parse it.
 
 ### Progress for a slow dataset
 
-The initial snapshot and every lazy dataset use the same streamed reader in
+Every resource uses the same streamed reader in
 `src/api/client.js`. The client counts received bytes against `Content-Length`
 when the server provides it; without a length it reports an indeterminate
 load. A progress bar appears only after a request remains unresolved for three
@@ -113,7 +120,7 @@ committed demonstration artifacts remain the file source.
 
 Reads from the PostgreSQL schema in [Dashboard data model](../market-simulation/dashboard-data-model.md). Used for a deployment with a populated database.
 
-`backend/repository/snapshot.py` assembles the runtime payload and its owning
+`backend/repository/snapshot.py` assembles the runtime resources and its owning
 repositories decide which mode is active. They return the **same fields,
 types, values, and row order in both modes**. The additional
 `simulationResearch` object has the same normalized shape and types in file
@@ -151,7 +158,7 @@ Continue with [Populating PostgreSQL](./database-import.md) for the importer tha
 
 ## The Seven Views <span class="status-label status-verified" aria-label="Verified"></span>
 
-The navigation mirrors the reference prototype in `external/UI_design/brandlens-vue`, by Rouxin Jin. Each view is one Single-File Component under `dashboard/src/views/` that takes no props and reads the shared snapshot.
+The navigation mirrors the reference prototype in `external/UI_design/brandlens-vue`, by Rouxin Jin. Each view is one Single-File Component under `dashboard/src/views/`; tabbed views receive their selected subsection and emit a route change, while all data remains in the shared resource store.
 
 ### Command Center
 
@@ -196,9 +203,9 @@ The code-level specification for the files this page describes. Each entry state
 Source: `dashboard/src/api/client.js`, `dashboard/src/lib/useDashboard.js`
 
 - Responsibility: Be the client's single route to the data, and hold the single shared copy of it.
-- Inputs: `/api/dashboard` in a local run, or `data/snapshot.json` in the published build.
-- Outputs: `IS_STATIC`, dashboard and lazy-research loaders with byte progress, reload/settings calls, `saveMasterObject()`, `archiveMasterObject()`, `fetchJobs()`, `startJob()`, `stopJob()`, `fetchSchemaOperation()`, `startSchemaOperation()`, and `stopSchemaOperation()`; and `useDashboard()`, including per-dataset loading, loaded, error, retry, and progress state. Static settings carry `backendIdentity: null` so the interface reports no connected backend instead of constructing a false match.
-- Behavior contract: `IS_STATIC` is baked in at build time by `vite build --mode static`, and it alone decides whether core and lazy requests read Application Programming Interface routes or relative generated files; **no view branches on it.** A response that is not JSON is reported by status rather than as a parse error naming character 0. `useDashboard()` holds one module-level snapshot and one in-flight promise per dataset, so concurrent callers share each request. Research observations merge only after their complete response parses successfully. Reload clears both datasets. Progress is byte-based where possible, indeterminate otherwise, hidden for the first three seconds, and reset on completion or failure. Empty core and lazy arrays are exposed before loading so views render named loading or empty states rather than crashing.
+- Inputs: `/api/dashboard/resources/<resource>` in a local run, or `data/resources/<resource>.json` in the published build; resource names come only from `src/pages.js`.
+- Outputs: `IS_STATIC`, `fetchDashboardResource()` with byte progress, reload/settings calls, `saveMasterObject()`, `archiveMasterObject()`, `fetchJobs()`, `startJob()`, `stopJob()`, `fetchSchemaOperation()`, `startSchemaOperation()`, and `stopSchemaOperation()`; and `useDashboard()`, including resource loading, completion, error, retry, merge, and progress state. Static settings carry `backendIdentity: null` so the interface reports no connected backend instead of constructing a false match.
+- Behavior contract: `IS_STATIC` is baked in at build time by `vite build --mode static`, and it alone selects live resource routes or relative generated resource files; **no view branches on it.** `fetchDashboardResource(resource)` rejects a key absent from the exported allow-list before constructing a URL. A response that is not JSON is reported by status rather than as a parse error naming character 0. `useDashboard()` holds one merged object, a completed-key set, one in-flight promise per resource, and per-resource failures. It merges nested `simulationResearch` slices without replacing completed siblings. Concurrent callers share each request, a completed key is not fetched twice, and Reload invalidates all resources. Progress is byte-based where possible, indeterminate otherwise, hidden for the first three seconds, and reset on completion or failure.
 - Dependencies: Vue's reactivity.
 - Verification: Driven in a real browser against both the API and the static snapshot; the data-backed views render identically and the backend-only generator names its unavailable state in static mode.
 

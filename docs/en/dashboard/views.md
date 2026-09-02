@@ -1,6 +1,6 @@
 ---
 title: Dashboard Views and Visual Contract
-compact: "Vue visual contract: seven views, empty Knowledge Base placeholder, accessible TermHelp links, delayed LoadingProgress, lazy research observations, server-declared model selectors, schema switching, large-history-safe charts, and native Willow forecasting."
+compact: "Vue visual contract: seven views with route-controlled tab subsections, empty Knowledge Base placeholder, accessible TermHelp links, route-owned lazy resources, server-declared model selectors, large-history-safe charts, and native Willow forecasting."
 lang: en-US
 source_files: dashboard/src/theme.js, dashboard/src/style.css, dashboard/src/lib/deployment.js, dashboard/src/lib/diagnostics.js, dashboard/src/lib/useJobs.js, dashboard/src/lib/willowGmvModel.js, dashboard/src/lib/terms.js, dashboard/src/views/CommandCenter.vue, dashboard/src/views/BudgetManager.vue, dashboard/src/views/Campaigns.vue, dashboard/src/views/CampaignOptimizer.vue, dashboard/src/views/OptimizationLog.vue, dashboard/src/views/KnowledgeBase.vue, dashboard/src/components/SidebarNav.vue, dashboard/src/components/TopBar.vue, dashboard/src/components/StageRunner.vue, dashboard/src/components/LoadingProgress.vue, dashboard/src/components/TermHelp.vue, dashboard/src/components/WillowGmvForecast.vue, dashboard/src/components/PlotlyChart.vue, dashboard/src/components/DataTable.vue, dashboard/src/components/EntityTable.vue, dashboard/src/components/ConfirmDialog.vue, dashboard/src/components/TableView.vue, dashboard/src/components/MetricRow.vue, dashboard/src/components/KeyValuePanel.vue, dashboard/src/components/ReliabilityBanner.vue, dashboard/src/lib/common.js
 ---
@@ -284,11 +284,12 @@ constant call-stack usage. They must never spread a history-sized array into
 the supported history size, and exceeding it aborts the Vue render with a
 `RangeError` after the snapshot has loaded.
 
-Budget Manager and Campaigns request research observations on entry rather
-than making Command Center or Knowledge Base download them. Their observation
-panels render `LoadingProgress` while that shared request is unresolved, show
-the bar only after three seconds, and expose a retry after failure. Navigating
-between the two views reuses the completed or in-flight request.
+Budget Manager and Campaigns do not request research observations on component
+entry. Their selected deep-link subsection controls the request before the
+component mounts. Budget Overview and Campaign Budget History declare the
+history slice; entity, performance, bridge, and path tabs declare their own
+smaller resources. Navigating between routes reuses completed or in-flight
+resources, while a sibling resource remains absent until its route is opened.
 
 The four tabs are one `v-if`/`v-else-if`/`v-else` chain, not several. A second
 `v-if` opened mid-way ends the first chain, and the trailing `v-else` then
@@ -319,7 +320,7 @@ Reads `campaignStrategy.optimized_strategy` from the snapshot. The optimized-bud
 
 The five-segment vocabulary, the reliability contract, the Outcomes, capacity rules, the hierarchy, and the artifacts in use.
 
-- Inputs: None. Each component takes no props and reads the shared snapshot through `useDashboard()`, so a view never holds a file path, a Structured Query Language (SQL) statement, or a `fetch` call.
+- Inputs: The tabbed components take a validated `section` prop and emit `navigate` with a declared section key; single-panel components take no route prop. Every component reads data through `useDashboard()`, so a view never holds a path, Structured Query Language (SQL) statement, or `fetch` call.
 - Outputs: The rendered page. Nothing is returned and nothing is written.
 - Behavior contract: **No production view recomputes attribution or predicts an outcome.** The Campaigns and Budget Manager views may aggregate displayed reported performance into descriptive totals and ratios such as Click-Through Rate (CTR), Cost Per Click (CPC), and Cost Per Mille (CPM); they do not alter source rows. The labelled Willow Sakura contribution is the one isolated exception: its browser-only forecast demonstrates the contributed network and never enters a production artifact or recommendation. The similarity modal uses only a transparent, equal-weight selector heuristic and its objects follow the presentation-only `SimilarityReference` fields. `CampaignOptimizer.vue` retains its labelled constant-total-budget restatement and refuses it for an unreliable Outcome. Reported performance is immutable, filters scope every related panel, and charts retain a table or direct-label alternative. A view may **start** a stage that rewrites those artifacts, through `StageRunner.vue`, but never computes their contents itself: the numbers still come from the pipeline. No view names the research simulator or calls its data generated — a test asserts this against the view sources — because a production deployment reads a live account and a reader told the numbers are invented cannot act on them.
 - Dependencies: Vue 3 and Plotly, through `src/lib/useDashboard.js`, `src/lib/common.js`, `src/theme.js`, and the shared components.

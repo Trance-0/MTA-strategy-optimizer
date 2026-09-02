@@ -1,6 +1,6 @@
 """What a reader can do when the loaded schema cannot serve the dashboard.
 
-`GET /api/dashboard` answers a schema it cannot read with a 503 naming the
+Dashboard resource routes answer a schema they cannot read with a 503 naming the
 problem. The reader this dashboard is deployed for may have a browser and no
 terminal, so diagnosis alone is not enough.
 

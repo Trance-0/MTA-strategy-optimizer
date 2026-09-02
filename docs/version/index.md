@@ -1,7 +1,7 @@
 ---
 title: Version Log
 description: Release history and material changes for the maintained project
-compact: "Routes release history from VERSION to one page per patch, keeping 0.9.33–0.9.36 flat and older patches in minor-version folders; includes dates, material summaries, historical group links, and planned follow-ups."
+compact: "Routes release history from VERSION to one page per patch, keeping 0.9.34–0.9.37 flat and older patches in minor-version folders; includes dates, material summaries, historical group links, and planned follow-ups."
 order: 1
 ---
 
@@ -10,6 +10,11 @@ order: 1
 The project version is recorded in the repository-root `VERSION` file. Each page here is one small patch description covering a coherent change set, rather than a reproduction of every commit message. Every patch keeps its own permanent page; older minor versions are grouped into a collapsed folder per minor version instead of being compacted away.
 
 This section records **what** changed. See the [work log](../worklog/) for **who** did the work and when.
+
+## [0.9.37](0.9.37.md)
+
+- Date: 2026-09-02
+- Summary: Added canonical deep links for every dashboard subsection and route-owned, allow-listed lazy resources for live and static deployments, with cache reuse, reload invalidation, and browser history restoration
 
 ## [0.9.36](0.9.36.md)
 
@@ -26,7 +31,7 @@ This section records **what** changed. See the [work log](../worklog/) for **who
 - Date: 2026-08-28
 - Summary: Made protected database deployments run all three pipeline stages through single-process, marketplace-scoped runtime artifacts, fixed research experiment grouping and evaluation scope, and replaced the Willow Sakura page iframe with native interactive Extended-27 widgets
 
-## [0.9.33](0.9.33.md)
+## [0.9.33](0.9/0.9.33.md)
 
 - Date: 2026-08-27
 - Summary: Added a deployment-identity block to Settings that compares the dashboard and backend project versions and full Git commit identifiers, reports detected Python and Flask versions, and makes incomplete or mismatched independently deployed artifacts visible

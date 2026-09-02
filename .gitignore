@@ -73,9 +73,9 @@ coverage/
 .stylelintcache
 *.tsbuildinfo
 
-# The dashboard's published data snapshot is exported from the committed
-# artifacts by `script/export_dashboard_snapshot.mjs` at build time. It is
-# generated, not authored, so it is never committed.
+# The dashboard's published resource files are exported from the committed
+# artifacts by `script/export_dashboard_snapshot.py` at build time. They are
+# generated, not authored, so they are never committed.
 /dashboard/public/data/
 
 # Cloudflare tooling, retained from the documentation package. GitHub Pages is

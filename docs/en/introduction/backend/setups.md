@@ -163,7 +163,7 @@ gunicorn --bind 0.0.0.0:8501 --workers 1 --threads 4 --timeout 120 backend.wsgi:
 
 `GET /api/health` is the liveness and readiness probe. It proves that the
 process routes requests and deliberately does not require a populated
-database. `GET /api/dashboard` separately returns `503` when database mode is
+database. Dashboard resource routes separately return `503` when database mode is
 configured but unusable.
 
 ## Yunxiao AppStack

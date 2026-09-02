@@ -1,6 +1,6 @@
 ---
 title: Running Locally and Publishing
-compact: "Dashboard delivery contract: launchers and Vite inject build identity; Docker stores pipeline results; static builds export core snapshot and lazy research JSON separately; image metadata, publishing, AppStack, and source-revision labels remain reproducible."
+compact: "Dashboard delivery contract: launchers and Vite inject build identity; Docker stores pipeline results; static builds export one JSON file per allow-listed lazy resource; image metadata, publishing, AppStack, and source-revision labels remain reproducible."
 lang: en-US
 source_files: dashboard/index.html, dashboard/vite.config.js, dashboard/run.sh, dashboard/run.bat, deploy/docker/compose.yaml, deploy/docker/defaults.env, deploy/docker/run.sh, deploy/docker/run.bat, deploy/docker/Dockerfile.api, deploy/docker/Dockerfile.dashboard, .github/workflows/publish-containers.yml, script/build_pages_site.mjs, script/export_dashboard_snapshot.py
 ---
@@ -198,8 +198,8 @@ port.
 GitHub Pages cannot run Flask, so the published client uses static mode.
 `script/export_dashboard_snapshot.py` forces local-file mode and writes the
 same core JavaScript Object Notation (JSON) object as Flask to
-`dashboard/public/data/snapshot.json`, plus the lazy observation object to
-`dashboard/public/data/research-history.json`. `vite build --mode static` copies them
+one generated file per allow-listed resource below
+`dashboard/public/data/resources/`. `vite build --mode static` copies them
 into the build and sets the one client flag that makes
 `dashboard/src/api/client.js` fetch the relative data file.
 
@@ -335,8 +335,11 @@ Source: `script/export_dashboard_snapshot.py`
 - Responsibility: Export the Flask snapshot repositories in forced file mode
   to the generated static-client data path using an atomic replacement.
 - Inputs: Committed module artifacts only.
-- Outputs: Minified UTF-8 `dashboard/public/data/snapshot.json` and
-  `dashboard/public/data/research-history.json`, each replaced atomically.
+- Outputs: One minified UTF-8
+  `dashboard/public/data/resources/<resource>.json` file per registered
+  resource, each replaced atomically. The exporter removes obsolete generated
+  resource files and the two pre-0.9.37 whole-snapshot files before writing, so
+  a static build cannot carry stale data contracts beside the active one.
 - Dependencies: `backend.repository.snapshot` and the backend dependency extra.
 - Verification: `uv run --extra backend python -X utf8 -B -m script.export_dashboard_snapshot`;
   assert the result reports `mode: local files` and fourteen keys.

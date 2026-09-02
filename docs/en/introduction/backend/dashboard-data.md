@@ -1,29 +1,40 @@
 ---
 title: Dashboard Data Endpoints
 description: Snapshot, reload, master-object, and repository behavior
-compact: "Specifies Flask dashboard routes and repositories: 15-key core `/api/dashboard`, lazy `/api/dashboard/research-history`, separate ten-minute caches, runtime artifact precedence, reload, immutable observations, editable master drafts, SQLAlchemy queries, and normalized JSON types."
+compact: "Specifies allow-listed `/api/dashboard/resources/<resource>` payloads, ten-minute loader caches, nested research slices, reload invalidation, compatibility snapshot assembly, runtime artifact precedence, immutable observations, editable master drafts, SQLAlchemy queries, and normalized JSON types."
 lang: en-US
 source_files: backend/api/dashboard.py, backend/repository/attribution.py, backend/repository/coercion.py, backend/repository/evaluation.py, backend/repository/history.py, backend/repository/master_data.py, backend/repository/research.py, backend/repository/snapshot.py, backend/repository/strategy.py, backend/tests/test_snapshot.py
 ---
 
 # Dashboard Data Endpoints
 
-## Snapshot Contract
+## Resource Contract
 
-`GET /api/dashboard` returns exactly fifteen keys: `mode`, `source`,
-`adsDaily`, `attributionResults`, `comparisonTouchpoints`,
-`comparisonSummary`, `recommendedAttribution`, `entityBridge`, `pathReport`,
-`budgetRecommendation`, `campaignStrategy`, `strategyRequest`,
-`candidatePool`, `simulationResearch`, and `strategyEvaluation`. Row ordering and JavaScript Object
-Notation (JSON) scalar types
-match the established file snapshot. Results are cached for ten minutes.
+`GET /api/dashboard/resources/<resource>` accepts only a key in the repository
+`RESOURCE_LOADERS` registry. It never accepts a path, table name, column name,
+or query from the browser. An unknown key returns `404 resource_not_found` and
+does not call a repository loader.
 
-The core response keeps `simulationResearch` metadata and entity catalogues but
-sets its `history`, `delivery`, and `touchpointObservations` arrays empty.
-`GET /api/dashboard/research-history` returns exactly those three arrays on
-demand. Its result has its own ten-minute cache entry, so loading the core does
-not execute the observation queries. `POST /api/reload` and a successful model
-job clear both caches together.
+Each response is a mergeable JavaScript Object Notation (JSON) object. The
+`shell` resource returns `mode`, `source`, and `dashboardContext`. The other
+resources return one coherent part of the former snapshot: `performance`,
+`attribution`, `budget`, `strategy`, `evaluation`, `entity-bridge`,
+`path-report`, or one named `research-*` slice. A research slice nests its
+fields below `simulationResearch`, so the client can merge one catalogue
+without replacing catalogues loaded earlier. Row ordering and scalar types
+match the established repository contract.
+
+The route registry, not the backend, decides which resources a subsection
+needs. The backend registry decides what each accepted name can expose. This
+two-sided allow-list means a hash fragment cannot become a storage operation.
+Results are cached for ten minutes by underlying loader key. Research history
+has a separate cache from research catalogues, so loading Providers cannot
+execute observation queries.
+
+`load_snapshot()` remains an internal compatibility assembly for schema
+validation and Python parity tests; the Vue client does not call the legacy
+whole-snapshot route. `POST /api/reload` and a successful model job clear every
+loader cache together.
 
 `POST /api/reload` clears every loader cache. A successful pipeline stage also
 clears it. Database mode first probes reachability and a non-empty attribution
@@ -62,12 +73,12 @@ never rewrite external `mta_sim_*` evidence tables.
 
 Source: `backend/api/dashboard.py`, `backend/repository/snapshot.py`
 
-- Responsibility: Serve health, the core snapshot, lazy research observations,
-  reload, and master routes; assemble the ordered fifteen-key core payload and
-  the separate three-array observation payload.
+- Responsibility: Serve health, compatibility snapshot, lazy resources,
+  reload, and master routes; expose only registered resource payloads and keep
+  the ordered compatibility snapshot for server-side validation.
 - Inputs: Data-source mode and repository loader results.
-- Outputs: JSON responses with stable keys and status-specific error objects;
-  the core never serializes the observation-heavy arrays.
+- Outputs: Mergeable JSON responses with exact stable keys and status-specific
+  error objects; unknown resource names return a bounded 404 before loading.
 - Dependencies: Backend repositories, settings log, and database probe.
 - Verification: `backend/tests/test_snapshot.py`.
 

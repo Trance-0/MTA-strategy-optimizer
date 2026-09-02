@@ -1,8 +1,8 @@
 """The snapshot, the reload control, and the master-object routes.
 
-These four routes are what the seven views read and write. `GET /api/dashboard`
-is the one the client fetches on load; the others exist because a reader can
-change something from the interface.
+These routes are what the seven views read and write. The client fetches one
+allow-listed resource for its selected deep route; mutation routes exist only
+for actions a reader can take from the interface.
 
 Data flow:
     backend/repository/&#42; -> here -> dashboard/src/api/client.js
@@ -22,8 +22,9 @@ from backend.repository.research import (
     save_master_object,
 )
 from backend.repository.snapshot import (
+    RESOURCE_LOADERS,
     clear_caches,
-    load_research_history,
+    load_resource,
     load_snapshot,
 )
 from backend.services.settings import log
@@ -46,7 +47,7 @@ def health():
 
 @blueprint.get("/api/dashboard")
 def dashboard():
-    """The whole snapshot in one response.
+    """Compatibility whole snapshot for older clients and server diagnostics.
 
     A database that is configured but unreachable is reported as a page-level
     state rather than as a failed fetch inside whichever chart read it first,
@@ -89,14 +90,43 @@ def dashboard():
         )
 
 
-@blueprint.get("/api/dashboard/research-history")
-def research_history():
-    """Observation-heavy research arrays, fetched only by views that use them."""
+@blueprint.get("/api/dashboard/resources/<resource>")
+def dashboard_resource(resource: str):
+    """Return one allow-listed resource without accepting storage identifiers."""
+    if resource not in RESOURCE_LOADERS:
+        return (
+            jsonify(
+                {
+                    "error": "resource_not_found",
+                    "message": "The requested dashboard resource is not available.",
+                }
+            ),
+            404,
+        )
+    started = time.perf_counter()
     try:
-        return jsonify(load_research_history())
+        if use_database():
+            usable, message = database_available()
+            if not usable:
+                return (
+                    jsonify(
+                        {
+                            "error": "database_unavailable",
+                            "message": message,
+                            "source": source_label(),
+                        }
+                    ),
+                    503,
+                )
+        payload = load_resource(resource)
+        elapsed = (time.perf_counter() - started) * 1000
+        log("INFO", "data_source", f"resource {resource} in {elapsed:.0f} ms")
+        return jsonify(payload)
     except Exception as error:  # noqa: BLE001 - same page-level error contract
         log(
-            "ERROR", "data_source", f"research history: {type(error).__name__}: {error}"
+            "ERROR",
+            "data_source",
+            f"resource {resource}: {type(error).__name__}: {error}",
         )
         return (
             jsonify(

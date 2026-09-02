@@ -1,7 +1,7 @@
 ---
 title: Database Migration and Continuous Deployment Plan
 description: Versioned PostgreSQL schema upgrades for existing dashboard deployments
-compact: "Migration plan for dashboard PostgreSQL schemas: current create/drop limitations, Alembic revision ledger, expand-contract compatibility, advisory-locked pre-deploy jobs, previous-release upgrade tests, rollout gates, observability, and forward-only recovery."
+compact: "Migration plan for dashboard PostgreSQL schemas: current create/drop limitations, Alembic revision ledger, expand-contract compatibility, advisory-locked pre-deploy jobs, previous-release upgrade and lazy-resource endpoint tests, rollout gates, observability, and forward-only recovery."
 lang: en-US
 ---
 
@@ -174,7 +174,7 @@ Deployment, then checks:
 3. `/api/settings` for matching client/backend identity and visible schema
    revisions;
 4. `/api/dashboard` for the core snapshot;
-5. `/api/dashboard/research-history` for the lazy Campaigns history contract;
+5. `/api/dashboard/resources/research-campaign-history` for the lazy Campaigns history contract;
 6. the Campaigns route in a browser with no console or request failure.
 
 Traffic is not considered upgraded until all six checks pass.

@@ -19,7 +19,9 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import test from "node:test";
 
-const { PAGES, PAGE_KEYS, DEFAULT_PAGE } = await import("../src/pages.js");
+const { PAGES, PAGE_KEYS, DEFAULT_PAGE, DASHBOARD_RESOURCES } = await import(
+  "../src/pages.js"
+);
 const { TERM_HELP: TERM_REGISTRY } = await import("../src/lib/terms.js");
 
 const HERE = resolve(import.meta.dirname);
@@ -124,6 +126,23 @@ test("every navigable page has an icon, a title, and a component", () => {
       new RegExp(`\\b${key}:\\s*\\w+`),
       `${key} is in the rail but not in App.vue's component map`,
     );
+  }
+});
+
+test("every subsection declares only allow-listed lazy resources", () => {
+  for (const key of PAGE_KEYS) {
+    const page = PAGES[key];
+    assert.ok(page.sections[page.defaultSection], `${key} has no default route`);
+    for (const [section, resources] of Object.entries(page.sections)) {
+      assert.equal(resources[0], "shell", `${key}/${section} does not load shell first`);
+      assert.equal(new Set(resources).size, resources.length, `${key}/${section} repeats a resource`);
+      for (const resource of resources) {
+        assert.ok(
+          DASHBOARD_RESOURCES.includes(resource),
+          `${key}/${section} declares unknown resource ${resource}`,
+        );
+      }
+    }
   }
 });
 
@@ -357,7 +376,7 @@ test("a schema that cannot be read offers controls, not a shell command", () => 
   // A reader who reaches the error card has a browser and, on a deployed
   // instance, nothing else, so the remedies are rendered as controls.
   assert.match(APP_VUE, /<SchemaRecovery/);
-  assert.match(APP_VUE, /error\.code === 'database_unavailable'/);
+  assert.match(APP_VUE, /routeError\.code === 'database_unavailable'/);
   assert.doesNotMatch(APP_VUE, /uv run --extra dashboard/);
 
   // The three actions the backend already implements, named as instructions.
@@ -622,7 +641,7 @@ test("schema selection confirms, calls the backend, and reloads dashboard data",
 });
 
 test("database load recovery offers only backend-declared non-replacement actions", () => {
-  assert.match(APP_VUE, /error\.code === 'database_unavailable'/);
+  assert.match(APP_VUE, /routeError\.code === 'database_unavailable'/);
   assert.match(APP_VUE, /<SchemaRecovery/);
   assert.match(SCHEMA_RECOVERY, /fetchSchemaRecovery/);
   assert.match(SCHEMA_RECOVERY, /selectRuntimeSchema/);
@@ -754,7 +773,7 @@ test("a stage reports the phase it is in, not a timer", () => {
   assert.match(STAGE_RUNNER, /job\.command/);
 });
 
-test("large dashboard payloads load lazily with delayed byte progress", () => {
+test("route resources load lazily with delayed byte progress", async () => {
   const client = readFileSync(
     resolve(HERE, "..", "src", "api", "client.js"),
     "utf8",
@@ -767,14 +786,33 @@ test("large dashboard payloads load lazily with delayed byte progress", () => {
     resolve(HERE, "..", "src", "components", "LoadingProgress.vue"),
     "utf8",
   );
-  assert.match(client, /\/api\/dashboard\/research-history/);
+  const { PAGES, parseRoute, routeHash, routeResources } = await import("../src/pages.js");
+  assert.match(client, /\/api\/dashboard\/resources\//);
   assert.match(client, /response\.body\.getReader/);
   assert.match(client, /Content-Length/);
   assert.match(dashboardStore, /setTimeout\(\(\) => \{/);
   assert.match(dashboardStore, /\}, 3000\)/);
   assert.match(progress, /role="progressbar"/);
-  assert.match(CAMPAIGNS, /ensureResearchHistory/);
-  assert.match(BUDGET_MANAGER, /ensureResearchHistory/);
+  assert.match(dashboardStore, /const inFlight = new Map\(\)/);
+  assert.match(dashboardStore, /completed\.value\.has\(resource\)/);
+  assert.deepEqual(parseRoute("#campaigns"), { page: "campaigns", section: "history" });
+  assert.deepEqual(parseRoute("#/campaigns/paths"), { page: "campaigns", section: "paths" });
+  assert.deepEqual(parseRoute("#/campaigns/not-declared"), {
+    page: "campaigns", section: "history",
+  });
+  assert.deepEqual(parseRoute("#/not-declared/anything"), {
+    page: "overview", section: "summary",
+  });
+  assert.equal(routeHash("budget", "product-economics"), "#/budget/product-economics");
+  assert.deepEqual(routeResources("campaigns", "performance"), ["shell", "performance"]);
+  assert.deepEqual(routeResources("campaigns", "paths"), ["shell", "path-report"]);
+  assert.equal(PAGES.optimizer.defaultSection, "attribution");
+  assert.match(APP_VUE, /pushState/);
+  assert.match(APP_VUE, /popstate/);
+  assert.match(APP_VUE, /route\.section === "generation-configs"/);
+  assert.match(APP_VUE, /!diagnosticsOn\.value/);
+  assert.match(CAMPAIGNS, /emit\('navigate', entry\.key\)/);
+  assert.match(BUDGET_MANAGER, /navigateSection\(key\)/);
 });
 
 test("the offered budget policies are the ones the optimizer accepts", () => {

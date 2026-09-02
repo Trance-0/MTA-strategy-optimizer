@@ -16,7 +16,7 @@
  *     src/lib/useDashboard.js -> here (provenance)
  *     src/lib/useJobs.js      -> here (per-model run logs)
  */
-import { computed, onMounted, ref } from "vue";
+import { computed, ref, watch } from "vue";
 
 import DataTable from "../components/DataTable.vue";
 import KeyValuePanel from "../components/KeyValuePanel.vue";
@@ -35,11 +35,11 @@ import { money } from "../theme.js";
 import * as theme from "../theme.js";
 
 const { data } = useDashboard();
+const props = defineProps({ section: { type: String, default: "provenance" } });
+const emit = defineEmits(["navigate"]);
 // Renamed on import: `stages` below is the pipeline's five artifact-producing
 // stages, which is a different list from the three runnable models.
 const { stages: modelStages, ensureLoaded: ensureJobsLoaded } = useJobs();
-
-onMounted(ensureJobsLoaded);
 
 /** Provenance first, then one log tab per model in pipeline order. */
 const LOG_TABS = [
@@ -48,7 +48,11 @@ const LOG_TABS = [
   { key: "optimization", label: "Optimization log" },
   { key: "evaluation", label: "Evaluation log" },
 ];
-const tab = ref("provenance");
+const tab = computed(() => props.section);
+
+watch(tab, (value) => {
+  if (value !== "provenance") ensureJobsLoaded();
+}, { immediate: true });
 
 /** The stage descriptor behind a model tab, or null on the provenance tab. */
 const activeStage = computed(() => modelStages.value[tab.value] ?? null);
@@ -342,7 +346,7 @@ const reliabilityMatrixLayout = computed(() => theme.layout({
         role="tab"
         :aria-selected="tab === entry.key"
         :class="{ active: tab === entry.key }"
-        @click="tab = entry.key"
+        @click="emit('navigate', entry.key)"
       >
         {{ entry.label }}
       </button>

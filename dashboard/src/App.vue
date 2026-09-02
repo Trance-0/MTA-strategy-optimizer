@@ -27,7 +27,17 @@ import SchemaRecovery from "./components/SchemaRecovery.vue";
 import { IS_STATIC, fetchSettings } from "./api/client.js";
 import { useDashboard } from "./lib/useDashboard.js";
 import { useDeployment } from "./lib/deployment.js";
-import { DEFAULT_PAGE, DOCS_URL, PAGES, PAGE_KEYS, REPO_URL } from "./pages.js";
+import { useDiagnostics } from "./lib/diagnostics.js";
+import {
+  DEFAULT_PAGE,
+  DOCS_URL,
+  PAGES,
+  PAGE_KEYS,
+  REPO_URL,
+  parseRoute,
+  routeHash,
+  routeResources,
+} from "./pages.js";
 
 const VIEWS = {
   overview: CommandCenter,
@@ -39,15 +49,17 @@ const VIEWS = {
   knowledge: KnowledgeBase,
 };
 
-const { data, loading, error, loaded, loadingProgress, ensureLoaded, reload } = useDashboard();
+const { data, loadingProgress, ensureResources, errorFor, isLoaded, reload } = useDashboard();
 const {
   writable,
   theme: deploymentTheme,
   label: deploymentLabel,
   readOnlyReason,
 } = useDeployment();
+const { diagnosticsOn } = useDiagnostics();
 
 const page = ref(DEFAULT_PAGE);
+const section = ref(PAGES[DEFAULT_PAGE].defaultSection);
 const settingsOpen = ref(false);
 const toast = ref("");
 const status = ref({});
@@ -63,23 +75,53 @@ function showToast(text) {
   }, 2400);
 }
 
-// The rail writes the page into the hash so a view is linkable and survives a
-// refresh. `replaceState` rather than assignment, so switching views does not
-// fill the browser's back stack with intermediate pages.
-function syncHash(key) {
-  const url = `${window.location.pathname}${window.location.search}#${key}`;
-  window.history.replaceState(null, "", url);
+const requiredResources = computed(() => routeResources(page.value, section.value));
+const routeLoaded = computed(() => isLoaded(requiredResources.value));
+const routeError = computed(() => errorFor(requiredResources.value));
+
+function guardRoute(route) {
+  if (
+    route.page === "budget" &&
+    route.section === "generation-configs" &&
+    !diagnosticsOn.value
+  ) {
+    return { page: "budget", section: "overview" };
+  }
+  return route;
+}
+
+function writeRoute(nextPage, nextSection, replace = false) {
+  const parsed = guardRoute(parseRoute(routeHash(nextPage, nextSection)));
+  page.value = parsed.page;
+  section.value = parsed.section;
+  const canonicalHash = routeHash(parsed.page, parsed.section);
+  if (!replace && window.location.hash === canonicalHash) {
+    ensureResources(routeResources(parsed.page, parsed.section)).catch(() => null);
+    return;
+  }
+  const url = `${window.location.pathname}${window.location.search}${canonicalHash}`;
+  window.history[replace ? "replaceState" : "pushState"](null, "", url);
+  ensureResources(routeResources(parsed.page, parsed.section)).catch(() => null);
 }
 
 function go(key) {
   if (!PAGE_KEYS.includes(key)) return;
-  page.value = key;
-  syncHash(key);
+  writeRoute(key, PAGES[key].defaultSection);
 }
 
-function readHash() {
-  const key = window.location.hash.replace(/^#/, "");
-  if (PAGE_KEYS.includes(key)) page.value = key;
+function goSection(key) {
+  writeRoute(page.value, key);
+}
+
+function readLocation() {
+  const parsed = guardRoute(parseRoute(window.location.hash));
+  page.value = parsed.page;
+  section.value = parsed.section;
+  if (window.location.hash !== routeHash(parsed.page, parsed.section)) {
+    writeRoute(parsed.page, parsed.section, true);
+    return;
+  }
+  ensureResources(routeResources(parsed.page, parsed.section)).catch(() => null);
 }
 
 async function refreshStatus() {
@@ -90,26 +132,26 @@ async function refreshStatus() {
 }
 
 onMounted(() => {
-  readHash();
-  syncHash(page.value);
-  window.addEventListener("hashchange", readHash);
-  ensureLoaded();
+  readLocation();
+  window.addEventListener("hashchange", readLocation);
+  window.addEventListener("popstate", readLocation);
   refreshStatus();
 });
 
 onUnmounted(() => {
-  window.removeEventListener("hashchange", readHash);
+  window.removeEventListener("hashchange", readLocation);
+  window.removeEventListener("popstate", readLocation);
   clearTimeout(toastTimer);
 });
 
 async function onReload() {
-  await reload();
+  await reload(requiredResources.value);
   await refreshStatus();
   showToast("Data reloaded from the source.");
 }
 
 async function onSettingsChanged() {
-  await reload();
+  await reload(requiredResources.value);
   await refreshStatus();
   showToast("Settings saved. Data reloaded.");
 }
@@ -136,15 +178,15 @@ const themeStyle = computed(() => ({
 
 /** The report window, read from the data rather than fixed in the header. */
 const reportWindow = computed(() => {
-  const summary = data.value.comparisonSummary?.[0];
-  if (!summary?.report_start_date) return "";
-  return `${summary.report_start_date} → ${summary.report_end_date}`;
+  const context = data.value.dashboardContext ?? {};
+  if (!context.reportStartDate) return "";
+  return `${context.reportStartDate} → ${context.reportEndDate}`;
 });
 
 const marketplace = computed(() => {
-  const group = data.value.strategyRequest?.campaign_group ?? {};
-  if (!group.platform && !group.marketplace) return "";
-  return [group.platform, group.marketplace].filter(Boolean).join(" · ");
+  const context = data.value.dashboardContext ?? {};
+  if (!context.platform && !context.marketplace) return "";
+  return [context.platform, context.marketplace].filter(Boolean).join(" · ");
 });
 
 /**
@@ -188,18 +230,18 @@ const docsHref = computed(() => (IS_STATIC ? "./docs/" : `${DOCS_URL}/`));
           governs. A reader who cannot edit should learn that from the page,
           not by hunting for a button that is not there.
         -->
-        <div v-if="loaded && !writable" class="notice deployment-notice">
+        <div v-if="routeLoaded && !writable" class="notice deployment-notice">
           <b>Read-only deployment.</b> {{ readOnlyReason }}
         </div>
-        <div v-if="loading && !loaded" class="card empty-card">
+        <div v-if="!routeLoaded && !routeError" class="card empty-card">
           <h2>Loading the pipeline's artifacts…</h2>
           <p>Reading the attribution outputs, the budget seed, and the history.</p>
           <LoadingProgress :progress="loadingProgress" />
         </div>
 
-        <div v-else-if="error" class="card empty-card error-card">
+        <div v-else-if="routeError" class="card empty-card error-card">
           <h2>The dashboard data could not be loaded</h2>
-          <p class="error-detail">{{ error.message }}</p>
+          <p class="error-detail">{{ routeError.message }}</p>
           <!--
             The remedies are rendered as controls rather than as a command to
             paste into a terminal. A reader reaching this page has a browser
@@ -207,7 +249,7 @@ const docsHref = computed(() => (IS_STATIC ? "./docs/" : `${DOCS_URL}/`));
             here would describe a fix they cannot carry out.
           -->
           <SchemaRecovery
-            v-if="error.code === 'database_unavailable'"
+            v-if="routeError.code === 'database_unavailable'"
             @recovered="onReload"
             @settings="settingsOpen = true"
           />
@@ -217,7 +259,12 @@ const docsHref = computed(() => (IS_STATIC ? "./docs/" : `${DOCS_URL}/`));
           </div>
         </div>
 
-        <component :is="VIEWS[page]" v-else />
+        <component
+          :is="VIEWS[page]"
+          v-else
+          :section="section"
+          @navigate="goSection"
+        />
       </div>
     </main>
 

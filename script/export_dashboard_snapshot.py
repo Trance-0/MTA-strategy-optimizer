@@ -1,4 +1,4 @@
-"""Export the Flask snapshot contract for the static dashboard build.
+"""Export dashboard resources for the static dashboard build.
 
 The live Flask backend and the GitHub Pages build read the same Python
 repositories. This command writes the live payload to the generated client
@@ -6,7 +6,7 @@ data directory before Vite builds static assets; the browser never reads a
 database or imports a server-side loader.
 
 Data flow:
-    backend.repository.snapshot -> dashboard/public/data/snapshot.json
+    backend.repository.snapshot -> dashboard/public/data/resources/*.json
 """
 
 from __future__ import annotations
@@ -22,15 +22,18 @@ os.environ["DATABASE"] = "false"
 os.environ["DASHBOARD_HOSTED"] = "true"
 
 from backend.repository.snapshot import (
+    RESOURCE_LOADERS,
     clear_caches,
-    load_research_history,
-    load_snapshot,
+    load_resource,
 )
 
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
-OUTPUT = REPO_ROOT / "dashboard" / "public" / "data" / "snapshot.json"
-RESEARCH_OUTPUT = REPO_ROOT / "dashboard" / "public" / "data" / "research-history.json"
+OUTPUT_DIRECTORY = REPO_ROOT / "dashboard" / "public" / "data" / "resources"
+LEGACY_OUTPUTS = (
+    REPO_ROOT / "dashboard" / "public" / "data" / "snapshot.json",
+    REPO_ROOT / "dashboard" / "public" / "data" / "research-history.json",
+)
 
 
 def _write_json(path: Path, payload: dict) -> None:
@@ -47,19 +50,22 @@ def _write_json(path: Path, payload: dict) -> None:
 def main() -> None:
     """Write a deterministic UTF-8 snapshot for Vite static mode."""
     clear_caches()
-    payload = load_snapshot()
-    if payload.get("mode") != "local files":
-        raise RuntimeError(
-            "Refusing to export a snapshot not read from committed local files."
-        )
-    research = load_research_history()
-    _write_json(OUTPUT, payload)
-    _write_json(RESEARCH_OUTPUT, research)
-    print(f"Wrote {OUTPUT.relative_to(REPO_ROOT)} ({OUTPUT.stat().st_size} bytes)")
-    print(
-        f"Wrote {RESEARCH_OUTPUT.relative_to(REPO_ROOT)} "
-        f"({RESEARCH_OUTPUT.stat().st_size} bytes)"
-    )
+    for legacy in LEGACY_OUTPUTS:
+        legacy.unlink(missing_ok=True)
+    expected = set(RESOURCE_LOADERS)
+    if OUTPUT_DIRECTORY.exists():
+        for existing in OUTPUT_DIRECTORY.glob("*.json"):
+            if existing.stem not in expected:
+                existing.unlink()
+    for resource in RESOURCE_LOADERS:
+        payload = load_resource(resource)
+        if resource == "shell" and payload.get("mode") != "local files":
+            raise RuntimeError(
+                "Refusing to export resources not read from committed local files."
+            )
+        output = OUTPUT_DIRECTORY / f"{resource}.json"
+        _write_json(output, payload)
+        print(f"Wrote {output.relative_to(REPO_ROOT)} ({output.stat().st_size} bytes)")
 
 
 if __name__ == "__main__":

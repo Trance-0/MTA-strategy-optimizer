@@ -1,7 +1,7 @@
 ---
 title: Zheyuan Wu (Trance-0)
 description: Project manager work log covering pipeline development, integration, and algorithm testing
-compact: "Zheyuan Wu's project-management work log: simulator integration, runnable attribution and strategy pipelines, canonical models, PostgreSQL schema setup, native Willow forecast widgets, Vue and Flask delivery identity, specification-oriented documentation, GitHub Pages, and deployment automation."
+compact: "Zheyuan Wu's project-management work log: simulator integration, runnable attribution and strategy pipelines, canonical models, PostgreSQL schema setup, route-owned Vue data delivery, native Willow widgets, specification-oriented documentation, GitHub Pages, and deployment automation."
 order: 10
 lang: en-US
 ---
@@ -11,9 +11,17 @@ lang: en-US
 > Project: Marketing ROI Analysis
 > Handle: `Trance-0`
 > Role: Project manager — pipeline development, data simulation and integration, algorithm testing
-> Last updated: 2026-09-01
+> Last updated: 2026-09-02
 
 Entries are reconstructed from Git history. They record the change set behind each commit, not a separate narrative.
+
+---
+
+## 2026-09-02
+
+### Completed
+
+- Replaced shallow page hashes with canonical `#/page/section` deep links for every dashboard subsection, including legacy-link normalization and Back/Forward restoration. Split the browser data path into allow-listed live and static resources, with per-resource merge, in-flight deduplication, cache reuse, reload invalidation, and fixed backend mappings that cannot accept client paths, tables, or queries; verified direct Campaign and Budget links, exact lazy requests, cached revisits, and zero console errors in a real browser.
 
 ---
 

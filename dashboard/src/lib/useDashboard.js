@@ -1,157 +1,119 @@
-/**
- * The single shared load of the dashboard snapshot.
- *
- * Every view reads from this one store rather than fetching for itself, which
- * is what makes switching views instant and guarantees that two views on the
- * same screen can never show two different reads of the same source. It is the
- * browser-side counterpart of the loader cache the Python dashboard held.
- *
- * Data flow:
- *     src/api/client.js -> here -> the seven views
- */
+/** Shared, route-aware dashboard resource store. */
 
 import { computed, readonly, ref } from "vue";
 
-import { fetchDashboard, fetchResearchHistory, reloadData } from "../api/client.js";
+import { fetchDashboardResource, reloadData } from "../api/client.js";
 
-const snapshot = ref(null);
-const loading = ref(false);
-const error = ref(null);
+const EMPTY = {
+  mode: "", source: "", dashboardContext: {}, adsDaily: [],
+  attributionResults: [], comparisonTouchpoints: [], comparisonSummary: [],
+  recommendedAttribution: [], entityBridge: [], pathReport: [],
+  budgetRecommendation: {}, campaignStrategy: {}, strategyEvaluation: {},
+  strategyRequest: {}, candidatePool: {},
+  simulationResearch: {
+    runs: [], providers: [], products: [], campaigns: [], adGroups: [],
+    touchpoints: [], productEconomics: [], campaignProductLinks: [], history: [],
+    delivery: [], generationConfigs: [], touchpointObservations: [], masterObjects: [],
+  },
+};
 
-let inFlight = null;
-let researchInFlight = null;
+const freshSnapshot = () => ({
+  ...EMPTY,
+  dashboardContext: {},
+  simulationResearch: { ...EMPTY.simulationResearch },
+});
 
-const researchLoading = ref(false);
-const researchLoaded = ref(false);
-const researchError = ref(null);
+const snapshot = ref(freshSnapshot());
+const completed = ref(new Set());
+const failures = ref(new Map());
+const activeRequests = ref(0);
 const loadingProgress = ref({
   label: "Loading dashboard data", visible: false, loaded: 0, total: null, percent: null,
 });
-const researchProgress = ref({
-  label: "Loading research observations", visible: false, loaded: 0, total: null, percent: null,
-});
+const inFlight = new Map();
+let currentResources = [];
 
-async function withProgress(state, action) {
-  state.value = { ...state.value, visible: false, loaded: 0, total: null, percent: null };
+function mergePayload(payload) {
+  snapshot.value = {
+    ...snapshot.value,
+    ...payload,
+    simulationResearch: payload.simulationResearch
+      ? { ...snapshot.value.simulationResearch, ...payload.simulationResearch }
+      : snapshot.value.simulationResearch,
+  };
+}
+
+async function withProgress(resource, action) {
+  loadingProgress.value = {
+    label: `Loading ${resource.replaceAll("-", " ")}`,
+    visible: false, loaded: 0, total: null, percent: null,
+  };
   const timer = setTimeout(() => {
-    state.value = { ...state.value, visible: true };
+    loadingProgress.value = { ...loadingProgress.value, visible: true };
   }, 3000);
   try {
     return await action((value) => {
-      state.value = { ...state.value, ...value };
+      loadingProgress.value = { ...loadingProgress.value, ...value };
     });
   } finally {
     clearTimeout(timer);
   }
 }
 
-/** An empty snapshot, so a view can render its own empty state rather than crash. */
-const EMPTY = {
-  mode: "",
-  source: "",
-  adsDaily: [],
-  attributionResults: [],
-  comparisonTouchpoints: [],
-  comparisonSummary: [],
-  recommendedAttribution: [],
-  entityBridge: [],
-  pathReport: [],
-  budgetRecommendation: {},
-  campaignStrategy: {},
-  strategyEvaluation: {},
-  strategyRequest: {},
-  candidatePool: {},
-  simulationResearch: {
-    runs: [],
-    providers: [],
-    products: [],
-    campaigns: [],
-    adGroups: [],
-    touchpoints: [],
-    productEconomics: [],
-    campaignProductLinks: [],
-    history: [],
-    delivery: [],
-    generationConfigs: [],
-    touchpointObservations: [],
-    masterObjects: [],
-  },
-};
-
-async function load() {
-  // Concurrent callers share one request: the seven views mount together on the
-  // first paint and would otherwise each issue their own.
-  if (inFlight) return inFlight;
-  loading.value = true;
-  error.value = null;
-  inFlight = withProgress(loadingProgress, fetchDashboard)
+function loadResource(resource) {
+  if (completed.value.has(resource)) return Promise.resolve(snapshot.value);
+  if (inFlight.has(resource)) return inFlight.get(resource);
+  activeRequests.value += 1;
+  const request = withProgress(resource, (progress) =>
+    fetchDashboardResource(resource, progress),
+  )
     .then((payload) => {
-      snapshot.value = payload;
+      mergePayload(payload);
+      completed.value = new Set([...completed.value, resource]);
+      const nextFailures = new Map(failures.value);
+      nextFailures.delete(resource);
+      failures.value = nextFailures;
       return payload;
     })
     .catch((cause) => {
-      error.value = cause;
+      failures.value = new Map(failures.value).set(resource, cause);
       throw cause;
     })
     .finally(() => {
-      loading.value = false;
-      inFlight = null;
+      activeRequests.value -= 1;
+      inFlight.delete(resource);
     });
-  return inFlight.catch(() => null);
-}
-
-async function loadResearchHistory() {
-  if (researchInFlight) return researchInFlight;
-  researchLoading.value = true;
-  researchError.value = null;
-  researchInFlight = withProgress(researchProgress, fetchResearchHistory)
-    .then((payload) => {
-      const current = snapshot.value?.simulationResearch ?? {};
-      snapshot.value = {
-        ...snapshot.value,
-        simulationResearch: { ...current, ...payload },
-      };
-      researchLoaded.value = true;
-      return payload;
-    })
-    .catch((cause) => {
-      researchError.value = cause;
-      throw cause;
-    })
-    .finally(() => {
-      researchLoading.value = false;
-      researchInFlight = null;
-    });
-  return researchInFlight.catch(() => null);
+  inFlight.set(resource, request);
+  return request;
 }
 
 export function useDashboard() {
-  const data = computed(() => snapshot.value ?? EMPTY);
-
   return {
-    data,
-    loading: readonly(loading),
-    error: readonly(error),
-    loaded: computed(() => snapshot.value !== null),
+    data: computed(() => snapshot.value),
+    loading: computed(() => activeRequests.value > 0),
+    loaded: computed(() => completed.value.size > 0),
     loadingProgress: readonly(loadingProgress),
-    researchLoading: readonly(researchLoading),
-    researchLoaded: readonly(researchLoaded),
-    researchError: readonly(researchError),
-    researchProgress: readonly(researchProgress),
-    ensureLoaded() {
-      if (snapshot.value === null && !inFlight) return load();
-      return inFlight ?? Promise.resolve(snapshot.value);
+    isLoaded(resources) {
+      return resources.every((resource) => completed.value.has(resource));
     },
-    ensureResearchHistory() {
-      if (researchLoaded.value) return Promise.resolve(data.value.simulationResearch);
-      return loadResearchHistory();
+    errorFor(resources) {
+      for (const resource of resources) {
+        const failure = failures.value.get(resource);
+        if (failure) return failure;
+      }
+      return null;
     },
-    async reload() {
+    ensureResources(resources) {
+      currentResources = [...resources];
+      return Promise.all(resources.map(loadResource));
+    },
+    async reload(resources = currentResources) {
+      await Promise.allSettled([...inFlight.values()]);
       await reloadData();
-      snapshot.value = null;
-      researchLoaded.value = false;
-      researchError.value = null;
-      return load();
+      completed.value = new Set();
+      failures.value = new Map();
+      snapshot.value = freshSnapshot();
+      return Promise.all(resources.map(loadResource));
     },
   };
 }

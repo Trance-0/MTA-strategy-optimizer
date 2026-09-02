@@ -1,17 +1,16 @@
-"""Assemble every loader's result into the one payload the client reads.
+"""Assemble allow-listed dashboard resources from repository loaders.
 
-`GET /api/dashboard` returns this object whole rather than paginating it. The
-whole snapshot is roughly 400 KB of JSON, smaller than the artifacts it was
-read from, and sending it once is what lets the six views share one source of
-truth instead of each issuing its own request and each seeing a slightly
-different moment.
+The browser requests one resource per selected route instead of receiving the
+whole dashboard on entry. Resources still share the same loader cache and merge
+into the same client object, so partitioning delivery does not create another
+source of truth.
 
 Results are cached in memory so switching views does not re-read the source.
 The Reload control clears the cache, and a completed pipeline stage clears it
 too, because a stage that succeeded rewrote what the dashboard reads.
 
 Data flow:
-    backend/repository/&#42; -> here -> GET /api/dashboard
+    backend/repository/&#42; -> here -> /api/dashboard/resources/<resource>
 """
 
 from __future__ import annotations
@@ -72,7 +71,7 @@ def clear_caches() -> None:
         _cache.clear()
 
 
-#: One entry per snapshot key, in the order the payload presents them.
+#: One entry per compatibility-snapshot key, in payload order.
 LOADERS: dict[str, Callable[[], Any]] = {
     "adsDaily": ads_daily,
     "attributionResults": attribution_results,
@@ -95,9 +94,8 @@ def load_snapshot() -> dict:
 
     The keys and their order are the contract `dashboard/src/api/client.js`
     reads and `script/export_dashboard_snapshot.py` writes to
-    `data/snapshot.json` for the static build. A key removed here disappears
-    from a view without the view knowing why, so the set is asserted by
-    `backend/tests/test_snapshot.py`.
+    the compatibility snapshot used by schema validation and Python parity
+    tests. Browser delivery is partitioned by `RESOURCE_LOADERS` below.
     """
     payload: dict[str, Any] = {"mode": active_mode(), "source": source_label()}
     for key, loader in LOADERS.items():
@@ -108,3 +106,90 @@ def load_snapshot() -> dict:
 def load_research_history() -> dict:
     """Return and cache the observation-heavy research arrays separately."""
     return cached("researchHistory", simulation_research_history)
+
+
+def _research_fields(*names: str, history: bool = False) -> dict:
+    """Return one mergeable `simulationResearch` slice by declared fields."""
+    core = cached("simulationResearch", simulation_research_core)
+    observations = load_research_history() if history else {}
+    combined = {**core, **observations}
+    return {"simulationResearch": {name: combined.get(name, []) for name in names}}
+
+
+def _shell_resource() -> dict:
+    """Return small deployment and report context used by every route."""
+    summary = cached("comparisonSummary", comparison_summary)
+    request = cached("strategyRequest", strategy_request)
+    first = summary[0] if summary else {}
+    group = request.get("campaign_group") or {}
+    return {
+        "mode": active_mode(),
+        "source": source_label(),
+        "dashboardContext": {
+            "reportStartDate": first.get("report_start_date"),
+            "reportEndDate": first.get("report_end_date"),
+            "platform": group.get("platform"),
+            "marketplace": group.get("marketplace"),
+        },
+    }
+
+
+def _resource_fields(*names: str) -> dict:
+    """Return declared top-level loader fields with their client key names."""
+    return {name: cached(name, LOADERS[name]) for name in names}
+
+
+#: Public resource names accepted by the HTTP route and static exporter.
+#: Values are fixed callables: browser input never becomes a path or query.
+RESOURCE_LOADERS: dict[str, Callable[[], dict]] = {
+    "shell": _shell_resource,
+    "performance": lambda: _resource_fields("adsDaily"),
+    "attribution": lambda: _resource_fields(
+        "attributionResults",
+        "comparisonTouchpoints",
+        "comparisonSummary",
+        "recommendedAttribution",
+    ),
+    "budget": lambda: _resource_fields("budgetRecommendation", "strategyRequest"),
+    "strategy": lambda: _resource_fields("campaignStrategy"),
+    "evaluation": lambda: _resource_fields("strategyEvaluation"),
+    "entity-bridge": lambda: _resource_fields("entityBridge"),
+    "path-report": lambda: _resource_fields("pathReport"),
+    "research-overview": lambda: _research_fields(
+        "providers",
+        "products",
+        "campaigns",
+        "adGroups",
+        "touchpoints",
+        "history",
+        "delivery",
+        history=True,
+    ),
+    "research-providers": lambda: _research_fields("providers", "masterObjects"),
+    "research-products": lambda: _research_fields("products", "masterObjects"),
+    "research-campaigns": lambda: _research_fields(
+        "campaigns", "campaignProductLinks", "adGroups", "masterObjects"
+    ),
+    "research-ad-groups": lambda: _research_fields("adGroups", "masterObjects"),
+    "research-touchpoints": lambda: _research_fields("touchpoints", "masterObjects"),
+    "research-product-economics": lambda: _research_fields(
+        "productEconomics", "masterObjects"
+    ),
+    "research-generation-configs": lambda: _research_fields(
+        "generationConfigs", "masterObjects"
+    ),
+    "research-campaign-history": lambda: _research_fields(
+        "providers",
+        "products",
+        "campaigns",
+        "campaignProductLinks",
+        "history",
+        "delivery",
+        history=True,
+    ),
+}
+
+
+def load_resource(resource: str) -> dict:
+    """Load one registered dashboard resource or raise `KeyError`."""
+    return RESOURCE_LOADERS[resource]()

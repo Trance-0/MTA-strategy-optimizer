@@ -7,12 +7,11 @@
  * filters sit in a single row above the charts, so every panel on the page
  * shows the same slice.
  */
-import { computed, onMounted, ref } from "vue";
+import { computed, ref } from "vue";
 
 import DataTable from "../components/DataTable.vue";
 import EntityTable from "../components/EntityTable.vue";
 import MetricRow from "../components/MetricRow.vue";
-import LoadingProgress from "../components/LoadingProgress.vue";
 import PlotlyChart from "../components/PlotlyChart.vue";
 import {
   distinct,
@@ -28,18 +27,12 @@ import { useDashboard } from "../lib/useDashboard.js";
 import { useDiagnostics } from "../lib/diagnostics.js";
 import * as theme from "../theme.js";
 
-const {
-  data,
-  researchLoaded,
-  researchError,
-  researchProgress,
-  ensureResearchHistory,
-} = useDashboard();
+const props = defineProps({ section: { type: String, default: "history" } });
+const emit = defineEmits(["navigate"]);
+const { data } = useDashboard();
 const { diagnosticsOn } = useDiagnostics();
 
-onMounted(ensureResearchHistory);
-
-const tab = ref("history");
+const tab = computed(() => props.section);
 const TABS = [
   { key: "history", label: "Budget history" },
   { key: "performance", label: "Daily performance" },
@@ -657,12 +650,6 @@ const scopedRowKey = (row) =>
       Campaigns and Ad Groups.
     </p>
 
-    <LoadingProgress :progress="researchProgress" />
-    <div v-if="researchError" class="notice bad">
-      <b>Research observations could not be loaded.</b> {{ researchError.message }}
-      <button class="btn small" @click="ensureResearchHistory">Try again</button>
-    </div>
-
     <div class="tabs" role="tablist">
       <button
         v-for="entry in TABS"
@@ -671,7 +658,7 @@ const scopedRowKey = (row) =>
         role="tab"
         :aria-selected="tab === entry.key"
         :class="{ active: tab === entry.key }"
-        @click="tab = entry.key"
+        @click="emit('navigate', entry.key)"
       >
         {{ entry.label }}
       </button>
@@ -698,7 +685,7 @@ const scopedRowKey = (row) =>
         </div>
       </article>
 
-      <template v-if="researchLoaded && scopedHistory.length">
+      <template v-if="scopedHistory.length">
         <MetricRow :items="historyTiles" />
         <article class="card">
           <div class="card-head"><h2>Budget delivery response</h2><span class="sub">Configured budget vs actual spend · dashed line is full delivery</span></div>
@@ -728,7 +715,7 @@ const scopedRowKey = (row) =>
           </div>
         </article>
       </template>
-      <article v-else-if="researchLoaded" class="card empty-card">
+      <article v-else class="card empty-card">
         <h2>No Campaign budget history</h2>
         <p>
           No Campaign has a recorded budget-versus-spend history in the current
