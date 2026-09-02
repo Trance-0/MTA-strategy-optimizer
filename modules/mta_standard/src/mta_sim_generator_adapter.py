@@ -138,7 +138,7 @@ def _zheyuanwu_root(submodule_root: str | Path) -> Path:
     if not (project / "simulations").is_dir():
         raise FileNotFoundError(
             "MTA-SIM submodule is not initialized: expected "
-            f"{project / 'simulations'}. Run git submodule update --init --recursive."
+            f"{project / 'simulations'}. Run git submodule update --init."
         )
     return project
 

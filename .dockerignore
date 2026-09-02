@@ -6,7 +6,16 @@
 _bmad
 _bmad-output
 docs
+# `external` stays excluded: it is 8 megabytes of vendored projects, and only
+# the pinned MTA-SIM generator is imported at runtime. The two re-inclusions
+# below are exactly the paths `_generator_unavailability_reason()` probes, so
+# the Data Generator reports a capability it actually has. Re-including a
+# directory requires its parents to be re-included first.
 external
+!external/mta_sim_dataset
+!external/mta_sim_dataset/ZheyuanWu
+!external/mta_sim_dataset/ZheyuanWu/simulations
+!external/mta_sim_dataset/ZheyuanWu/examples
 .env
 .env.*
 deploy/.env

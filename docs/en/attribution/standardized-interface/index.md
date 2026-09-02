@@ -159,7 +159,7 @@ Three configuration failures are rejected rather than guessed:
 For the maintained generation path, initialize the submodule and run:
 
 ```sh
-git submodule update --init --recursive
+git submodule update --init
 uv run python -X utf8 -B script/generate_mta_sim_dataset.py
 ```
 

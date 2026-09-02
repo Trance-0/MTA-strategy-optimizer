@@ -360,7 +360,13 @@ Source: `.dockerignore`, `deploy/appstack/Dockerfile`,
   evaluation extras; model jobs call that environment's Python executable
   directly and do not require `uv` at run time. Generated outputs last until the pod is removed, and
   each repository prefers a complete runtime result over its image or database
-  fallback.
+  fallback. `external` stays excluded except for the pinned MTA-SIM
+  `simulations` package and its `examples` presets, which `.dockerignore`
+  re-includes and the build file copies through a single-match glob. That glob
+  is what keeps the copy optional: a build context without the submodule
+  matches nothing and still produces an image, in which the Data Generator
+  reports bounded unavailability rather than failing. A context with the
+  submodule ships the feature for about 444 kilobytes.
 - Dependencies: Node 22.23.0, Python 3.12.11, uv 0.8.13, ACR, Kubernetes, and
   an NGINX Ingress controller.
 - Verification: Render placeholders with the example values, validate the

@@ -109,8 +109,10 @@ The Python implementation uses only the standard library. The `uv` configuration
 After cloning the repository, initialize the pinned MTA-SIM dataset source:
 
 ```sh
-git submodule update --init --recursive
+git submodule update --init
 ```
+
+Initialize one level only. Do not add `--recursive`: `external/campaign-optimizer-llm-integration` declares this repository as one of its own submodules, so a recursive update re-enters the project and retrieves a stale copy of itself.
 
 The submodule is stored at `external/mta_sim_dataset` and points to [Trance-0/MTA-SIM-dataset](https://github.com/Trance-0/MTA-SIM-dataset). The maintained integration uses its `ZheyuanWu` generator directly from source; it does not install or publish either repository as a package.
 

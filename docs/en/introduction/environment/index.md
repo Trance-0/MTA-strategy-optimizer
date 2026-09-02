@@ -26,10 +26,12 @@ Alternatively, invoke Python with `python -X utf8 ...`. Without UTF-8 mode, Chin
 ## Initialize and generate data <span class="status-label status-verified" aria-label="Verified"></span>
 
 ```bash
-git submodule update --init --recursive
+git submodule update --init
 uv sync --locked
 uv run python -X utf8 -B script/generate_mta_sim_dataset.py
 ```
+
+Initialize one level only. `external/campaign-optimizer-llm-integration` declares this repository as one of its own submodules, so `--recursive` re-enters the project and retrieves a stale copy of itself.
 
 The generated bundle is stored under ignored `generated/mta_sim/`. See [Generate MTA-SIM data](mta-sim-generation.md) for custom configuration and output paths.
 
@@ -80,6 +82,14 @@ The public site is built and deployed by `.github/workflows/deploy-pages.yml` af
 ## Repository Mirrors <span class="status-label status-verified" aria-label="Verified"></span>
 
 GitHub is the source of truth. `.github/workflows/mirror-to-gitea.yml` force-updates every branch and tag on its configured Gitea destination after a push, deletion, manual dispatch, or scheduled run, then compares the destination references with GitHub and fails unless they match exactly. When GitHub has `main` but no `master`, the destination's protected `master` is retained as an alias of `main`.
+
+### The submodule snapshot branch
+
+A mirror copies references, so a mirrored submodule arrives as the recorded commit identifier and nothing else. Gitea cannot reach `github.com`, so it cannot resolve that identifier into files. The same workflow therefore publishes one additional branch, `gitea-snapshot`, whose tree has the submodule content committed as ordinary tracked files and no `.gitmodules`. A Gitea checkout of that branch is self-contained and needs no submodule step.
+
+That branch is the one destination reference that is deliberately not a copy of a GitHub reference. It is exempt from pruning and excluded from the exact-match verification; every other branch and tag still has to match GitHub exactly. It is generated, so it is never a place to commit: each run force-updates it, and its commit message records the pinned submodule commits it was built from. Bumping a submodule pin on GitHub is what changes it.
+
+Submodules are initialized one level deep, never recursively. `external/campaign-optimizer-llm-integration` declares this repository as one of its own submodules, so a recursive update re-enters the project and retrieves a stale copy of itself; one level costs about 8 megabytes, while recursion costs about 62.
 
 Configure the workflow with the `GITEA_USERNAME`, `GITEA_PASSWORD`, and `GITEA_REPOSITORY` repository secrets. `GITEA_REPOSITORY` accepts either of these credential-free forms:
 

@@ -28,10 +28,12 @@ Simulation ground truth remains evaluation-only. It is normalized into a compati
 From the project root:
 
 ```sh
-git submodule update --init --recursive
+git submodule update --init
 ```
 
-For a new clone, `git clone --recurse-submodules` performs the same initialization while cloning.
+Initialize one level only. `external/campaign-optimizer-llm-integration` declares this repository as one of its own submodules, so `--recursive` re-enters the project and retrieves a stale copy of itself: about 62 megabytes instead of 8, with a second copy of this generator inside it.
+
+For a new clone, `git clone --recurse-submodules` would recurse the same way; clone normally and run the command above instead.
 
 ## Generate the public toy dataset <span class="status-label status-verified" aria-label="Verified"></span>
 

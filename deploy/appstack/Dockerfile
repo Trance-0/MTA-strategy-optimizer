@@ -36,6 +36,22 @@ COPY backend/ backend/
 COPY dashboard/config.py dashboard/models.py dashboard/
 COPY modules/ modules/
 COPY script/ script/
+
+# The pinned MTA-SIM generator, imported in-process by
+# `modules/mta_standard/src/mta_sim_generator_adapter.py`. Only the package and
+# its reviewed presets are copied: nothing here runs the vendored project as a
+# separate program, and `generated/` is its output rather than its source.
+#
+# `externa[l]` is a glob that matches one literal path. It makes these two
+# copies optional: a build whose context omits the submodule -- the source-only
+# checkout in `publish-containers.yml` -- matches nothing and proceeds, and the
+# Data Generator then reports bounded unavailability instead of failing. A
+# context that has the submodule ships the feature.
+COPY externa[l]/mta_sim_dataset/ZheyuanWu/simulations/ \
+     external/mta_sim_dataset/ZheyuanWu/simulations/
+COPY externa[l]/mta_sim_dataset/ZheyuanWu/examples/ \
+     external/mta_sim_dataset/ZheyuanWu/examples/
+
 COPY --from=client /workspace/dashboard/dist dashboard/dist/
 
 RUN groupadd --gid 10001 app \

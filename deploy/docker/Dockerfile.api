@@ -35,6 +35,17 @@ COPY dashboard/config.py dashboard/models.py dashboard/
 COPY modules/ modules/
 COPY script/ script/
 
+# The pinned MTA-SIM generator, imported in-process by
+# `modules/mta_standard/src/mta_sim_generator_adapter.py`. `externa[l]` is a
+# glob matching one literal path, which makes these copies optional: this
+# image is built by `publish-containers.yml` from a deliberately source-only
+# checkout, where they match nothing and the Data Generator reports bounded
+# unavailability instead of the build failing.
+COPY externa[l]/mta_sim_dataset/ZheyuanWu/simulations/ \
+     external/mta_sim_dataset/ZheyuanWu/simulations/
+COPY externa[l]/mta_sim_dataset/ZheyuanWu/examples/ \
+     external/mta_sim_dataset/ZheyuanWu/examples/
+
 RUN groupadd --gid 10001 app \
     && useradd --uid 10001 --gid app --no-create-home \
         --home-dir /nonexistent --shell /usr/sbin/nologin app \
