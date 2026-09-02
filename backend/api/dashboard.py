@@ -120,7 +120,12 @@ def dashboard_resource(resource: str):
                 )
         payload = load_resource(resource)
         elapsed = (time.perf_counter() - started) * 1000
-        log("INFO", "data_source", f"resource {resource} in {elapsed:.0f} ms")
+        log(
+            "INFO",
+            "data_source",
+            f"resource {resource} completed",
+            duration_ms=elapsed,
+        )
         return jsonify(payload)
     except Exception as error:  # noqa: BLE001 - same page-level error contract
         log(

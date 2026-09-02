@@ -144,6 +144,12 @@ export async function fetchJobs() {
         datasets: [],
         defaultDataset: null,
         current: null,
+        artifacts: {
+          files: [],
+          complete: false,
+          canUpload: false,
+          canImport: false,
+        },
       };
     }
     return { stages, history: [] };
@@ -177,6 +183,32 @@ export async function stopJob(stage) {
     method: "DELETE",
   });
   return readJson(response);
+}
+
+/** Upload one complete allow-listed model-output set for backend parsing. */
+export async function uploadJobArtifacts(stage, files) {
+  if (IS_STATIC) throw new Error("Model output upload requires a live backend.");
+  const body = new FormData();
+  for (const file of files) body.append("files", file, file.name);
+  const response = await fetch(`/api/jobs/${encodeURIComponent(stage)}/artifacts`, {
+    method: "POST",
+    body,
+  });
+  const result = await readJson(response);
+  if (!response.ok) throw new Error(result.message ?? "Model outputs were not uploaded.");
+  return result;
+}
+
+/** Ask the backend to import the validated runtime set into PostgreSQL. */
+export async function importJobArtifacts(stage) {
+  if (IS_STATIC) throw new Error("Model output import requires a live backend.");
+  const response = await fetch(
+    `/api/jobs/${encodeURIComponent(stage)}/artifacts/import`,
+    { method: "POST" },
+  );
+  const result = await readJson(response);
+  if (!response.ok) throw new Error(result.message ?? "Model outputs were not imported.");
+  return result;
 }
 
 /**

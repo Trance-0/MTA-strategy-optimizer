@@ -1,7 +1,7 @@
 ---
 title: Dashboard
 description: The Vue dashboard's architecture, its dual data source contract, and where each topic is documented
-compact: "Vue and Flask dashboard boundary: routes declare allow-listed lazy resources, `client.js` and `useDashboard.js` fetch, merge, cache, deduplicate, and invalidate them with delayed byte progress; Python alone owns data access and static builds read equivalent per-resource JSON files."
+compact: "Vue/Flask boundary: route-owned lazy resources, caching and byte progress; `client.js` also sends model files through fixed backend artifact upload/download/import routes. Python alone owns parsing, storage, database access, and static-build capability refusals."
 lang: en-US
 source_files: dashboard/src/api/client.js, dashboard/src/lib/useDashboard.js, dashboard/tests/dashboard.test.js, backend/repository/coercion.py, backend/tests/test_coercion.py
 ---
@@ -204,7 +204,7 @@ Source: `dashboard/src/api/client.js`, `dashboard/src/lib/useDashboard.js`
 
 - Responsibility: Be the client's single route to the data, and hold the single shared copy of it.
 - Inputs: `/api/dashboard/resources/<resource>` in a local run, or `data/resources/<resource>.json` in the published build; resource names come only from `src/pages.js`.
-- Outputs: `IS_STATIC`, `fetchDashboardResource()` with byte progress, reload/settings calls, `saveMasterObject()`, `archiveMasterObject()`, `fetchJobs()`, `startJob()`, `stopJob()`, `fetchSchemaOperation()`, `startSchemaOperation()`, and `stopSchemaOperation()`; and `useDashboard()`, including resource loading, completion, error, retry, merge, and progress state. Static settings carry `backendIdentity: null` so the interface reports no connected backend instead of constructing a false match.
+- Outputs: `IS_STATIC`, `fetchDashboardResource()` with byte progress, reload/settings calls, master-data calls, job start/stop, `uploadJobArtifacts()`, `importJobArtifacts()`, schema-operation calls, and `useDashboard()` resource state. Static settings carry `backendIdentity: null`; static job descriptors disable run, upload, and database import.
 - Behavior contract: `IS_STATIC` is baked in at build time by `vite build --mode static`, and it alone selects live resource routes or relative generated resource files; **no view branches on it.** `fetchDashboardResource(resource)` rejects a key absent from the exported allow-list before constructing a URL. A response that is not JSON is reported by status rather than as a parse error naming character 0. `useDashboard()` holds one merged object, a completed-key set, one in-flight promise per resource, and per-resource failures. It merges nested `simulationResearch` slices without replacing completed siblings. Concurrent callers share each request, a completed key is not fetched twice, and Reload invalidates all resources. Progress is byte-based where possible, indeterminate otherwise, hidden for the first three seconds, and reset on completion or failure.
 - Dependencies: Vue's reactivity.
 - Verification: Driven in a real browser against both the API and the static snapshot; the data-backed views render identically and the backend-only generator names its unavailable state in static mode.
@@ -218,7 +218,7 @@ Source: `dashboard/tests/dashboard.test.js`
 - Outputs: Pass or fail per test. Run with `npm test` in `dashboard/`.
 - Behavior contract: Every test runs without a database and without a browser, so a clean checkout can run the whole suite. It covers the navigation registration contract; the entity table's paging and identity-keyed selection; the run options and refusals; and the snapshot invariants — real booleans rather than the string `"false"`, dates as `YYYY-MM-DD`, absent text as `null` rather than `""`, finite numbers rather than strings, the five touchpoint segments, and that the whole snapshot survives JSON serialisation unchanged. Several tests assert against **source text** rather than a rendered component, because the suite runs without a Document Object Model (DOM): they pin contracts a reader cannot see in a screenshot — that a progress bar's `aria-valuenow` and its visible percentage read one value, that a phase pattern still matches a line the Python actually prints, that the offered budget policies are the ones the enum declares. Two of those read Python sources directly, because the contract they pin is now owned by `backend/services/`; the reader is the client, so the test stays here.
 - Dependencies: Node's built-in test runner. No database.
-- Verification: `npm test` in `dashboard/`. Forty-five tests pass against the committed artifacts and source contracts.
+- Verification: `npm test` in `dashboard/`; the exact passing count is printed by the command.
 
 ### `backend/tests/test_coercion.py`
 

@@ -16,12 +16,15 @@ Data flow:
                                                v
                                   dashboard/data_source.py -> views
 
-The classes are grouped into four layers, mirroring the project's own stages:
+The required classes are grouped into four layers, mirroring the project's own stages:
 
 1. Entity        — the advertising hierarchy and the touchpoint vocabulary.
 2. History       — what was observed: spend, paths, and events.
 3. Model output  — what the attribution models concluded.
 4. Strategy      — what the budget initializer recommended.
+
+``ModelArtifact`` uses separate metadata because it is optional storage created
+only by the dashboard's explicit validated-artifact import action.
 
 Every table carries the report window and marketplace it belongs to, so a
 second run over a different window can be loaded alongside the first without
@@ -48,6 +51,10 @@ from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
 class Base(DeclarativeBase):
     """Declarative base for every dashboard table."""
+
+
+class ArtifactBase(DeclarativeBase):
+    """Separate metadata for optional, explicitly imported artifact storage."""
 
 
 # ---------------------------------------------------------------------------
@@ -478,6 +485,26 @@ class RecommendedAttribution(Base):
     run: Mapped[AttributionRun] = relationship()
     touchpoint_pk: Mapped[int] = mapped_column(ForeignKey("touchpoint.id"))
     touchpoint: Mapped[Touchpoint] = relationship()
+
+
+class ModelArtifact(ArtifactBase):
+    """One validated model-output file explicitly imported by an operator.
+
+    This table is optional and is not part of ``IMPORT_ORDER``. The artifact
+    service creates it on the first explicit import so an older dashboard
+    schema remains readable without an unrelated migration.
+    """
+
+    __tablename__ = "model_artifact"
+    __table_args__ = (UniqueConstraint("stage", "filename"),)
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    stage: Mapped[str] = mapped_column(String(32), index=True)
+    filename: Mapped[str] = mapped_column(String(128))
+    media_type: Mapped[str] = mapped_column(String(64))
+    sha256: Mapped[str] = mapped_column(String(64))
+    content: Mapped[str] = mapped_column(Text)
+    imported_at: Mapped[datetime] = mapped_column(DateTime)
 
 
 # ---------------------------------------------------------------------------

@@ -1,6 +1,6 @@
 ---
 title: Navigation Rail and Settings
-compact: "Navigation contract for canonical `#/page/section` deep links, back/forward history, route-owned lazy resources, legacy-hash normalization, the flat rail, Settings-owned reload, runtime PostgreSQL schema selection, protected schema recovery, write-only passwords, and bounded logging."
+compact: "Navigation contract for canonical deep links, route-owned lazy resources, the flat rail, Settings General/Data source/Logging tabs, Settings-owned reload, runtime PostgreSQL schema selection, protected schema recovery, write-only passwords, and default INFO logging."
 lang: en-US
 source_files: dashboard/src/pages.js, dashboard/src/App.vue, dashboard/src/main.js, dashboard/src/components/SettingsDialog.vue, dashboard/src/components/SchemaRecovery.vue
 ---
@@ -94,7 +94,7 @@ selected destination stays visible through horizontal scrolling and carries
 
 ### The settings module
 
-Everything about the dashboard's own plumbing is pinned to the foot of the rail, ruled off from the view navigation above it, so it never reads as another destination. It shows the active source, a status dot, and whether logging is on, and opens a modal with two tabs:
+Everything about the dashboard's own plumbing is pinned to the foot of the rail, ruled off from the view navigation above it, so it never reads as another destination. It shows the active source, a status dot, and whether logging is on, and opens a modal with three tabs. **General** is first and contains basic deployment identity only. **Data source** owns connection, schema, setup, and reload controls. **Logging** owns log capture and inspection. Deployment identity appears nowhere in the latter two tabs.
 
 When `DASHBOARD_CONFIG_READ_ONLY=true`, the server continues to report its configured source but rejects every settings mutation. The modal replaces its connection form with the server-configuration instruction and disables logging controls, so a team-server visitor cannot rewrite protected credentials or process state through the browser.
 
@@ -170,13 +170,22 @@ card is rendered to a reader who has a browser and nothing else.
 
 #### Logging
 
-Contains the streaming-data log switch, its level, and the captured records.
+Contains the streaming-data log switch, its minimum severity, source and
+severity display filters, copy and clear actions, and the captured records.
 
 **Test connection** opens a throwaway connection using what was typed rather than what is saved, so a correction can be validated before it is committed to `.env`. Saving rewrites `.env` in place — comments and unrelated keys are preserved, and a key already present is replaced rather than appended, so a file cannot end up with two values for one key and the winner decided by read order. Saving also drops the loader caches and disposes the connection pool, because both would otherwise hold the old mode until a restart.
 
 **The password field is write-only.** The server never sends a stored password back, and an empty field means "keep the stored one" rather than "clear it", so the value is never rendered into the page. `config.safeSummary()` omits it by construction and is the only rendering of a connection the dashboard performs.
 
-Logging is off by default, because recording every read costs time on each request. Enabled, it captures the actual data-source activity into a fixed-capacity ring buffer rather than a file: a demonstration machine's disk cannot be filled by leaving the dashboard open, and one long statement cannot dominate the buffer because each message is truncated.
+Logging is enabled at `INFO` by default. It captures actual data-source activity
+as English, grep-friendly records with a Coordinated Universal Time (UTC)
+timestamp, severity, source, message, and optional operation duration in a fixed-capacity in-memory ring
+buffer rather than a file. A demonstration machine's disk cannot be filled by
+leaving the dashboard open, and one long statement cannot dominate the buffer
+because each message is truncated. Display filters do not mutate capture or
+records. This structure adapts Trance-0's
+[Notechondria operator-log component](https://github.com/Trance-0/notechondria/blob/main/frontend/notechondria_shared/lib/src/components/debug_log.dart):
+bounded buffers, INFO defaults, severity/source filters, copy, and clear.
 
 ### Links out of the app
 
@@ -201,14 +210,17 @@ Source: `dashboard/src/main.js`, `dashboard/src/App.vue`, `dashboard/src/pages.j
 
 Source: `dashboard/src/components/SettingsDialog.vue`
 
-- Responsibility: Own every control the rail's foot opens — the connection
-  form, reload, runtime schema selection, schema setup, and logging — and own
+- Responsibility: Own every control the rail's foot opens — General deployment
+  identity, the connection form, reload, runtime schema selection, schema setup,
+  and logging — and own
   none of the decisions about whether they are permitted.
 - Inputs: `GET /api/settings`, `GET /api/schema-operations`, and what the
   reader types. A stored password is never among them.
 - Outputs: Settings, schema-selection, and schema-operation requests, and the
   rendered dialog.
-- Behavior contract: **Protection and capability are separate branches.**
+- Behavior contract: The modal defaults to General. Deployment identity renders
+  only there; it is basic build/runtime information with no setting control.
+  **Protection and capability are separate branches.**
   Protected configuration replaces the credential form; it does not enclose
   schema setup, which renders as a sibling on every deployment with a backend.
   Nesting the two is what made setup unreachable on the protected deployment,

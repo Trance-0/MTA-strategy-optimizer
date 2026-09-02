@@ -430,6 +430,9 @@ test("schema setup exposes discovery-driven initialization, parsing, and logs", 
 });
 
 test("settings compares independently detected frontend and backend builds", () => {
+  assert.match(SETTINGS_DIALOG, />\s*General\s*<\/button>/);
+  assert.match(SETTINGS_DIALOG, /v-if="tab === 'general'"[\s\S]*Deployment identity/);
+  assert.match(SETTINGS_DIALOG, /const tab = ref\("general"\)/);
   assert.match(SETTINGS_DIALOG, /Deployment identity/);
   assert.match(SETTINGS_DIALOG, /Dashboard version/);
   assert.match(SETTINGS_DIALOG, /Dashboard commit SHA/);
@@ -457,6 +460,16 @@ test("pipeline capability comes from the server rather than settings protection"
   assert.doesNotMatch(STAGE_RUNNER, /props\.writable/);
   assert.match(STAGE_RUNNER, /props\.stage\.available/);
   assert.doesNotMatch(CAMPAIGN_OPTIMIZER, /:writable=/);
+});
+
+test("model output transfer stays behind fixed backend artifact routes", () => {
+  assert.match(STAGE_RUNNER, /Upload and parse/);
+  assert.match(STAGE_RUNNER, /Import to database/);
+  assert.match(STAGE_RUNNER, /artifact\.downloadUrl/);
+  assert.match(CLIENT, /uploadJobArtifacts/);
+  assert.match(CLIENT, /importJobArtifacts/);
+  assert.match(CLIENT, /new FormData\(\)/);
+  assert.doesNotMatch(STAGE_RUNNER, /PG_PASSWORD|psycopg|create_engine/);
 });
 
 test("Willow Sakura renders native running widgets instead of a whole-page iframe", () => {

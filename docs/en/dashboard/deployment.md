@@ -178,6 +178,10 @@ send the following poll to another. `compose.yaml` mounts the named
 `PIPELINE_OUTPUT_DIR` to that path. Generated attribution, strategy, and
 evaluation results therefore survive an API container replacement without
 making the source tree writable; removing the volume deliberately resets them.
+For a direct local backend, omitting `PIPELINE_OUTPUT_DIR` instead selects and
+write-probes the ignored `generated/pipeline-output` directory. A configured
+path that cannot be written makes pipeline capability unavailable rather than
+falling back elsewhere.
 
 ### The data source is detected, not configured
 

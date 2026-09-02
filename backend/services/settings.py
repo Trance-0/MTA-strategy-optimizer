@@ -60,30 +60,33 @@ LOG_CAPACITY = 400
 LEVEL_ORDER = {"DEBUG": 10, "INFO": 20, "WARNING": 30, "ERROR": 40}
 
 _records: deque = deque(maxlen=LOG_CAPACITY)
-_logging_on = False
+_logging_on = True
 _logging_level = "INFO"
 _log_lock = threading.Lock()
 _schema_switch_lock = threading.Lock()
 _configured_schema: str | None = None
 
 
-def log(level: str, source: str, message: Any) -> None:
-    """Record one line of activity, if logging is on."""
+def log(
+    level: str, source: str, message: Any, *, duration_ms: float | None = None
+) -> None:
+    """Record one structured activity line when its severity is enabled."""
     if not _logging_on:
         return
     if LEVEL_ORDER.get(level, 20) < LEVEL_ORDER.get(_logging_level, 20):
         return
     with _log_lock:
-        _records.append(
-            {
-                "when": datetime.now(timezone.utc).strftime("%H:%M:%S"),
-                "level": level,
-                "source": source,
-                # A long statement or a long error is truncated rather than
-                # stored whole, so one record cannot dominate the buffer.
-                "message": str(message)[:400],
-            }
-        )
+        record = {
+            "when": datetime.now(timezone.utc).isoformat(),
+            "level": level,
+            "source": source,
+            # A long statement or a long error is truncated rather than
+            # stored whole, so one record cannot dominate the buffer.
+            "message": str(message)[:400],
+        }
+        if duration_ms is not None:
+            record["durationMs"] = round(max(0.0, float(duration_ms)), 3)
+        _records.append(record)
 
 
 def logging_enabled() -> bool:

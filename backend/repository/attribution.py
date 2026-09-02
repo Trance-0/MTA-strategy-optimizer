@@ -33,6 +33,7 @@ from backend.repository.coercion import (
     read_csv,
     split_touchpoint,
 )
+from backend.services.model_outputs import restore_artifact_directory
 from dashboard.models import (
     AttributionResult,
     AttributionRun,
@@ -83,6 +84,17 @@ def _completed_output_directory():
     """Runtime attribution directory only after its atomic set is complete."""
     runtime = pipeline_output_directory()
     candidate = runtime / "attribution" if runtime else None
+    if candidate is not None and not all(
+        (candidate / name).is_file() for name in _RUNTIME_FILES
+    ):
+        try:
+            candidate = (
+                restore_artifact_directory("attribution")
+                if use_database()
+                else candidate
+            )
+        except (OSError, ValueError):
+            candidate = None
     if candidate is not None and all(
         (candidate / name).is_file() for name in _RUNTIME_FILES
     ):

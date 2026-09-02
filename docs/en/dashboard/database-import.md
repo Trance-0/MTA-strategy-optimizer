@@ -1,6 +1,6 @@
 ---
 title: Populating PostgreSQL
-compact: "PostgreSQL schema initialization and simulator parsing through `import_to_database.py`, `derive_scenario_schemas.py`, `PG_SCHEMA`, and current-interpreter dashboard schema setup, including replacement safeguards, derived marketplace schemas, and streamed operation logs."
+compact: "PostgreSQL schema initialization and simulator parsing through `import_to_database.py`, `derive_scenario_schemas.py`, `PG_SCHEMA`, and current-interpreter schema setup, plus optional `ModelArtifact` storage created only by explicit validated artifact import."
 lang: en-US
 source_files: dashboard/config.py, dashboard/models.py, script/import_to_database.py, script/derive_scenario_schemas.py
 ---
@@ -176,7 +176,11 @@ Source: `dashboard/config.py`, `dashboard/models.py`
 
 - Responsibility: Define the PostgreSQL schema the dashboard reads and the `.env` contract the importer resolves against. The dashboard itself holds no Python; these two exist for `script/import_to_database.py`.
 - Inputs: `.env` at the repository root, for `config.py`. Nothing at runtime for `models.py`.
-- Outputs: `use_database()`, `database_settings()`, `DatabaseSettings.safe_summary()`, `DatabaseSettings.connect_args()`, `valid_schema_name()`, `DEFAULT_SCHEMA`, and the path constants; and `Base` plus eighteen mapped classes in four layers — entity, history, model output, and strategy. Field-level meaning is specified in [Dashboard data model](../market-simulation/dashboard-data-model.md).
+- Outputs: `use_database()`, database settings and path constants; `Base` plus
+  eighteen required mapped classes; and the separate `ArtifactBase` with
+  optional `ModelArtifact`, so normal metadata creation does not create the
+  optional table. Field-level meaning is specified in
+  [Dashboard data model](../market-simulation/dashboard-data-model.md).
 - Behavior contract: `DatabaseSettings.url()` percent-encodes the user and password. This is required, not defensive: a password containing `@` or `/` otherwise corrupts the Uniform Resource Locator (URL) and fails as a misleading host-resolution error. `safe_summary()` never contains the password, and names the schema in parentheses only when it is not `public`. `connect_args()` returns `connect_timeout`, plus `options: -csearch_path=<schema>` for a non-default schema — the selected schema alone, with no fallback behind it, so a partly populated schema reports a missing table rather than resolving it from another scenario. It raises `ValueError` rather than building an option from a name `valid_schema_name()` rejects. These modules sit at the edge of the project: the attribution, standard, and strategy modules must never import them, because they read and write files and depend on the standard library alone. Every run-scoped table carries a foreign key to its run, so two report windows coexist rather than overwrite, and the `UniqueConstraint` on each output table is scoped by `run_pk`, which makes a re-import of the same window a conflict rather than a silent duplicate. **Every table carries a surrogate `id` primary key, and the row order the dashboard reads depends on it**: the importer inserts in the artifact's order, so `order by id` reproduces it.
 - Dependencies: `python-dotenv` and SQLAlchemy 2.0. Installed with `uv sync --extra dashboard`.
 - Verification: `uv run --extra dashboard python script/import_to_database.py --dry-run` reports the row count each class will receive without opening a connection.

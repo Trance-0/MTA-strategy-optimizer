@@ -49,10 +49,10 @@ from backend.config import (  # noqa: E402
     trust_proxy_headers,
 )
 
-#: Requests larger than this are refused. The largest legitimate body is a
-#: master-object draft, which is a few kilobytes; the model routes take paths
-#: and options rather than data.
-MAX_CONTENT_LENGTH = 256 * 1024
+#: Requests larger than this are refused before multipart parsing. Model
+#: artifact upload permits 25 MiB of file content; one extra MiB leaves room
+#: for multipart framing. Every route still applies its narrower own contract.
+MAX_CONTENT_LENGTH = 26 * 1024 * 1024
 
 
 def create_app() -> Flask:

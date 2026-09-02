@@ -56,6 +56,8 @@ const {
   ensureLoaded: ensureJobsLoaded,
   start: startStage,
   stop: stopStage,
+  uploadOutputs,
+  importOutputs,
   reloadAfterRun,
 } = useJobs();
 
@@ -550,6 +552,8 @@ const evaluationAvailable = computed(
           :controls="STAGE_CONTROLS[model] ?? []"
           @start="startStage(model, $event)"
           @stop="stopStage(model)"
+          @upload="uploadOutputs(model, $event)"
+          @import="importOutputs(model)"
           @reload="reloadAfterRun"
         />
       </div>

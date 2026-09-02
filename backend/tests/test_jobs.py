@@ -17,6 +17,7 @@ from types import SimpleNamespace
 from unittest.mock import patch
 
 from backend.app import create_app
+from backend import config as backend_config
 from backend.services.jobs import (
     OptionError,
     arguments_for,
@@ -54,11 +55,9 @@ class JobServiceTests(unittest.TestCase):
             "PIPELINE_RUNS_ENABLED",
             disabled["stages"]["attribution"]["unavailableReason"],
         )
-        self.assertFalse(file_mode["stages"]["attribution"]["available"])
-        self.assertIn(
-            "connected database",
-            file_mode["stages"]["attribution"]["unavailableReason"],
-        )
+        self.assertTrue(file_mode["stages"]["attribution"]["available"])
+        self.assertTrue(file_mode["stages"]["attribution"]["artifacts"]["canUpload"])
+        self.assertFalse(file_mode["stages"]["attribution"]["artifacts"]["canImport"])
 
     def test_available_stage_declares_datasets_and_default(self) -> None:
         choices = [
@@ -78,6 +77,24 @@ class JobServiceTests(unittest.TestCase):
         self.assertEqual(stage["datasets"], choices)
         self.assertEqual(stage["defaultDataset"], "scope-a")
 
+    def test_unset_output_directory_uses_a_verified_ignored_runtime(self) -> None:
+        with (
+            tempfile.TemporaryDirectory() as temporary,
+            patch.dict("os.environ", {}, clear=False),
+            patch.object(backend_config, "_load_env"),
+            patch.object(
+                backend_config,
+                "DEFAULT_PIPELINE_OUTPUT_DIR",
+                Path(temporary) / "generated" / "pipeline-output",
+            ),
+        ):
+            import os
+
+            os.environ.pop("PIPELINE_OUTPUT_DIR", None)
+            runtime = backend_config.pipeline_output_directory()
+            self.assertIsNotNone(runtime)
+            self.assertTrue(runtime.is_dir())
+
     def test_database_attribution_has_no_refusal(self) -> None:
         with patch(
             "backend.services.jobs.resolve_dataset", return_value={"id": "scope"}
@@ -87,6 +104,20 @@ class JobServiceTests(unittest.TestCase):
                     "attribution", writable=True, options={"datasetId": "scope"}
                 )
             )
+
+    def test_evaluation_keeps_strategy_only_fallback_without_research_tables(
+        self,
+    ) -> None:
+        with patch.object(model_datasets, "table_exists", return_value=False):
+            evaluation = model_datasets.datasets_for(
+                "evaluation", database_enabled=True
+            )
+            optimization = model_datasets.datasets_for(
+                "optimization", database_enabled=True
+            )
+
+        self.assertEqual(evaluation[0]["id"], "files|evaluation|strategy-artifacts")
+        self.assertEqual(optimization, [])
 
     def test_options_become_fixed_command_arguments(self) -> None:
         options = normalize_options({"datasetId": "server-scope", "totalBudget": "125"})

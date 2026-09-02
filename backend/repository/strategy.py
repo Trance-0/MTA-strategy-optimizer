@@ -31,6 +31,7 @@ from backend.config import (
 )
 from backend.database import orm_rows
 from backend.repository.coercion import format_date, read_json, to_number
+from backend.services.model_outputs import restored_artifact_path
 from dashboard.models import (
     AdGroupBudgetSlot,
     Advertiser,
@@ -184,11 +185,12 @@ def campaign_strategy() -> dict:
     representation: it is produced by `script/generate_campaign_strategy.py`
     rather than by the import pipeline.
     """
+    fallback = pipeline_artifact_path(
+        "strategy/campaign_strategy.json",
+        STRATEGY_OUTPUT_DIR / "campaign_strategy.json",
+    )
     return read_json(
-        pipeline_artifact_path(
-            "strategy/campaign_strategy.json",
-            STRATEGY_OUTPUT_DIR / "campaign_strategy.json",
-        )
+        restored_artifact_path("optimization", "campaign_strategy.json", fallback)
     )
 
 

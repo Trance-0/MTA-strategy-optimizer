@@ -1,7 +1,7 @@
 ---
 title: Dashboard Data Endpoints
 description: Snapshot, reload, master-object, and repository behavior
-compact: "Specifies allow-listed `/api/dashboard/resources/<resource>` payloads, ten-minute loader caches, nested research slices, reload invalidation, compatibility snapshot assembly, runtime artifact precedence, immutable observations, editable master drafts, SQLAlchemy queries, and normalized JSON types."
+compact: "Specifies allow-listed dashboard resources, loader caches, research slices, structured load timing, reload invalidation, compatibility snapshot assembly, runtime/imported-artifact precedence, immutable observations, editable master drafts, SQLAlchemy queries, and normalized JSON types."
 lang: en-US
 source_files: backend/api/dashboard.py, backend/repository/attribution.py, backend/repository/coercion.py, backend/repository/evaluation.py, backend/repository/history.py, backend/repository/master_data.py, backend/repository/research.py, backend/repository/snapshot.py, backend/repository/strategy.py, backend/tests/test_snapshot.py
 ---
@@ -79,6 +79,9 @@ Source: `backend/api/dashboard.py`, `backend/repository/snapshot.py`
 - Inputs: Data-source mode and repository loader results.
 - Outputs: Mergeable JSON responses with exact stable keys and status-specific
   error objects; unknown resource names return a bounded 404 before loading.
+- Behavior contract: A successful resource request emits one structured INFO
+  record whose `durationMs` is measured with the monotonic performance clock;
+  the response payload contains no diagnostic field.
 - Dependencies: Backend repositories, settings log, and database probe.
 - Verification: `backend/tests/test_snapshot.py`.
 
@@ -96,7 +99,9 @@ Source: `backend/repository/attribution.py`,
 - Dependencies: `dashboard/models.py`, backend database helpers, and coercions.
 - Behavior contract: Attribution requires its complete five-file runtime set
   before switching. Strategy and evaluation require their named JSON artifact.
-  An absent or partial runtime result falls back without mixing sources.
+  When runtime is absent, a complete optional `model_artifact` database set is
+  validated and restored below the runtime directory before reading. An absent
+  or partial runtime/database result falls back without mixing sources.
 - Verification: Snapshot row counts, runtime-precedence tests, and exact
   cross-language value comparison.
 

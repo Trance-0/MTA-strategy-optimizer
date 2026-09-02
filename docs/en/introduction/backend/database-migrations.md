@@ -1,7 +1,7 @@
 ---
 title: Database Migration and Continuous Deployment Plan
 description: Versioned PostgreSQL schema upgrades for existing dashboard deployments
-compact: "Migration plan for dashboard PostgreSQL schemas: current create/drop limitations, Alembic revision ledger, expand-contract compatibility, advisory-locked pre-deploy jobs, previous-release upgrade and lazy-resource endpoint tests, rollout gates, observability, and forward-only recovery."
+compact: "Migration plan for dashboard PostgreSQL schemas: current create/drop and optional artifact-table limitations, Alembic revision ledger, expand-contract compatibility, advisory-locked pre-deploy jobs, previous-release upgrades, rollout gates, observability, and forward-only recovery."
 lang: en-US
 ---
 
@@ -34,6 +34,12 @@ ordered migration directory or database structure revision ledger.
 **Repository fact:** `BudgetRecommendationRun.schema_version` versions one
 strategy artifact. It is not a database structure version and cannot answer
 whether a column, index, or constraint required by a backend release exists.
+
+**Repository fact:** explicit model-output import may create the isolated
+optional `model_artifact` table with `checkfirst=True`. It uses separate
+SQLAlchemy metadata, is not part of dashboard readiness, and does not alter the
+eighteen required tables. This compatibility bridge gives existing untracked
+schemas artifact persistence; it is not a general migration mechanism.
 
 **Inference:** adding a mapped column may work for a newly created schema while
 an existing schema remains unchanged. The backend then fails only when a query
@@ -102,6 +108,11 @@ the already documented destructive replacement action.
 
 **Recommendation:** every change that affects stored data uses two compatible
 releases.
+
+The first implemented migration after adoption should declare
+`model_artifact` as an idempotent expand revision. A schema that already has the
+exact compatibility-bridge structure is marked satisfied; any shape difference
+is reported as drift rather than overwritten.
 
 1. **Expand:** add nullable columns, new tables, or new indexes without removing
    anything the previous backend reads.

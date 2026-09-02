@@ -44,6 +44,11 @@ from backend.services.model_datasets import (
     prepare_dataset,
     resolve_dataset,
 )
+from backend.services.model_outputs import (
+    ArtifactError,
+    artifact_manifest,
+    restore_artifact_directory,
+)
 
 _STRATEGY_OUTPUT_DIR = REPO_ROOT / "modules" / "mta_strategy_recommendation" / "outputs"
 
@@ -246,8 +251,9 @@ def arguments_for(
             "--output",
             str(runtime / "evaluation" / "strategy_evaluation.json"),
         ]
-        args += ["--research-snapshot", str(prepared.research_snapshot)]
-        args += ["--marketplace", prepared.marketplace]
+        if prepared.research_snapshot is not None:
+            args += ["--research-snapshot", str(prepared.research_snapshot)]
+            args += ["--marketplace", prepared.marketplace]
     return args
 
 
@@ -262,7 +268,7 @@ def script_for(stage: str) -> str | None:
     return STAGES[stage]["script"]
 
 
-def prepare_runtime_inputs(stage: str) -> None:
+def prepare_runtime_inputs(stage: str, *, database_enabled: bool = True) -> None:
     """Create isolated output folders and seed evaluation's strategy inputs."""
     runtime = pipeline_output_directory()
     if runtime is not None:
@@ -273,6 +279,8 @@ def prepare_runtime_inputs(stage: str) -> None:
         return
     if stage != "evaluation":
         return
+    if database_enabled:
+        restore_artifact_directory("optimization", database_enabled=True)
     for name in ("initial_budget_recommendation.json", "campaign_strategy.json"):
         target = runtime / "strategy" / name
         if target.is_file():
@@ -368,13 +376,21 @@ def jobs_state(execution_enabled: bool = True, database_enabled: bool = True) ->
         script = script_for(key)
         job = _running.get(key)
         try:
-            datasets = datasets_for(key) if database_enabled else []
+            datasets = datasets_for(key, database_enabled=database_enabled)
         except (OSError, ValueError, SQLAlchemyError):
             datasets = []
+        try:
+            artifacts = artifact_manifest(key, database_enabled=database_enabled)
+        except (OSError, RuntimeError, ArtifactError, SQLAlchemyError):
+            artifacts = {
+                "files": [],
+                "complete": False,
+                "canUpload": False,
+                "canImport": False,
+            }
         available = (
             bool(script)
             and execution_enabled
-            and database_enabled
             and pipeline_output_directory() is not None
             and bool(datasets)
         )
@@ -390,29 +406,28 @@ def jobs_state(execution_enabled: bool = True, database_enabled: bool = True) ->
                 )
                 if not execution_enabled
                 else (
-                    "Running a stage writes new outputs, so it needs a connected "
-                    "database deployment. This deployment reads committed files."
-                    if not database_enabled
+                    "PIPELINE_OUTPUT_DIR must name a writable runtime directory."
+                    if pipeline_output_directory() is None
                     else (
-                        "PIPELINE_OUTPUT_DIR must name a writable runtime directory."
-                        if pipeline_output_directory() is None
-                        else (
-                            "No compatible database dataset is available for this model."
-                            if not datasets
-                            else definition.get("unavailableReason")
-                        )
+                        "No compatible server-owned dataset is available for this model."
+                        if not datasets
+                        else definition.get("unavailableReason")
                     )
                 )
             ),
             "datasets": datasets,
             "defaultDataset": datasets[0]["id"] if datasets else None,
             "current": job.public_view() if job else None,
+            "artifacts": artifacts,
         }
     return {"stages": stages, "history": [job.public_view() for job in _history]}
 
 
 def start_refusal(
-    stage: str, writable: bool, options: dict | None = None
+    stage: str,
+    writable: bool,
+    options: dict | None = None,
+    database_enabled: bool = True,
 ) -> dict | None:
     """Why `stage` cannot be started right now, or None when it can.
 
@@ -426,11 +441,8 @@ def start_refusal(
         return {"code": "stage_unavailable", "message": definition["unavailableReason"]}
     if not writable:
         return {
-            "code": "read_only",
-            "message": (
-                "Running a stage writes new outputs, so it needs a connected "
-                "database deployment. This deployment reads committed files."
-            ),
+            "code": "runtime_unwritable",
+            "message": "PIPELINE_OUTPUT_DIR must name a writable runtime directory.",
         }
     if active_job(stage) is not None:
         return {
@@ -438,7 +450,11 @@ def start_refusal(
             "message": f"{definition['label']} is already running.",
         }
     try:
-        resolve_dataset(stage, (options or {}).get("datasetId"))
+        resolve_dataset(
+            stage,
+            (options or {}).get("datasetId"),
+            database_enabled=database_enabled,
+        )
     except DatasetError as error:
         return {
             "code": "missing_input",
@@ -448,7 +464,10 @@ def start_refusal(
 
 
 def start_job(
-    stage: str, options: dict, on_finish: Callable[[Job], None] | None = None
+    stage: str,
+    options: dict,
+    on_finish: Callable[[Job], None] | None = None,
+    database_enabled: bool = True,
 ) -> Job:
     """Start `stage` and return its run immediately.
 
@@ -464,8 +483,10 @@ def start_job(
     _running[stage] = job
 
     try:
-        selected = resolve_dataset(stage, options.get("datasetId"))
-        prepare_runtime_inputs(stage)
+        selected = resolve_dataset(
+            stage, options.get("datasetId"), database_enabled=database_enabled
+        )
+        prepare_runtime_inputs(stage, database_enabled=database_enabled)
         prepared = prepare_dataset(stage, selected)
         args = arguments_for(stage, options, prepared)
         job.command = " ".join(args)

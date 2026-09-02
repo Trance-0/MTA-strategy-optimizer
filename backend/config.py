@@ -17,6 +17,7 @@ import os
 import platform
 import re
 import subprocess
+import tempfile
 from functools import lru_cache
 from importlib.metadata import PackageNotFoundError, version as package_version
 from pathlib import Path
@@ -42,6 +43,7 @@ from dashboard.config import (  # noqa: F401  (re-exported by design)
 _TRUE_VALUES = {"1", "true", "yes", "on"}
 _PROJECT_VERSION = re.compile(r"^\d+\.\d+\.\d+$")
 _COMMIT = re.compile(r"^(?:[0-9a-fA-F]{40}|[0-9a-fA-F]{64})$")
+DEFAULT_PIPELINE_OUTPUT_DIR = REPO_ROOT / "generated" / "pipeline-output"
 
 
 @lru_cache(maxsize=1)
@@ -138,10 +140,24 @@ def schema_setup_enabled() -> bool:
 
 
 def pipeline_output_directory() -> Path | None:
-    """Optional writable root for generated stage artifacts."""
+    """Return the verified writable root for generated stage artifacts.
+
+    Local backends default to an ignored runtime directory. A configured path
+    never silently falls back: failure to create or probe it returns ``None``
+    so the capability response can name the operator remedy.
+    """
     _load_env()
     value = os.getenv("PIPELINE_OUTPUT_DIR", "").strip()
-    return Path(value).resolve() if value else None
+    root = Path(value).resolve() if value else DEFAULT_PIPELINE_OUTPUT_DIR.resolve()
+    try:
+        root.mkdir(parents=True, exist_ok=True)
+        if not root.is_dir():
+            return None
+        with tempfile.NamedTemporaryFile(dir=root, prefix=".write-probe-", delete=True):
+            pass
+    except OSError:
+        return None
+    return root
 
 
 def pipeline_artifact_path(relative: str, fallback: Path) -> Path:

@@ -299,18 +299,24 @@ class RuntimeSchemaSelectionTests(unittest.TestCase):
 
 
 class DiagnosticLogTests(unittest.TestCase):
-    """Check that capture is opt-in, level-filtered, and bounded."""
+    """Check that default INFO capture is level-filtered and bounded."""
+
+    def setUp(self) -> None:
+        apply_logging(True, "INFO")
+        clear_log()
 
     def tearDown(self) -> None:
         apply_logging(False)
         clear_log()
 
-    def test_logging_is_off_by_default_and_records_nothing(self) -> None:
-        clear_log()
-
+    def test_info_logging_records_structured_utc_time(self) -> None:
         log("INFO", "test", "before")
 
-        self.assertEqual(log_state()["records"], [])
+        record = log_state()["records"][-1]
+        self.assertEqual(record["level"], "INFO")
+        self.assertEqual(record["source"], "test")
+        self.assertIn("T", record["when"])
+        self.assertTrue(record["when"].endswith("+00:00"))
 
     def test_a_record_below_the_active_level_is_dropped(self) -> None:
         clear_log()
@@ -332,6 +338,10 @@ class DiagnosticLogTests(unittest.TestCase):
         log("INFO", "test", "x" * 5000)
 
         self.assertEqual(len(log_state()["records"][-1]["message"]), 400)
+
+    def test_operation_duration_is_structured_and_non_negative(self) -> None:
+        log("INFO", "test", "timed", duration_ms=12.34567)
+        self.assertEqual(log_state()["records"][-1]["durationMs"], 12.346)
 
     def test_the_buffer_stays_bounded(self) -> None:
         clear_log()

@@ -13,6 +13,7 @@ from __future__ import annotations
 
 from backend.config import REPO_ROOT, pipeline_artifact_path
 from backend.repository.coercion import read_json
+from backend.services.model_outputs import restored_artifact_path
 
 
 EVALUATION_OUTPUT = (
@@ -27,6 +28,9 @@ EVALUATION_OUTPUT = (
 def strategy_evaluation() -> dict:
     """Return the evaluation artifact, or an empty object before its first run."""
 
+    fallback = pipeline_artifact_path(
+        "evaluation/strategy_evaluation.json", EVALUATION_OUTPUT
+    )
     return read_json(
-        pipeline_artifact_path("evaluation/strategy_evaluation.json", EVALUATION_OUTPUT)
+        restored_artifact_path("evaluation", "strategy_evaluation.json", fallback)
     )

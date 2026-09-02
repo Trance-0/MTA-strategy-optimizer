@@ -25,10 +25,11 @@ const props = defineProps({
   controls: { type: Array, default: () => [] },
 });
 
-const emit = defineEmits(["start", "stop", "reload"]);
+const emit = defineEmits(["start", "stop", "reload", "upload", "import"]);
 
 const options = ref({});
 const logEnd = ref(null);
+const selectedFiles = ref([]);
 
 watch(
   () => [props.stage.key, props.stage.defaultDataset],
@@ -54,6 +55,11 @@ const blocked = computed(() => {
 });
 
 const lines = computed(() => job.value?.lines ?? []);
+const artifacts = computed(() => props.stage.artifacts ?? { files: [] });
+
+function selectArtifacts(event) {
+  selectedFiles.value = Array.from(event.target.files ?? []);
+}
 
 /**
  * Follow the tail while a run is going.
@@ -213,5 +219,58 @@ function elapsed(record) {
         This stage has not been run from the dashboard yet.
       </p>
     </template>
+
+    <section v-if="artifacts.canUpload || artifacts.files.length" class="schema-operation">
+      <div class="section-head">
+        <div>
+          <h3>Model outputs</h3>
+          <p class="caption">
+            Upload one complete output set for backend validation, or download
+            the currently parsed runtime artifacts.
+          </p>
+        </div>
+      </div>
+      <div v-if="artifacts.files.length" class="rec-actions">
+        <a
+          v-for="artifact in artifacts.files"
+          :key="artifact.filename"
+          class="btn small"
+          :class="{ disabled: !artifact.available }"
+          :href="artifact.available ? artifact.downloadUrl : undefined"
+          :aria-disabled="!artifact.available"
+          download
+        >
+          Download {{ artifact.filename }}
+        </a>
+      </div>
+      <div v-if="artifacts.canUpload" class="filter-row">
+        <div class="field span-2">
+          <label :for="`stage-${stage.key}-artifacts`">Upload output files</label>
+          <input
+            :id="`stage-${stage.key}-artifacts`"
+            type="file"
+            multiple
+            :accept="artifacts.files.map((item) => item.filename).join(',')"
+            :disabled="busy"
+            @change="selectArtifacts"
+          />
+        </div>
+        <button
+          class="btn"
+          :disabled="busy || !selectedFiles.length"
+          @click="emit('upload', selectedFiles)"
+        >
+          Upload and parse
+        </button>
+        <button
+          v-if="artifacts.canImport"
+          class="btn primary"
+          :disabled="busy || !artifacts.complete"
+          @click="emit('import')"
+        >
+          Import to database
+        </button>
+      </div>
+    </section>
   </div>
 </template>

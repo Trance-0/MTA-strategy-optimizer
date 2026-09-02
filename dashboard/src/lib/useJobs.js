@@ -16,7 +16,13 @@
 
 import { computed, readonly, ref } from "vue";
 
-import { fetchJobs, startJob, stopJob } from "../api/client.js";
+import {
+  fetchJobs,
+  importJobArtifacts,
+  startJob,
+  stopJob,
+  uploadJobArtifacts,
+} from "../api/client.js";
 import { useDashboard } from "./useDashboard.js";
 
 /** How often a running stage is polled. */
@@ -109,6 +115,37 @@ export function useJobs() {
         const result = await stopJob(stage);
         if (result) state.value = result;
         schedule();
+      } finally {
+        busy.value = false;
+      }
+    },
+
+    async uploadOutputs(stage, files) {
+      busy.value = true;
+      error.value = null;
+      try {
+        await uploadJobArtifacts(stage, files);
+        await refresh();
+        await reload();
+        return true;
+      } catch (cause) {
+        error.value = cause;
+        return false;
+      } finally {
+        busy.value = false;
+      }
+    },
+
+    async importOutputs(stage) {
+      busy.value = true;
+      error.value = null;
+      try {
+        await importJobArtifacts(stage);
+        await refresh();
+        return true;
+      } catch (cause) {
+        error.value = cause;
+        return false;
       } finally {
         busy.value = false;
       }

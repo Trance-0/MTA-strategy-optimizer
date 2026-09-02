@@ -21,8 +21,9 @@ from decimal import Decimal
 from pathlib import Path
 from typing import Any
 
-from backend.config import pipeline_output_directory
+from backend.config import pipeline_output_directory, research_snapshot_path
 from backend.database import sql, table_exists
+from modules.mta_attribution.config import AMAZON_ADS_REPORT_FILE, AMC_REPORT_FILE
 from modules.mta_attribution.src.synthetic_event_pipeline import ADS_FIELDS
 from modules.mta_standard.src.dataloader import MTA_SIM_PATH_REPORT_FIELDS
 
@@ -42,21 +43,27 @@ class PreparedDataset:
     research_snapshot: Path | None = None
 
 
-def datasets_for(stage: str) -> list[dict[str, str]]:
-    """Return compatible database scopes for one model stage."""
+def datasets_for(stage: str, database_enabled: bool = True) -> list[dict[str, str]]:
+    """Return compatible database scopes or fixed server-owned file inputs."""
+    if not database_enabled:
+        return _file_datasets(stage)
     if stage == "attribution":
         return _attribution_datasets()
-    if stage in {"optimization", "evaluation"}:
+    if stage == "optimization":
         return _research_datasets()
+    if stage == "evaluation":
+        return [*_research_datasets(), _strategy_artifact_dataset()]
     return []
 
 
-def resolve_dataset(stage: str, dataset_id: str | None) -> dict[str, str]:
+def resolve_dataset(
+    stage: str, dataset_id: str | None, database_enabled: bool = True
+) -> dict[str, str]:
     """Revalidate one opaque identifier against the database's current state."""
     selected = str(dataset_id or "").strip()
     if not selected:
         raise DatasetError("datasetId is required for every model run.")
-    for dataset in datasets_for(stage):
+    for dataset in datasets_for(stage, database_enabled=database_enabled):
         if dataset["id"] == selected:
             return dataset
     raise DatasetError(
@@ -73,6 +80,8 @@ def prepare_dataset(stage: str, dataset: dict[str, str]) -> PreparedDataset:
             "PIPELINE_OUTPUT_DIR must name a writable directory before models "
             "can prepare database inputs."
         )
+    if dataset.get("source") == "files":
+        return _prepare_file_dataset(stage, dataset)
     target = runtime / "datasets" / stage
     target.mkdir(parents=True, exist_ok=True)
     if stage == "attribution":
@@ -92,6 +101,77 @@ def prepare_dataset(stage: str, dataset: dict[str, str]) -> PreparedDataset:
             dataset_id=dataset["id"],
             marketplace=dataset["marketplace"],
             research_snapshot=snapshot,
+        )
+    raise DatasetError(f"Unknown model stage: {stage}.")
+
+
+def _file_datasets(stage: str) -> list[dict[str, str]]:
+    """Describe only fixed files already known to this backend."""
+    if (
+        stage == "attribution"
+        and AMC_REPORT_FILE.is_file()
+        and AMAZON_ADS_REPORT_FILE.is_file()
+    ):
+        return [
+            {
+                "id": "files|attribution|committed-sample",
+                "label": "Committed attribution sample",
+                "description": "Aggregated paths and matching daily performance",
+                "marketplace": "US",
+                "source": "files",
+            }
+        ]
+    if stage == "optimization" and research_snapshot_path() is not None:
+        return [
+            {
+                "id": "files|optimization|research-snapshot",
+                "label": "Configured research snapshot",
+                "description": "Server-configured observed budget and outcome history",
+                "marketplace": "US",
+                "source": "files",
+            }
+        ]
+    if stage == "evaluation":
+        return [_strategy_artifact_dataset()]
+    return []
+
+
+def _strategy_artifact_dataset() -> dict[str, str]:
+    """Describe evaluation's built-in no-research fallback."""
+    return {
+        "id": "files|evaluation|strategy-artifacts",
+        "label": "Current strategy artifacts",
+        "description": "Initializer and optimizer outputs available to the backend",
+        "marketplace": "US",
+        "source": "files",
+    }
+
+
+def _prepare_file_dataset(stage: str, dataset: dict[str, str]) -> PreparedDataset:
+    """Resolve a fixed file descriptor without accepting a browser path."""
+    if stage == "attribution":
+        if not AMC_REPORT_FILE.is_file() or not AMAZON_ADS_REPORT_FILE.is_file():
+            raise DatasetError("The committed attribution input files are unavailable.")
+        return PreparedDataset(
+            dataset_id=dataset["id"],
+            marketplace=dataset["marketplace"],
+            path_report=AMC_REPORT_FILE,
+            performance_report=AMAZON_ADS_REPORT_FILE,
+        )
+    if stage == "optimization":
+        snapshot = research_snapshot_path()
+        if snapshot is None:
+            raise DatasetError("The configured research snapshot is unavailable.")
+        return PreparedDataset(
+            dataset_id=dataset["id"],
+            marketplace=dataset["marketplace"],
+            research_snapshot=snapshot,
+        )
+    if stage == "evaluation":
+        return PreparedDataset(
+            dataset_id=dataset["id"],
+            marketplace=dataset["marketplace"],
+            research_snapshot=research_snapshot_path(),
         )
     raise DatasetError(f"Unknown model stage: {stage}.")
 

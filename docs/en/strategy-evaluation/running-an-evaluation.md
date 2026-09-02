@@ -91,7 +91,7 @@ The stage declares no `requiresResearchSnapshot`, because it falls back to the o
 
 ### The snapshot key
 
-`backend/repository/evaluation.py` adds `strategy_evaluation()`, registered as `strategyEvaluation` in the `LOADERS` dictionary in `backend/repository/snapshot.py`. Like `campaignStrategy`, it is read in its own shape in both file and database modes, because the artifact is produced by a research command rather than by the import pipeline and has no table. When configured, a completed `PIPELINE_OUTPUT_DIR/evaluation/strategy_evaluation.json` takes precedence over the baseline artifact. An absent runtime and baseline file returns an empty object, which the dashboard reads as "the evaluation has not run" — the honest reading in both modes.
+`backend/repository/evaluation.py` adds `strategy_evaluation()`, registered as `strategyEvaluation` in the `LOADERS` dictionary in `backend/repository/snapshot.py`. Like `campaignStrategy`, it is read in its own shape in both file and database modes. A completed `PIPELINE_OUTPUT_DIR/evaluation/strategy_evaluation.json` takes precedence; database mode can restore a complete explicitly imported `model_artifact` set there. An absent runtime, imported, and baseline file returns an empty object, which the dashboard reads as "the evaluation has not run" — the honest reading in both modes.
 
 The key set is asserted exactly by `backend/tests/test_snapshot.py`, so adding it there is part of the same change rather than a follow-up. `dashboard/src/api/client.js` returns the payload whole without enumerating keys, so the client needs no change to receive it.
 

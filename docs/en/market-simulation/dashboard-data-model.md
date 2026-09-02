@@ -1,7 +1,7 @@
 ---
 title: Dashboard Data Model
-description: The eighteen relational classes the dashboard reads when DATABASE=true
-compact: "PostgreSQL mirror contract in `dashboard/models.py`: eighteen ordered entity, history, model-output, and strategy tables populated by `script/import_to_database.py` and read by Flask repositories in database mode. Covers keys, constraints, lineage, nullability, rounding, and file/database parity."
+description: The nineteen relational classes the dashboard uses when DATABASE=true
+compact: "PostgreSQL mirror contract in `dashboard/models.py`: eighteen ordered dashboard tables plus optional `model_artifact` storage for validated uploads and job outputs. Covers keys, constraints, lineage, nullability, rounding, file/database parity, and explicit artifact import."
 order: 60
 ---
 
@@ -22,7 +22,7 @@ The attribution, standard, and strategy modules never import these classes. They
 
 ### `DATABASE=true`
 
-- Reads: The eighteen tables below
+- Reads: The eighteen required tables below; `model_artifact` is optional
 - Requires: A populated PostgreSQL instance
 
 The Flask repositories under `backend/repository/` guarantee that both modes
@@ -138,6 +138,16 @@ The diagnostics inform a reader; they never change the verdict, which AND-aggreg
 Table `recommended_attribution`, unique on `(run_pk, touchpoint_pk, outcome)`. The governed view a consumer is meant to read, naming the `official_model` and its `official_share`, the `benchmark_model` and its `benchmark_share`, and the gap between them.
 
 `recommended_value` is a text union type. A RELIABLE row holds the official point value as a string; an UNRELIABLE row holds the closed interval `[low,high]` between the two model shares instead. It is a governance output, not a third model, and an interval grants no budgeting authority.
+
+### `ModelArtifact`
+
+Table `model_artifact`, unique on `(stage, filename)`. This optional nineteenth
+class uses separate `ArtifactBase` metadata and stores a complete validated stage-output set only after the operator
+presses **Import to database**. It carries the fixed stage and filename, media
+type, SHA-256 digest, UTF-8 content, and import timestamp. It is deliberately
+excluded from dashboard schema readiness and the normal bulk import: an older
+eighteen-table schema remains readable, and the artifact endpoint creates this
+single table only for the explicit import transaction.
 
 ## Strategy Layer
 

@@ -1,7 +1,7 @@
 ---
 title: Backend Setup and Deployment
 description: Local Flask startup and Yunxiao AppStack deployment configuration
-compact: "Flask and AppStack setup: local commands, direct-interpreter model jobs with evaluation dependencies, read-only root plus `/pipeline-output`, protected settings, build identity, PostgreSQL schema census, probes, ingress, connectivity, and Docker metadata without copied Git history."
+compact: "Flask and AppStack setup: local commands, direct-interpreter jobs, default writable pipeline runtime, read-only root plus `/pipeline-output`, protected settings, build identity, PostgreSQL schema census, probes, ingress, connectivity, and Docker metadata without copied Git history."
 lang: en-US
 source_files: backend/app.py, backend/config.py, backend/database.py, backend/services/schemas.py, backend/wsgi.py, backend/tests/test_app.py, backend/tests/test_schemas.py, deploy/appstack/Dockerfile, deploy/appstack/orchestration.yaml, deploy/appstack/values.example.yaml, .dockerignore
 ---
@@ -212,6 +212,20 @@ Claim named by `mtaSimPvc` at `/data/mta-sim`. The claim must exist in the
 target namespace before deployment. Use an empty read-only claim when model
 research inputs are intentionally unavailable; the catalogue will report the
 corresponding capabilities as unavailable.
+
+Outside containers, leaving `PIPELINE_OUTPUT_DIR` unset selects the ignored
+repository path `generated/pipeline-output`. The backend creates it and performs
+a temporary write probe before advertising model execution or artifact upload.
+An explicitly configured directory is never replaced by this default when its
+creation or probe fails; the jobs response reports that configured runtime as
+unwritable. Static builds have no Python backend and advertise neither run nor
+upload capability.
+
+Flask refuses any request body above 26 MiB before a route parses it. That
+ceiling accommodates the model-output endpoint's 25 MiB complete-set limit plus
+multipart framing; the artifact service still enforces ten MiB per file, the
+exact file count, and the lower aggregate content limit. Other write routes
+retain their own stricter field and shape validation.
 
 The Ingress requires an existing Transport Layer Security (TLS) Secret and an
 NGINX basic-auth Secret. This is mandatory because the application has no

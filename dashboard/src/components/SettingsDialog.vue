@@ -2,8 +2,9 @@
 /**
  * The settings modal behind the rail's gear button.
  *
- * Two tabs: the data source this dashboard connects with, and the streaming
- * data log. The published build renders neither form -- it has no writable
+ * Three tabs: basic deployment identity, the data source this dashboard
+ * connects with, and the streaming data log. The published build renders
+ * neither mutable form -- it has no writable
  * `.env` and no socket, so offering a credential field there would invite a
  * real password into a page that could never use it -- and states the local-run
  * instructions instead.
@@ -33,7 +34,7 @@ const props = defineProps({
 
 const emit = defineEmits(["close", "changed", "reload"]);
 
-const tab = ref("source");
+const tab = ref("general");
 const state = ref(null);
 const busy = ref(false);
 const message = ref(null);
@@ -51,6 +52,20 @@ const form = ref({
 
 const SSL_MODES = ["disable", "allow", "prefer", "require", "verify-ca", "verify-full"];
 const LOG_LEVELS = ["DEBUG", "INFO", "WARNING", "ERROR"];
+const displayLevel = ref("DEBUG");
+const displaySource = ref("all");
+
+const logSources = computed(() => [
+  "all",
+  ...new Set((state.value?.logging?.records ?? []).map((record) => record.source)),
+]);
+const visibleRecords = computed(() =>
+  (state.value?.logging?.records ?? []).filter(
+    (record) =>
+      LOG_LEVELS.indexOf(record.level) >= LOG_LEVELS.indexOf(displayLevel.value) &&
+      (displaySource.value === "all" || record.source === displaySource.value),
+  ),
+);
 
 const hosted = computed(() => state.value?.hosted ?? false);
 const readOnly = computed(() => hosted.value || (state.value?.readOnly ?? false));
@@ -477,6 +492,33 @@ function setLevel(level) {
     logging: { enabled: state.value?.logging?.enabled ?? false, level },
   });
 }
+
+async function copyVisibleLogs() {
+  const content = visibleRecords.value
+    .map((record) =>
+      `${record.when} ${record.level} ${record.source} ${record.message}` +
+      (record.durationMs == null ? "" : ` duration_ms=${record.durationMs}`),
+    )
+    .join("\n");
+  try {
+    if (navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(content);
+    } else {
+      const field = document.createElement("textarea");
+      field.value = content;
+      field.setAttribute("readonly", "");
+      field.style.position = "fixed";
+      field.style.opacity = "0";
+      document.body.appendChild(field);
+      field.select();
+      if (!document.execCommand("copy")) throw new Error("Browser copy was refused.");
+      field.remove();
+    }
+    message.value = { ok: true, text: `${visibleRecords.value.length} log record(s) copied.` };
+  } catch (error) {
+    message.value = { ok: false, text: `Could not copy logs: ${error.message}` };
+  }
+}
 </script>
 
 <template>
@@ -488,6 +530,15 @@ function setLevel(level) {
       </div>
 
       <div class="tabs" role="tablist">
+        <button
+          class="tab"
+          role="tab"
+          :aria-selected="tab === 'general'"
+          :class="{ active: tab === 'general' }"
+          @click="tab = 'general'"
+        >
+          General
+        </button>
         <button
           class="tab"
           role="tab"
@@ -509,7 +560,11 @@ function setLevel(level) {
       </div>
 
       <div class="modal-body">
-        <section class="deployment-identity" aria-label="Deployment identity">
+        <section
+          v-if="tab === 'general'"
+          class="deployment-identity"
+          aria-label="Deployment identity"
+        >
           <div class="identity-head">
             <div>
               <h3>Deployment identity</h3>
@@ -548,7 +603,7 @@ function setLevel(level) {
           <p class="caption">{{ identityStatus.detail }}</p>
         </section>
 
-        <template v-if="tab === 'source'">
+        <template v-else-if="tab === 'source'">
           <div v-if="state" class="source-banner">
             <b>{{ state.status.label }}</b>
             <span>{{ state.status.detail }}</span>
@@ -916,11 +971,11 @@ cp sample.env .env      # set DATABASE=true and the PG_* values
           </template>
         </template>
 
-        <template v-else>
+        <template v-else-if="tab === 'logging'">
           <p>
             Records what the dashboard reads while it reads it: the queries
             issued to PostgreSQL, the source each snapshot came from, and how
-            long it took. Off by default, because logging every read costs time.
+            long it took. Capture starts enabled at INFO level.
           </p>
 
           <template v-if="state">
@@ -935,7 +990,7 @@ cp sample.env .env      # set DATABASE=true and the PG_* values
                 <span>Enable logging</span>
               </label>
               <div class="field">
-                <label for="log-level">Level</label>
+                <label for="log-level">Capture level</label>
                 <select
                   id="log-level"
                   :value="state.logging.level"
@@ -947,6 +1002,25 @@ cp sample.env .env      # set DATABASE=true and the PG_* values
                   </option>
                 </select>
               </div>
+              <div class="field">
+                <label for="log-display-level">Show severity</label>
+                <select id="log-display-level" v-model="displayLevel">
+                  <option v-for="level in LOG_LEVELS" :key="level" :value="level">
+                    {{ level }}+
+                  </option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="log-source">Source</label>
+                <select id="log-source" v-model="displaySource">
+                  <option v-for="source in logSources" :key="source" :value="source">
+                    {{ source === "all" ? "All sources" : source }}
+                  </option>
+                </select>
+              </div>
+              <button class="btn small" :disabled="!visibleRecords.length" @click="copyVisibleLogs">
+                Copy visible logs
+              </button>
               <button class="btn small" :disabled="readOnly" @click="send('clearLog')">
                 Clear captured records
               </button>
@@ -958,21 +1032,26 @@ cp sample.env .env      # set DATABASE=true and the PG_* values
             </p>
             <template v-else>
               <p class="caption">
-                {{ state.logging.records.length }} record(s), newest last.
+                {{ visibleRecords.length }} of {{ state.logging.records.length }} record(s), newest last.
                 Capacity {{ state.logging.capacity }}.
               </p>
               <div class="log-stream">
                 <div
-                  v-for="(record, index) in state.logging.records"
+                  v-for="(record, index) in visibleRecords"
                   :key="index"
                   class="log-row"
                 >
-                  <span class="log-when">{{ record.when }}</span>
+                  <span class="log-when">{{ record.when.slice(11, 19) }}</span>
                   <span class="log-level" :class="record.level.toLowerCase()">
                     {{ record.level }}
                   </span>
                   <span class="log-source">{{ record.source }}</span>
-                  <span class="log-message">{{ record.message }}</span>
+                  <span class="log-message">
+                    {{ record.message }}
+                    <template v-if="record.durationMs != null">
+                      · {{ record.durationMs }} ms
+                    </template>
+                  </span>
                 </div>
               </div>
             </template>

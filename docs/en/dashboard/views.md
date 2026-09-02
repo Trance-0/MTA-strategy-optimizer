@@ -1,6 +1,6 @@
 ---
 title: Dashboard Views and Visual Contract
-compact: "Vue visual contract: seven views with route-controlled tab subsections, empty Knowledge Base placeholder, accessible TermHelp links, route-owned lazy resources, server-declared model selectors, large-history-safe charts, and native Willow forecasting."
+compact: "Vue visual contract: seven route-controlled views, lazy resources, accessible terms, server-declared model selectors, file/backend run capability, validated model artifact upload/download/database import, large-history-safe charts, and native Willow forecasting."
 lang: en-US
 source_files: dashboard/src/theme.js, dashboard/src/style.css, dashboard/src/lib/deployment.js, dashboard/src/lib/diagnostics.js, dashboard/src/lib/useJobs.js, dashboard/src/lib/willowGmvModel.js, dashboard/src/lib/terms.js, dashboard/src/views/CommandCenter.vue, dashboard/src/views/BudgetManager.vue, dashboard/src/views/Campaigns.vue, dashboard/src/views/CampaignOptimizer.vue, dashboard/src/views/OptimizationLog.vue, dashboard/src/views/KnowledgeBase.vue, dashboard/src/components/SidebarNav.vue, dashboard/src/components/TopBar.vue, dashboard/src/components/StageRunner.vue, dashboard/src/components/LoadingProgress.vue, dashboard/src/components/TermHelp.vue, dashboard/src/components/WillowGmvForecast.vue, dashboard/src/components/PlotlyChart.vue, dashboard/src/components/DataTable.vue, dashboard/src/components/EntityTable.vue, dashboard/src/components/ConfirmDialog.vue, dashboard/src/components/TableView.vue, dashboard/src/components/MetricRow.vue, dashboard/src/components/KeyValuePanel.vue, dashboard/src/components/ReliabilityBanner.vue, dashboard/src/lib/common.js
 ---
@@ -125,7 +125,15 @@ New results are loaded on request rather than automatically: a finished run swap
 
 ### Refusals happen before anything is spawned
 
-Running a stage writes new outputs, so it is refused wherever the deployment cannot write — the published build has no server at all, and a file-mode server would write outputs it cannot read back. Strategy optimization additionally needs a research snapshot to fit against, because fitting a budget-to-revenue curve needs the same Campaign observed at several budget levels and a single reporting window carries one. Every reason is checked before the spawn, so a refusal never leaves a half-started run behind, and each names its remedy rather than only the fault.
+Running a stage needs a Python backend and a writable runtime directory. The
+published static build has neither and keeps Run disabled. A file-mode backend
+uses fixed server-owned files and allows the resulting artifacts to be
+downloaded. Database mode additionally offers explicit import into the active
+schema. Strategy optimization still needs a research snapshot to fit against,
+because fitting a budget-to-revenue curve needs the same Campaign observed at
+several budget levels and a single reporting window carries one. Every reason
+is checked before the spawn, so a refusal never leaves a half-started run behind,
+and each names its remedy rather than only the fault.
 
 Options are validated at the same boundary: a date must be a plain ISO date, a total budget a positive number, and a budget usage policy one the `BudgetUsagePolicy` enum declares. Arguments are passed as a vector with `shell: false`, never as a string a shell would re-parse.
 
@@ -221,8 +229,8 @@ Source: `dashboard/src/lib/useJobs.js`
 
 - Responsibility: Hold the single shared copy of every stage's run state and poll it while anything is running.
 - Inputs: `GET /api/jobs`, through `src/api/client.js`.
-- Outputs: `useJobs()` returning `stages`, the read-only `busy` and `error`, `running`, `ensureLoaded()`, `refresh()`, `start(stage, options)`, `stop(stage)`, and `reloadAfterRun()`.
-- Behavior contract: One module-level store rather than a fetch per tab: the optimizer shows three stages at once, and three components polling for themselves would be three times the requests to paint one screen, with three answers free to disagree about which stage is running. **Polling stops when nothing is running** — a dashboard left open on an idle pipeline must not issue a request every second forever — and a stage started from this browser restarts the poll itself. `schedule()` clears the timer before setting one, so a manual refresh landing beside a scheduled one cannot leave two timers polling in parallel. A refusal from the server is surfaced rather than swallowed, because a stage blocked for want of a research snapshot and one blocked by a read-only deployment are different problems and only the message distinguishes them. `reloadAfterRun()` is separate from the run and is called by the reader: a finished stage rewrites what every view reads, and swapping the numbers mid-read would be a worse surprise than a button.
+- Outputs: `useJobs()` returning `stages`, read-only `busy` and `error`, `running`, `ensureLoaded()`, `refresh()`, `start()`, `stop()`, `uploadOutputs()`, `importOutputs()`, and `reloadAfterRun()`.
+- Behavior contract: One module-level store rather than a fetch per tab: the optimizer shows three stages at once, and three components polling for themselves would be three times the requests to paint one screen, with three answers free to disagree about which stage is running. **Polling stops when nothing is running** — a dashboard left open on an idle pipeline must not issue a request every second forever — and a stage started from this browser restarts the poll itself. `schedule()` clears the timer before setting one, so a manual refresh landing beside a scheduled one cannot leave two timers polling in parallel. A refusal from the server is surfaced rather than swallowed. Upload refreshes parsed dashboard data after backend validation; database import refreshes capability after its backend transaction. `reloadAfterRun()` remains reader-controlled so a finished stage does not swap numbers mid-read.
 - Dependencies: Vue's reactivity, `src/api/client.js`, and `src/lib/useDashboard.js`.
 - Verification: `dashboard/tests/dashboard.test.js` covers the server contract this module polls — `GET /api/jobs`, the refusals, and the progress shape. The store itself, its poll scheduling, and its stop-when-idle rule are exercised in a real browser against a running stage.
 
@@ -337,7 +345,20 @@ Source: `dashboard/src/components/SidebarNav.vue`, `dashboard/src/components/Top
 
 `EntityTable.vue` owns paging, page size, free-text filtering, selection, and the two row controls, and owns nothing about what a row means: columns are declared by the mounting view exactly as `DataTable`'s are. Its default page size is 15, offering 15, 30, 50, and 100. **Selection is keyed by a caller-supplied row identity rather than by page index**, so a batch action cannot act on whatever record happens to occupy that index after the page turns; the selection Set is reassigned rather than mutated, because a Set mutated in place is the same object and Vue's reactivity would not repaint the checkboxes. The header checkbox acts on the current page, which is what it can show. Both components read `renderCell` from `src/lib/common.js`, so one column declaration cannot mean two things in two tables.
 
-`StageRunner.vue` is one stage's controls, dataset selector, progress bar, and log, and is mounted once per model tab in both Campaign Optimizer and Optimization Log — so the two views cannot show a run differently. It takes the stage descriptor whole rather than a set of flags, so available datasets and capability changes come from the server without a view edit. The selected dataset identifier is emitted as `datasetId` beside declared extra options. **The bar reads `job.percent` for both `aria-valuenow` and the visible percentage**, so a screen reader and the bar cannot report different progress, and the command is rendered verbatim beside it. The log follows its tail only while the run is going. A blocked stage or a stage with no dataset renders its reason in place of an enabled control rather than failing when pressed.
+`StageRunner.vue` is one stage's controls, dataset selector, progress bar, log,
+and artifact transfer surface, and is mounted once per model tab in both
+Campaign Optimizer and Optimization Log — so the two views cannot show a run
+differently. It takes the stage descriptor whole rather than a set of flags, so
+available datasets, artifact filenames, and capabilities come from the server
+without a view edit. The selected dataset identifier is emitted as `datasetId`
+beside declared extra options. **The bar reads `job.percent` for both
+`aria-valuenow` and the visible percentage**, so a screen reader and the bar
+cannot report different progress, and the command is rendered verbatim beside
+it. The log follows its tail only while the run is going. A blocked stage or a
+stage with no dataset renders its reason in place of an enabled control rather
+than failing when pressed. Valid outputs have fixed download links. A file input
+uploads one complete stage set to the backend for validation and parsing, and
+the database-import action is shown only when the server declares it.
 
 `LoadingProgress.vue` is the corresponding reader for dataset loads rather
 than model runs. It accepts the shared progress object, uses a determinate

@@ -12,9 +12,15 @@ Data flow:
 
 from __future__ import annotations
 
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, jsonify, request, send_file
+from sqlalchemy.exc import SQLAlchemyError
 
-from backend.config import is_hosted, pipeline_runs_enabled, use_database
+from backend.config import (
+    is_hosted,
+    pipeline_output_directory,
+    pipeline_runs_enabled,
+    use_database,
+)
 from backend.repository.snapshot import clear_caches
 from backend.services.jobs import (
     STAGE_KEYS,
@@ -26,6 +32,16 @@ from backend.services.jobs import (
     stop_job,
 )
 from backend.services.settings import log
+from backend.services.model_outputs import (
+    MAX_FILE_BYTES,
+    MAX_STAGE_BYTES,
+    ArtifactError,
+    artifact_names,
+    artifact_manifest,
+    artifact_path,
+    import_artifacts,
+    publish_artifacts,
+)
 
 blueprint = Blueprint("jobs", __name__)
 
@@ -71,7 +87,13 @@ def start(stage: str):
     except OptionError as error:
         return jsonify({"error": "invalid_options", "message": str(error)}), 400
 
-    refusal = start_refusal(stage, writable=use_database(), options=options)
+    database_enabled = use_database()
+    refusal = start_refusal(
+        stage,
+        writable=pipeline_output_directory() is not None,
+        options=options,
+        database_enabled=database_enabled,
+    )
     if refusal is not None:
         return (
             jsonify({"error": refusal["code"], "message": refusal["message"]}),
@@ -84,9 +106,88 @@ def start(stage: str):
         clear_caches()
         log("INFO", "jobs", f"{stage} finished; caches cleared")
 
-    job = start_job(stage, options, on_finish=on_finish)
+    job = start_job(
+        stage,
+        options,
+        on_finish=on_finish,
+        database_enabled=database_enabled,
+    )
     log("INFO", "jobs", f"{stage} started: {job.command}")
-    return jsonify(jobs_state(execution_enabled=True, database_enabled=True)), 202
+    return jsonify(
+        jobs_state(execution_enabled=True, database_enabled=database_enabled)
+    ), 202
+
+
+@blueprint.get("/api/jobs/<stage>/artifacts/<filename>")
+def download_artifact(stage: str, filename: str):
+    """Download one exact validated stage artifact from runtime storage."""
+    try:
+        path = artifact_path(stage, filename)
+    except ArtifactError as error:
+        return jsonify({"error": "invalid_artifact", "message": str(error)}), 400
+    except FileNotFoundError:
+        return jsonify(
+            {"error": "artifact_not_found", "message": "Artifact not found."}
+        ), 404
+    except (OSError, RuntimeError, SQLAlchemyError) as error:
+        return (
+            jsonify(
+                {
+                    "error": "artifact_unavailable",
+                    "message": f"{type(error).__name__}: {str(error)[:300]}",
+                }
+            ),
+            503,
+        )
+    return send_file(path, as_attachment=True, download_name=filename)
+
+
+@blueprint.post("/api/jobs/<stage>/artifacts")
+def upload_artifacts(stage: str):
+    """Validate and publish one complete multipart stage-output set."""
+    submitted = []
+    try:
+        uploads = request.files.getlist("files")
+        if len(uploads) > len(artifact_names(stage)):
+            raise ArtifactError("Too many files were submitted for this stage.")
+        total = 0
+        for upload in uploads:
+            content = upload.stream.read(MAX_FILE_BYTES + 1)
+            total += len(content)
+            if total > MAX_STAGE_BYTES:
+                raise ArtifactError(
+                    "The artifact set exceeds the 25 MiB request limit."
+                )
+            submitted.append((upload.filename or "", content))
+        result = publish_artifacts(stage, submitted)
+    except (ArtifactError, OSError) as error:
+        return jsonify({"error": "invalid_artifacts", "message": str(error)}), 400
+    clear_caches()
+    log("INFO", "artifacts", f"{stage} outputs uploaded and parsed")
+    return jsonify({"ok": True, "artifacts": result})
+
+
+@blueprint.post("/api/jobs/<stage>/artifacts/import")
+def import_stage_artifacts(stage: str):
+    """Persist one complete validated runtime set in the active database."""
+    if not use_database():
+        return (
+            jsonify(
+                {
+                    "error": "database_required",
+                    "message": "Configure database mode before importing model outputs.",
+                }
+            ),
+            409,
+        )
+    try:
+        count = import_artifacts(stage)
+        artifacts = artifact_manifest(stage, database_enabled=True)
+    except (ArtifactError, FileNotFoundError, OSError, SQLAlchemyError) as error:
+        return jsonify({"error": "invalid_artifacts", "message": str(error)}), 400
+    clear_caches()
+    log("INFO", "artifacts", f"{stage} outputs imported to database ({count} files)")
+    return jsonify({"ok": True, "imported": count, "artifacts": artifacts})
 
 
 @blueprint.delete("/api/jobs/<stage>")
