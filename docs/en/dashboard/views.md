@@ -1,6 +1,6 @@
 ---
 title: Dashboard Views and Visual Contract
-compact: "Vue visual contract: seven route-controlled views, lazy resources, accessible terms, server-declared model selectors, file/backend run capability, validated model artifact upload/download/database import, large-history-safe charts, and native Willow forecasting."
+compact: "Vue visual contract: seven route-controlled views, immediate backend-phased lazy-loading transitions, accessible terms, server-declared model selectors, artifact transfer, unified queued tasks, large-history-safe charts, and native Willow forecasting."
 lang: en-US
 source_files: dashboard/src/theme.js, dashboard/src/style.css, dashboard/src/lib/deployment.js, dashboard/src/lib/diagnostics.js, dashboard/src/lib/useJobs.js, dashboard/src/lib/willowGmvModel.js, dashboard/src/lib/terms.js, dashboard/src/views/CommandCenter.vue, dashboard/src/views/BudgetManager.vue, dashboard/src/views/Campaigns.vue, dashboard/src/views/CampaignOptimizer.vue, dashboard/src/views/OptimizationLog.vue, dashboard/src/views/KnowledgeBase.vue, dashboard/src/components/SidebarNav.vue, dashboard/src/components/TopBar.vue, dashboard/src/components/StageRunner.vue, dashboard/src/components/LoadingProgress.vue, dashboard/src/components/TermHelp.vue, dashboard/src/components/WillowGmvForecast.vue, dashboard/src/components/PlotlyChart.vue, dashboard/src/components/DataTable.vue, dashboard/src/components/EntityTable.vue, dashboard/src/components/ConfirmDialog.vue, dashboard/src/components/TableView.vue, dashboard/src/components/MetricRow.vue, dashboard/src/components/KeyValuePanel.vue, dashboard/src/components/ReliabilityBanner.vue, dashboard/src/lib/common.js
 ---
@@ -299,6 +299,19 @@ history slice; entity, performance, bridge, and path tabs declare their own
 smaller resources. Navigating between routes reuses completed or in-flight
 resources, while a sibling resource remains absent until its route is opened.
 
+The shell mounts a transition card as soon as a route requires an uncached
+resource; it never waits three seconds before acknowledging the click. For a live
+backend, the resource response streams server milestones — checking the configured
+source, reading metadata, reading history, preparing JavaScript Object Notation
+(JSON), and transferring bytes. Elapsed time is always visible. The Campaign
+History message names that filters and charts are held until the complete,
+consistent history slice is ready.
+
+Static builds continue to read generated resource files directly, but show the
+same immediate transition and byte progress. A failed load replaces the transition
+with the existing actionable error card. Navigating away makes an old progress
+report irrelevant without invalidating the shared backend cache.
+
 The four tabs are one `v-if`/`v-else-if`/`v-else` chain, not several. A second
 `v-if` opened mid-way ends the first chain, and the trailing `v-else` then
 renders under whichever tab is selected — which is exactly the defect 0.9.27
@@ -362,10 +375,11 @@ the database-import action is shown only when the server declares it.
 
 `LoadingProgress.vue` is the corresponding reader for dataset loads rather
 than model runs. It accepts the shared progress object, uses a determinate
-width and `aria-valuenow` only when total bytes are known, otherwise renders an
-indeterminate bar, and states received versus total bytes where possible. It
-does not own the three-second timer; the store owns timing so two mounted views
-cannot disagree about whether the same request is slow.
+width and `aria-valuenow` only when a backend milestone or total bytes are known,
+otherwise renders an indeterminate bar, and states server phase, elapsed time,
+and received versus total bytes where possible. The store makes it visible
+immediately and owns timing so two mounted views cannot disagree about the same
+request.
 
 `ConfirmDialog.vue` is the only route to a deletion. It **names the affected identifiers rather than reporting a count alone**, because a count is not something a reader can check and a batch selected across several pages is exactly the case where a reader cannot see their own selection. The list is capped at twelve with the remainder stated rather than dropped, and the dialog stays open on failure carrying the reason.
 

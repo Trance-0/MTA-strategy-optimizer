@@ -2,8 +2,8 @@
 /**
  * The settings modal behind the rail's gear button.
  *
- * Three tabs: basic deployment identity, the data source this dashboard
- * connects with, and the streaming data log. The published build renders
+ * Four tabs: basic deployment identity, a database doctor, the request log,
+ * and queued backend tasks. The published build renders
  * neither mutable form -- it has no writable
  * `.env` and no socket, so offering a credential field there would invite a
  * real password into a page that could never use it -- and states the local-run
@@ -15,6 +15,7 @@
  */
 import { computed, onUnmounted, ref, watch } from "vue";
 
+import BackendTasks from "./BackendTasks.vue";
 import {
   fetchSchemaOperation,
   fetchSettings,
@@ -38,6 +39,7 @@ const tab = ref("general");
 const state = ref(null);
 const busy = ref(false);
 const message = ref(null);
+const focusedTaskId = ref("");
 
 const form = ref({
   useDatabase: false,
@@ -142,7 +144,7 @@ const inspectedOption = computed(() =>
 );
 const operation = computed(() => schemaOperation.value.current);
 const operationRunning = computed(() =>
-  ["running", "stopping"].includes(operation.value?.state),
+  ["queued", "running", "stopping"].includes(operation.value?.state),
 );
 
 /**
@@ -156,6 +158,19 @@ const operationRunning = computed(() =>
  */
 const setupAvailable = computed(() => schemaOperation.value.available === true);
 const setupReason = computed(() => schemaOperation.value.reason ?? "");
+const doctorSteps = computed(() => {
+  const census = schemas.value ?? {};
+  const active = (census.schemas ?? []).find((item) => item.name === census.selected);
+  const connected = state.value?.useDatabase && !String(state.value?.status?.detail ?? "").includes("Unavailable");
+  const inspected = connected && !census.error && (census.schemas ?? []).length > 0;
+  const importing = ["queued", "running", "stopping"].includes(operation.value?.state);
+  return [
+    { number: 1, label: "Connect", state: connected ? "complete" : "current" },
+    { number: 2, label: "Inspect", state: inspected ? "complete" : connected ? "current" : "blocked" },
+    { number: 3, label: "Import", state: importing ? "current" : active?.selectable ? "optional" : inspected ? "current" : "blocked" },
+    { number: 4, label: "Verify", state: active?.selectable && !importing ? "complete" : importing ? "blocked" : "current" },
+  ];
+});
 
 /**
  * Whether the entered connection is the saved one.
@@ -459,10 +474,8 @@ async function runSchemaOperation(action) {
       schema,
       replaceSchemas.value,
     );
-    message.value = {
-      ok: true,
-      text: `${action === "derive" ? "Parsing" : "Initialization"} started.`,
-    };
+    focusedTaskId.value = String(schemaOperation.value.current?.id ?? "");
+    tab.value = "tasks";
     scheduleOperationPoll();
   } catch (error) {
     message.value = { ok: false, text: `${error.name}: ${error.message}` };
@@ -557,6 +570,15 @@ async function copyVisibleLogs() {
         >
           Logging
         </button>
+        <button
+          class="tab"
+          role="tab"
+          :aria-selected="tab === 'tasks'"
+          :class="{ active: tab === 'tasks' }"
+          @click="tab = 'tasks'"
+        >
+          Tasks
+        </button>
       </div>
 
       <div class="modal-body">
@@ -604,6 +626,12 @@ async function copyVisibleLogs() {
         </section>
 
         <template v-else-if="tab === 'source'">
+          <div class="doctor-steps" aria-label="Database setup steps">
+            <span v-for="step in doctorSteps" :key="step.number" :class="step.state">
+              <b>{{ step.number }}</b>
+              <span>{{ step.label }}<small>{{ step.state }}</small></span>
+            </span>
+          </div>
           <div v-if="state" class="source-banner">
             <b>{{ state.status.label }}</b>
             <span>{{ state.status.detail }}</span>
@@ -664,7 +692,7 @@ cp sample.env .env      # set DATABASE=true and the PG_* values
               loaded, and setting one up, remain available below: neither
               rewrites a credential.
             </div>
-            <h3>Database schemas</h3>
+            <h3>Step 2 — Inspect database schemas</h3>
             <p class="caption">
               Select a dashboard-ready schema to open a confirmation window and
               load its actual data. Source and incomplete schemas remain
@@ -715,7 +743,7 @@ cp sample.env .env      # set DATABASE=true and the PG_* values
               </span>
             </label>
 
-            <h3>PostgreSQL connection</h3>
+            <h3>Step 1 — Connect PostgreSQL</h3>
             <div class="form-grid">
               <div class="field span-2">
                 <label for="pg-host">Host</label>
@@ -756,6 +784,7 @@ cp sample.env .env      # set DATABASE=true and the PG_* values
                 </select>
               </div>
               <div class="field span-2">
+                <b>Step 2 — Inspect and select schema</b>
                 <label for="pg-schema">Dashboard schema</label>
                 <!--
                   A schema that cannot serve the dashboard is listed and
@@ -850,7 +879,7 @@ cp sample.env .env      # set DATABASE=true and the PG_* values
           <template v-if="!hosted && state">
             <h3>Schema setup</h3>
             <p class="caption">
-              Build or populate a schema on the connected database. A source
+              <b>Step 3 — Import data.</b> Build or populate a schema on the connected database. A source
               schema stays unchanged and produces one dashboard schema per
               scenario; an empty schema can receive the committed sample
               account.
@@ -924,48 +953,16 @@ cp sample.env .env      # set DATABASE=true and the PG_* values
                 </button>
               </div>
 
-              <section v-if="operation" class="schema-operation" aria-live="polite">
-                <div class="section-head">
-                  <div>
-                    <h4>
-                      {{ operation.action }} {{ operation.schema }} —
-                      {{ operation.state }}
-                    </h4>
-                    <p class="caption">
-                      Started {{ operation.startedAt }}
-                      <template v-if="operation.finishedAt">
-                        · finished {{ operation.finishedAt }}
-                      </template>
-                      <template v-if="operation.exitCode !== null">
-                        · exit {{ operation.exitCode }}
-                      </template>
-                    </p>
-                  </div>
-                  <button
-                    v-if="operationRunning"
-                    class="btn small"
-                    :disabled="busy"
-                    @click="stopSchemaSetup"
-                  >
-                    Stop
-                  </button>
-                </div>
-                <p v-if="operation.error" class="notice bad">{{ operation.error }}</p>
-                <p v-if="operation.droppedLines" class="caption">
-                  {{ operation.droppedLines }} earlier log line(s) dropped.
+              <section class="schema-operation">
+                <h4>Step 4 — Verify the imported schema</h4>
+                <p class="caption">
+                  Start an import to open its complete build log in Tasks. When it
+                  succeeds, return here, select the new dashboard-ready schema,
+                  and reload the actual data.
                 </p>
-                <pre class="schema-command"><code>{{ operation.command }}</code></pre>
-                <div class="log-stream schema-log">
-                  <div
-                    v-for="(line, index) in operation.lines"
-                    :key="`${line.at}-${index}`"
-                    class="log-row"
-                  >
-                    <span class="log-when">{{ line.at }}</span>
-                    <span class="log-source">{{ line.stream }}</span>
-                    <span class="log-message">{{ line.text }}</span>
-                  </div>
-                </div>
+                <button v-if="operation" class="btn small" @click="tab = 'tasks'">
+                  View {{ operation.state }} task
+                </button>
               </section>
             </template>
           </template>
@@ -1057,6 +1054,12 @@ cp sample.env .env      # set DATABASE=true and the PG_* values
             </template>
           </template>
         </template>
+
+        <BackendTasks
+          v-else-if="tab === 'tasks'"
+          :active="open && tab === 'tasks'"
+          :focus-task-id="focusedTaskId"
+        />
       </div>
     </div>
 

@@ -103,16 +103,28 @@ def load_snapshot() -> dict:
     return payload
 
 
-def load_research_history() -> dict:
+def load_research_history(
+    progress: Callable[[int, str], None] | None = None,
+) -> dict:
     """Return and cache the observation-heavy research arrays separately."""
-    return cached("researchHistory", simulation_research_history)
+    return cached("researchHistory", lambda: simulation_research_history(progress))
 
 
-def _research_fields(*names: str, history: bool = False) -> dict:
+def _research_fields(
+    *names: str,
+    history: bool = False,
+    progress: Callable[[int, str], None] | None = None,
+) -> dict:
     """Return one mergeable `simulationResearch` slice by declared fields."""
+    if progress:
+        progress(18, "Reading Campaign metadata")
     core = cached("simulationResearch", simulation_research_core)
-    observations = load_research_history() if history else {}
+    if progress:
+        progress(34, "Campaign metadata ready")
+    observations = load_research_history(progress) if history else {}
     combined = {**core, **observations}
+    if progress:
+        progress(92, "Preparing dashboard history")
     return {"simulationResearch": {name: combined.get(name, []) for name in names}}
 
 
@@ -193,3 +205,26 @@ RESOURCE_LOADERS: dict[str, Callable[[], dict]] = {
 def load_resource(resource: str) -> dict:
     """Load one registered dashboard resource or raise `KeyError`."""
     return RESOURCE_LOADERS[resource]()
+
+
+def load_resource_with_progress(
+    resource: str,
+    progress: Callable[[int, str], None],
+) -> dict:
+    """Load a resource while reporting meaningful server-side milestones."""
+    progress(8, "Checking the configured data source")
+    if resource == "research-campaign-history":
+        return _research_fields(
+            "providers",
+            "products",
+            "campaigns",
+            "campaignProductLinks",
+            "history",
+            "delivery",
+            history=True,
+            progress=progress,
+        )
+    progress(35, f"Reading {resource.replace('-', ' ')}")
+    payload = load_resource(resource)
+    progress(92, "Preparing dashboard data")
+    return payload

@@ -50,6 +50,10 @@ const SETTINGS_DIALOG = readFileSync(
   resolve(HERE, "..", "src", "components", "SettingsDialog.vue"),
   "utf8",
 );
+const BACKEND_TASKS = readFileSync(
+  resolve(HERE, "..", "src", "components", "BackendTasks.vue"),
+  "utf8",
+);
 const DATA_GENERATOR = readFileSync(
   resolve(HERE, "..", "src", "views", "DataGenerator.vue"),
   "utf8",
@@ -414,13 +418,20 @@ test("the schema selection is sent, saved, and refilled from a live test", () =>
   assert.match(settingsApi, /"invalid_schema"/);
 });
 
-test("schema setup exposes discovery-driven initialization, parsing, and logs", () => {
+test("schema doctor queues imports and sends build logs to Tasks", () => {
   assert.match(SETTINGS_DIALOG, /id="setup-schema"/);
   assert.match(SETTINGS_DIALOG, /v-for="option in schemas\.schemas"/);
   assert.match(SETTINGS_DIALOG, /Initialize sample model/);
   assert.match(SETTINGS_DIALOG, /Parse all scenarios/);
-  assert.match(SETTINGS_DIALOG, /operation\.lines/);
-  assert.match(SETTINGS_DIALOG, /operation\.command/);
+  assert.match(SETTINGS_DIALOG, /Connect/);
+  assert.match(SETTINGS_DIALOG, /Inspect/);
+  assert.match(SETTINGS_DIALOG, /Import/);
+  assert.match(SETTINGS_DIALOG, /Verify/);
+  assert.match(SETTINGS_DIALOG, />\s*Tasks\s*<\/button>/);
+  assert.match(BACKEND_TASKS, /selected\.lines/);
+  assert.match(BACKEND_TASKS, /selected\.command/);
+  assert.match(BACKEND_TASKS, /Copy log/);
+  assert.match(BACKEND_TASKS, /stopTask/);
 
   const client = readFileSync(resolve(HERE, "..", "src", "api", "client.js"), "utf8");
   assert.match(client, /fetchSchemaOperation/);
@@ -786,7 +797,7 @@ test("a stage reports the phase it is in, not a timer", () => {
   assert.match(STAGE_RUNNER, /job\.command/);
 });
 
-test("route resources load lazily with delayed byte progress", async () => {
+test("route resources load lazily with immediate backend phase progress", async () => {
   const client = readFileSync(
     resolve(HERE, "..", "src", "api", "client.js"),
     "utf8",
@@ -803,8 +814,10 @@ test("route resources load lazily with delayed byte progress", async () => {
   assert.match(client, /\/api\/dashboard\/resources\//);
   assert.match(client, /response\.body\.getReader/);
   assert.match(client, /Content-Length/);
-  assert.match(dashboardStore, /setTimeout\(\(\) => \{/);
-  assert.match(dashboardStore, /\}, 3000\)/);
+  assert.match(client, /application\/x-ndjson/);
+  assert.match(client, /frame\.type === "progress"/);
+  assert.match(dashboardStore, /visible: true/);
+  assert.match(dashboardStore, /elapsedMs/);
   assert.match(progress, /role="progressbar"/);
   assert.match(dashboardStore, /const inFlight = new Map\(\)/);
   assert.match(dashboardStore, /completed\.value\.has\(resource\)/);

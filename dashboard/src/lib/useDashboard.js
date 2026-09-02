@@ -28,9 +28,11 @@ const completed = ref(new Set());
 const failures = ref(new Map());
 const activeRequests = ref(0);
 const loadingProgress = ref({
-  label: "Loading dashboard data", visible: false, loaded: 0, total: null, percent: null,
+  label: "Loading dashboard data", phase: "Starting request", visible: false,
+  loaded: 0, total: null, percent: null, elapsedMs: 0,
 });
 const inFlight = new Map();
+const progressByResource = new Map();
 let currentResources = [];
 
 function mergePayload(payload) {
@@ -43,20 +45,51 @@ function mergePayload(payload) {
   };
 }
 
+function publishProgress() {
+  const values = [...progressByResource.values()];
+  if (!values.length) return;
+  const visible = values.filter((item) => item.resource !== "shell");
+  const candidates = visible.length ? visible : values;
+  const current = candidates.reduce((slowest, item) =>
+    (item.percent ?? 0) < (slowest.percent ?? 0) ? item : slowest,
+  );
+  loadingProgress.value = { ...current };
+}
+
 async function withProgress(resource, action) {
-  loadingProgress.value = {
+  const started = Date.now();
+  progressByResource.set(resource, {
+    resource,
     label: `Loading ${resource.replaceAll("-", " ")}`,
-    visible: false, loaded: 0, total: null, percent: null,
-  };
-  const timer = setTimeout(() => {
-    loadingProgress.value = { ...loadingProgress.value, visible: true };
-  }, 3000);
+    phase: "Starting request", visible: true, loaded: 0, total: null,
+    percent: 0, elapsedMs: 0,
+  });
+  publishProgress();
+  const timer = setInterval(() => {
+    progressByResource.set(resource, {
+      ...progressByResource.get(resource),
+      elapsedMs: Date.now() - started,
+    });
+    publishProgress();
+  }, 250);
   try {
     return await action((value) => {
-      loadingProgress.value = { ...loadingProgress.value, ...value };
+      const current = progressByResource.get(resource) ?? {};
+      const nextPercent = Number.isFinite(value.percent)
+        ? Math.max(current.percent ?? 0, value.percent)
+        : current.percent;
+      progressByResource.set(resource, {
+        ...current,
+        ...value,
+        percent: nextPercent,
+        elapsedMs: Date.now() - started,
+      });
+      publishProgress();
     });
   } finally {
-    clearTimeout(timer);
+    clearInterval(timer);
+    progressByResource.delete(resource);
+    publishProgress();
   }
 }
 

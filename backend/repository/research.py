@@ -25,7 +25,7 @@ Data flow:
 from __future__ import annotations
 
 import json
-from typing import Any, Mapping
+from typing import Any, Callable, Mapping
 
 from backend.config import simulator_data_directory, use_database
 from backend.database import execute, sql, table_exists
@@ -412,13 +412,54 @@ def simulation_research_core() -> dict:
     return _local_simulation_research(include_observations=False)
 
 
-def simulation_research_history() -> dict:
-    """The three observation arrays loaded lazily by history-facing views."""
-    research = simulation_research()
+def simulation_research_history(
+    progress: Callable[[int, str], None] | None = None,
+) -> dict:
+    """Load only observation arrays, reporting real database query phases."""
+    report = progress or (lambda _percent, _phase: None)
+    if not use_database() or not table_exists("mta_simulation_run"):
+        report(48, "Reading local Campaign history")
+        research = _local_simulation_research()
+        report(84, "Normalizing Campaign history")
+        return {
+            "history": research.get("history") or [],
+            "delivery": research.get("delivery") or [],
+            "touchpointObservations": research.get("touchpointObservations") or [],
+        }
+
+    report(42, "Querying budget and outcome observations")
+    history = sql(
+        """
+        select b.run_id, b.campaign_id, b.marketplace, b.advertiser_id,
+               b.currency, b.report_date, b.budget_level, b.configured_budget,
+               b.actual_spend, o.product_id, o.total_units, o.total_revenue,
+               o.expected_organic_units, o.expected_organic_revenue,
+               o.incremental_units, o.incremental_revenue, o.contribution_profit
+          from mta_sim_budget_observation b
+          left join mta_sim_outcome_observation o
+            on o.run_id = b.run_id and o.campaign_id = b.campaign_id
+           and o.marketplace = b.marketplace and o.report_date = b.report_date
+           and o.budget_level = b.budget_level and o.evaluation_only = true
+         order by b.run_id, b.report_date, b.campaign_id, b.budget_level
+        """
+    )
+    report(66, "Querying delivery observations")
+    delivery = sql(
+        "select * from mta_sim_delivery_observation "
+        "order by run_id, report_date, campaign_id, id"
+    )
+    report(84, "Normalizing Campaign history")
+    dates(history, ["report_date"])
+    dates(delivery, ["report_date"])
+    for row in delivery:
+        row["touchpoint"] = row.get("touchpoint_key")
+    split_touchpoint(delivery)
+    numeric(history, HISTORY_NUMERIC)
+    numeric(delivery, DELIVERY_NUMERIC)
     return {
-        "history": research.get("history") or [],
-        "delivery": research.get("delivery") or [],
-        "touchpointObservations": research.get("touchpointObservations") or [],
+        "history": history,
+        "delivery": delivery,
+        "touchpointObservations": [],
     }
 
 

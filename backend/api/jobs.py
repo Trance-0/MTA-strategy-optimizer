@@ -65,8 +65,8 @@ def list_jobs():
 def start(stage: str):
     """Start one pipeline stage.
 
-    Returns as soon as the child process is spawned; the client polls
-    `GET /api/jobs` for progress.
+    Returns as soon as the validated command is queued; the client polls
+    `GET /api/jobs` or the unified Tasks endpoint for progress.
     """
     if is_hosted() or not pipeline_runs_enabled():
         return (
@@ -112,7 +112,7 @@ def start(stage: str):
         on_finish=on_finish,
         database_enabled=database_enabled,
     )
-    log("INFO", "jobs", f"{stage} started: {job.command}")
+    log("INFO", "jobs", f"{stage} queued: {job.command}")
     return jsonify(
         jobs_state(execution_enabled=True, database_enabled=database_enabled)
     ), 202

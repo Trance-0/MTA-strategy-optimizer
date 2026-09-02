@@ -137,14 +137,17 @@ The source remains read-only. Replacement of already-derived target schemas is
 off by default and requires an explicit choice and browser confirmation.
 
 Initialization and parsing return immediately after starting and continue as
-server-side operations. The settings dialog polls their state and renders the
-exact reproducible command, start and finish times, exit status, and each
-timestamped output line. The log retains at most 600 lines and reports how
-many earlier lines were dropped. A successful operation clears database read
+server-side operations in the unified first-in/first-out operator queue. The
+Data source doctor moves from Connect, through Inspect and Import, to Verify;
+starting the operation opens Settings Tasks on the new task. That tab renders
+the exact reproducible command, safe source or target summary, queue position,
+start and finish times, exit status, and each timestamped output line, with a
+copy action for the complete detail. The log retains at most 600 lines and
+reports how many earlier lines were dropped. A successful operation clears database read
 caches and refreshes the schema census, so newly initialized or derived
 schemas become available in the active selector without restarting the
 dashboard. Closing the dialog does not stop an operation; the operator may
-request termination explicitly.
+request termination explicitly, including while it is still queued.
 
 Setup is available on a protected server. `DASHBOARD_CONFIG_READ_ONLY` keeps
 the browser from rewriting credentials; it does not decide whether the database

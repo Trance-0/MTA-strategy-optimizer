@@ -1,8 +1,8 @@
 ---
 title: Navigation Rail and Settings
-compact: "Navigation contract for canonical deep links, route-owned lazy resources, the flat rail, Settings General/Data source/Logging tabs, Settings-owned reload, runtime PostgreSQL schema selection, protected schema recovery, write-only passwords, and default INFO logging."
+compact: "Navigation contract for canonical deep links, route-owned lazy resources, the flat rail, Settings General/Data source/Logging/Tasks tabs, a four-step schema doctor, runtime PostgreSQL schema selection, queued setup, write-only passwords, and default INFO logging."
 lang: en-US
-source_files: dashboard/src/pages.js, dashboard/src/App.vue, dashboard/src/main.js, dashboard/src/components/SettingsDialog.vue, dashboard/src/components/SchemaRecovery.vue
+source_files: dashboard/src/pages.js, dashboard/src/App.vue, dashboard/src/main.js, dashboard/src/components/SettingsDialog.vue, dashboard/src/components/BackendTasks.vue, dashboard/src/components/SchemaRecovery.vue
 ---
 
 # Navigation Rail and Settings
@@ -94,7 +94,7 @@ selected destination stays visible through horizontal scrolling and carries
 
 ### The settings module
 
-Everything about the dashboard's own plumbing is pinned to the foot of the rail, ruled off from the view navigation above it, so it never reads as another destination. It shows the active source, a status dot, and whether logging is on, and opens a modal with three tabs. **General** is first and contains basic deployment identity only. **Data source** owns connection, schema, setup, and reload controls. **Logging** owns log capture and inspection. Deployment identity appears nowhere in the latter two tabs.
+Everything about the dashboard's own plumbing is pinned to the foot of the rail, ruled off from the view navigation above it, so it never reads as another destination. It shows the active source, a status dot, and whether logging is on, and opens a modal with four tabs. **General** is first and contains basic deployment identity only. **Data source** owns a four-step database doctor. **Logging** owns request-log capture and inspection. **Tasks** owns long-running service history, detail logs, queue state, copy, and stop controls. Deployment identity appears nowhere in the latter three tabs.
 
 When `DASHBOARD_CONFIG_READ_ONLY=true`, the server continues to report its configured source but rejects every settings mutation. The modal replaces its connection form with the server-configuration instruction and disables logging controls, so a team-server visitor cannot rewrite protected credentials or process state through the browser.
 
@@ -111,6 +111,23 @@ Contains the `DATABASE` toggle and the PostgreSQL host, port, database, user, pa
 It also contains **Reload data**. Reload is not rendered in the sidebar. The
 button clears backend and client caches, reloads the selected schema, and keeps
 the Settings dialog open long enough to report success or failure.
+
+The database doctor presents one standard sequence rather than mixing connection,
+selection, and destructive setup controls in one undifferentiated form:
+
+1. **Connect** — enable database mode, enter or inspect the protected connection,
+   test it where editable, and save it.
+2. **Inspect** — read the schema census and its readiness diagnosis.
+3. **Import** — either select a dashboard-ready schema, parse a complete MTA-SIM
+   source into scenario schemas, or initialize the explicitly synthetic sample in
+   an empty/new schema. Replacement remains a separate confirmed choice.
+4. **Verify** — monitor the queued task in Tasks, then select the resulting
+   dashboard-ready schema and reload its actual data.
+
+Each step reports `complete`, `current`, `blocked`, or `optional` from the state
+already returned by the backend. Starting import switches the modal to Tasks and
+selects that task, so a bare “Parsing started” notice never substitutes for
+observable work.
 
 #### Runtime schema selection
 
@@ -145,9 +162,11 @@ it, and the dialog then states why instead of showing buttons the route would
 refuse. `DASHBOARD_CONFIG_READ_ONLY` does not withhold it, on the same grounds
 as `PIPELINE_RUNS_ENABLED`.
 
-Each request is revalidated against a fresh census before a process starts, and
-each command is a fixed argument vector run without a shell. Output streams into
-the dialog, bounded to the newest 600 lines.
+Each request is revalidated against a fresh census before entering the shared
+operator queue, and each command is a fixed argument vector run without a shell.
+The queue has one worker by default: initialization, parsing, attribution,
+optimization, and evaluation execute one at a time in first-in/first-out order.
+Output streams into the Tasks tab, bounded to the newest 600 lines per task.
 
 #### When a schema cannot be read
 
@@ -187,6 +206,22 @@ records. This structure adapts Trance-0's
 [Notechondria operator-log component](https://github.com/Trance-0/notechondria/blob/main/frontend/notechondria_shared/lib/src/components/debug_log.dart):
 bounded buffers, INFO defaults, severity/source filters, copy, and clear.
 
+#### Tasks
+
+Tasks lists queued, running, stopping, stopped, succeeded, and failed backend
+operations newest first. Every row states task type, human label, safe input
+summary, queue position where applicable, created/start/finish timestamps, and
+progress. Selecting a row opens a build-style event stream: each line has a
+timestamp, stream/severity marker, and message; the exact reproducible command is
+separate and copyable. **Copy log** copies the visible task header, summary,
+command, and lines. **Stop** cancels a queued task immediately or terminates the
+running child. Completed tasks remain inspectable in bounded process history.
+
+The task summary never contains credentials, arbitrary client paths, raw datasets,
+or evaluation-only ground truth. A model task names the server-owned dataset label,
+scope, and declared options; a schema task names the action, source or target
+schema, and replacement choice.
+
 ### Links out of the app
 
 The rail closes with **Docs** and **Repo**. A reader who arrives at the published dashboard has no other route to the specification or the source, so the app carries them. The documentation link is relative in the published build, where the documentation is a sibling directory, and absolute in a local run, where there is no sibling to point at.
@@ -206,18 +241,19 @@ Source: `dashboard/src/main.js`, `dashboard/src/App.vue`, `dashboard/src/pages.j
 - Dependencies: Vue 3.
 - Verification: `dashboard/tests/dashboard.test.js` for the registration contract; the rendered result is verified in a real browser for all seven views.
 
-### `src/components/SettingsDialog.vue`
+### `src/components/SettingsDialog.vue` and `src/components/BackendTasks.vue`
 
-Source: `dashboard/src/components/SettingsDialog.vue`
+Source: `dashboard/src/components/SettingsDialog.vue`,
+`dashboard/src/components/BackendTasks.vue`
 
 - Responsibility: Own every control the rail's foot opens — General deployment
-  identity, the connection form, reload, runtime schema selection, schema setup,
-  and logging — and own
+  identity, the database doctor, reload, runtime schema selection, schema setup,
+  request logging, and task inspection — and own
   none of the decisions about whether they are permitted.
-- Inputs: `GET /api/settings`, `GET /api/schema-operations`, and what the
+- Inputs: `GET /api/settings`, `GET /api/schema-operations`, `GET /api/tasks`, and what the
   reader types. A stored password is never among them.
-- Outputs: Settings, schema-selection, and schema-operation requests, and the
-  rendered dialog.
+- Outputs: Settings, schema-selection, schema-operation, and task-stop requests,
+  and the rendered dialog.
 - Behavior contract: The modal defaults to General. Deployment identity renders
   only there; it is basic build/runtime information with no setting control.
   **Protection and capability are separate branches.**
@@ -231,7 +267,11 @@ Source: `dashboard/src/components/SettingsDialog.vue`
   is refreshed by reading settings on a protected server and by a connection
   test on an editable one, because the test action is itself refused when
   configuration is protected. The password field is write-only, and an empty
-  one means keep the stored value.
+  one means keep the stored value. The Data source tab renders Connect, Inspect,
+  Import, and Verify in that order; starting a schema operation opens Tasks with
+  its returned identifier. Tasks polls only while at least one operation is
+  queued, running, or stopping, keeps terminal records selectable, copies one
+  complete detail log, and can stop the selected queued or running task.
 - Dependencies: Vue 3, `src/api/client.js`, and `ConfirmDialog.vue`.
 - Verification: `dashboard/tests/dashboard.test.js`, which pins the branch
   structure, the census-refresh path, and the schema-selection contract;
@@ -254,7 +294,7 @@ Source: `dashboard/src/components/SchemaRecovery.vue`
   census. **It never sends `replace: true`.** Overwriting stays behind the
   settings checkbox that states what it destroys, because the reader here is
   the one least placed to judge what is about to be lost. A running operation
-  is polled at 1200 ms against the same bounded log; on success the offer list
+  is polled at 1200 ms while queued, running, or stopping; on success the offer list
   is refreshed before the page reloads, so a stale option cannot be pressed
   twice.
 - Dependencies: Vue 3 and `src/api/client.js`.

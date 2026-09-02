@@ -106,6 +106,26 @@ class SnapshotContractTests(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.get_json(), {"simulationResearch": expected})
 
+    def test_streamed_resource_reports_backend_phases_before_result(self) -> None:
+        with patch.object(
+            dashboard_api,
+            "load_resource_with_progress",
+            side_effect=lambda _name, progress: (
+                progress(42, "Querying history") or {"simulationResearch": {}}
+            ),
+        ):
+            response = self.client.get(
+                "/api/dashboard/resources/research-campaign-history?stream=1"
+            )
+            body = response.get_data(as_text=True)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.mimetype, "application/x-ndjson")
+        self.assertIn('"phase": "Request accepted by the backend"', body)
+        self.assertIn('"phase": "Querying history"', body)
+        self.assertIn('"type": "result"', body)
+        self.assertEqual(response.headers["X-Accel-Buffering"], "no")
+
     def test_unknown_resource_is_rejected_before_loading(self) -> None:
         with patch.object(dashboard_api, "load_resource") as load:
             response = self.client.get("/api/dashboard/resources/private-table")

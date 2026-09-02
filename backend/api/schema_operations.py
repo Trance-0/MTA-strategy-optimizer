@@ -75,7 +75,7 @@ def get_schema_operation():
 
 @blueprint.post("/api/schema-operations")
 def post_schema_operation():
-    """Validate and start one initializer or simulator parser."""
+    """Validate and queue one initializer or simulator parser."""
     refusal = _refusal()
     if refusal is not None:
         code, message = refusal
@@ -116,7 +116,7 @@ def post_schema_operation():
             else 400
         )
         return jsonify({"error": error.code, "message": str(error)}), status
-    log("INFO", "schema", f"{action} started for {schema}")
+    log("INFO", "schema", f"{action} queued for {schema}")
     return jsonify(_state_payload()), 202
 
 

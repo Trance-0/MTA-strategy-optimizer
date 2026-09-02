@@ -1632,6 +1632,151 @@ tbody tr.selected:hover {
   text-overflow: ellipsis;
 }
 
+.doctor-steps {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.doctor-steps span {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--soft);
+  color: var(--muted);
+  font-size: 11.5px;
+  font-weight: 650;
+}
+
+.doctor-steps > span > span {
+  display: grid;
+  gap: 1px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
+.doctor-steps small {
+  font-size: 8.5px;
+  font-weight: 750;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.doctor-steps > span.complete { border-color: #8fd8b1; background: #f0fbf5; }
+.doctor-steps > span.current { border-color: var(--blue); background: var(--soft); }
+.doctor-steps > span.blocked { opacity: 0.62; }
+
+.doctor-steps b {
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--blue);
+  color: #fff;
+  font-size: 10px;
+}
+
+.tasks-panel,
+.task-detail {
+  display: grid;
+  gap: 10px;
+}
+
+.task-layout {
+  display: grid;
+  grid-template-columns: minmax(210px, 0.75fr) minmax(0, 1.6fr);
+  gap: 12px;
+  min-height: 360px;
+}
+
+.task-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 520px;
+  overflow: auto;
+}
+
+.task-row {
+  display: grid;
+  gap: 4px;
+  width: 100%;
+  padding: 9px 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--text);
+  text-align: left;
+}
+
+.task-row:hover,
+.task-row.active {
+  border-color: var(--blue);
+  background: var(--soft);
+}
+
+.task-row-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 7px;
+}
+
+.task-row > span:not(.task-row-head),
+.task-row small {
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 10.5px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.task-state {
+  padding: 2px 6px;
+  border-radius: 999px;
+  background: var(--line);
+  font-size: 9px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.task-state.running,
+.task-state.stopping { background: #fff0c2; color: #805c00; }
+.task-state.succeeded { background: #d9f6e6; color: #11683c; }
+.task-state.failed,
+.task-state.stopped { background: #ffe1de; color: #9b2d24; }
+
+.task-detail {
+  min-width: 0;
+  padding: 11px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: #fff;
+}
+
+.task-timestamps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px 14px;
+  color: var(--muted);
+  font-size: 10.5px;
+}
+
+.task-log {
+  max-height: 330px;
+  background: #0d1830;
+  color: #dbe6ff;
+}
+
+.task-log .log-row { border-color: rgba(255, 255, 255, 0.08); }
+.task-log .log-when,
+.task-log .log-source { color: #91a8cc; }
+
 /* The remedies under the error card. Left-aligned inside `.empty-card`, which
    centres its text: a list of choices is read as a list, not as a caption. */
 .schema-recovery {
@@ -1748,6 +1893,13 @@ tbody tr.selected:hover {
 @keyframes load-progress-indeterminate {
   from { transform: translateX(-110%); }
   to { transform: translateX(300%); }
+}
+
+@media (max-width: 760px) {
+  .doctor-steps,
+  .task-layout {
+    grid-template-columns: 1fr;
+  }
 }
 
 .run-status {

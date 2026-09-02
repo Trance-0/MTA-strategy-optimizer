@@ -34,7 +34,7 @@ let timer = null;
 
 const options = computed(() => state.value?.options ?? []);
 const running = computed(() =>
-  ["running", "stopping"].includes(operation.value?.state),
+  ["queued", "running", "stopping"].includes(operation.value?.state),
 );
 
 /** The three actions read as instructions, not as the API's verbs. */

@@ -1,9 +1,9 @@
 ---
 title: Backend Jobs and Settings
 description: Pipeline job polling and protected runtime settings contracts
-compact: "Contracts for jobs, artifact upload/download/database import, default writable runtime storage, settings, INFO logging, schema selection and recovery, current-interpreter child operations, bounded logs, termination, cache invalidation, and independent capability flags."
+compact: "Contracts for the single-worker backend task queue, model jobs, schema operations, safe task summaries, task event logs and termination, settings, INFO request logging, schema selection/recovery, artifacts, runtime storage, cache invalidation, and capability flags."
 lang: en-US
-source_files: backend/api/jobs.py, backend/api/settings.py, backend/api/schema_operations.py, backend/api/schema_recovery.py, backend/services/jobs.py, backend/services/model_datasets.py, backend/services/model_outputs.py, backend/services/settings.py, backend/services/schema_operations.py, backend/services/schema_recovery.py, backend/tests/test_jobs.py, backend/tests/test_model_outputs.py, backend/tests/test_settings.py, backend/tests/test_schema_operations.py, backend/tests/test_schema_recovery.py
+source_files: backend/api/jobs.py, backend/api/tasks.py, backend/api/settings.py, backend/api/schema_operations.py, backend/api/schema_recovery.py, backend/services/jobs.py, backend/services/tasks.py, backend/services/model_datasets.py, backend/services/model_outputs.py, backend/services/settings.py, backend/services/schema_operations.py, backend/services/schema_recovery.py, backend/tests/test_jobs.py, backend/tests/test_tasks.py, backend/tests/test_model_outputs.py, backend/tests/test_settings.py, backend/tests/test_schema_operations.py, backend/tests/test_schema_recovery.py
 ---
 
 # Backend Jobs and Settings
@@ -57,7 +57,7 @@ online runs fail before Python started when the executable was absent from the
 deployed path. Strategy evaluation's numerical dependencies are installed in
 every pipeline-enabled runtime image.
 
-The runner keeps active jobs and bounded logs in process memory. A deployment
+The runner registers active jobs and bounded logs with the unified task manager. A deployment
 that enables it therefore runs exactly one application process in exactly one
 pod. Otherwise a start request and its following poll can reach different
 memories, making a live run disappear. Generated artifacts are written inside
@@ -66,6 +66,36 @@ lifetime; AppStack uses the ephemeral `/pipeline-output` mount, while the
 two-container stack uses a named volume. A preparation or permission failure
 becomes a terminal failed job with its error in the bounded log instead of an
 uncaught server error.
+
+## Unified Backend Tasks
+
+`GET /api/tasks` returns bounded operator-task history and queue state. `GET
+/api/tasks/<task_id>` returns one complete detail record. `DELETE
+/api/tasks/<task_id>` stops a queued task before it starts or requests termination
+of its running child. Unknown identifiers return 404 and terminal tasks return
+409 to a stop request.
+
+The manager owns a first-in/first-out queue with one subprocess worker by default.
+Model attribution, strategy optimization, evaluation, schema initialization, and
+scenario parsing all use it, so two CPU- or database-heavy operations do not race
+for the same runtime, tables, or cache. Enqueue returns 202 immediately. A queued
+record carries a one-based `queuePosition`; it receives `startedAt` only when the
+worker claims it. When a task reaches a terminal state, the manager starts the
+next queued task and invokes the successful task's cache-invalidation callback.
+
+Every task record has `id`, `kind`, `action`, `label`, `state`, `phase`, `percent`,
+`createdAt`, `startedAt`, `finishedAt`, `exitCode`, `error`, `summary`, `command`,
+`lines`, and `droppedLines`. Log lines have `at`, `stream`, `level`, and `text`.
+The first lines record queue admission, validation, safe inputs, exact command,
+and worker start before child output appears; therefore a quiet script still
+produces an effective build log. At most 600 newest lines and 100 newest tasks are
+retained in process memory.
+
+Summaries are allow-listed per task type. Model runs include stage, selected
+server-owned dataset identifier and label, marketplace or scope where known, and
+declared numeric options. Schema operations include action, validated schema, and
+replacement choice. Credentials, environment values, client paths, uploaded file
+contents, and evaluation-only truth are never recorded.
 
 When `PIPELINE_OUTPUT_DIR` is unset, a local backend creates and verifies the
 ignored `generated/pipeline-output` directory below the repository. A configured
@@ -174,8 +204,8 @@ value and takes effect on restart.
 
 ## Schema Operations
 
-`GET /api/schema-operations` returns the running or most recent schema
-operation. `POST /api/schema-operations` accepts `initialize` or `derive`, a
+`GET /api/schema-operations` returns the running, queued, or most recent schema
+operation through the unified task record. `POST /api/schema-operations` accepts `initialize` or `derive`, a
 validated schema name, and an explicit Boolean `replace`. `DELETE
 /api/schema-operations` requests termination. Hosted and file-mode deployments
 refuse starts before spawning a process. `SCHEMA_SETUP_ENABLED` governs the
@@ -190,15 +220,17 @@ currently holds every simulator source table required by
 `derive_scenario_schemas.py`. This classification is repeated immediately
 before the process starts rather than trusting an earlier browser census.
 
-Both actions spawn the documented root script as a fixed argument vector with
+Both actions queue the documented root script as a fixed argument vector with
 no shell. The vector begins with the already-running environment's
 `sys.executable`; it never performs an environment-manager lookup, because a
 deployed runtime has already installed the required backend dependencies and
 need not carry `uv` on its executable path. Standard output and standard error
-are combined in order,
-timestamped, truncated to 500 characters per line, and bounded to 600 retained
-lines with a dropped-line count. The response is `202` once the process exists;
-the client polls the `GET` route until `succeeded`, `failed`, or `stopped`. A
+are combined in order. Queue admission, validation, selected schema,
+replacement choice, command, and worker start are recorded before child output,
+so the Tasks tab never substitutes a bare “Parsing started” notice for observable
+work. Lines are timestamped, truncated to 500 characters, and bounded to 600
+retained lines with a dropped-line count. The response is `202` once queued;
+the client polls the Tasks route until `succeeded`, `failed`, or `stopped`. A
 successful operation disposes the database pool and clears snapshot caches
 before the next census.
 
@@ -220,6 +252,24 @@ before acting. Recovery never proposes replacement; destructive rebuilding
 remains an explicit Settings action.
 
 ## Source Files
+
+### `backend/api/tasks.py` and `backend/services/tasks.py`
+
+Source: `backend/api/tasks.py`, `backend/services/tasks.py`
+
+- Responsibility: Own the unified backend-task record, bounded event log,
+  single-worker queue, public task list/detail shapes, and stop dispatch.
+- Inputs: Server-created fixed command vectors, allow-listed safe summaries,
+  optional progress patterns, and successful-completion callbacks.
+- Outputs: The `/api/tasks` list/detail/stop contract and task lifecycle events.
+- Behavior contract: Queue order is first-in/first-out and concurrency defaults
+  to one. A queued task can be cancelled without spawning; a running task is
+  terminated through its held process. Timestamps are Coordinated Universal Time.
+  Task/event history is bounded. No credential, raw environment, arbitrary path,
+  or dataset content enters a public task record.
+- Dependencies: Python standard-library subprocess, threading, and deque only.
+- Verification: `backend/tests/test_tasks.py` proves queue order, state and
+  timestamps, log bounds, safe summaries, queued/running stop, and route errors.
 
 ### `backend/api/jobs.py`, `backend/services/jobs.py`, and `backend/services/model_datasets.py`
 
@@ -302,7 +352,7 @@ Source: `backend/api/schema_operations.py`,
 
 - Responsibility: Validate schema setup requests, recheck live schema
   capabilities, run the canonical initializer or simulator parser, expose a
-  bounded polling log, and terminate the active process on request.
+  queue a unified task, and terminate a queued or active process on request.
 - Inputs: Operation action, valid source or target schema name, explicit
   replacement Boolean, saved PostgreSQL connection settings, and the live
   schema census.

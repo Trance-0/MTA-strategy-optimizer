@@ -234,8 +234,12 @@ const docsHref = computed(() => (IS_STATIC ? "./docs/" : `${DOCS_URL}/`));
           <b>Read-only deployment.</b> {{ readOnlyReason }}
         </div>
         <div v-if="!routeLoaded && !routeError" class="card empty-card">
-          <h2>Loading the pipeline's artifacts…</h2>
-          <p>Reading the attribution outputs, the budget seed, and the history.</p>
+          <h2>{{ page === "campaigns" && section === "history" ? "Loading Campaign history…" : "Loading this dashboard section…" }}</h2>
+          <p v-if="page === 'campaigns' && section === 'history'">
+            Reading a consistent budget, outcome, and delivery slice. Filters and charts
+            will appear together when the backend finishes.
+          </p>
+          <p v-else>Reading only the resources required by this route.</p>
           <LoadingProgress :progress="loadingProgress" />
         </div>
 

@@ -11,8 +11,17 @@ Data flow:
 from __future__ import annotations
 
 import time
+import threading
+from queue import Queue
 
-from flask import Blueprint, jsonify, request
+from flask import (
+    Blueprint,
+    Response,
+    current_app,
+    jsonify,
+    request,
+    stream_with_context,
+)
 
 from backend.config import source_label, use_database
 from backend.database import database_available
@@ -25,6 +34,7 @@ from backend.repository.snapshot import (
     RESOURCE_LOADERS,
     clear_caches,
     load_resource,
+    load_resource_with_progress,
     load_snapshot,
 )
 from backend.services.settings import log
@@ -103,6 +113,8 @@ def dashboard_resource(resource: str):
             ),
             404,
         )
+    if request.args.get("stream") == "1":
+        return _stream_resource(resource)
     started = time.perf_counter()
     try:
         if use_database():
@@ -142,6 +154,89 @@ def dashboard_resource(resource: str):
             ),
             500,
         )
+
+
+def _stream_resource(resource: str) -> Response:
+    """Stream server-side load milestones before the final resource payload."""
+    messages: Queue[tuple[str, object]] = Queue()
+    encoder = current_app.json.dumps
+
+    def progress(percent: int, phase: str) -> None:
+        messages.put(("progress", {"percent": percent, "phase": phase}))
+
+    def work() -> None:
+        started = time.perf_counter()
+        try:
+            if use_database():
+                progress(4, "Checking database readiness")
+                usable, message = database_available()
+                if not usable:
+                    messages.put(
+                        (
+                            "error",
+                            {
+                                "error": "database_unavailable",
+                                "message": message,
+                                "source": source_label(),
+                            },
+                        )
+                    )
+                    return
+            payload = load_resource_with_progress(resource, progress)
+            elapsed = (time.perf_counter() - started) * 1000
+            log(
+                "INFO",
+                "data_source",
+                f"resource {resource} completed",
+                duration_ms=elapsed,
+            )
+            messages.put(("result", payload))
+        except Exception as error:  # noqa: BLE001 - terminal stream frame
+            log(
+                "ERROR",
+                "data_source",
+                f"resource {resource}: {type(error).__name__}: {error}",
+            )
+            messages.put(
+                (
+                    "error",
+                    {
+                        "error": "load_failed",
+                        "message": f"{type(error).__name__}: {str(error)[:400]}",
+                    },
+                )
+            )
+
+    threading.Thread(
+        target=work,
+        daemon=True,
+        name=f"resource-{resource}",
+    ).start()
+
+    @stream_with_context
+    def frames():
+        yield (
+            encoder(
+                {
+                    "type": "progress",
+                    "percent": 1,
+                    "phase": "Request accepted by the backend",
+                }
+            )
+            + "\n"
+        )
+        while True:
+            kind, value = messages.get()
+            if kind == "progress":
+                yield encoder({"type": kind, **value}) + "\n"
+                continue
+            yield encoder({"type": kind, "payload": value}) + "\n"
+            break
+
+    response = Response(frames(), mimetype="application/x-ndjson")
+    response.headers["Cache-Control"] = "no-store"
+    response.headers["X-Accel-Buffering"] = "no"
+    return response
 
 
 @blueprint.post("/api/reload")

@@ -20,11 +20,12 @@ from typing import Any, Callable
 
 from backend.config import REPO_ROOT, valid_schema_name
 from backend.services.schemas import _read_schemas
+from backend.services.tasks import manager, stop_task, task_detail
 
 MAX_LINES = 600
 
 _current: "SchemaOperation | None" = None
-_lock = threading.Lock()
+_id_lock = threading.Lock()
 _next_id = 1
 
 
@@ -49,15 +50,18 @@ class SchemaOperation:
         self.id = identifier
         self.action = action
         self.schema = schema
-        self.state = "running"
+        self.state = "queued"
+        self.percent = 0
+        self.phase = "Validating request"
         self.command = subprocess.list2cmdline(args)
-        self.started_at = _now()
+        self.started_at: str | None = None
         self.finished_at: str | None = None
         self.exit_code: int | None = None
         self.error: str | None = None
         self.lines: list[dict[str, str]] = []
         self.dropped_lines = 0
         self.process: subprocess.Popen | None = None
+        self.task_id: str | None = None
 
     def append(self, stream: str, text: str) -> None:
         """Append timestamped nonblank lines, retaining only the newest 600."""
@@ -65,7 +69,14 @@ class SchemaOperation:
             line = raw.rstrip()
             if not line:
                 continue
-            self.lines.append({"at": _now(), "stream": stream, "text": line[:500]})
+            self.lines.append(
+                {
+                    "at": _now(),
+                    "stream": stream,
+                    "level": "ERROR" if stream == "stderr" else "INFO",
+                    "text": line[:500],
+                }
+            )
             if len(self.lines) > MAX_LINES:
                 overflow = len(self.lines) - MAX_LINES
                 self.dropped_lines += overflow
@@ -73,10 +84,12 @@ class SchemaOperation:
 
     def public_view(self) -> dict[str, Any]:
         return {
-            "id": self.id,
+            "id": self.task_id or self.id,
             "action": self.action,
             "schema": self.schema,
             "state": self.state,
+            "percent": self.percent,
+            "phase": self.phase,
             "command": self.command,
             "startedAt": self.started_at,
             "finishedAt": self.finished_at,
@@ -89,7 +102,8 @@ class SchemaOperation:
 
 def operation_state() -> dict[str, Any]:
     """The active or most recently completed operation."""
-    return {"current": _current.public_view() if _current else None}
+    current = task_detail(_current.task_id) if _current and _current.task_id else None
+    return {"current": current}
 
 
 def arguments_for(action: str, schema: str, replace: bool = False) -> list[str]:
@@ -182,21 +196,44 @@ def start_operation(
 ) -> SchemaOperation:
     """Validate and spawn one operation, returning as soon as it starts."""
     global _current, _next_id
-    with _lock:
-        if _current is not None and _current.state == "running":
-            raise OperationError(
-                "already_running", "Another schema operation is already running."
-            )
-        args = validate_request(action, schema, replace, census)
+    args = validate_request(action, schema, replace, census)
+    with _id_lock:
         operation = SchemaOperation(_next_id, action, schema, args)
         _next_id += 1
-        _current = operation
+    _current = operation
 
-    operation.append("meta", f"$ {operation.command}")
     operation.append(
         "meta",
         f"Validated {action} request for schema {schema!r}; replace={replace}.",
     )
+    operation.append("meta", f"$ {operation.command}")
+
+    def run() -> None:
+        _run_operation(operation, args, on_finish)
+
+    operation.task_id = manager.submit(
+        operation,
+        kind="schema",
+        action=action,
+        label=(
+            "Initialize database schema"
+            if action == "initialize"
+            else "Parse simulator scenarios"
+        ),
+        summary={"schema": schema, "replace": replace},
+        runner=run,
+    )
+    return operation
+
+
+def _run_operation(
+    operation: SchemaOperation,
+    args: list[str],
+    on_finish: Callable[[SchemaOperation], None] | None,
+) -> None:
+    """Spawn and drain one schema command after the queue selects it."""
+    operation.phase = "Starting database command"
+    operation.percent = 4
     try:
         process = subprocess.Popen(  # noqa: S603 - fixed vector, never a shell
             args,
@@ -218,16 +255,13 @@ def start_operation(
         _finish(
             operation, error=f"{type(error).__name__}: {error}", on_finish=on_finish
         )
-        return operation
+        return
 
     operation.process = process
-    threading.Thread(
-        target=_drain,
-        args=(operation, process, on_finish),
-        daemon=True,
-        name=f"schema-{action}",
-    ).start()
-    return operation
+    operation.phase = "Running database command"
+    operation.percent = 10
+    operation.append("meta", "Database command started; streaming output follows.")
+    _drain(operation, process, on_finish)
 
 
 def _drain(
@@ -265,6 +299,12 @@ def _finish(
         if operation.state == "succeeded"
         else error or f"Schema operation ended with exit code {exit_code}.",
     )
+    operation.percent = 100 if operation.state == "succeeded" else operation.percent
+    operation.phase = {
+        "succeeded": "Complete",
+        "failed": "Failed",
+        "stopped": "Stopped",
+    }.get(operation.state, operation.phase)
     if operation.state == "succeeded" and on_finish is not None:
         on_finish(operation)
 
@@ -272,9 +312,6 @@ def _finish(
 def stop_operation() -> bool:
     """Request termination of the running operation."""
     operation = _current
-    if operation is None or operation.state != "running" or operation.process is None:
+    if operation is None or operation.task_id is None:
         return False
-    operation.append("meta", "Stop requested by the operator.")
-    operation.state = "stopping"
-    operation.process.terminate()
-    return True
+    return stop_task(operation.task_id) in {"stopped", "stopping"}

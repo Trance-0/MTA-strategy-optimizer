@@ -61,6 +61,58 @@ async function readJson(response, onProgress = null) {
   }
 }
 
+/** Read newline-delimited backend milestones followed by one result frame. */
+async function readResourceStream(response, onProgress) {
+  if (!response.body?.getReader) return readJson(response, onProgress);
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = "";
+  let transferred = 0;
+  let result = null;
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    transferred += value.byteLength;
+    buffer += decoder.decode(value, { stream: true });
+    const lines = buffer.split("\n");
+    buffer = lines.pop() ?? "";
+    for (const line of lines) {
+      if (!line.trim()) continue;
+      const frame = JSON.parse(line);
+      if (frame.type === "progress") {
+        onProgress?.({
+          phase: frame.phase,
+          percent: frame.percent,
+          loaded: transferred,
+          total: null,
+        });
+      } else if (frame.type === "error") {
+        const payload = frame.payload ?? {};
+        const error = new Error(payload.message ?? "Dashboard resource load failed.");
+        error.code = payload.error;
+        error.source = payload.source;
+        throw error;
+      } else if (frame.type === "result") {
+        result = frame.payload;
+      }
+    }
+    if (result === null) {
+      onProgress?.({
+        loaded: transferred,
+        total: null,
+      });
+    }
+  }
+  buffer += decoder.decode();
+  if (buffer.trim()) {
+    const frame = JSON.parse(buffer);
+    if (frame.type === "result") result = frame.payload;
+  }
+  if (result === null) throw new Error("The backend resource stream ended without data.");
+  onProgress?.({ phase: "Dashboard data ready", percent: 100, loaded: transferred });
+  return result;
+}
+
 /** Fetch one declared dashboard resource. */
 export async function fetchDashboardResource(resource, onProgress = null) {
   if (!DASHBOARD_RESOURCES.includes(resource)) {
@@ -68,8 +120,21 @@ export async function fetchDashboardResource(resource, onProgress = null) {
   }
   const url = IS_STATIC
     ? `data/resources/${resource}.json`
-    : `/api/dashboard/resources/${encodeURIComponent(resource)}`;
+    : `/api/dashboard/resources/${encodeURIComponent(resource)}?stream=1`;
   const response = await fetch(url, { headers: { Accept: "application/json" } });
+  if (!response.ok) {
+    const payload = await readJson(response);
+    const error = new Error(payload.message || `Failed to load dashboard resource ${resource}.`);
+    error.code = payload.error;
+    error.source = payload.source;
+    throw error;
+  }
+  if (
+    !IS_STATIC &&
+    response.headers.get("Content-Type")?.includes("application/x-ndjson")
+  ) {
+    return readResourceStream(response, onProgress);
+  }
   const payload = await readJson(response, onProgress);
   if (!response.ok) {
     const error = new Error(payload.message || `Failed to load dashboard resource ${resource}.`);
@@ -77,6 +142,24 @@ export async function fetchDashboardResource(resource, onProgress = null) {
     error.source = payload.source;
     throw error;
   }
+  return payload;
+}
+
+/** List every queued, active, and retained backend operator task. */
+export async function fetchTasks() {
+  if (IS_STATIC) return { concurrency: 0, tasks: [] };
+  const response = await fetch("/api/tasks");
+  return readJson(response);
+}
+
+/** Cancel one queued task or request termination of its running child. */
+export async function stopTask(taskId) {
+  if (IS_STATIC) throw new Error("Backend tasks are unavailable in the static build.");
+  const response = await fetch(`/api/tasks/${encodeURIComponent(taskId)}`, {
+    method: "DELETE",
+  });
+  const payload = await readJson(response);
+  if (!response.ok) throw new Error(payload.message ?? "The task could not be stopped.");
   return payload;
 }
 

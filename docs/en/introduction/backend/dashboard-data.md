@@ -1,7 +1,7 @@
 ---
 title: Dashboard Data Endpoints
 description: Snapshot, reload, master-object, and repository behavior
-compact: "Specifies allow-listed dashboard resources, loader caches, research slices, structured load timing, reload invalidation, compatibility snapshot assembly, runtime/imported-artifact precedence, immutable observations, editable master drafts, SQLAlchemy queries, and normalized JSON types."
+compact: "Specifies allow-listed dashboard resources, streamed server milestones, optimized Campaign-history queries, loader caches, research slices, structured timing, reload invalidation, compatibility snapshots, artifact precedence, immutable observations, editable master drafts, SQLAlchemy queries, and normalized JSON types."
 lang: en-US
 source_files: backend/api/dashboard.py, backend/repository/attribution.py, backend/repository/coercion.py, backend/repository/evaluation.py, backend/repository/history.py, backend/repository/master_data.py, backend/repository/research.py, backend/repository/snapshot.py, backend/repository/strategy.py, backend/tests/test_snapshot.py
 ---
@@ -24,12 +24,26 @@ fields below `simulationResearch`, so the client can merge one catalogue
 without replacing catalogues loaded earlier. Row ordering and scalar types
 match the established repository contract.
 
+A live client requests `?stream=1`. The same allow-list then returns
+newline-delimited JSON frames: monotonic `progress` frames precede exactly one
+`result` or `error` frame. Milestones describe database readiness, Campaign
+metadata, budget/outcome query, delivery query, normalization, and response
+preparation. Nginx buffering is disabled for this response so the first frame
+reaches the loading transition before the expensive query completes. The plain
+JSON response remains available for compatibility and diagnostics.
+
 The route registry, not the backend, decides which resources a subsection
 needs. The backend registry decides what each accepted name can expose. This
 two-sided allow-list means a hash fragment cannot become a storage operation.
 Results are cached for ten minutes by underlying loader key. Research history
 has a separate cache from research catalogues, so loading Providers cannot
 execute observation queries.
+
+Campaign History reads its metadata catalogues and observation arrays as
+separate cached layers. In database mode the observation layer issues only
+the budget/outcome join and delivery query; it does not re-read providers,
+Products, Campaigns, Ad Groups, touchpoints, economics, or master drafts a
+second time.
 
 `load_snapshot()` remains an internal compatibility assembly for schema
 validation and Python parity tests; the Vue client does not call the legacy
@@ -77,11 +91,14 @@ Source: `backend/api/dashboard.py`, `backend/repository/snapshot.py`
   reload, and master routes; expose only registered resource payloads and keep
   the ordered compatibility snapshot for server-side validation.
 - Inputs: Data-source mode and repository loader results.
-- Outputs: Mergeable JSON responses with exact stable keys and status-specific
-  error objects; unknown resource names return a bounded 404 before loading.
+- Outputs: Mergeable JSON responses or newline-delimited progress/result frames
+  with exact stable keys and status-specific error objects; unknown resource
+  names return a bounded 404 before loading.
 - Behavior contract: A successful resource request emits one structured INFO
-  record whose `durationMs` is measured with the monotonic performance clock;
-  the response payload contains no diagnostic field.
+  record whose `durationMs` is measured with the monotonic performance clock.
+  Stream progress is operational metadata outside the final payload, which
+  contains no diagnostic field. Campaign History milestones correspond to real
+  loader boundaries and remain monotonic.
 - Dependencies: Backend repositories, settings log, and database probe.
 - Verification: `backend/tests/test_snapshot.py`.
 
@@ -128,6 +145,9 @@ Source: `backend/repository/master_data.py`, `backend/repository/research.py`
 - Inputs: Normalized reports, optional simulator sidecars, external tables,
   and validated master payloads.
 - Outputs: The `simulationResearch` object and saved/archived draft records.
+- Behavior contract: Observation-only Campaign History reads do not reconstruct
+  the entire research object in database mode; only the two heavy observation
+  queries execute, with normalization after both return.
 - Dependencies: Backend repositories and database execution boundary.
 - Verification: Snapshot parity and master-route refusal tests.
 

@@ -1,7 +1,7 @@
 ---
 title: Zheyuan Wu (Trance-0)
 description: Project manager work log covering pipeline development, integration, and algorithm testing
-compact: "Zheyuan Wu's project-management work log: simulator integration, runnable attribution and strategy pipelines, model artifact transfer, PostgreSQL schema setup, route-owned Vue delivery, native Willow widgets, specification-oriented documentation, GitHub Pages, and deployment automation."
+compact: "Zheyuan Wu's project-management work log: simulator integration, runnable attribution and strategy pipelines, backend task orchestration, model artifact transfer, PostgreSQL schema setup, route-owned Vue delivery, specification-oriented documentation, GitHub Pages, and deployment automation."
 order: 10
 lang: en-US
 ---
@@ -11,11 +11,19 @@ lang: en-US
 > Project: Marketing ROI Analysis
 > Handle: `Trance-0`
 > Role: Project manager — pipeline development, data simulation and integration, algorithm testing
-> Last updated: 2026-09-02
+> Last updated: 2026-09-03
 
 Entries are reconstructed from Git history. They record the change set behind each commit, not a separate narrative.
 
 ---
+
+## 2026-09-03
+
+### Completed
+
+- Added immediate backend-phased Campaign History loading with newline-delimited JSON streaming and removed redundant database catalogue reconstruction from the history resource.
+- Added a single-worker first-in, first-out backend task queue for model and schema operations, with timestamps, safe summaries, bounded build-style logs, copy controls, and cancellation of queued or running work.
+- Reworked Settings data-source setup into Connect, Inspect, Import, and Verify steps, and added a Tasks tab for task status, details, logs, refresh, and stop controls.
 
 ## 2026-09-02
 

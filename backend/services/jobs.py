@@ -49,6 +49,7 @@ from backend.services.model_outputs import (
     artifact_manifest,
     restore_artifact_directory,
 )
+from backend.services.tasks import ACTIVE_STATES, manager, stop_task
 
 _STRATEGY_OUTPUT_DIR = REPO_ROOT / "modules" / "mta_strategy_recommendation" / "outputs"
 
@@ -296,17 +297,18 @@ class Job:
     def __init__(self, identifier: int, stage: str, command: str) -> None:
         self.id = identifier
         self.stage = stage
-        self.state = "running"
-        self.percent = 2
-        self.phase = "Starting"
+        self.state = "queued"
+        self.percent = 0
+        self.phase = "Preparing"
         self.command = command
-        self.started_at = _now()
+        self.started_at: str | None = None
         self.finished_at: str | None = None
         self.exit_code: int | None = None
         self.error: str | None = None
         self.lines: list[dict] = []
         self.dropped_lines = 0
         self.process: subprocess.Popen | None = None
+        self.task_id: str | None = None
 
     def public_view(self) -> dict:
         """The run's public shape.
@@ -317,6 +319,7 @@ class Job:
         """
         return {
             "id": self.id,
+            "taskId": self.task_id,
             "stage": self.stage,
             "label": STAGES.get(self.stage, {}).get("label", self.stage),
             "state": self.state,
@@ -337,7 +340,14 @@ class Job:
             line = raw.rstrip()
             if line == "":
                 continue
-            self.lines.append({"at": _now(), "stream": stream, "text": line[:500]})
+            self.lines.append(
+                {
+                    "at": _now(),
+                    "stream": stream,
+                    "level": "ERROR" if stream == "stderr" else "INFO",
+                    "text": line[:500],
+                }
+            )
             if len(self.lines) > MAX_LINES:
                 overflow = len(self.lines) - MAX_LINES
                 self.dropped_lines += overflow
@@ -360,7 +370,7 @@ class Job:
 def active_job(stage: str) -> Job | None:
     """The run of `stage` that is still going, if any."""
     job = _running.get(stage)
-    return job if job is not None and job.state == "running" else None
+    return job if job is not None and job.state in ACTIVE_STATES else None
 
 
 def jobs_state(execution_enabled: bool = True, database_enabled: bool = True) -> dict:
@@ -471,9 +481,9 @@ def start_job(
 ) -> Job:
     """Start `stage` and return its run immediately.
 
-    The caller has already checked `start_refusal`. The child is detached from
-    the request: the HTTP response returns as soon as the process is spawned,
-    and the client polls for the rest.
+    The caller has already checked `start_refusal`. Preparation is synchronous
+    so an invalid dataset fails immediately; the validated command then enters
+    the shared single-worker queue and the client polls for the rest.
     """
     global _next_id
     with _lock:
@@ -490,8 +500,8 @@ def start_job(
         prepared = prepare_dataset(stage, selected)
         args = arguments_for(stage, options, prepared)
         job.command = " ".join(args)
-        job.append("meta", f"$ {job.command}")
         job.append("meta", f"Selected dataset: {selected['label']}")
+        job.append("meta", f"$ {job.command}")
     except (OSError, ValueError, SQLAlchemyError) as error:
         _finish(
             job,
@@ -501,7 +511,47 @@ def start_job(
             ),
             on_finish=on_finish,
         )
+        job.task_id = manager.register_terminal(
+            job,
+            kind="model",
+            action=stage,
+            label=STAGES[stage]["label"],
+            summary={"stage": stage, "datasetId": options.get("datasetId")},
+        )
         return job
+
+    summary = {
+        "stage": stage,
+        "datasetId": selected.get("id"),
+        "dataset": selected.get("label"),
+        "marketplace": selected.get("marketplace") or prepared.marketplace,
+    }
+    for key in ("totalBudget", "budgetUsagePolicy"):
+        if key in options:
+            summary[key] = options[key]
+
+    def run() -> None:
+        _run_job(job, args, on_finish)
+
+    job.task_id = manager.submit(
+        job,
+        kind="model",
+        action=stage,
+        label=STAGES[stage]["label"],
+        summary=summary,
+        runner=run,
+    )
+    return job
+
+
+def _run_job(
+    job: Job,
+    args: list[str],
+    on_finish: Callable[[Job], None] | None,
+) -> None:
+    """Spawn and drain a prepared model command when the queue selects it."""
+    job.phase = "Starting model command"
+    job.percent = 2
 
     try:
         process = subprocess.Popen(  # noqa: S603 - a fixed vector, never a shell
@@ -525,17 +575,14 @@ def start_job(
             ),
             on_finish=on_finish,
         )
-        return job
+        return
     except OSError as error:
         _finish(job, error=f"{type(error).__name__}: {error}", on_finish=on_finish)
-        return job
+        return
 
     job.process = process
-    thread = threading.Thread(
-        target=_drain, args=(job, process, on_finish), daemon=True, name=f"job-{stage}"
-    )
-    thread.start()
-    return job
+    job.append("meta", "Model command started; streaming output follows.")
+    _drain(job, process, on_finish)
 
 
 def _child_environment() -> dict:
@@ -559,7 +606,7 @@ def _drain(
                 job.append("stdout", line)
     finally:
         code = process.wait()
-        if job.state == "running":
+        if job.state in {"running", "stopping"}:
             _finish(job, exit_code=code, on_finish=on_finish)
 
 
@@ -570,7 +617,10 @@ def _finish(
     on_finish: Callable[[Job], None] | None = None,
 ) -> None:
     """Record a run's outcome and retire it into the history."""
-    job.state = "failed" if error or exit_code != 0 else "succeeded"
+    if job.state == "stopping":
+        job.state = "stopped"
+    else:
+        job.state = "failed" if error or exit_code != 0 else "succeeded"
     job.exit_code = exit_code
     job.error = error
     job.finished_at = _now()
@@ -579,6 +629,9 @@ def _finish(
         job.percent = 100
         job.phase = "Complete"
         job.append("meta", "Stage completed. Reloading the dashboard's data.")
+    elif job.state == "stopped":
+        job.append("meta", "Stage stopped by the operator.")
+        job.phase = "Stopped"
     else:
         job.append("meta", error or f"Stage failed with exit code {exit_code}.")
         job.phase = "Failed"
@@ -595,11 +648,9 @@ def _finish(
 def stop_job(stage: str) -> bool:
     """Stop a running stage. Used by the view's Stop control."""
     job = active_job(stage)
-    if job is None or job.process is None:
+    if job is None or job.task_id is None:
         return False
-    job.append("meta", "Stop requested by the operator.")
-    job.process.terminate()
-    return True
+    return stop_task(job.task_id) in {"stopped", "stopping"}
 
 
 def reset_state() -> None:
@@ -609,3 +660,4 @@ def reset_state() -> None:
         _running.clear()
         _history.clear()
         _next_id = 1
+    manager.reset()

@@ -41,6 +41,7 @@ from backend.api import models as models_api  # noqa: E402
 from backend.api import schema_operations as schema_operations_api  # noqa: E402
 from backend.api import schema_recovery as schema_recovery_api  # noqa: E402
 from backend.api import settings as settings_api  # noqa: E402
+from backend.api import tasks as tasks_api  # noqa: E402
 from backend.config import (  # noqa: E402
     client_dist_directory,
     open_browser,
@@ -70,6 +71,7 @@ def create_app() -> Flask:
     app.register_blueprint(data_generator_api.blueprint)
     app.register_blueprint(jobs_api.blueprint)
     app.register_blueprint(settings_api.blueprint)
+    app.register_blueprint(tasks_api.blueprint)
     app.register_blueprint(schema_operations_api.blueprint)
     app.register_blueprint(schema_recovery_api.blueprint)
     app.register_blueprint(models_api.blueprint)

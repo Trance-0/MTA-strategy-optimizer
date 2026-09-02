@@ -15,6 +15,8 @@ function bytes(value) {
   if (!Number.isFinite(value)) return "";
   return `${(value / 1024 / 1024).toFixed(value >= 10 * 1024 * 1024 ? 1 : 2)} MB`;
 }
+
+const elapsed = computed(() => `${(Number(props.progress.elapsedMs ?? 0) / 1000).toFixed(1)}s`);
 </script>
 
 <template>
@@ -34,10 +36,10 @@ function bytes(value) {
       ></div>
     </div>
     <div class="run-status">
-      <span class="run-phase">{{ progress.label }}</span>
+      <span class="run-phase">{{ progress.phase || progress.label }}</span>
       <span class="run-meta">
-        <template v-if="determinate">{{ percent }}% · {{ bytes(progress.loaded) }} of {{ bytes(progress.total) }}</template>
-        <template v-else>{{ bytes(progress.loaded) || "Waiting for data" }}</template>
+        <template v-if="determinate">{{ percent }}% · {{ elapsed }}<template v-if="progress.total"> · {{ bytes(progress.loaded) }} of {{ bytes(progress.total) }}</template></template>
+        <template v-else>{{ elapsed }} · {{ bytes(progress.loaded) || "Waiting for data" }}</template>
       </span>
     </div>
   </div>
