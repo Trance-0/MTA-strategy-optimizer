@@ -22,6 +22,7 @@ Entries are reconstructed from Git history. They record the change set behind ea
 ### Completed
 
 - Replaced shallow page hashes with canonical `#/page/section` deep links for every dashboard subsection, including legacy-link normalization and Back/Forward restoration. Split the browser data path into allow-listed live and static resources, with per-resource merge, in-flight deduplication, cache reuse, reload invalidation, and fixed backend mappings that cannot accept client paths, tables, or queries; verified direct Campaign and Budget links, exact lazy requests, cached revisits, and zero console errors in a real browser.
+- Repaired the container-publishing backend gate for its deliberate source-only checkout: only the real MTA-SIM toy integration case now skips without the pinned submodule, while configuration-boundary and route tests stay hermetic. Missing simulator source is reported as bounded capability state, and known preset requests return `503 generator_unavailable` without leaking the runner path instead of raising an unhandled 500.
 
 ---
 

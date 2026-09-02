@@ -12,6 +12,25 @@ from backend.app import create_app
 from backend.services import data_generator
 
 
+MTA_SIM_AVAILABLE = not data_generator._generator_unavailability_reason()
+
+
+def _bounded_configuration() -> dict:
+    """Return the smallest request object needed by boundary validation."""
+
+    return {
+        "seed": 41,
+        "advertiser_id": "synthetic_test_advertiser",
+        "report_start_date": "2026-01-01",
+        "report_end_date": "2026-01-07",
+        "base_product_price": 25.0,
+        "marketplaces": [{"code": "US", "currency_code": "USD"}],
+        "touchpoints": [{}],
+        "path_scenarios": [{}],
+        "campaign_replications": 1,
+    }
+
+
 class GeneratorServiceTests(unittest.TestCase):
     """Exercise a real toy run and the request-boundary refusals."""
 
@@ -29,6 +48,10 @@ class GeneratorServiceTests(unittest.TestCase):
             data_generator._runs.clear()
             data_generator._active_operation = None
 
+    @unittest.skipUnless(
+        MTA_SIM_AVAILABLE,
+        "the pinned MTA-SIM checkout is not initialized",
+    )
     def test_default_run_returns_only_two_bounded_public_previews(self) -> None:
         """The browser sees two tables and no path, configuration, or truth."""
 
@@ -52,14 +75,19 @@ class GeneratorServiceTests(unittest.TestCase):
     def test_client_paths_and_unbounded_configuration_are_refused(self) -> None:
         """A request cannot make the server read a path or create huge work."""
 
-        configuration = data_generator.generator_overview()["configuration"]
-        configuration["extends"] = "../../private.json"
-        with self.assertRaisesRegex(ValueError, "self-contained"):
-            data_generator.start_generation("baseline", configuration)
-        configuration.pop("extends")
-        configuration["report_end_date"] = "2030-01-01"
-        with self.assertRaisesRegex(ValueError, "1 to 366"):
-            data_generator.start_generation("baseline", configuration)
+        configuration = _bounded_configuration()
+        with patch.object(
+            data_generator,
+            "generator_overview",
+            return_value={"available": True, "reason": ""},
+        ):
+            configuration["extends"] = "../../private.json"
+            with self.assertRaisesRegex(ValueError, "self-contained"):
+                data_generator.start_generation("baseline", configuration)
+            configuration.pop("extends")
+            configuration["report_end_date"] = "2030-01-01"
+            with self.assertRaisesRegex(ValueError, "1 to 366"):
+                data_generator.start_generation("baseline", configuration)
 
     def test_postgresql_fields_are_validated_and_absent_from_public_state(self) -> None:
         """Connection secrets are accepted only at the backend boundary."""
@@ -117,11 +145,29 @@ class GeneratorRouteTests(unittest.TestCase):
     def test_overview_and_preset_are_registered(self) -> None:
         """A live backend serves a self-contained reviewed configuration."""
 
-        response = self.client.get("/api/data-generator")
-        self.assertEqual(response.status_code, 200)
-        self.assertNotIn("extends", response.get_json()["configuration"])
-        preset = self.client.get("/api/data-generator/presets/baseline/toy")
+        with patch(
+            "backend.api.data_generator.preset_configuration",
+            return_value=_bounded_configuration(),
+        ):
+            preset = self.client.get("/api/data-generator/presets/baseline/toy")
         self.assertEqual(preset.status_code, 200)
+        self.assertNotIn("extends", preset.get_json()["configuration"])
+
+    def test_uninitialized_submodule_is_bounded_capability_state(self) -> None:
+        """Missing pinned source returns availability and 503, never a 500."""
+
+        with tempfile.TemporaryDirectory() as directory:
+            missing = Path(directory) / "missing-submodule"
+            with patch.object(data_generator, "SUBMODULE_ROOT", missing):
+                response = self.client.get("/api/data-generator")
+                preset = self.client.get("/api/data-generator/presets/baseline/toy")
+            rendered = preset.get_data(as_text=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(response.get_json()["available"])
+        self.assertEqual(response.get_json()["configuration"], {})
+        self.assertEqual(preset.status_code, 503)
+        self.assertEqual(preset.get_json()["error"], "generator_unavailable")
+        self.assertNotIn(str(missing), rendered)
 
     def test_remote_plain_http_never_accepts_postgresql_credentials(self) -> None:
         """Credential submission is refused before run or body inspection."""

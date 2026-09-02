@@ -95,18 +95,15 @@ _active_operation: str | None = None
 def generator_overview() -> dict[str, Any]:
     """Return reviewed presets and one self-contained initial configuration."""
 
-    available = (
-        pipeline_runs_enabled()
-        and (SUBMODULE_ROOT / "ZheyuanWu" / "simulations").is_dir()
-    )
-    reason = ""
-    if not pipeline_runs_enabled():
-        reason = "Pipeline runs are disabled on this backend."
-    elif not available:
-        reason = "The pinned MTA-SIM submodule is not initialized."
+    reason = _generator_unavailability_reason()
+    available = not reason
     configuration: dict[str, Any] = {}
     if available:
-        configuration = preset_configuration("baseline", "toy")
+        try:
+            configuration = preset_configuration("baseline", "toy")
+        except FileNotFoundError:
+            available = False
+            reason = "The pinned MTA-SIM submodule is not initialized."
     return {
         "available": available,
         "reason": reason,
@@ -139,6 +136,9 @@ def preset_configuration(variant: str, preset: str) -> dict[str, Any]:
         filename = PRESETS[variant][preset]
     except KeyError as error:
         raise ValueError("Unknown generator variant or preset.") from error
+    reason = _generator_unavailability_reason()
+    if reason:
+        raise RuntimeError(reason)
     return load_resolved_mta_sim_configuration(
         submodule_root=SUBMODULE_ROOT,
         configuration_path=SUBMODULE_ROOT / "ZheyuanWu" / "examples" / filename,
@@ -150,8 +150,9 @@ def start_generation(variant: str, configuration: object) -> dict[str, Any]:
     """Validate a configuration boundary and start one background run."""
 
     global _active_operation
-    if not generator_overview()["available"]:
-        raise RuntimeError(generator_overview()["reason"])
+    overview = generator_overview()
+    if not overview["available"]:
+        raise RuntimeError(overview["reason"])
     if variant not in PRESETS:
         raise ValueError("Unknown generator variant.")
     accepted = _validate_configuration(configuration)
@@ -175,6 +176,23 @@ def start_generation(variant: str, configuration: object) -> dict[str, Any]:
         _trim_runs()
     threading.Thread(target=_run_generation, args=(run,), daemon=True).start()
     return run.public_state()
+
+
+def _generator_unavailability_reason() -> str:
+    """Return one bounded capability reason without exposing checkout paths."""
+
+    if not pipeline_runs_enabled():
+        return "Pipeline runs are disabled on this backend."
+    project_root = SUBMODULE_ROOT / "ZheyuanWu"
+    required_paths = [project_root / "simulations"]
+    required_paths.extend(
+        project_root / "examples" / filename
+        for presets in PRESETS.values()
+        for filename in presets.values()
+    )
+    if any(not path.exists() for path in required_paths):
+        return "The pinned MTA-SIM submodule is not initialized."
+    return ""
 
 
 def _run_generation(run: GeneratorRun) -> None:

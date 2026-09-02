@@ -1,6 +1,6 @@
 ---
 title: Running Locally and Publishing
-compact: "Dashboard delivery contract: launchers and Vite inject build identity; Docker stores pipeline results; static builds export one JSON file per allow-listed lazy resource; image metadata, publishing, AppStack, and source-revision labels remain reproducible."
+compact: "Dashboard delivery contract: launchers and Vite inject build identity; Docker stores pipeline results; static builds export allow-listed lazy resources; image tests isolate absent submodules; metadata, publishing, AppStack, and revision labels remain reproducible."
 lang: en-US
 source_files: dashboard/index.html, dashboard/vite.config.js, dashboard/run.sh, dashboard/run.bat, deploy/docker/compose.yaml, deploy/docker/defaults.env, deploy/docker/run.sh, deploy/docker/run.bat, deploy/docker/Dockerfile.api, deploy/docker/Dockerfile.dashboard, .github/workflows/publish-containers.yml, script/build_pages_site.mjs, script/export_dashboard_snapshot.py
 ---
@@ -132,6 +132,13 @@ the backend suite for `mta-backend`, the dashboard suite for `mta-dashboard` —
 then builds the client. A failure publishes nothing. The client build runs
 here as well as in the image, because a failure costs seconds here and a full
 layer cache miss there.
+
+The checkout deliberately omits Git submodules because `.dockerignore`
+excludes `external/` from both image contexts. The one backend integration
+case that executes the external MTA-SIM toy pipeline skips explicitly when its
+pinned checkout is absent. Every request-boundary, availability, route, and
+credential test remains active, including the assertion that an unavailable
+preset returns a bounded 503 instead of an unhandled exception.
 
 #### `build`
 
@@ -302,10 +309,13 @@ Source: `.github/workflows/publish-containers.yml`
   not `major.minor.patch` and skips the run when both tags already resolve in
   the registry, so a tag is written once unless dispatched with `force`. The
   registry is asked rather than the GitHub API, because the registry is what a
-  `docker pull` consults. Tests gate the build, and the build gates a `verify`
-  job that pulls both images on a runner that never built them and exercises
-  the running stack. The concurrency group queues rather than cancels, since a
-  cancelled publish can leave a manifest half-written.
+  `docker pull` consults. The source-only checkout omits submodules; only the
+  real external-generator integration test skips, while hermetic backend tests
+  verify the unavailable capability and 503 preset response. Tests gate the
+  build, and the build gates a `verify` job that pulls both images on a runner
+  that never built them and exercises the running stack. The concurrency group
+  queues rather than cancels, since a cancelled publish can leave a manifest
+  half-written.
 - Dependencies: `actions/checkout`, `actions/setup-node`,
   `actions/setup-python`, `astral-sh/setup-uv`, `docker/login-action`,
   `docker/setup-buildx-action`, and `docker/build-push-action`.

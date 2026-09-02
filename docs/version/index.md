@@ -1,7 +1,7 @@
 ---
 title: Version Log
 description: Release history and material changes for the maintained project
-compact: "Routes release history from VERSION to one page per patch, keeping 0.9.34–0.9.37 flat and older patches in minor-version folders; includes dates, material summaries, historical group links, and planned follow-ups."
+compact: "Routes release history from VERSION to one page per patch, keeping 0.9.35–0.9.38 flat and older patches in minor-version folders; includes dates, material summaries, historical group links, and planned follow-ups."
 order: 1
 ---
 
@@ -10,6 +10,11 @@ order: 1
 The project version is recorded in the repository-root `VERSION` file. Each page here is one small patch description covering a coherent change set, rather than a reproduction of every commit message. Every patch keeps its own permanent page; older minor versions are grouped into a collapsed folder per minor version instead of being compacted away.
 
 This section records **what** changed. See the [work log](../worklog/) for **who** did the work and when.
+
+## [0.9.38](0.9.38.md)
+
+- Date: 2026-09-02
+- Summary: Made the backend generator suite pass without an initialized MTA-SIM checkout while preserving the real integration case, and converted unavailable preset requests from unhandled 500 errors to bounded 503 capability responses
 
 ## [0.9.37](0.9.37.md)
 
@@ -26,7 +31,7 @@ This section records **what** changed. See the [work log](../worklog/) for **who
 - Date: 2026-09-01
 - Summary: Split large research observations from the core dashboard load, made Campaigns safe for 100,000 rows, exposed active schema inventory in protected Settings, documented versioned database migration/CD adoption, and made model runs select server-issued datasets
 
-## [0.9.34](0.9.34.md)
+## [0.9.34](0.9/0.9.34.md)
 
 - Date: 2026-08-28
 - Summary: Made protected database deployments run all three pipeline stages through single-process, marketplace-scoped runtime artifacts, fixed research experiment grouping and evaluation scope, and replaced the Willow Sakura page iframe with native interactive Extended-27 widgets

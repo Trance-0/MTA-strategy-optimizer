@@ -1,7 +1,7 @@
 ---
 title: Data Generator
 description: Dashboard workflow for configured MTA-SIM generation, preview, CSV download, and backend-only PostgreSQL export
-compact: "Data Generator contract for `DataGenerator.vue` and `/api/data-generator`: bounded structured/JSON configuration, asynchronous pinned MTA-SIM execution, two 20-row previews, CSV downloads, write-only PostgreSQL credentials, and backend-only export."
+compact: "Data Generator contract for `DataGenerator.vue` and `/api/data-generator`: bounded structured/JSON configuration, pinned MTA-SIM availability and execution, two 20-row previews, CSV downloads, write-only PostgreSQL credentials, and backend-only export."
 lang: en-US
 source_files: dashboard/src/views/DataGenerator.vue, backend/api/data_generator.py, backend/services/data_generator.py, backend/tests/test_data_generator.py
 ---
@@ -23,8 +23,19 @@ receives a stored credential.
 ## Availability and ownership
 
 The feature is available only when a Flask backend is present and pipeline
-runs are enabled. The static documentation deployment explains that generation
-requires a local or team-server backend and does not simulate a successful run.
+runs are enabled, and when the pinned simulator submodule has been initialized.
+The static documentation deployment explains that generation requires a local
+or team-server backend and does not simulate a successful run.
+
+An ordinary backend test or image-publishing checkout may intentionally omit
+Git submodules because external source does not enter those images. In that
+environment, the overview remains a successful capability response with
+`available: false`, an empty initial configuration, and a bounded reason. A
+request for an allow-listed preset returns `503 generator_unavailable`; it must
+not become an unhandled server error or reveal an absolute checkout path. The
+one integration test that executes a real toy simulation skips when the pinned
+checkout is absent. Request validation, route behavior, and credential tests
+remain active and must not depend on that checkout.
 
 One backend process owns at most one active generation or export operation.
 A second start request receives a conflict response naming the active run.
@@ -74,7 +85,14 @@ MTA-SIM.
 ## Generation lifecycle
 
 `GET /api/data-generator` returns availability, reviewed presets, the default
-variant and preset, and the initial self-contained configuration object.
+variant and preset, and the initial self-contained configuration object when
+the pinned simulator is present. Its absence is represented by the capability
+response described above.
+
+`GET /api/data-generator/presets/<variant>/<preset>` returns one allow-listed,
+resolved, self-contained configuration. An unknown pair returns `404
+unknown_preset`; a known pair whose pinned source is unavailable returns the
+bounded `503 generator_unavailable` response.
 
 `POST /api/data-generator/runs` accepts `variant` and `configuration`. It
 validates the request boundary, allocates an opaque run identifier, starts one
@@ -182,11 +200,12 @@ Source: `backend/api/data_generator.py`, `backend/services/data_generator.py`
 - Outputs: Bounded run state, two previews, two declared CSV attachments, and
   export status.
 - Behavior contract: The service invokes the pinned MTA-SIM functions and does
-  not reproduce simulation logic. One operation runs at a time. Paths and
-  external writers cannot come from the client. Ground truth remains absent
-  from responses. Credentials are never retained in state or logs. PostgreSQL
-  export targets only an existing validated schema and reset requires the
-  explicit Boolean.
+  not reproduce simulation logic. Missing pinned source is capability state,
+  not an unhandled exception; preset routes return a bounded 503 without an
+  absolute path. One operation runs at a time. Paths and external writers
+  cannot come from the client. Ground truth remains absent from responses.
+  Credentials are never retained in state or logs. PostgreSQL export targets
+  only an existing validated schema and reset requires the explicit Boolean.
 - Dependencies: Python standard library, Flask, Psycopg from the backend extra,
   and the pinned MTA-SIM submodule.
 - Verification: `backend/tests/test_data_generator.py`.
@@ -196,11 +215,13 @@ Source: `backend/api/data_generator.py`, `backend/services/data_generator.py`
 Source: `backend/tests/test_data_generator.py`
 
 - Responsibility: Pin request limits, asynchronous state, preview bounds,
-  declared downloads, hidden ground truth, credential non-retention, and
-  PostgreSQL export delegation.
+  declared downloads, hidden ground truth, missing-submodule behavior,
+  credential non-retention, and PostgreSQL export delegation.
 - Inputs: Temporary directories, synthetic configurations, and patched writer
   boundaries; never a real database credential.
 - Outputs: Backend pass or fail.
-- Dependencies: Python `unittest` and the backend dependency extra.
+- Dependencies: Python `unittest` and the backend dependency extra. Only the
+  real toy-run integration case depends on the initialized submodule and skips
+  explicitly when it is absent; all boundary and route cases are hermetic.
 - Verification: `uv run --extra backend python -X utf8 -m unittest
   backend.tests.test_data_generator -v`.

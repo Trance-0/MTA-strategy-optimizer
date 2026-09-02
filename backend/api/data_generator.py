@@ -38,6 +38,21 @@ def preset(variant: str, preset: str):
         )
     except ValueError as error:
         return jsonify({"error": "unknown_preset", "message": str(error)}), 404
+    except FileNotFoundError:
+        return (
+            jsonify(
+                {
+                    "error": "generator_unavailable",
+                    "message": "The pinned MTA-SIM submodule is not initialized.",
+                }
+            ),
+            503,
+        )
+    except RuntimeError as error:
+        return (
+            jsonify({"error": "generator_unavailable", "message": str(error)}),
+            503,
+        )
 
 
 @blueprint.post("/api/data-generator/runs")
