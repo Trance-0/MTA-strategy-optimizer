@@ -22,7 +22,12 @@
  */
 import { computed, ref, watch } from "vue";
 
-import { NUMERIC_FORMATS, renderCell } from "../lib/common.js";
+import {
+  NUMERIC_FORMATS,
+  nextTableSort,
+  renderCell,
+  sortTableRows,
+} from "../lib/common.js";
 
 const props = defineProps({
   /** One entry per column: the same `{ key, label, format }` DataTable takes. */
@@ -48,6 +53,7 @@ const pageSize = ref(PAGE_SIZES[0]);
 const page = ref(1);
 const search = ref("");
 const selected = ref(new Set());
+const sort = ref({ key: null, direction: null });
 
 /**
  * Free-text filter across the declared columns only.
@@ -66,6 +72,11 @@ const filtered = computed(() => {
   );
 });
 
+const sorted = computed(() => {
+  const column = props.columns.find(({ key }) => key === sort.value.key);
+  return sortTableRows(filtered.value, column, sort.value.direction);
+});
+
 const pageCount = computed(() =>
   Math.max(1, Math.ceil(filtered.value.length / pageSize.value)),
 );
@@ -80,7 +91,7 @@ watch([filtered, pageSize], () => {
 
 const pageRows = computed(() => {
   const start = (page.value - 1) * pageSize.value;
-  return filtered.value.slice(start, start + pageSize.value);
+  return sorted.value.slice(start, start + pageSize.value);
 });
 
 const firstShown = computed(() =>
@@ -124,12 +135,22 @@ function clearSelection() {
 }
 
 /**
- * The selected rows, in the filtered order rather than selection order, so a
- * confirmation lists them as the table shows them.
+ * The selected rows, in displayed sort order rather than selection order, so
+ * a confirmation lists them as the table shows them.
  */
 const selectedRows = computed(() =>
-  filtered.value.filter((row) => selected.value.has(props.rowKey(row))),
+  sorted.value.filter((row) => selected.value.has(props.rowKey(row))),
 );
+
+function changeSort(column) {
+  sort.value = nextTableSort(sort.value, column.key);
+  page.value = 1;
+}
+
+function ariaSort(column) {
+  if (sort.value.key !== column.key || !sort.value.direction) return "none";
+  return sort.value.direction === "asc" ? "ascending" : "descending";
+}
 
 function requestBatchDelete() {
   if (selectedRows.value.length === 0) return;
@@ -195,8 +216,21 @@ defineExpose({ clearSelection });
               :key="column.key"
               :class="{ num: NUMERIC_FORMATS.has(column.format) }"
               :style="column.width ? { width: column.width } : null"
+              :aria-sort="ariaSort(column)"
             >
-              {{ column.label }}
+              <button
+                type="button"
+                class="table-sort-button"
+                :class="{ active: sort.key === column.key }"
+                @click="changeSort(column)"
+              >
+                <span>{{ column.label }}</span>
+                <span
+                  v-if="sort.key === column.key"
+                  class="table-sort-arrow"
+                  aria-hidden="true"
+                >{{ sort.direction === "asc" ? "▲" : "▼" }}</span>
+              </button>
             </th>
             <th v-if="editable || deletable" class="row-actions-head">Actions</th>
           </tr>

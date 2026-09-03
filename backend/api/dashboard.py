@@ -32,10 +32,12 @@ from backend.repository.research import (
 )
 from backend.repository.snapshot import (
     RESOURCE_LOADERS,
+    WINDOWED_RESOURCES,
     clear_caches,
     load_resource,
     load_resource_with_progress,
     load_snapshot,
+    resolve_history_window,
 )
 from backend.services.settings import log
 
@@ -113,8 +115,16 @@ def dashboard_resource(resource: str):
             ),
             404,
         )
+    # Resolved only for the resources that carry observations. Asking for a
+    # date range is what makes the recent quarter the default, and a resource
+    # holding no observations would only fragment its cache entry by it.
+    window = (
+        resolve_history_window(request.args.get("start"), request.args.get("end"))
+        if resource in WINDOWED_RESOURCES
+        else None
+    )
     if request.args.get("stream") == "1":
-        return _stream_resource(resource)
+        return _stream_resource(resource, window)
     started = time.perf_counter()
     try:
         if use_database():
@@ -130,7 +140,7 @@ def dashboard_resource(resource: str):
                     ),
                     503,
                 )
-        payload = load_resource(resource)
+        payload = load_resource(resource, window)
         elapsed = (time.perf_counter() - started) * 1000
         log(
             "INFO",
@@ -156,7 +166,7 @@ def dashboard_resource(resource: str):
         )
 
 
-def _stream_resource(resource: str) -> Response:
+def _stream_resource(resource: str, window: dict | None = None) -> Response:
     """Stream server-side load milestones before the final resource payload."""
     messages: Queue[tuple[str, object]] = Queue()
     encoder = current_app.json.dumps
@@ -182,7 +192,7 @@ def _stream_resource(resource: str) -> Response:
                         )
                     )
                     return
-            payload = load_resource_with_progress(resource, progress)
+            payload = load_resource_with_progress(resource, progress, window)
             elapsed = (time.perf_counter() - started) * 1000
             log(
                 "INFO",

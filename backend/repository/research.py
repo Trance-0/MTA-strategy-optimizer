@@ -31,6 +31,7 @@ from backend.config import simulator_data_directory, use_database
 from backend.database import execute, sql, table_exists
 from backend.repository.coercion import (
     dates,
+    format_date,
     numeric,
     read_json,
     split_touchpoint,
@@ -412,24 +413,99 @@ def simulation_research_core() -> dict:
     return _local_simulation_research(include_observations=False)
 
 
+def history_window_bounds() -> dict:
+    """The first and last observed `report_date`, or nulls when there are none.
+
+    Read separately from the observations so a window-limited request can still
+    tell the reader what lies outside it. This is two aggregates over an indexed
+    column rather than a scan of the rows themselves, so it stays cheap enough
+    to answer beside every history load.
+    """
+    if not use_database() or not table_exists("mta_simulation_run"):
+        research = _local_simulation_research()
+        observed = sorted(
+            {
+                row.get("report_date")
+                for row in (research.get("history") or [])
+                if row.get("report_date")
+            }
+        )
+        return {
+            "earliest": observed[0] if observed else None,
+            "latest": observed[-1] if observed else None,
+        }
+    rows = sql(
+        "select min(report_date) as earliest, max(report_date) as latest "
+        "from mta_sim_budget_observation"
+    )
+    first = rows[0] if rows else {}
+    return {
+        "earliest": format_date(first.get("earliest")),
+        "latest": format_date(first.get("latest")),
+    }
+
+
+def _within_window(rows: list[dict], window: Mapping[str, Any] | None) -> list[dict]:
+    """Keep the rows whose `report_date` falls inside an inclusive window.
+
+    Applied to locally read history, which arrives whole because it is one
+    file. The database path pushes the same bounds into SQL instead, so this
+    filter never runs against a full table read.
+    """
+    if not window:
+        return rows
+    start = window.get("start")
+    end = window.get("end")
+    if not start and not end:
+        return rows
+    kept = []
+    for row in rows:
+        value = row.get("report_date")
+        if not value:
+            continue
+        if start and value < start:
+            continue
+        if end and value > end:
+            continue
+        kept.append(row)
+    return kept
+
+
 def simulation_research_history(
     progress: Callable[[int, str], None] | None = None,
+    window: Mapping[str, Any] | None = None,
 ) -> dict:
-    """Load only observation arrays, reporting real database query phases."""
+    """Load only observation arrays, reporting real database query phases.
+
+    `window` optionally bounds `report_date` inclusively as `{start, end}`.
+    Both bounds are already validated `YYYY-MM-DD` strings by the time they
+    arrive, and they are bound as SQL parameters rather than interpolated.
+    """
     report = progress or (lambda _percent, _phase: None)
+    bounds = {"start": (window or {}).get("start"), "end": (window or {}).get("end")}
     if not use_database() or not table_exists("mta_simulation_run"):
         report(48, "Reading local Campaign history")
         research = _local_simulation_research()
         report(84, "Normalizing Campaign history")
         return {
-            "history": research.get("history") or [],
-            "delivery": research.get("delivery") or [],
+            "history": _within_window(research.get("history") or [], bounds),
+            "delivery": _within_window(research.get("delivery") or [], bounds),
             "touchpointObservations": research.get("touchpointObservations") or [],
         }
 
+    # Built by appending whole predicates rather than by formatting values in:
+    # the bounds still travel as bound parameters, and a bound that was not
+    # requested contributes no clause at all.
+    clauses = ""
+    if bounds["start"]:
+        clauses += " and b.report_date >= :start"
+    if bounds["end"]:
+        clauses += " and b.report_date <= :end"
+    parameters = {key: value for key, value in bounds.items() if value}
+
     report(42, "Querying budget and outcome observations")
     history = sql(
-        """
+        f"""
         select b.run_id, b.campaign_id, b.marketplace, b.advertiser_id,
                b.currency, b.report_date, b.budget_level, b.configured_budget,
                b.actual_spend, o.product_id, o.total_units, o.total_revenue,
@@ -440,13 +516,16 @@ def simulation_research_history(
             on o.run_id = b.run_id and o.campaign_id = b.campaign_id
            and o.marketplace = b.marketplace and o.report_date = b.report_date
            and o.budget_level = b.budget_level and o.evaluation_only = true
+         where true{clauses}
          order by b.run_id, b.report_date, b.campaign_id, b.budget_level
-        """
+        """,
+        parameters,
     )
     report(66, "Querying delivery observations")
     delivery = sql(
-        "select * from mta_sim_delivery_observation "
-        "order by run_id, report_date, campaign_id, id"
+        f"select * from mta_sim_delivery_observation b where true{clauses} "
+        "order by run_id, report_date, campaign_id, id",
+        parameters,
     )
     report(84, "Normalizing Campaign history")
     dates(history, ["report_date"])

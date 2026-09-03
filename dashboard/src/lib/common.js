@@ -44,6 +44,11 @@ export const NUMERIC_FORMATS = new Set([
   "share",
 ]);
 
+const TABLE_COLLATOR = new Intl.Collator(undefined, {
+  numeric: true,
+  sensitivity: "base",
+});
+
 /**
  * Render one cell of a declared column.
  *
@@ -79,6 +84,57 @@ export function renderCell(column, row) {
       if (typeof value === "object") return JSON.stringify(value);
       return String(value);
   }
+}
+
+/** Advance one column through ascending, descending, and source order. */
+export function nextTableSort(current, key) {
+  if (current.key !== key || current.direction === null) {
+    return { key, direction: "asc" };
+  }
+  if (current.direction === "asc") return { key, direction: "desc" };
+  return { key: null, direction: null };
+}
+
+/**
+ * Sort table rows without mutating them or losing their source-order ties.
+ *
+ * Missing values remain last in either direction. Numeric display formats use
+ * their raw number; every other format follows the text visible to the reader.
+ */
+export function sortTableRows(rows, column, direction) {
+  if (!column || !direction) return rows;
+  const numeric = NUMERIC_FORMATS.has(column.format);
+  const sign = direction === "desc" ? -1 : 1;
+  return rows
+    .map((row, index) => ({ row, index }))
+    .sort((left, right) => {
+      const leftRaw = left.row[column.key];
+      const rightRaw = right.row[column.key];
+      const leftMissing = leftRaw === null || leftRaw === undefined || leftRaw === "";
+      const rightMissing = rightRaw === null || rightRaw === undefined || rightRaw === "";
+      if (leftMissing && rightMissing) return left.index - right.index;
+      if (leftMissing) return 1;
+      if (rightMissing) return -1;
+
+      let comparison;
+      if (numeric) {
+        const leftNumber = Number(leftRaw);
+        const rightNumber = Number(rightRaw);
+        const leftInvalid = !Number.isFinite(leftNumber);
+        const rightInvalid = !Number.isFinite(rightNumber);
+        if (leftInvalid && rightInvalid) return left.index - right.index;
+        if (leftInvalid) return 1;
+        if (rightInvalid) return -1;
+        comparison = leftNumber - rightNumber;
+      } else {
+        comparison = TABLE_COLLATOR.compare(
+          renderCell(column, left.row),
+          renderCell(column, right.row),
+        );
+      }
+      return comparison === 0 ? left.index - right.index : comparison * sign;
+    })
+    .map(({ row }) => row);
 }
 
 const CURRENCY_SYMBOLS = { USD: "$", EUR: "€", GBP: "£", JPY: "¥" };
@@ -138,6 +194,86 @@ export function maxOf(rows, fields, floor = 0) {
     }
   }
   return highest;
+}
+
+/**
+ * A row's value as a number, or null when it does not hold one.
+ *
+ * `Number(null)` and `Number("")` are both 0, so a plain coercion would place
+ * a row whose measure is absent at the origin and count it as an observation
+ * that was never recorded.
+ */
+function measure(value) {
+  if (value === null || value === undefined || value === "") return null;
+  const number = Number(value);
+  return Number.isFinite(number) ? number : null;
+}
+
+/**
+ * Merge observations into a fixed grid, counting how many fall in each cell.
+ *
+ * A scatter of the supported history draws one mark per observation, and at
+ * 100,000 rows most of those marks land where another has already drawn: the
+ * ink then says only "something is here", not how much. Counting into
+ * `resolution × resolution` cells says how much, and bounds the drawn marks by
+ * the grid rather than by the row count, so rendering cost stops following the
+ * size of the history.
+ *
+ * Both axes share one bound because the pair being compared is budget against
+ * spend in one currency, and the diagonal only reads as full delivery when a
+ * step along x is the same amount as a step along y.
+ *
+ * Returns a dense row-major matrix with `null` for the cells nothing fell in,
+ * beside the origin and cell size. That is Plotly's unambiguous heatmap form:
+ * given only the coordinates of occupied cells it infers brick widths from the
+ * spacing between them, which for a sparse grid produces bricks of uneven size
+ * that misstate where an observation actually sat.
+ */
+export function densityGrid(rows, xField, yField, highest, resolution) {
+  const size = Math.max(1, Math.floor(resolution));
+  const span = Number(highest) > 0 ? Number(highest) : 1;
+  const step = span / size;
+  const counts = new Array(size * size).fill(null);
+  let occupied = 0;
+  let densest = 0;
+  let total = 0;
+  for (const row of rows) {
+    const x = measure(row[xField]);
+    const y = measure(row[yField]);
+    if (x === null || y === null) continue;
+    // Clamped rather than dropped: a value exactly at the bound belongs in the
+    // last cell, and `floor(span / step)` addresses one past the end.
+    const column = Math.min(size - 1, Math.max(0, Math.floor(x / step)));
+    const line = Math.min(size - 1, Math.max(0, Math.floor(y / step)));
+    const index = line * size + column;
+    const current = counts[index];
+    if (current === null) {
+      counts[index] = 1;
+      occupied += 1;
+      if (densest < 1) densest = 1;
+    } else {
+      counts[index] = current + 1;
+      if (counts[index] > densest) densest = counts[index];
+    }
+    total += 1;
+  }
+  const z = [];
+  for (let line = 0; line < size; line += 1) {
+    z.push(counts.slice(line * size, line * size + size));
+  }
+  return {
+    z,
+    // The centre of the first cell, which is where Plotly anchors a brick.
+    x0: step / 2,
+    y0: step / 2,
+    dx: step,
+    dy: step,
+    size,
+    step,
+    occupied,
+    densest,
+    total,
+  };
 }
 
 /**

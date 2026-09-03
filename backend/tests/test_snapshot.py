@@ -110,7 +110,7 @@ class SnapshotContractTests(unittest.TestCase):
         with patch.object(
             dashboard_api,
             "load_resource_with_progress",
-            side_effect=lambda _name, progress: (
+            side_effect=lambda _name, progress, _window=None: (
                 progress(42, "Querying history") or {"simulationResearch": {}}
             ),
         ):
@@ -125,6 +125,135 @@ class SnapshotContractTests(unittest.TestCase):
         self.assertIn('"phase": "Querying history"', body)
         self.assertIn('"type": "result"', body)
         self.assertEqual(response.headers["X-Accel-Buffering"], "no")
+
+    def test_a_history_window_is_validated_before_it_reaches_a_query(self) -> None:
+        # The bounds are bound parameters by the time they reach SQL, so this
+        # is not what makes the query safe. It is what stops a malformed bound
+        # from being compared against a `YYYY-MM-DD` column as a string, which
+        # would silently return nothing rather than reporting a bad request.
+        self.assertEqual(
+            snapshot.parse_history_window("2026-01-01", "2026-03-01"),
+            {"start": "2026-01-01", "end": "2026-03-01"},
+        )
+        self.assertEqual(
+            snapshot.parse_history_window(None, None), {"start": None, "end": None}
+        )
+        self.assertEqual(
+            snapshot.parse_history_window("2026-01-01'; drop table x --", None),
+            {"start": None, "end": None},
+        )
+        # A reversed range is read as the range the reader described rather
+        # than refused: it names a window, just in the other order.
+        self.assertEqual(
+            snapshot.parse_history_window("2026-05-01", "2026-01-01"),
+            {"start": "2026-01-01", "end": "2026-05-01"},
+        )
+
+    def test_a_window_reaches_the_loader_and_is_reported_back(self) -> None:
+        seen: dict = {}
+
+        def record(*names, history=False, progress=None, window=None):
+            seen["window"] = window
+            return {"simulationResearch": {name: [] for name in names}}
+
+        with patch.object(snapshot, "_research_fields", side_effect=record):
+            snapshot.load_resource(
+                "research-campaign-history", {"start": "2026-02-01", "end": None}
+            )
+
+        self.assertEqual(seen["window"], {"start": "2026-02-01", "end": None})
+
+    def test_a_windowed_history_states_the_range_it_was_taken_from(self) -> None:
+        # A reader cannot infer the excluded range from the rows that survived
+        # a window, so the applied bounds travel beside the full observed range.
+        payload = snapshot.load_resource(
+            "research-campaign-history", {"start": "2026-02-01", "end": "2026-02-28"}
+        )
+        window = payload["simulationResearch"]["historyWindow"]
+
+        self.assertEqual(window["start"], "2026-02-01")
+        self.assertEqual(window["end"], "2026-02-28")
+        self.assertIn("earliest", window)
+        self.assertIn("latest", window)
+
+    def test_a_widened_window_is_not_served_from_the_narrower_cache(self) -> None:
+        # Keyed by name alone, widening a window would return the narrower
+        # slice already cached and the view would silently show too little.
+        snapshot.clear_caches()
+        calls: list = []
+
+        def record(progress=None, window=None):
+            calls.append(window)
+            return {"history": [], "delivery": [], "touchpointObservations": []}
+
+        with patch.object(snapshot, "simulation_research_history", side_effect=record):
+            snapshot.load_research_history(window={"start": "2026-02-01"})
+            snapshot.load_research_history(window={"start": "2026-02-01"})
+            snapshot.load_research_history(window={"start": "2026-01-01"})
+
+        self.assertEqual(len(calls), 2)
+        snapshot.clear_caches()
+
+    def test_resources_without_observations_ignore_a_window(self) -> None:
+        # Every other resource would only fragment its cache entry under a
+        # window it does not read.
+        self.assertEqual(
+            snapshot.WINDOWED_RESOURCES,
+            {"research-overview", "research-campaign-history"},
+        )
+        with patch.object(snapshot, "_windowed_resource") as windowed:
+            snapshot.load_resource("research-providers", {"start": "2026-02-01"})
+
+        windowed.assert_not_called()
+
+    def test_a_browser_asking_for_no_window_is_given_the_recent_quarter(self) -> None:
+        # A full history is 100,000 rows and above 50 MB of JSON. Serving that
+        # for a first view of a chart is the wait this default removes; the
+        # view is told what it did not load and can still ask for all of it.
+        observed = {"earliest": "2026-01-01", "latest": "2026-09-07"}
+        with patch.object(snapshot, "load_history_bounds", return_value=observed):
+            defaulted = snapshot.resolve_history_window(None, None)
+            requested = snapshot.resolve_history_window("2026-01-01", None)
+            junk = snapshot.resolve_history_window("not-a-date", "")
+
+        self.assertEqual(defaulted, {"start": "2026-06-10", "end": "2026-09-07"})
+        # A named bound is honoured exactly, never widened to the default.
+        self.assertEqual(requested, {"start": "2026-01-01", "end": None})
+        # A malformed bound names no window, so the default applies to it too.
+        self.assertEqual(junk, defaulted)
+
+    def test_a_short_history_is_reported_whole_rather_than_as_a_window(self) -> None:
+        # Bounding a range that is already shorter than the default would make
+        # the view describe a complete history as a partial one.
+        short = {"earliest": "2026-08-01", "latest": "2026-09-07"}
+        with patch.object(snapshot, "load_history_bounds", return_value=short):
+            self.assertEqual(
+                snapshot.resolve_history_window(None, None),
+                {"start": None, "end": None},
+            )
+        # A source with nothing recorded has no range to bound.
+        with patch.object(
+            snapshot,
+            "load_history_bounds",
+            return_value={"earliest": None, "latest": None},
+        ):
+            self.assertEqual(
+                snapshot.resolve_history_window(None, None),
+                {"start": None, "end": None},
+            )
+
+    def test_the_default_window_applies_only_where_a_browser_is_served(self) -> None:
+        # The exporter and the compatibility snapshot depend on an unbounded
+        # load meaning the whole history, so the default lives on the route.
+        with patch.object(dashboard_api, "load_resource", return_value={}) as load:
+            self.client.get("/api/dashboard/resources/research-campaign-history")
+            self.client.get("/api/dashboard/resources/research-providers")
+
+        windowed, unwindowed = load.call_args_list
+        self.assertEqual(windowed.args[0], "research-campaign-history")
+        self.assertIsNotNone(windowed.args[1])
+        # A resource carrying no observations is asked for without a window.
+        self.assertEqual(unwindowed.args, ("research-providers", None))
 
     def test_unknown_resource_is_rejected_before_loading(self) -> None:
         with patch.object(dashboard_api, "load_resource") as load:

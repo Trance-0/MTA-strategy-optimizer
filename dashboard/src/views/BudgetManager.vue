@@ -479,6 +479,27 @@ const historicalTotals = computed(() => {
   };
 });
 
+/**
+ * The observation range the totals above were summed over.
+ *
+ * The backend answers an unbounded history request with its recent-quarter
+ * default, so these totals are a period's, not the account's whole record. A
+ * tile that says "Actual spend" over a slice the reader did not choose and
+ * cannot see is a wrong number, so the period is stated beneath them.
+ */
+const historyWindow = computed(() => research.value.historyWindow ?? {});
+const historyPeriod = computed(() => {
+  const { start, end, earliest, latest } = historyWindow.value;
+  if (!earliest || !latest) return "";
+  const from = start || earliest;
+  const to = end || latest;
+  if (from === earliest && to === latest) {
+    return `Covering the complete recorded history, ${earliest} to ${latest}.`;
+  }
+  return `Covering ${from} to ${to}. The account's recorded history runs ` +
+    `${earliest} to ${latest}; Campaign history can be read over any range.`;
+});
+
 const researchTiles = computed(() => [
   { label: "Providers", value: theme.count((research.value.providers ?? []).length) },
   { label: "Products", value: theme.count((research.value.products ?? []).length) },
@@ -703,6 +724,7 @@ const slotColumns = [
         <p class="caption">
           Reported performance is a record of what the account already
           delivered, so it is read-only. Plan changes apply to future spend.
+          {{ historyPeriod }}
         </p>
       </template>
 

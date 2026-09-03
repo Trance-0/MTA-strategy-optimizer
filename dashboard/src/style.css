@@ -1026,6 +1026,42 @@ td.num {
   white-space: nowrap;
 }
 
+.table-sort-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  max-width: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  cursor: pointer;
+}
+
+th.num .table-sort-button {
+  justify-content: flex-end;
+}
+
+.table-sort-button:hover,
+.table-sort-button.active {
+  color: var(--text);
+}
+
+.table-sort-button:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+.table-sort-arrow {
+  color: var(--blue);
+  font-size: 8px;
+  line-height: 1;
+}
+
 .table-empty {
   color: var(--muted);
   font-size: 12px;

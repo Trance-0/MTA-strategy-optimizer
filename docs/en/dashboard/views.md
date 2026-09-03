@@ -1,6 +1,6 @@
 ---
 title: Dashboard Views and Visual Contract
-compact: "Vue visual contract: seven route-controlled views, immediate backend-phased lazy-loading transitions, accessible terms, server-declared model selectors, artifact transfer, unified queued tasks, large-history-safe charts, and native Willow forecasting."
+compact: "Vue visual contract: seven route-controlled views, immediate lazy-loading transitions, three-state sortable tables, accessible terms, server-declared model selectors, artifact transfer, unified queued tasks, large-history-safe charts, and native Willow forecasting."
 lang: en-US
 source_files: dashboard/src/theme.js, dashboard/src/style.css, dashboard/src/lib/deployment.js, dashboard/src/lib/diagnostics.js, dashboard/src/lib/useJobs.js, dashboard/src/lib/willowGmvModel.js, dashboard/src/lib/terms.js, dashboard/src/views/CommandCenter.vue, dashboard/src/views/BudgetManager.vue, dashboard/src/views/Campaigns.vue, dashboard/src/views/CampaignOptimizer.vue, dashboard/src/views/OptimizationLog.vue, dashboard/src/views/KnowledgeBase.vue, dashboard/src/components/SidebarNav.vue, dashboard/src/components/TopBar.vue, dashboard/src/components/StageRunner.vue, dashboard/src/components/LoadingProgress.vue, dashboard/src/components/TermHelp.vue, dashboard/src/components/WillowGmvForecast.vue, dashboard/src/components/PlotlyChart.vue, dashboard/src/components/DataTable.vue, dashboard/src/components/EntityTable.vue, dashboard/src/components/ConfirmDialog.vue, dashboard/src/components/TableView.vue, dashboard/src/components/MetricRow.vue, dashboard/src/components/KeyValuePanel.vue, dashboard/src/components/ReliabilityBanner.vue, dashboard/src/lib/common.js
 ---
@@ -263,6 +263,12 @@ parameters; a Product its `sku_id`, inventory, and salable state. Every
 remaining field stays reachable through the editor, which renders the record
 whole.
 
+Budget Overview reads the same windowed observation resource as Campaign
+History, so its spend, impression, revenue, and margin tiles describe the loaded
+period rather than the account's whole record. That period is stated beneath
+them: a total labelled "Actual spend" over a slice the reader did not choose and
+cannot see is a wrong number, not a partial one.
+
 Data operations render only where `useDeployment().writable` is true. Reported
 delivery, spend, outcomes, and paths are never editable in any deployment.
 Missing economics remain unavailable rather than becoming zero: a blank
@@ -280,10 +286,11 @@ frequencies, path frequencies, length, and transitions. Each list renders as one
 Budget Manager uses, with a row key composed from the fields that distinguish a
 record rather than the row's index. A modal finds presentation-only historical
 similarity references at a selected threshold and states that they are not used
-by attribution or strategy; that modal is the view's one remaining `DataTable`,
-because it is a fixed short list inside a dialog rather than a page of records.
-When no attribution artifact exists, the view displays “Attribution not
-available.”
+by attribution or strategy. That modal pages through `EntityTable` like every
+other list here: a selected Campaign matches every observation sharing its
+Provider, which reaches thousands of rows, and an unpaged table would render all
+of them into a dialog. Attribution output belongs to Campaign Optimizer, which
+owns the models that produce it, and is not restated here.
 
 Database histories may contain 100,000 rows and the view renders that complete
 selected history. Chart extrema therefore scan rows and fields iteratively with
@@ -291,6 +298,55 @@ constant call-stack usage. They must never spread a history-sized array into
 `Math.max()` or `Math.min()`: JavaScript engines impose an argument limit below
 the supported history size, and exceeding it aborts the Vue render with a
 `RangeError` after the snapshot has loaded.
+
+The same size governs how that history is drawn. Configured budget against
+actual spend is a density grid, not a scatter: observations are merged into
+`resolution × resolution` cells and the cell's colour is how many fell in it.
+A scatter drew one mark per observation, and at a hundred thousand marks roughly
+eighty-five per cent landed where another had already drawn, so the ink said
+only "something is here" across forty overlapping series whose colours could no
+longer be told apart. The count the overplotting hid is the thing worth showing,
+so it is the encoded value, and the drawn marks are bounded by the grid rather
+than by the row count. The reader chooses the grid from `DENSITY_RESOLUTIONS` —
+10, 40, or 100 a side — because a coarse grid reads as shape and a fine one
+resolves where a dense band separates. The dashed full-delivery diagonal is
+retained; both axes share one bound, since a step along x must be the same
+amount as a step along y for that diagonal to mean anything.
+
+`densityGrid` returns a dense row-major matrix with `null` for the cells nothing
+fell in, beside `x0`, `dx`, `y0`, and `dy`. That is Plotly's unambiguous heatmap
+form: given only the coordinates of the occupied cells it infers brick widths
+from the spacing between them, which on a sparse grid draws bricks of uneven
+size that misstate where an observation sat. An empty cell is `null` and
+`hoverongaps` is false, so "nothing here" is never drawn as the palette's
+lightest colour and read as "a few here". A row whose measure is absent is
+dropped rather than coerced: `Number(null)` is zero, which would pile absent
+observations onto the origin cell.
+
+Series that remain lines or bars are grouped in one pass over the rows rather
+than filtered once per Campaign, because a filter per series rescans the whole
+history and forty Campaigns therefore mean forty full scans on every filter
+change.
+
+The history slice is also bounded before it is sent. The Loaded history window
+card requests a `report_date` range from the backend, which appends whole
+predicates and binds the dates as SQL parameters — a bound never reaches a query
+as text. Narrowing the range therefore shrinks the transfer, which the view's
+other filters cannot do: they select within rows the reader has already waited
+for. A request naming no range is answered with the most recent quarter rather
+than the whole history, which is 36,000 rows and 17.5 MB against 100,000 rows
+and 48.6 MB for a first view of a chart. Load everything is a deliberate action
+and appears only while the loaded slice is partial; it asks for the observed
+range explicitly, because asking for no window is what produced the default.
+The payload reports both the window it was read under and the full recorded
+range, because a reader cannot infer what was excluded from the rows that
+survived it, and the card names the difference whenever the loaded slice is
+narrower. `useDashboard` keys its cache by resource and window together, so
+widening refetches instead of being answered from the narrower slice, and only
+the windowed resources reload — the entity catalogues beside them do not vary
+with a date. A static host has whole files and no query to bound, so the same
+window is applied to the payload after it arrives and reported the same way; a
+view never asks which deployment it is running in.
 
 Budget Manager and Campaigns do not request research observations on component
 entry. Their selected deep-link subsection controls the request before the
@@ -307,10 +363,26 @@ source, reading metadata, reading history, preparing JavaScript Object Notation
 History message names that filters and charts are held until the complete,
 consistent history slice is ready.
 
+The stream is newline-delimited, and its terminal result frame carries the whole
+resource on one line — tens of megabytes for a full Campaign history. The reader
+must therefore scan only each newly decoded chunk, holding the pieces of the
+line in progress and joining them once its newline arrives. Appending each chunk
+to one growing buffer and splitting that buffer per chunk rescans every byte
+already received, which makes the cost quadratic in the frame size: a 48 MB
+history took tens of seconds of blocked main thread, and because the thread is
+blocked the progress report it feeds cannot repaint — so the load appears both
+slow and silent. Byte counts are republished per `PROGRESS_BYTE_STEP` rather
+than per chunk, since each republish is a reactive write that repaints the bar
+and a reader cannot perceive a counter moving every 16 KiB.
+
 Static builds continue to read generated resource files directly, but show the
 same immediate transition and byte progress. A failed load replaces the transition
 with the existing actionable error card. Navigating away makes an old progress
-report irrelevant without invalidating the shared backend cache.
+report irrelevant without invalidating the shared backend cache. The report is
+reset when the last in-flight resource finishes rather than left standing: a
+route that reuses cached resources starts no request of its own, so a retained
+final bar would never be overwritten and would show a stale reading from an
+unrelated load.
 
 The four tabs are one `v-if`/`v-else-if`/`v-else` chain, not several. A second
 `v-if` opened mid-way ends the first chain, and the trailing `v-else` then
@@ -357,6 +429,13 @@ Source: `dashboard/src/components/SidebarNav.vue`, `dashboard/src/components/Top
 - Behavior contract: `SidebarNav.vue` draws the flat seven-view rail from `src/pages.js` and pins the settings module to the foot. It renders no section label, group container, disclosure, or reload button. Below `1024px` the same order becomes a horizontally scrollable bar. `SettingsDialog.vue` owns reload and confirmed runtime schema switching; it never renders a stored password or sends one back. In the published build it replaces backend operations with local-run instructions, while a protected team-server deployment keeps credential mutation unavailable. `SchemaRecovery.vue` replaces terminal-only advice on a database load error with backend-declared select, derive, or initialize buttons; it never offers replacement and polls the existing bounded operation log. `TermHelp.vue` and `src/lib/terms.js` provide keyboard-accessible definitions and precise English documentation links without hiding the original labels. `PlotlyChart.vue` is the only component that touches Plotly, so chart defaults in `src/theme.js` cannot be bypassed, and it disposes the plot on unmount. `TableView.vue` keeps every chart paired with readable values. `ReliabilityBanner.vue` always renders the status word beside its colour. `TopBar.vue` leads its tag row with the deployment.
 
 `EntityTable.vue` owns paging, page size, free-text filtering, selection, and the two row controls, and owns nothing about what a row means: columns are declared by the mounting view exactly as `DataTable`'s are. Its default page size is 15, offering 15, 30, 50, and 100. **Selection is keyed by a caller-supplied row identity rather than by page index**, so a batch action cannot act on whatever record happens to occupy that index after the page turns; the selection Set is reassigned rather than mutated, because a Set mutated in place is the same object and Vue's reactivity would not repaint the checkboxes. The header checkbox acts on the current page, which is what it can show. Both components read `renderCell` from `src/lib/common.js`, so one column declaration cannot mean two things in two tables.
+
+Every declared column header in `DataTable.vue` and `EntityTable.vue` is a
+keyboard-accessible sort control. Repeated activation cycles ascending,
+descending, and unsorted; unsorted restores the rows' exact backend order.
+Only the active header shows an upward or downward arrow, while `aria-sort`
+exposes the same state without relying on the icon. Entity sorting applies
+after filtering and before paging, and changing direction returns to page one.
 
 `StageRunner.vue` is one stage's controls, dataset selector, progress bar, log,
 and artifact transfer surface, and is mounted once per model tab in both
@@ -469,7 +548,7 @@ Source: `dashboard/src/lib/common.js`
 
 - Responsibility: Hold the label vocabulary and the small aggregations more than one view needs, so two views cannot name the same thing differently.
 - Inputs: Rows from the snapshot, plus the reader's selections.
-- Outputs: The `OUTCOME_LABELS`, `OUTCOME_SHARE_COLUMNS`, and `OUTCOME_VALUE_COLUMNS` maps; `NUMERIC_FORMATS` and `renderCell()`; `currencySymbol()`, `pretty()`, `shortTouchpoint()`, `shortDate()`, `statusTone()`; and the `sum()`, `maxOf()`, `groupSum()`, `distinct()`, and `sortBy()` helpers.
-- Behavior contract: Only presentation lives here; **nothing in this module computes an attribution or budget number** — the values are read from the snapshot and these helpers group, sort, and format them. The three `OUTCOME_*` maps are the single binding between an Outcome key as the pipeline writes it, its display label, and the fields that carry it, so a renamed field is corrected in one place. `shortTouchpoint()` drops the `UNSPECIFIED` segments, which carry no information and would otherwise make every axis label the same length and unreadable. `maxOf()` scans iteratively, ignores non-finite results, and retains its finite floor, so a chart may find an extremum across a 100,000-row history without turning the rows into function arguments. `groupSum()` returns an array in first-seen order rather than a Map, so a chart's category order is stable across reloads. `sortBy()` sorts a copy and pushes non-finite values last, so a missing number never wins a comparison. `renderCell()` is the **single** cell renderer behind both `DataTable` and `EntityTable`, so one column declaration cannot render two ways; it returns `--` for an absent value so a missing number is visibly missing rather than blank, and it flattens an array to a comma-joined list and an object to JSON — the canonical entity records carry both, and `String(value)` renders the first correctly only by accident and the second as `[object Object]`.
+- Outputs: The `OUTCOME_LABELS`, `OUTCOME_SHARE_COLUMNS`, and `OUTCOME_VALUE_COLUMNS` maps; `NUMERIC_FORMATS`, `renderCell()`, `nextTableSort()`, and `sortTableRows()`; `currencySymbol()`, `pretty()`, `shortTouchpoint()`, `shortDate()`, `statusTone()`; and the `sum()`, `maxOf()`, `densityGrid()`, `groupSum()`, `distinct()`, and `sortBy()` helpers.
+- Behavior contract: Only presentation lives here; **nothing in this module computes an attribution or budget number** — the values are read from the snapshot and these helpers group, sort, and format them. The three `OUTCOME_*` maps are the single binding between an Outcome key as the pipeline writes it, its display label, and the fields that carry it, so a renamed field is corrected in one place. `shortTouchpoint()` drops the `UNSPECIFIED` segments, which carry no information and would otherwise make every axis label the same length and unreadable. `maxOf()` scans iteratively, ignores non-finite results, and retains its finite floor, so a chart may find an extremum across a 100,000-row history without turning the rows into function arguments. `densityGrid()` merges rows into a `resolution × resolution` count matrix in one pass, so the marks a chart draws are bounded by the grid rather than by the row count; it clamps a value sitting exactly on the bound into the last cell rather than addressing one past the end, leaves an empty cell `null` so it is never drawn as a low count, and drops a row whose measure is absent rather than coercing it to the origin. `groupSum()` returns an array in first-seen order rather than a Map, so a chart's category order is stable across reloads. `sortBy()` sorts a numeric copy and pushes non-finite values last, so a missing number never wins a comparison. `nextTableSort()` owns the ascending, descending, and unsorted cycle; `sortTableRows()` compares numeric columns numerically and all other displayed values with a case-insensitive natural alphabetic order, keeps missing values last, preserves source order for equal values, and returns source order unchanged in the unsorted state. `renderCell()` is the **single** cell renderer behind both `DataTable` and `EntityTable`, so one column declaration cannot render two ways; it returns `--` for an absent value so a missing number is visibly missing rather than blank, and it flattens an array to a comma-joined list and an object to JSON — the canonical entity records carry both, and `String(value)` renders the first correctly only by accident and the second as `[object Object]`.
 - Dependencies: `src/theme.js`, for the four value formatters `renderCell()` dispatches to.
 - Verification: Exercised through the views that call it.
