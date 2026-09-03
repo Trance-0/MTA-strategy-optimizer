@@ -20,3 +20,6 @@
 *.toml text eol=lf
 *.drawio text eol=lf
 *.svg text eol=lf
+
+# Canonical cross-repository fixture bytes are checksum-pinned release inputs.
+dashboard/fixtures/ontology_review/canonical_r5_v3/*.json -text

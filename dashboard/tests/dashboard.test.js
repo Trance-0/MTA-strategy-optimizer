@@ -61,6 +61,9 @@ const DATA_GENERATOR = readFileSync(
 const KNOWLEDGE_BASE = readFileSync(
   resolve(HERE, "..", "src", "views", "KnowledgeBase.vue"),
   "utf8",
+);const ONTOLOGY_FIXTURES = readFileSync(
+  resolve(HERE, "..", "src", "lib", "ontologyReviewFixtures.js"),
+  "utf8",
 );
 const TERM_HELP = readFileSync(
   resolve(HERE, "..", "src", "components", "TermHelp.vue"),
@@ -637,9 +640,32 @@ test("Data Generator keeps execution and storage behind backend APIs", () => {
   }
 });
 
-test("Knowledge Base contains only the backend-integration notice", () => {
-  assert.match(KNOWLEDGE_BASE, /remain unavailable/i);
-  assert.doesNotMatch(KNOWLEDGE_BASE, /DataTable|fetchData|computed|ref\(/);
+test("Knowledge Base preserves the backend boundary and adds only canonical review", () => {
+  assert.match(KNOWLEDGE_BASE, /previous browser-derived vocabulary has been removed/i);
+  assert.match(KNOWLEDGE_BASE, /Knowledge status/);
+  assert.match(KNOWLEDGE_BASE, /Ontology Review/);
+  assert.match(KNOWLEDGE_BASE, /No Review API connected/);
+  assert.match(KNOWLEDGE_BASE, /No request is sent and no verdict is calculated here/);
+  assert.match(KNOWLEDGE_BASE, /new AbortController\(\)/);
+  assert.match(KNOWLEDGE_BASE, /ontologyReviewAbortController\?\.abort\(\)/);
+  assert.match(KNOWLEDGE_BASE, /section === "ontology-review"/);
+  assert.match(ONTOLOGY_FIXTURES, /timeoutMs = 10000/);
+  assert.match(ONTOLOGY_FIXTURES, /Promise\.race/);
+  assert.match(ONTOLOGY_FIXTURES, /RELEASE_MANIFEST_SIZE = 1506/);
+  assert.match(KNOWLEDGE_BASE, /Try again/);
+  assert.doesNotMatch(KNOWLEDGE_BASE, /from "\.\.\/api\/client\.js"|globalThis\.fetch|ontologyReviewDemo/);
+  assert.deepEqual(Object.keys(PAGES.knowledge.sections), ["notice", "ontology-review"]);
+});
+
+test("Ontology Review exposes complete fail-closed fixture states and semantics", () => {
+  for (const state of ["idle", "loading", "error", "empty", "ready"]) assert.match(KNOWLEDGE_BASE, new RegExp(`"${state}"`));
+  for (const label of ["Plan identity", "Release identity", "Review and rule", "Evidence", "Limitations", "Risks and availability", "NEXT STEP"]) assert.match(KNOWLEDGE_BASE, new RegExp(label));
+  for (const field of ["currentBudget", "recommendedBudget", "absoluteChangeRatio", "authorizationLimit", "source"]) assert.match(KNOWLEDGE_BASE, new RegExp(field));
+  assert.match(ONTOLOGY_FIXTURES, /No R5 conflict was emitted/);
+  assert.match(ONTOLOGY_FIXTURES, /strict > comparison/);
+  assert.match(ONTOLOGY_FIXTURES, /does not mean the optimizer failed/i);
+  assert.match(ONTOLOGY_FIXTURES, /not an industry benchmark/i);
+  assert.doesNotMatch(ONTOLOGY_FIXTURES, /15%|0\.15/);
 });
 
 test("term help is accessible and links only into English documentation", () => {

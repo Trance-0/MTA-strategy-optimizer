@@ -30,6 +30,8 @@ import { existsSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
+import { verifyPublishedOntologyReviewBundle } from "./import_ontology_review_fixtures.mjs";
+
 const scriptDirectory = dirname(fileURLToPath(import.meta.url));
 const repositoryRoot = resolve(scriptDirectory, "..");
 const outputRoot = resolve(repositoryRoot, "site");
@@ -91,6 +93,7 @@ await mkdir(outputRoot, { recursive: true });
 
 await cp(dashboardBuild, outputRoot, { recursive: true });
 await cp(documentationBuild, join(outputRoot, "docs"), { recursive: true });
+await verifyPublishedOntologyReviewBundle(join(outputRoot, "data", "ontology-review"));
 
 // Without this marker Pages runs Jekyll, which drops the underscore-prefixed
 // files inside the built assets.

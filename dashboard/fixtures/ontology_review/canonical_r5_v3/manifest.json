@@ -1,0 +1,44 @@
+{
+  "schema_version": "1.0",
+  "suite_id": "gate-d-canonical-r5-v3",
+  "release_identity": {
+    "ontology_version": "3.0-campaign-budget-policy",
+    "rule_version": "R5@3.0-budget-policy",
+    "engine_version": "3.0",
+    "schema_version": "2.0",
+    "source_commit": "816958b7c5fa44cedf55408a0797fea93b1f44bc",
+    "package_checksum": "23aefa15460399623b82cd83a9708397ddafd8af7a1572cf73a1e8eee1199926"
+  },
+  "fixtures": [
+    {
+      "file": "in-band.json",
+      "scenario": "in-band",
+      "sha256": "6f6b67a60b796d11e304be387d34f68a3e67f7f0431a26b308d52194adb057d4",
+      "size": 4552
+    },
+    {
+      "file": "exact-boundary.json",
+      "scenario": "exact-boundary",
+      "sha256": "4bcbcccf6ef4fc7b11b5699c6fedd3244b72c359ee4e5a98c69c1e3577300f85",
+      "size": 4559
+    },
+    {
+      "file": "conflict.json",
+      "scenario": "conflict",
+      "sha256": "1a5b71680eef72c499b56cbe8c8c44db325a8f313794484414812331b483e602",
+      "size": 4575
+    },
+    {
+      "file": "zero-baseline.json",
+      "scenario": "zero-baseline",
+      "sha256": "3556810aeb27f845d5aae968b1d4c862e0bf1a505e2126215d2bf37052eeb1e3",
+      "size": 4647
+    },
+    {
+      "file": "missing-policy.json",
+      "scenario": "missing-policy",
+      "sha256": "b06d18d9aaf5cbae935120d87bef67be3c0eef0f56af55a58d2cdd2a8e32d367",
+      "size": 4656
+    }
+  ]
+}
