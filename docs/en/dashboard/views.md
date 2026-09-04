@@ -10,15 +10,17 @@ source_files: dashboard/src/theme.js, dashboard/src/style.css, dashboard/src/lib
 The seven views are listed on [Dashboard](./index.md#the-seven-views). This page specifies what they share beyond the question each one answers: the reliability rule every data view honors and the colour, chart, formatting, and key-term help system they draw from.
 
 Optimization Log is backed by run provenance and pipeline stage state.
-Knowledge Base still has no backend-owned vocabulary contract, so it retains
-an unavailable status instead of rebuilding ontology from Dashboard data. Its
-separate Ontology Review tab is a display-only exception: it reads five
-checksum-verified canonical R5 fixtures prepared by the
+Knowledge Base exposes four operational-reference tabs derived only from the
+current Dashboard snapshot: Touchpoint vocabulary, Rules, Entities, and Data
+sources. They describe the data already in use and do not claim to be a
+backend-owned ontology or recompute attribution, budgets, or verdicts. The
+separate fifth Ontology Review tab remains a display-only exception: it reads
+five checksum-verified canonical R5 fixtures prepared by the
 [static delivery process](./deployment.md#canonical-ontology-review-fixtures).
 It never calls a Review Application Programming Interface (API), calculates a
 ratio, compares a threshold, or infers a verdict.
 
-The default Knowledge status sends no fixture requests. Entering Ontology Review
+The default Touchpoint vocabulary tab sends no fixture requests. Entering Ontology Review
 starts a bounded load with retry after failure. It has loading, unavailable/error,
 defensive empty, and ready states. A valid release always reaches ready with
 exactly five cases; empty is a defensive rendering state, not a sixth canonical
@@ -31,7 +33,7 @@ limitations, availability, and next step. `UNVERIFIED` never means approval,
 and `CONFLICT` means human authorization is required rather than optimizer
 failure. An unavailable or altered bundle displays no verdict.
 
-The Knowledge status and Ontology Review tabs use roving focus with ArrowLeft,
+All five Knowledge Base tabs use roving focus with ArrowLeft,
 ArrowRight, Home, and End. Unmounting aborts unfinished fixture requests, and a request that exceeds ten seconds fails closed.
 Identity, meaning, verdict, and next step remain readable in the narrow layout.
 
@@ -359,13 +361,13 @@ Reads `campaignStrategy.optimized_strategy` from the snapshot. The optimized-bud
 
 #### `KnowledgeBase.vue`
 
-The unavailable backend-knowledge status and the separately sourced canonical R5 Ontology Review. `ontologyReviewFixtures.js` owns the deployment-base asset path, byte and identity checks, display-only normalization, and immutable five-case result.
+Four snapshot-backed operational references and the separately sourced canonical R5 Ontology Review. Touchpoint vocabulary reads the observed attribution keys; Rules combines the fixed reliability/outcome vocabulary with the current strategy request; Entities reads the Campaign Group, Campaigns, and eligible candidate counts; Data sources identifies the active snapshot source and its declared artifacts. These panels are presentation of current Dashboard data, not a backend-owned ontology. `ontologyReviewFixtures.js` continues to own the deployment-base asset path, byte and identity checks, display-only normalization, and immutable five-case result.
 
-- Inputs: A validated route `section` and the generated release manifest plus five fixture payloads below the deployment-base `data/ontology-review/` path. The component passes only an abort signal to the adapter and owns no fetch implementation, local path, Structured Query Language (SQL) statement, credential, or Review API client.
+- Inputs: A validated route `section`; the route-scoped `shell`, `attribution`, or `budget` resource needed by the selected operational-reference tab; and, only for Ontology Review, the generated release manifest plus five fixture payloads below the deployment-base `data/ontology-review/` path. The component passes only an abort signal to the fixture adapter and owns no fetch implementation, local path, Structured Query Language (SQL) statement, credential, or Review API client.
 - Outputs: The rendered page. Nothing is returned and nothing is written.
-- Behavior contract: The general knowledge contract remains unavailable. Ontology Review fails closed until every payload passes the pinned manifest, SHA-256, release, client, plan/review-link, and R5 identity checks. It copies policy strings and verdicts without calculation or inference, exposes the specified fail-closed states and five canonical meanings, loads only after its route is selected, supports retry and a ten-second timeout, aborts on unmount, and preserves the declared keyboard and narrow-layout behavior.
-- Dependencies: Vue 3 and `src/lib/ontologyReviewFixtures.js`; this view does not use Plotly, `useDashboard.js`, or a Review API.
-- Verification: `dashboard/tests/ontology_review_fixtures.test.js`, `dashboard/tests/dashboard.test.js`, the clean static build, and the live GitHub Pages smoke test.
+- Behavior contract: The four operational-reference tabs only group, label, and format existing snapshot fields; absent capacity rules or entities use their declared empty explanations. Ontology Review remains isolated and fails closed until every payload passes the pinned manifest, SHA-256, release, client, plan/review-link, and R5 identity checks. It copies policy strings and verdicts without calculation or inference, exposes the specified fail-closed states and five canonical meanings, loads only after its route is selected, supports retry and a ten-second timeout, aborts on unmount, and preserves the declared keyboard and narrow-layout behavior across all five tabs.
+- Dependencies: Vue 3, `src/lib/useDashboard.js`, `src/lib/common.js`, the shared table and key/value components, `src/theme.js`, and `src/lib/ontologyReviewFixtures.js`; the view does not use Plotly or a Review API.
+- Verification: `dashboard/tests/ontology_review_fixtures.test.js`, `dashboard/tests/dashboard.test.js`, `backend/tests/test_snapshot.py`, the clean normal/static builds, and the live GitHub Pages smoke test.
 
 ### The shared components
 

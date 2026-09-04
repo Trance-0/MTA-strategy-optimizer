@@ -17,6 +17,7 @@ WORKDIR /workspace/dashboard
 COPY VERSION /workspace/VERSION
 COPY dashboard/package.json dashboard/package-lock.json ./
 RUN --mount=type=cache,target=/root/.npm npm ci
+COPY script/import_ontology_review_fixtures.mjs /workspace/script/import_ontology_review_fixtures.mjs
 COPY dashboard/ ./
 RUN npm run build
 

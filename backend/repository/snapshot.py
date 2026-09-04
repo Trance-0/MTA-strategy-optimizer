@@ -162,7 +162,9 @@ RESOURCE_LOADERS: dict[str, Callable[[], dict]] = {
         "comparisonSummary",
         "recommendedAttribution",
     ),
-    "budget": lambda: _resource_fields("budgetRecommendation", "strategyRequest"),
+    "budget": lambda: _resource_fields(
+        "budgetRecommendation", "strategyRequest", "candidatePool"
+    ),
     "strategy": lambda: _resource_fields("campaignStrategy"),
     "evaluation": lambda: _resource_fields("strategyEvaluation"),
     "entity-bridge": lambda: _resource_fields("entityBridge"),

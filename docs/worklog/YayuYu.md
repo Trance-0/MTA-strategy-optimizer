@@ -22,9 +22,9 @@ lang: en-US
 
 ### Completed
 
-- Defined and implemented the display-only Gate D boundary: preserved the unavailable backend knowledge contract while adding five canonical R5 budget-policy review scenarios with complete provenance, evidence, limitation, and next-step presentation.
+- Defined and implemented the display-only Gate D boundary: restored four snapshot-backed operational-reference tabs without presenting them as a backend-owned ontology, while retaining five canonical R5 budget-policy review scenarios with complete provenance, evidence, limitation, and next-step presentation.
 - Pinned and audited the exact-six synthetic release input, then added strict offline import, digest/identity/schema checks, build-output revalidation, fail-closed states, deep links, keyboard behavior, and responsive layout without changing strategy algorithms or backend APIs.
-- Hardened the candidate release by loading the five cases only on demand, adding bounded retry and unmount cancellation, pinning both manifest byte contracts, and rejecting linked output paths that resolve outside the project.
+- Hardened the candidate release by loading the five cases only on demand, adding bounded retry and unmount cancellation, pinning both manifest byte contracts, rejecting linked output paths that resolve outside the project, restoring the importer's clean Dashboard container build wiring, and routing all five Knowledge Base tabs through minimal lazy resources including the read-only candidate-pool projection.
 
 ### Next
 

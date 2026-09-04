@@ -1,7 +1,7 @@
 ---
 title: Version Log
 description: Release history and material changes for the maintained project
-compact: "Routes release history from VERSION to one page per patch, keeping 0.9.39–0.9.42 flat and older patches in minor-version folders; includes dates, material summaries, historical group links, and planned follow-ups."
+compact: "Routes release history from VERSION to one page per patch, keeping 0.9.40–0.9.43 flat and older patches in minor-version folders; includes dates, material summaries, historical group links, and planned follow-ups."
 order: 1
 ---
 
@@ -10,6 +10,11 @@ order: 1
 The project version is recorded in the repository-root `VERSION` file. Each page here is one small patch description covering a coherent change set, rather than a reproduction of every commit message. Every patch keeps its own permanent page; older minor versions are grouped into a collapsed folder per minor version instead of being compacted away.
 
 This section records **what** changed. See the [work log](../worklog/) for **who** did the work and when.
+
+## [0.9.43](0.9.43.md)
+
+- Date: 2026-09-04
+- Summary: Restored the four snapshot-backed Knowledge Base reference tabs beside canonical Ontology Review, and restored clean Dashboard container builds by copying the root importer before prebuild
 
 ## [0.9.42](0.9.42.md)
 
@@ -25,7 +30,7 @@ This section records **what** changed. See the [work log](../worklog/) for **who
 - Date: 2026-09-02
 - Summary: Added Settings General and default INFO logging, safe local pipeline runtime and file-mode execution, plus bounded model artifact upload, download, PostgreSQL import, and restart restoration
 
-## [0.9.39](0.9.39.md)
+## [0.9.39](0.9/0.9.39.md)
 
 - Date: 2026-09-02
 - Summary: Made dashboard schema initialization and derivation use the backend's active Python interpreter instead of requiring `uv` on the deployed executable path

@@ -142,6 +142,14 @@ class SnapshotContractTests(unittest.TestCase):
                 self.assertIsInstance(payload, dict)
                 self.assertTrue(payload)
 
+    def test_budget_resource_carries_candidate_pool_for_knowledge_entities(self) -> None:
+        payload = snapshot.load_resource("budget")
+
+        self.assertEqual(
+            set(payload),
+            {"budgetRecommendation", "strategyRequest", "candidatePool"},
+        )
+        self.assertIsInstance(payload["candidatePool"], dict)
     def test_campaign_history_carries_its_delivery_filter_bridge(self) -> None:
         payload = snapshot.load_resource("research-campaign-history")
 
