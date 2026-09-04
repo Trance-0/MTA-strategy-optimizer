@@ -98,6 +98,14 @@ const PUBLISH_WORKFLOW = readFileSync(
   resolve(HERE, "..", "..", ".github", "workflows", "publish-containers.yml"),
   "utf8",
 );
+const DASHBOARD_DOCKERFILE = readFileSync(
+  resolve(HERE, "..", "..", "deploy", "docker", "Dockerfile.dashboard"),
+  "utf8",
+);
+const DOCKERIGNORE = readFileSync(
+  resolve(HERE, "..", "..", ".dockerignore"),
+  "utf8",
+);
 const OPTIMIZATION_LOG = readFileSync(
   resolve(HERE, "..", "src", "views", "OptimizationLog.vue"),
   "utf8",
@@ -469,6 +477,35 @@ test("settings compares independently detected frontend and backend builds", () 
   assert.match(CLIENT, /backendIdentity: null/);
   assert.match(COMPOSE, /BUILD_COMMIT: \$\{PROJECT_COMMIT:-unknown\}/);
   assert.match(PUBLISH_WORKFLOW, /BUILD_COMMIT=\$\{\{ github\.sha \}\}/);
+});
+
+test("dashboard image admits only its complete external build inputs", () => {
+  assert.match(
+    DASHBOARD_DOCKERFILE,
+    /COPY script\/import_ontology_review_fixtures\.mjs \/workspace\/script\/import_ontology_review_fixtures\.mjs/,
+  );
+  assert.match(
+    DASHBOARD_DOCKERFILE,
+    /COPY docs\/en\/strategy-evaluation\/asin-gmv-nn-v1\/results\/demo_mlp_extended27\.json\s+\\\s+\/workspace\/docs\/en\/strategy-evaluation\/asin-gmv-nn-v1\/results\/demo_mlp_extended27\.json/,
+  );
+
+  const docsRules = DOCKERIGNORE.split(/\r?\n/).filter(
+    (line) => line === "docs" || line.startsWith("docs/") || line.startsWith("!docs"),
+  );
+  assert.deepEqual(docsRules, [
+    "docs",
+    "!docs/",
+    "docs/*",
+    "!docs/en/",
+    "docs/en/*",
+    "!docs/en/strategy-evaluation/",
+    "docs/en/strategy-evaluation/*",
+    "!docs/en/strategy-evaluation/asin-gmv-nn-v1/",
+    "docs/en/strategy-evaluation/asin-gmv-nn-v1/*",
+    "!docs/en/strategy-evaluation/asin-gmv-nn-v1/results/",
+    "docs/en/strategy-evaluation/asin-gmv-nn-v1/results/*",
+    "!docs/en/strategy-evaluation/asin-gmv-nn-v1/results/demo_mlp_extended27.json",
+  ]);
 });
 
 test("pipeline capability comes from the server rather than settings protection", () => {

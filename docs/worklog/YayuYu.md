@@ -18,6 +18,14 @@ lang: en-US
 
 ---
 
+## 2026-09-05
+
+### Completed
+
+- Completed the Dashboard container's allow-listed build inputs by admitting and copying only the existing Willow demonstration JSON, and added a regression guard without changing model data, canonical R5 fixtures, backend behavior, or algorithms.
+
+---
+
 ## 2026-09-04
 
 ### Completed
