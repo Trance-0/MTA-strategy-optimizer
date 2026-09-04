@@ -1,8 +1,8 @@
 ---
 title: Running Locally and Publishing
-compact: "Dashboard delivery contract: launchers and Vite inject build identity; Docker stores pipeline results; static builds export allow-listed lazy resources; image tests isolate absent submodules; metadata, publishing, AppStack, and revision labels remain reproducible."
+compact: "Dashboard delivery contract: launchers, build identity, Docker results, static resources, byte-pinned Ontology Review source/release provenance and materialization, repeated Pages validation, container publishing, AppStack, and reproducible revision labels."
 lang: en-US
-source_files: dashboard/index.html, dashboard/vite.config.js, dashboard/run.sh, dashboard/run.bat, deploy/docker/compose.yaml, deploy/docker/defaults.env, deploy/docker/run.sh, deploy/docker/run.bat, deploy/docker/Dockerfile.api, deploy/docker/Dockerfile.dashboard, .github/workflows/publish-containers.yml, script/build_pages_site.mjs, script/export_dashboard_snapshot.py
+source_files: dashboard/index.html, dashboard/package.json, dashboard/vite.config.js, dashboard/run.sh, dashboard/run.bat, deploy/docker/compose.yaml, deploy/docker/defaults.env, deploy/docker/run.sh, deploy/docker/run.bat, deploy/docker/Dockerfile.api, deploy/docker/Dockerfile.dashboard, .github/workflows/publish-containers.yml, script/build_pages_site.mjs, script/export_dashboard_snapshot.py, script/import_ontology_review_fixtures.mjs, dashboard/tests/ontology_review_fixtures.test.js
 ---
 
 # Running Locally and Publishing
@@ -219,6 +219,42 @@ The exporter must never publish database data. It sets `DATABASE=false` and
 whose mode is not `local files`. This makes accidental private-data inclusion
 a failed build rather than a review convention.
 
+### Canonical Ontology Review fixtures
+
+The tracked `dashboard/fixtures/ontology_review/canonical_r5_v3/` directory is
+an immutable public reference input. It contains exactly the upstream source
+manifest and five regular fixture files, with no links or additional entries.
+Path-scoped Git attributes preserve their raw bytes across operating systems.
+The release review confirms that all fields are synthetic and contain no
+customer or personal identity, credential, token, connection string, raw
+proprietary identifier, or unreviewed free text.
+
+The source manifest remains byte-identical to upstream. The preparation command
+verifies the pinned source and release provenance, manifest order, sizes,
+SHA-256 digests, release identity, demo client, plan/review linkage, and R5
+identity. It then atomically writes copied payloads and a distinct generated
+release manifest containing `import_identity` below the ignored
+`dashboard/public/data/ontology-review/` directory. Routine builds require no
+sibling repository, network fetch, submodule, or absolute developer path.
+Refreshing the tracked input is a separate human-gated action that resolves
+both commits in the canonical Git repository, compares the exact-six bytes
+with the pinned release commit, confirms that the manifest records the pinned
+source commit, and proves that source is a Git ancestor of release. The source
+commit identifies the ontology snapshot; the fixture directory is introduced by
+the release commit.
+
+The same preparation runs before development, normal Vue, and static builds.
+After Vite builds, the exact generated bundle is reverified in `dist-static`.
+`script/build_pages_site.mjs` verifies it again after copying to final
+`site/`. A missing, extra, linked, converted, or altered input or output makes
+the command fail; a successful Pages build without review data is forbidden.
+
+If preparation reports an existing `.ontology-review.lock`, first confirm that no
+Dashboard start or build still owns it. Preserve the lock under a named recovery
+path before retrying; never delete it automatically. A failed old-bundle cleanup
+likewise preserves the `.backup-*` directory while the newly verified bundle
+remains installed, so inspect both before removing that recovery copy.
+
 Run the dashboard static build from `dashboard/`:
 
 ```powershell
@@ -229,7 +265,10 @@ The Pages workflow installs Python, `uv`, Node, dashboard dependencies, and
 documentation dependencies. It builds the dashboard and English VitePress
 site, then `script/build_pages_site.mjs` assembles the dashboard at `/` and the
 documentation at `/docs/` in the ignored `site/` directory. GitHub Pages is
-the only maintained documentation deployment target.
+the only maintained documentation deployment target. Before a release is
+called done, the deployed project-base URL must return the generated manifest
+and all five fixtures successfully and the `#/knowledge/ontology-review` view must expose all
+five cases. Generated public data, `dist*`, and `site/` remain untracked.
 
 ## Production Deployment
 
@@ -358,14 +397,36 @@ Source: `script/export_dashboard_snapshot.py`
 - Verification: `uv run --extra backend python -X utf8 -B -m script.export_dashboard_snapshot`;
   assert the result reports `mode: local files` and fourteen keys.
 
+### Canonical Ontology Review build inputs and verification
+
+Source: `dashboard/package.json`, `script/import_ontology_review_fixtures.mjs`, `dashboard/tests/ontology_review_fixtures.test.js`
+
+- Responsibility: Prepare and verify the canonical Ontology Review browser
+  bundle before any Dashboard start or build.
+- Inputs: The tracked exact-six reference directory. A separate refresh mode
+  accepts an explicitly selected canonical Git checkout after human approval.
+- Outputs: One generated release manifest and five byte-identical payloads
+  under ignored `dashboard/public/data/ontology-review/`.
+- Behavior contract: Reject missing, extra, non-regular, linked, converted, or
+  altered entries and any mismatch in provenance, manifest order, sizes,
+  hashes, release identity, demo client, plan/review linkage, or R5 identity. The
+  source manifest has a pinned raw size and hash; the generated release manifest
+  has one deterministic byte serialization whose raw bytes are rechecked.
+  Preparation is local and deterministic; refresh additionally proves the two
+  upstream commits and their content relationship.
+- Dependencies: Node's standard library and the tracked canonical reference
+  bundle; after normal toolchain dependencies are installed, no canonical-source network access, sibling repository, runtime API, or credential.
+- Verification: Dashboard fixture tests plus an isolated tracked-files-only
+  checkout with no generated data or canonical repository beside it.
+
 ### `script/build_pages_site.mjs`
 
 Source: `script/build_pages_site.mjs`
 
 - Responsibility: Validate both production builds, copy them into one Pages
-  artifact, and add `.nojekyll`.
+  artifact, add `.nojekyll`, and reverify the final canonical review bundle.
 - Inputs: `dashboard/dist-static` and `docs/.vitepress/dist`.
 - Outputs: Ignored `site/` with dashboard root and `/docs/` documentation.
 - Dependencies: Node's standard library.
-- Verification: Run after both builds and confirm it reports the assembled
-  file count and size.
+- Verification: Run after both builds; it reports the assembled file count and
+  size only after the final manifest and five payloads pass verification.

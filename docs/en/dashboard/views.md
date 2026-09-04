@@ -1,8 +1,8 @@
 ---
 title: Dashboard Views and Visual Contract
-compact: "Vue visual contract: seven route-controlled views, immediate backend-phased lazy-loading transitions, accessible terms, server-declared model selectors, artifact transfer, unified queued tasks, large-history-safe charts, and native Willow forecasting."
+compact: "Vue visual contract: seven route-controlled views, backend-phased lazy loading, accessible terms, queued tasks, large-history-safe charts, native Willow forecasting, and on-demand, bounded, retryable display-only canonical R5 Ontology Review states."
 lang: en-US
-source_files: dashboard/src/theme.js, dashboard/src/style.css, dashboard/src/lib/deployment.js, dashboard/src/lib/diagnostics.js, dashboard/src/lib/useJobs.js, dashboard/src/lib/willowGmvModel.js, dashboard/src/lib/terms.js, dashboard/src/views/CommandCenter.vue, dashboard/src/views/BudgetManager.vue, dashboard/src/views/Campaigns.vue, dashboard/src/views/CampaignOptimizer.vue, dashboard/src/views/OptimizationLog.vue, dashboard/src/views/KnowledgeBase.vue, dashboard/src/components/SidebarNav.vue, dashboard/src/components/TopBar.vue, dashboard/src/components/StageRunner.vue, dashboard/src/components/LoadingProgress.vue, dashboard/src/components/TermHelp.vue, dashboard/src/components/WillowGmvForecast.vue, dashboard/src/components/PlotlyChart.vue, dashboard/src/components/DataTable.vue, dashboard/src/components/EntityTable.vue, dashboard/src/components/ConfirmDialog.vue, dashboard/src/components/TableView.vue, dashboard/src/components/MetricRow.vue, dashboard/src/components/KeyValuePanel.vue, dashboard/src/components/ReliabilityBanner.vue, dashboard/src/lib/common.js
+source_files: dashboard/src/theme.js, dashboard/src/style.css, dashboard/src/lib/deployment.js, dashboard/src/lib/diagnostics.js, dashboard/src/lib/useJobs.js, dashboard/src/lib/willowGmvModel.js, dashboard/src/lib/ontologyReviewFixtures.js, dashboard/src/lib/terms.js, dashboard/src/views/CommandCenter.vue, dashboard/src/views/BudgetManager.vue, dashboard/src/views/Campaigns.vue, dashboard/src/views/CampaignOptimizer.vue, dashboard/src/views/OptimizationLog.vue, dashboard/src/views/KnowledgeBase.vue, dashboard/src/components/SidebarNav.vue, dashboard/src/components/TopBar.vue, dashboard/src/components/StageRunner.vue, dashboard/src/components/LoadingProgress.vue, dashboard/src/components/TermHelp.vue, dashboard/src/components/WillowGmvForecast.vue, dashboard/src/components/PlotlyChart.vue, dashboard/src/components/DataTable.vue, dashboard/src/components/EntityTable.vue, dashboard/src/components/ConfirmDialog.vue, dashboard/src/components/TableView.vue, dashboard/src/components/MetricRow.vue, dashboard/src/components/KeyValuePanel.vue, dashboard/src/components/ReliabilityBanner.vue, dashboard/src/lib/common.js
 ---
 
 # Dashboard Views and Visual Contract
@@ -10,10 +10,30 @@ source_files: dashboard/src/theme.js, dashboard/src/style.css, dashboard/src/lib
 The seven views are listed on [Dashboard](./index.md#the-seven-views). This page specifies what they share beyond the question each one answers: the reliability rule every data view honors and the colour, chart, formatting, and key-term help system they draw from.
 
 Optimization Log is backed by run provenance and pipeline stage state.
-Knowledge Base has no backend-owned knowledge contract yet, so its former
-snapshot-derived ontology is removed. The view renders one unavailable notice
-and no vocabulary, rules, entity, or artifact tabs until a backend endpoint is
-specified and implemented.
+Knowledge Base still has no backend-owned vocabulary contract, so it retains
+an unavailable status instead of rebuilding ontology from Dashboard data. Its
+separate Ontology Review tab is a display-only exception: it reads five
+checksum-verified canonical R5 fixtures prepared by the
+[static delivery process](./deployment.md#canonical-ontology-review-fixtures).
+It never calls a Review Application Programming Interface (API), calculates a
+ratio, compares a threshold, or infers a verdict.
+
+The default Knowledge status sends no fixture requests. Entering Ontology Review
+starts a bounded load with retry after failure. It has loading, unavailable/error,
+defensive empty, and ready states. A valid release always reaches ready with
+exactly five cases; empty is a defensive rendering state, not a sixth canonical
+release. The ready state
+offers the canonical in-band, exact-boundary, conflict, zero-baseline, and
+missing-policy cases in manifest order. It displays plan, release, review, and
+rule identity; current and recommended budget, currency, the canonical absolute
+change ratio, authorization limit, policy source, verdict, evidence,
+limitations, availability, and next step. `UNVERIFIED` never means approval,
+and `CONFLICT` means human authorization is required rather than optimizer
+failure. An unavailable or altered bundle displays no verdict.
+
+The Knowledge status and Ontology Review tabs use roving focus with ArrowLeft,
+ArrowRight, Home, and End. Unmounting aborts unfinished fixture requests, and a request that exceeds ten seconds fails closed.
+Identity, meaning, verdict, and next step remain readable in the narrow layout.
 
 ## Key-Term Help <span class="status-label status-verified" aria-label="Verified"></span>
 
@@ -339,13 +359,13 @@ Reads `campaignStrategy.optimized_strategy` from the snapshot. The optimized-bud
 
 #### `KnowledgeBase.vue`
 
-The five-segment vocabulary, the reliability contract, the Outcomes, capacity rules, the hierarchy, and the artifacts in use.
+The unavailable backend-knowledge status and the separately sourced canonical R5 Ontology Review. `ontologyReviewFixtures.js` owns the deployment-base asset path, byte and identity checks, display-only normalization, and immutable five-case result.
 
-- Inputs: The tabbed components take a validated `section` prop and emit `navigate` with a declared section key; single-panel components take no route prop. Every component reads data through `useDashboard()`, so a view never holds a path, Structured Query Language (SQL) statement, or `fetch` call.
+- Inputs: A validated route `section` and the generated release manifest plus five fixture payloads below the deployment-base `data/ontology-review/` path. The component passes only an abort signal to the adapter and owns no fetch implementation, local path, Structured Query Language (SQL) statement, credential, or Review API client.
 - Outputs: The rendered page. Nothing is returned and nothing is written.
-- Behavior contract: **No production view recomputes attribution or predicts an outcome.** The Campaigns and Budget Manager views may aggregate displayed reported performance into descriptive totals and ratios such as Click-Through Rate (CTR), Cost Per Click (CPC), and Cost Per Mille (CPM); they do not alter source rows. The labelled Willow Sakura contribution is the one isolated exception: its browser-only forecast demonstrates the contributed network and never enters a production artifact or recommendation. The similarity modal uses only a transparent, equal-weight selector heuristic and its objects follow the presentation-only `SimilarityReference` fields. `CampaignOptimizer.vue` retains its labelled constant-total-budget restatement and refuses it for an unreliable Outcome. Reported performance is immutable, filters scope every related panel, and charts retain a table or direct-label alternative. A view may **start** a stage that rewrites those artifacts, through `StageRunner.vue`, but never computes their contents itself: the numbers still come from the pipeline. No view names the research simulator or calls its data generated — a test asserts this against the view sources — because a production deployment reads a live account and a reader told the numbers are invented cannot act on them.
-- Dependencies: Vue 3 and Plotly, through `src/lib/useDashboard.js`, `src/lib/common.js`, `src/theme.js`, and the shared components.
-- Verification: Rendered in a real browser in all three deployments — the API against PostgreSQL, the API against the committed files, and the static build — with no console error, no failed request, and no error card in any of the six.
+- Behavior contract: The general knowledge contract remains unavailable. Ontology Review fails closed until every payload passes the pinned manifest, SHA-256, release, client, plan/review-link, and R5 identity checks. It copies policy strings and verdicts without calculation or inference, exposes the specified fail-closed states and five canonical meanings, loads only after its route is selected, supports retry and a ten-second timeout, aborts on unmount, and preserves the declared keyboard and narrow-layout behavior.
+- Dependencies: Vue 3 and `src/lib/ontologyReviewFixtures.js`; this view does not use Plotly, `useDashboard.js`, or a Review API.
+- Verification: `dashboard/tests/ontology_review_fixtures.test.js`, `dashboard/tests/dashboard.test.js`, the clean static build, and the live GitHub Pages smoke test.
 
 ### The shared components
 

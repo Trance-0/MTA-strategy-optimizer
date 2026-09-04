@@ -83,7 +83,10 @@ export const PAGES = {
     title: "Knowledge Base",
     crumb: "AI-MTA / Insights / Governance",
     defaultSection: "notice",
-    sections: { notice: ["shell"] },
+    sections: {
+      notice: ["shell"],
+      "ontology-review": ["shell"],
+    },
     icon: '<path d="M4 5h7v14H4V5zm9 0h7v14h-7V5zM7 9h1m8 0h1" stroke="currentColor" stroke-width="1.6"/>',
   },
 

@@ -1,6 +1,6 @@
 ---
 title: Navigation Rail and Settings
-compact: "Navigation contract for canonical deep links, route-owned lazy resources, the flat rail, Settings General/Data source/Logging/Tasks tabs, a four-step schema doctor, runtime PostgreSQL schema selection, queued setup, write-only passwords, and default INFO logging."
+compact: "Navigation contract for canonical deep links including Knowledge status/Ontology Review, route-owned lazy resources, the flat rail, Settings tabs, schema recovery, runtime PostgreSQL selection, queued setup, write-only passwords, and INFO logging."
 lang: en-US
 source_files: dashboard/src/pages.js, dashboard/src/App.vue, dashboard/src/main.js, dashboard/src/components/SettingsDialog.vue, dashboard/src/components/BackendTasks.vue, dashboard/src/components/SchemaRecovery.vue
 ---
@@ -55,7 +55,8 @@ with `shell`, which supplies deployment and report context.
 - `overview/summary`: `performance`, `attribution`, and `budget`.
 - `generator/configure`: no dashboard data beyond `shell`; the generator uses
   its own backend capability endpoint only after this route mounts.
-- `knowledge/notice`: no dashboard data beyond `shell`.
+- `knowledge/notice`: preserves the unavailable backend-knowledge status; no data beyond `shell`.
+- `knowledge/ontology-review`: displays the separately imported canonical fixture release; no dashboard application programming interface (API) resource beyond `shell`.
 
 #### Budget Manager
 
