@@ -8,9 +8,13 @@
     "node": "^20.19.0 || >=22.12.0"
   },
   "scripts": {
+    "prepare:ontology-review": "node ../script/import_ontology_review_fixtures.mjs",
+    "predev": "npm run prepare:ontology-review",
     "dev": "vite",
-    "build": "vite build",
-    "build:static": "uv run --directory .. --extra backend python -m script.export_dashboard_snapshot && vite build --mode static",
+    "prebuild": "npm run prepare:ontology-review",
+    "build": "vite build && node ../script/import_ontology_review_fixtures.mjs --verify dist/data/ontology-review",
+    "prebuild:static": "npm run prepare:ontology-review",
+    "build:static": "uv run --directory .. --extra backend python -m script.export_dashboard_snapshot && vite build --mode static && node ../script/import_ontology_review_fixtures.mjs --verify dist-static/data/ontology-review",
     "export:static": "uv run --directory .. --extra backend python -m script.export_dashboard_snapshot",
     "test": "node --test \"tests/**/*.test.js\""
   },
