@@ -6,6 +6,17 @@
 _bmad
 _bmad-output
 docs
+!docs/
+docs/*
+!docs/en/
+docs/en/*
+!docs/en/strategy-evaluation/
+docs/en/strategy-evaluation/*
+!docs/en/strategy-evaluation/asin-gmv-nn-v1/
+docs/en/strategy-evaluation/asin-gmv-nn-v1/*
+!docs/en/strategy-evaluation/asin-gmv-nn-v1/results/
+docs/en/strategy-evaluation/asin-gmv-nn-v1/results/*
+!docs/en/strategy-evaluation/asin-gmv-nn-v1/results/demo_mlp_extended27.json
 # `external` stays excluded: it is 8 megabytes of vendored projects, and only
 # the pinned MTA-SIM generator is imported at runtime. The two re-inclusions
 # below are exactly the paths `_generator_unavailability_reason()` probes, so

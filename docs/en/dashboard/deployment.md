@@ -1,8 +1,8 @@
 ---
 title: Running Locally and Publishing
-compact: "Dashboard delivery contract: launchers, build identity, Docker results, static resources, byte-pinned Ontology Review source/release provenance and materialization, repeated Pages validation, container publishing, AppStack, and reproducible revision labels."
+compact: "Dashboard delivery contract: launchers, build identity, allow-listed Docker build inputs, static resources, byte-pinned Ontology Review provenance and materialization, repeated Pages validation, container publishing, AppStack, and reproducible revision labels."
 lang: en-US
-source_files: dashboard/index.html, dashboard/package.json, dashboard/vite.config.js, dashboard/run.sh, dashboard/run.bat, deploy/docker/compose.yaml, deploy/docker/defaults.env, deploy/docker/run.sh, deploy/docker/run.bat, deploy/docker/Dockerfile.api, deploy/docker/Dockerfile.dashboard, .github/workflows/publish-containers.yml, script/build_pages_site.mjs, script/export_dashboard_snapshot.py, script/import_ontology_review_fixtures.mjs, dashboard/tests/ontology_review_fixtures.test.js
+source_files: dashboard/index.html, dashboard/package.json, dashboard/vite.config.js, dashboard/run.sh, dashboard/run.bat, deploy/docker/compose.yaml, deploy/docker/defaults.env, deploy/docker/run.sh, deploy/docker/run.bat, deploy/docker/Dockerfile.api, deploy/docker/Dockerfile.dashboard, .dockerignore, .github/workflows/publish-containers.yml, script/build_pages_site.mjs, script/export_dashboard_snapshot.py, script/import_ontology_review_fixtures.mjs, dashboard/tests/ontology_review_fixtures.test.js
 ---
 
 # Running Locally and Publishing
@@ -277,6 +277,16 @@ one full-stack container and deploys it through Alibaba Cloud Yunxiao AppStack.
 The exact image, placeholders, Kubernetes resources, credential boundary,
 health probes, and validation sequence are specified in
 [Backend Setup and Deployment](/en/introduction/backend/setups).
+
+The separate Dashboard client image uses the repository root as its Docker
+build context because the Vue build has three tracked inputs outside
+`dashboard/`: the project `VERSION`, the Ontology Review fixture importer, and
+the Willow demonstration model at
+`docs/en/strategy-evaluation/asin-gmv-nn-v1/results/demo_mlp_extended27.json`.
+The Dockerfile copies those inputs before `npm run build`. The root
+`.dockerignore` keeps the rest of `docs/` excluded and re-includes only that
+exact JSON and its parent directories; widening the exception to a whole
+documentation subtree is not permitted.
 
 ## Source Files
 
