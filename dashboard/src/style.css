@@ -2583,6 +2583,17 @@ tbody tr.selected:hover {
 }
 
 @media (max-width: 620px) {
+  .knowledge-tabs {
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scrollbar-width: thin;
+  }
+
+  .knowledge-tabs .tab {
+    flex: 0 0 auto;
+    white-space: nowrap;
+  }
+
   .ontology-review-head,
   .ontology-review-toolbar {
     align-items: stretch;

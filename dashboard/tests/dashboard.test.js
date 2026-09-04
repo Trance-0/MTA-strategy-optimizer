@@ -61,7 +61,8 @@ const DATA_GENERATOR = readFileSync(
 const KNOWLEDGE_BASE = readFileSync(
   resolve(HERE, "..", "src", "views", "KnowledgeBase.vue"),
   "utf8",
-);const ONTOLOGY_FIXTURES = readFileSync(
+);
+const ONTOLOGY_FIXTURES = readFileSync(
   resolve(HERE, "..", "src", "lib", "ontologyReviewFixtures.js"),
   "utf8",
 );
@@ -640,10 +641,30 @@ test("Data Generator keeps execution and storage behind backend APIs", () => {
   }
 });
 
-test("Knowledge Base preserves the backend boundary and adds only canonical review", () => {
-  assert.match(KNOWLEDGE_BASE, /previous browser-derived vocabulary has been removed/i);
-  assert.match(KNOWLEDGE_BASE, /Knowledge status/);
-  assert.match(KNOWLEDGE_BASE, /Ontology Review/);
+test("Knowledge Base restores four operational references beside canonical review", () => {
+  const expectedLabels = [
+    "Touchpoint vocabulary",
+    "Rules",
+    "Entities",
+    "Data sources",
+    "Ontology Review",
+  ];
+  const tabDeclaration = KNOWLEDGE_BASE.match(/const tabs = Object\.freeze\(\[([\s\S]*?)\n\]\);/)?.[1] ?? "";
+  const labels = [...tabDeclaration.matchAll(/label: "([^"]+)"/g)].map((match) => match[1]);
+
+  assert.deepEqual(labels, expectedLabels);
+  assert.match(KNOWLEDGE_BASE, /The first four tabs are operational references/);
+  assert.match(KNOWLEDGE_BASE, /Ontology Review uses a[^;]+separate[^;]+canonical fixture source/s);
+  assert.match(KNOWLEDGE_BASE, /The five-segment touchpoint key/);
+  assert.match(KNOWLEDGE_BASE, /Reliability contract/);
+  assert.match(KNOWLEDGE_BASE, /Advertising hierarchy/);
+  assert.match(KNOWLEDGE_BASE, /Eligible targeting candidates/);
+  assert.match(KNOWLEDGE_BASE, /Active source/);
+  assert.match(KNOWLEDGE_BASE, /candidatePool/);
+  for (const key of ["ArrowLeft", "ArrowRight", "Home", "End"]) {
+    assert.match(KNOWLEDGE_BASE, new RegExp(key));
+  }
+
   assert.match(KNOWLEDGE_BASE, /No Review API connected/);
   assert.match(KNOWLEDGE_BASE, /No request is sent and no verdict is calculated here/);
   assert.match(KNOWLEDGE_BASE, /new AbortController\(\)/);
@@ -654,7 +675,40 @@ test("Knowledge Base preserves the backend boundary and adds only canonical revi
   assert.match(ONTOLOGY_FIXTURES, /RELEASE_MANIFEST_SIZE = 1506/);
   assert.match(KNOWLEDGE_BASE, /Try again/);
   assert.doesNotMatch(KNOWLEDGE_BASE, /from "\.\.\/api\/client\.js"|globalThis\.fetch|ontologyReviewDemo/);
-  assert.deepEqual(Object.keys(PAGES.knowledge.sections), ["notice", "ontology-review"]);
+  assert.equal(PAGES.knowledge.defaultSection, "vocabulary");
+  assert.deepEqual(Object.keys(PAGES.knowledge.sections), [
+    "vocabulary",
+    "rules",
+    "entities",
+    "sources",
+    "ontology-review",
+  ]);
+});
+
+test("Knowledge Base guards partial snapshot values without inventing provenance", () => {
+  assert.match(KNOWLEDGE_BASE, /Array\.isArray\(data\.value\.attributionResults\)/);
+  assert.match(KNOWLEDGE_BASE, /hasTotalDailyBudget/);
+  assert.doesNotMatch(KNOWLEDGE_BASE, /total_daily_budget\s*\?\?\s*0/);
+  assert.match(KNOWLEDGE_BASE, /mode === "database" \? "true" : mode \? "false" : "--"/);
+  assert.match(KNOWLEDGE_BASE, /not stored in database mode/);
+  assert.match(KNOWLEDGE_BASE, /No capacity rules are present in the current strategy_request\.json/);
+  assert.match(KNOWLEDGE_BASE, /source has not been identified/);
+  assert.doesNotMatch(KNOWLEDGE_BASE, /Switch <code>DATABASE<\/code>/);
+  assert.match(KNOWLEDGE_BASE, /File-mode artifact contract/);
+  assert.match(KNOWLEDGE_BASE, /this list is not\s+provenance for the active database/);
+});
+
+test("Knowledge Base keyboard navigation preloads before navigating and keeps narrow tabs reachable", () => {
+  const preload = KNOWLEDGE_BASE.indexOf('await ensureResources(routeResources("knowledge", target.key))');
+  const navigate = KNOWLEDGE_BASE.indexOf('emit("navigate", target.key)', preload);
+  const focus = KNOWLEDGE_BASE.indexOf('document.getElementById', navigate);
+  assert.ok(preload >= 0 && navigate > preload && focus > navigate);
+  assert.match(KNOWLEDGE_BASE, /catch \{[\s\S]*route-level error/);
+
+  const narrow = STYLE_CSS.slice(STYLE_CSS.indexOf("@media (max-width: 620px)"));
+  assert.match(narrow, /\.knowledge-tabs\s*\{[^}]*overflow-x:\s*auto/s);
+  assert.match(narrow, /\.knowledge-tabs \.tab\s*\{[^}]*flex:\s*0 0 auto/s);
+  assert.match(narrow, /\.knowledge-tabs \.tab\s*\{[^}]*white-space:\s*nowrap/s);
 });
 
 test("Ontology Review exposes complete fail-closed fixture states and semantics", () => {
@@ -858,6 +912,11 @@ test("route resources load lazily with immediate backend phase progress", async 
   assert.equal(routeHash("budget", "product-economics"), "#/budget/product-economics");
   assert.deepEqual(routeResources("campaigns", "performance"), ["shell", "performance"]);
   assert.deepEqual(routeResources("campaigns", "paths"), ["shell", "path-report"]);
+  assert.deepEqual(routeResources("knowledge", "vocabulary"), ["shell", "attribution"]);
+  assert.deepEqual(routeResources("knowledge", "rules"), ["shell", "budget"]);
+  assert.deepEqual(routeResources("knowledge", "entities"), ["shell", "budget"]);
+  assert.deepEqual(routeResources("knowledge", "sources"), ["shell"]);
+  assert.deepEqual(routeResources("knowledge", "ontology-review"), ["shell"]);
   assert.equal(PAGES.optimizer.defaultSection, "attribution");
   assert.match(APP_VUE, /pushState/);
   assert.match(APP_VUE, /popstate/);

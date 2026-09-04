@@ -316,7 +316,10 @@ Source: `deploy/docker/compose.yaml`, `deploy/docker/defaults.env`,
   `dashboard/dist`, so `client_dist_directory()` returns None and the service
   registers API routes only — the client is the other image. It builds with
   `npm run build`, not `--mode static`, which would bake a snapshot and make
-  Flask unreachable. The runtime installs both the `backend` and
+  Flask unreachable. Before that build, the Dashboard image copies the root
+  Ontology Review importer into `/workspace/script/`; `COPY dashboard/ ./`
+  supplies its tracked canonical fixtures, so the prebuild works in a clean
+  repository-root Docker context. The runtime installs both the `backend` and
   `strategy-evaluation` dependency extras, and model jobs invoke that
   environment's Python interpreter directly; no runtime uv cache or writable
   home directory is required. Gunicorn uses one worker because live job state
