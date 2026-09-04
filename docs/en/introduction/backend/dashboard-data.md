@@ -45,6 +45,34 @@ the budget/outcome join and delivery query; it does not re-read providers,
 Products, Campaigns, Ad Groups, touchpoints, economics, or master drafts a
 second time.
 
+The two resources carrying observations — `research-overview` and
+`research-campaign-history` — accept optional `start` and `end` query parameters
+bounding `report_date` inclusively. `parse_history_window()` accepts only
+`YYYY-MM-DD`, drops a bound that does not match rather than refusing the
+request, and swaps a reversed pair so the earlier date is always the start.
+A bound that survives becomes a whole appended predicate with its date bound as
+a SQL parameter; no part of the query string is ever formatted into a statement,
+which is the same rule the resource allow-list keeps for names. Local file mode
+applies the identical bounds to the rows it read, so both modes answer one
+contract.
+
+A request naming neither bound is served the most recent `DEFAULT_HISTORY_DAYS`
+— 90 — rather than the whole history. That default is resolved on the route, not
+inside a loader, because an unbounded load must keep meaning the whole history
+for the static exporter and the compatibility snapshot. A range already shorter
+than the default is reported unbounded, so a complete history is never described
+as a partial one.
+
+The observation cache is keyed by its bounds as well as by the loader, so
+widening a window issues a fresh query instead of returning the narrower slice
+already held. Every windowed response carries `simulationResearch.historyWindow`
+— the bounds applied, plus `earliest` and `latest` from
+`history_window_bounds()`. Those two are read as aggregates over the indexed
+`report_date` column rather than from the rows, so they stay cheap enough to
+answer beside every history load, and they are what lets a client state the
+range a narrowed window excluded. Resources that carry no observations ignore a
+window entirely.
+
 `load_snapshot()` remains an internal compatibility assembly for schema
 validation and Python parity tests; the Vue client does not call the legacy
 whole-snapshot route. `POST /api/reload` and a successful model job clear every

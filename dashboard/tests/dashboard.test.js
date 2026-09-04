@@ -15,9 +15,10 @@
  */
 
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { readFileSync, rmSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 import test from "node:test";
+import { pathToFileURL } from "node:url";
 
 const { PAGES, PAGE_KEYS, DEFAULT_PAGE, DASHBOARD_RESOURCES } = await import(
   "../src/pages.js"
@@ -126,6 +127,62 @@ const RUN_PIPELINE_PY = readFileSync(
   resolve(HERE, "..", "..", "script", "run_pipeline.py"),
   "utf8",
 );
+
+/**
+ * Import `src/api/client.js` under Node, with its private helpers exported.
+ *
+ * The module reads `import.meta.env` at load, which only Vite defines, and it
+ * keeps the stream reader and the static windowing private because no view
+ * calls them directly. Rather than widen the module's surface for the suite, a
+ * copy is written beside it with the build flag substituted and those helpers
+ * exported. The copy sits in `src/api/` so its own `../pages.js` import still
+ * resolves, and is removed as soon as it is loaded.
+ *
+ * `staticBuild` selects which deployment the copy believes it is, which is the
+ * only way to reach the branch a published build takes.
+ */
+const clientModules = new Map();
+async function loadClientModule(staticBuild = false) {
+  const flag = staticBuild ? "true" : "false";
+  if (clientModules.has(flag)) return clientModules.get(flag);
+  const shim = resolve(HERE, "..", "src", "api", `__client_test_shim_${flag}.mjs`);
+  writeFileSync(
+    shim,
+    CLIENT.replaceAll("import.meta.env", `{ VITE_STATIC_BUILD: "${flag}" }`) +
+      "\nexport { readResourceStream, windowStaticPayload };\n",
+    "utf8",
+  );
+  try {
+    clientModules.set(flag, await import(pathToFileURL(shim).href));
+  } finally {
+    rmSync(shim, { force: true });
+  }
+  return clientModules.get(flag);
+}
+
+/**
+ * A stand-in `Response` that delivers `text` as many small byte chunks.
+ *
+ * The chunk is deliberately smaller than a network read. What is under test is
+ * the per-chunk cost, so the count of chunks is the load, and a small chunk
+ * reaches a telling count without holding a network-sized frame in memory.
+ */
+function chunkedResponse(text, chunkSize = 4096) {
+  const bytes = new TextEncoder().encode(text);
+  let offset = 0;
+  return {
+    body: {
+      getReader: () => ({
+        read: async () => {
+          if (offset >= bytes.length) return { done: true, value: undefined };
+          const value = bytes.subarray(offset, offset + chunkSize);
+          offset += chunkSize;
+          return { done: false, value };
+        },
+      }),
+    },
+  };
+}
 
 // ---------------------------------------------------------------------------
 // CSV
@@ -821,6 +878,47 @@ test("one cell renderer serves every table", () => {
   assert.match(ENTITY_TABLE, /NUMERIC_FORMATS/);
 });
 
+test("table headers cycle ascending, descending, and backend order", async () => {
+  const dataTable = readFileSync(
+    resolve(HERE, "..", "src", "components", "DataTable.vue"),
+    "utf8",
+  );
+  const { nextTableSort, sortTableRows } = await import("../src/lib/common.js");
+  const sourceRows = [
+    { name: "Beta", spend: 20 },
+    { name: "alpha10", spend: null },
+    { name: "Alpha2", spend: 3 },
+  ];
+
+  const ascending = nextTableSort({ key: null, direction: null }, "name");
+  assert.deepEqual(ascending, { key: "name", direction: "asc" });
+  const descending = nextTableSort(ascending, "name");
+  assert.deepEqual(descending, { key: "name", direction: "desc" });
+  const reset = nextTableSort(descending, "name");
+  assert.deepEqual(reset, { key: null, direction: null });
+
+  assert.deepEqual(
+    sortTableRows(sourceRows, { key: "name", format: "text" }, "asc").map(
+      ({ name }) => name,
+    ),
+    ["Alpha2", "alpha10", "Beta"],
+  );
+  assert.deepEqual(
+    sortTableRows(sourceRows, { key: "spend", format: "money" }, "desc").map(
+      ({ spend }) => spend,
+    ),
+    [20, 3, null],
+  );
+  assert.equal(sortTableRows(sourceRows, null, null), sourceRows);
+
+  for (const component of [dataTable, ENTITY_TABLE]) {
+    assert.match(component, /nextTableSort/);
+    assert.match(component, /sortTableRows/);
+    assert.match(component, /:aria-sort="ariaSort\(column\)"/);
+    assert.match(component, /sort\.direction === "asc" \? "▲" : "▼"/);
+  }
+});
+
 test("renderCell flattens the shapes the canonical records actually carry", async () => {
   const { renderCell } = await import("../src/lib/common.js");
 
@@ -868,7 +966,12 @@ test("Campaigns exposes history filters and presentation-only similarity", () =>
   assert.match(CAMPAIGNS, /row\.similarity_score >= similarityThreshold\.value/);
   assert.match(CAMPAIGNS, /type="range" min="0" max="1" step="0\.05"/);
   assert.match(CAMPAIGNS, /row\.subject_id !== row\.comparable_id/);
-  assert.match(CAMPAIGNS, /Attribution not available\./);
+  // Attribution output belongs to Campaign Optimizer, which owns the models
+  // that produce it. This explorer restated that in a card carrying no figure
+  // of its own, so the card is gone rather than duplicated here.
+  assert.doesNotMatch(CAMPAIGNS, /Attribution evidence/);
+  assert.doesNotMatch(CAMPAIGNS, /Attribution not available\./);
+  assert.doesNotMatch(CAMPAIGNS, /data\.attributionResults/);
 });
 
 test("Campaigns chart bounds support the full database history", async () => {
@@ -882,6 +985,178 @@ test("Campaigns chart bounds support the full database history", async () => {
   assert.equal(maxOf([{ value: null }, { value: Number.NaN }], ["value"], 1), 1);
   assert.match(CAMPAIGNS, /maxOf\(scopedHistory\.value/);
   assert.doesNotMatch(CAMPAIGNS, /\.\.\.scopedHistory\.value/);
+});
+
+test("merged observations keep their count and stay inside the grid", async () => {
+  const { densityGrid } = await import("../src/lib/common.js");
+
+  // The supported history size: one row per Campaign, date, and budget level.
+  const rows = Array.from({ length: 100_000 }, (_, index) => ({
+    configured_budget: (index % 800) + 1,
+    actual_spend: ((index * 7) % 800) + 1,
+  }));
+
+  for (const resolution of [10, 40, 100]) {
+    const grid = densityGrid(rows, "configured_budget", "actual_spend", 800, resolution);
+    // Merging must not be losing: every observation lands in exactly one cell,
+    // or the colour understates how much sits where.
+    assert.equal(grid.total, rows.length);
+    assert.equal(
+      grid.z.flat().reduce((running, value) => running + (value ?? 0), 0),
+      rows.length,
+    );
+    // The drawn marks follow the grid, not the row count. That is the whole
+    // reason this replaced a scatter: 100,000 markers freeze the tab.
+    assert.equal(grid.z.length, resolution);
+    for (const line of grid.z) assert.equal(line.length, resolution);
+    assert.ok(grid.occupied <= resolution * resolution);
+    // The last cell's far edge sits on the bound, so no brick is drawn past
+    // the axis range the layout sets.
+    assert.ok(Math.abs(grid.x0 - grid.dx / 2 + grid.dx * resolution - 800) < 1e-9);
+  }
+
+  // A value exactly at the bound belongs in the last cell rather than one past
+  // the end of the matrix, where it would be dropped silently.
+  const atBound = densityGrid([{ x: 10, y: 10 }], "x", "y", 10, 10);
+  assert.equal(atBound.z[9][9], 1);
+  assert.equal(atBound.total, 1);
+
+  // An empty cell is `null`, never 0: a drawn zero reads as "a few here".
+  assert.ok(!atBound.z.flat().includes(0));
+  assert.match(CAMPAIGNS, /hoverongaps: false/);
+
+  // Degenerate inputs a filtered view reaches: no rows at all, and rows whose
+  // measures are missing.
+  assert.equal(densityGrid([], "x", "y", 1, 10).total, 0);
+  assert.equal(densityGrid([], "x", "y", 1, 10).z.length, 10);
+  assert.equal(
+    densityGrid([{ x: null, y: 1 }, { x: "n/a", y: 2 }, { x: 1, y: 1 }], "x", "y", 10, 10).total,
+    1,
+  );
+  assert.equal(densityGrid([{ x: 0, y: 0 }], "x", "y", 0, 4).densest, 1);
+});
+
+test("the delivery chart merges observations at a resolution the reader picks", () => {
+  // Plotly's scatter emits one mark per observation. A full history is 100,000
+  // of them, most landing where another has already drawn, so the ink said only
+  // "something is here". The count is what the overplotting hid, so the chart
+  // encodes the count and draws at most `resolution²` marks either way.
+  assert.match(CAMPAIGNS, /const DENSITY_RESOLUTIONS = \[10, 40, 100\]/);
+  assert.match(CAMPAIGNS, /densityGrid\(/);
+  assert.match(CAMPAIGNS, /type: "heatmap"/);
+  assert.doesNotMatch(CAMPAIGNS, /scattergl/);
+  // Explicit origin and cell size. Given only the occupied coordinates Plotly
+  // infers brick widths from their spacing, which on a sparse grid draws
+  // bricks of uneven size that misstate where an observation sat.
+  for (const key of ["x0", "dx", "y0", "dy"]) {
+    assert.match(CAMPAIGNS, new RegExp(`${key}: grid\\.${key}`));
+  }
+  // The resolution is a control, not a constant, and its effect is stated.
+  assert.match(CAMPAIGNS, /v-model\.number="densityResolution"/);
+  assert.match(CAMPAIGNS, /observations in this cell/);
+  assert.match(CAMPAIGNS, /densitySummary/);
+  // The diagonal is what makes the chart readable: a cell above it overspent.
+  assert.match(CAMPAIGNS, /dash: "dash"/);
+
+  // Grouped in one pass. A `filter` per Campaign rescans the whole history
+  // once per series, which is 40 full scans on every filter change.
+  assert.doesNotMatch(
+    CAMPAIGNS,
+    /scopedHistory\.value\.filter\(\(row\) => row\.campaign_id === campaign\)/,
+  );
+});
+
+test("a narrower history window is fetched, not filtered in the browser", async () => {
+  const dashboardStore = readFileSync(
+    resolve(HERE, "..", "src", "lib", "useDashboard.js"),
+    "utf8",
+  );
+  const client = readFileSync(resolve(HERE, "..", "src", "api", "client.js"), "utf8");
+  const { WINDOWED_RESOURCES } = await import("../src/pages.js");
+
+  // Narrowing the range must shrink the transfer. Filtering rows already in the
+  // browser only hides what the reader has already waited for.
+  assert.ok(WINDOWED_RESOURCES.has("research-campaign-history"));
+  assert.match(client, /query\.set\("start", window\.start\)/);
+  assert.match(client, /query\.set\("end", window\.end\)/);
+
+  // Cached per window as well as per resource, or widening the range would be
+  // answered from the narrower slice already loaded under the bare name.
+  assert.match(dashboardStore, /function cacheKey\(resource\)/);
+  assert.match(dashboardStore, /\$\{resource\}:\$\{start \?\? ""\}:\$\{end \?\? ""\}/);
+  assert.match(dashboardStore, /completed\.value\.has\(key\)/);
+  // Only the windowed resources reload: the entity catalogues beside them do
+  // not vary with the date, and refetching them would make changing a date
+  // re-transfer everything.
+  assert.match(dashboardStore, /currentResources\.filter\(\(resource\) =>\s*WINDOWED_RESOURCES\.has\(resource\)/);
+
+  // The reader is told what was excluded; the rows that survived a window
+  // cannot say what range they were taken from.
+  assert.match(CAMPAIGNS, /loadedWindow\.earliest/);
+  assert.match(CAMPAIGNS, /loadedWindow\.latest/);
+  assert.match(CAMPAIGNS, /windowIsPartial/);
+  // "Load everything" asks for the observed range, not for no window at all:
+  // no window is what the backend answers with its recent-quarter default, so
+  // clearing the dates would request the slice already loaded.
+  assert.match(CAMPAIGNS, /setHistoryWindow\(\{ start: earliest, end: latest \}\)/);
+  assert.match(CAMPAIGNS, /v-if="windowIsPartial"[\s\S]{0,120}Load everything/);
+
+  // Budget Overview reads the same windowed resource and sums it into tiles.
+  // A total labelled "Actual spend" over a slice the reader did not choose and
+  // cannot see is a wrong number, so it states the period it covers.
+  assert.match(BUDGET_MANAGER, /research\.value\.historyWindow/);
+  assert.match(BUDGET_MANAGER, /historyPeriod/);
+});
+
+test("a static host honours the same window against its whole files", async () => {
+  // A static file is written at build time and cannot be re-queried, so the
+  // bounds are applied after it arrives. The view must not have to ask which
+  // deployment it is in, so the payload reports the window either way.
+  const { windowStaticPayload } = await loadClientModule(true);
+  const whole = {
+    simulationResearch: {
+      campaigns: [{ campaign_id: "c1" }],
+      history: [
+        { report_date: "2026-01-01", configured_budget: 1 },
+        { report_date: "2026-02-15", configured_budget: 2 },
+        { report_date: "2026-03-30", configured_budget: 3 },
+      ],
+      delivery: [
+        { report_date: "2026-01-01", cost: 1 },
+        { report_date: "2026-03-30", cost: 3 },
+      ],
+      historyWindow: {
+        start: null, end: null, earliest: "2026-01-01", latest: "2026-03-30",
+      },
+    },
+  };
+
+  const bounded = windowStaticPayload(whole, { start: "2026-02-01", end: "2026-03-01" });
+  assert.deepEqual(
+    bounded.simulationResearch.history.map((row) => row.report_date),
+    ["2026-02-15"],
+  );
+  assert.deepEqual(bounded.simulationResearch.delivery, []);
+  // The applied bounds are reported, and the full recorded range is left as the
+  // file wrote it -- that is what tells the reader what the window excluded.
+  assert.deepEqual(bounded.simulationResearch.historyWindow, {
+    start: "2026-02-01", end: "2026-03-01",
+    earliest: "2026-01-01", latest: "2026-03-30",
+  });
+  // Fields that do not vary with the window survive untouched.
+  assert.deepEqual(bounded.simulationResearch.campaigns, [{ campaign_id: "c1" }]);
+  // The source is not mutated, or a later widening would read a filtered cache.
+  assert.equal(whole.simulationResearch.history.length, 3);
+
+  // No window means the whole file, and a resource carrying no history at all
+  // passes through as it came.
+  assert.equal(
+    windowStaticPayload(whole, null).simulationResearch.history.length,
+    3,
+  );
+  const unwindowed = { simulationResearch: { providers: [{ provider: "p" }] } };
+  assert.equal(windowStaticPayload(unwindowed, { start: "2026-02-01" }), unwindowed);
+  assert.equal(windowStaticPayload({ adsDaily: [] }, { start: "2026-02-01" }).adsDaily.length, 0);
 });
 
 test("Campaigns reads through the same paged table Budget Manager uses", () => {
@@ -937,7 +1212,7 @@ test("route resources load lazily with immediate backend phase progress", async 
   assert.match(dashboardStore, /elapsedMs/);
   assert.match(progress, /role="progressbar"/);
   assert.match(dashboardStore, /const inFlight = new Map\(\)/);
-  assert.match(dashboardStore, /completed\.value\.has\(resource\)/);
+  assert.match(dashboardStore, /completed\.value\.has\(cacheKey\(resource\)\)/);
   assert.deepEqual(parseRoute("#campaigns"), { page: "campaigns", section: "history" });
   assert.deepEqual(parseRoute("#/campaigns/paths"), { page: "campaigns", section: "paths" });
   assert.deepEqual(parseRoute("#/campaigns/not-declared"), {
@@ -961,6 +1236,73 @@ test("route resources load lazily with immediate backend phase progress", async 
   assert.match(APP_VUE, /!diagnosticsOn\.value/);
   assert.match(CAMPAIGNS, /emit\('navigate', entry\.key\)/);
   assert.match(BUDGET_MANAGER, /navigateSection\(key\)/);
+});
+
+test("a resource stream is read in one pass over each chunk", async () => {
+  // The result frame is the whole resource on one line -- tens of megabytes for
+  // a full Campaign history. Reading it by appending to a buffer and splitting
+  // that buffer per chunk rescans every byte already received, so the cost is
+  // quadratic in the frame size and the tab stops answering for the duration.
+  // This asserts the observable consequence rather than the implementation:
+  // a large single-line frame must parse in time a reader would not notice.
+  const { readResourceStream } = await loadClientModule();
+
+  const rows = Array.from({ length: 60_000 }, (_, index) => ({
+    campaign_id: `campaign_${index % 40}`,
+    report_date: "2026-01-01",
+    configured_budget: index,
+    actual_spend: index + 0.5,
+    note: "padding that makes each row a realistic width",
+  }));
+  const frames =
+    JSON.stringify({ type: "progress", percent: 42, phase: "Querying" }) + "\n" +
+    JSON.stringify({ type: "result", payload: { simulationResearch: { history: rows } } }) + "\n";
+
+  const phases = [];
+  const started = process.hrtime.bigint();
+  const payload = await readResourceStream(chunkedResponse(frames), (update) => {
+    if (update.phase) phases.push(update.phase);
+  });
+  const elapsedMs = Number(process.hrtime.bigint() - started) / 1e6;
+
+  assert.equal(payload.simulationResearch.history.length, 60_000);
+  // The server's own milestone must still reach the progress report, and the
+  // terminal frame must mark completion.
+  assert.deepEqual(phases, ["Querying", "Dashboard data ready"]);
+  // Generous next to the quadratic read this replaced, which took tens of
+  // seconds on a frame this size, and far above a linear read's own cost.
+  assert.ok(
+    elapsedMs < 4000,
+    `reading a ${(frames.length / 1024 / 1024).toFixed(1)} MB frame took ${elapsedMs.toFixed(0)} ms`,
+  );
+});
+
+test("a resource stream reports its terminal frames", async () => {
+  const { readResourceStream } = await loadClientModule();
+
+  // A backend that streams milestones and then dies must not resolve with a
+  // half-populated snapshot; the route's error card is the honest outcome.
+  await assert.rejects(
+    readResourceStream(
+      chunkedResponse(JSON.stringify({ type: "progress", percent: 5, phase: "x" }) + "\n"),
+      () => {},
+    ),
+    /ended without data/,
+  );
+
+  // An error frame carries the code the shell reads to offer schema recovery.
+  await assert.rejects(
+    readResourceStream(
+      chunkedResponse(
+        JSON.stringify({
+          type: "error",
+          payload: { error: "database_unavailable", message: "no database" },
+        }) + "\n",
+      ),
+      () => {},
+    ),
+    (error) => error.code === "database_unavailable" && /no database/.test(error.message),
+  );
 });
 
 test("the offered budget policies are the ones the optimizer accepts", () => {

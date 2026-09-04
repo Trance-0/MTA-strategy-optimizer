@@ -136,6 +136,17 @@ export const DASHBOARD_RESOURCES = Object.freeze([
   "research-campaign-history",
 ]);
 
+/**
+ * The resources whose payload depends on the requested history window.
+ *
+ * Mirrors `WINDOWED_FIELDS` in `backend/repository/snapshot.py`. These are the
+ * two resources carrying observation arrays; every other one ignores a window,
+ * so requesting them with bounds would only fragment their cache entry.
+ */
+export const WINDOWED_RESOURCES = Object.freeze(
+  new Set(["research-overview", "research-campaign-history"]),
+);
+
 /** Normalize a location hash to one declared page and subsection. */
 export function parseRoute(hash) {
   const parts = String(hash ?? "")

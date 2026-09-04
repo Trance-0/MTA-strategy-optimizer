@@ -9,11 +9,11 @@
  */
 import { computed, ref } from "vue";
 
-import DataTable from "../components/DataTable.vue";
 import EntityTable from "../components/EntityTable.vue";
 import MetricRow from "../components/MetricRow.vue";
 import PlotlyChart from "../components/PlotlyChart.vue";
 import {
+  densityGrid,
   distinct,
   groupSum,
   maxOf,
@@ -29,7 +29,7 @@ import * as theme from "../theme.js";
 
 const props = defineProps({ section: { type: String, default: "history" } });
 const emit = defineEmits(["navigate"]);
-const { data } = useDashboard();
+const { data, historyWindow, setHistoryWindow } = useDashboard();
 const { diagnosticsOn } = useDiagnostics();
 
 const tab = computed(() => props.section);
@@ -76,6 +76,58 @@ const budgetHistory = computed(() =>
     };
   }),
 );
+
+/**
+ * The window the loaded rows were read under, and the full range they came
+ * from. The server reports both, because a reader cannot tell from the rows
+ * that survived a window what range was excluded by it.
+ */
+const loadedWindow = computed(() => research.value.historyWindow ?? {});
+
+/** Whether the loaded slice is narrower than the range the source holds. */
+const windowIsPartial = computed(() => {
+  const window = loadedWindow.value;
+  return Boolean(
+    (window.start && window.start > (window.earliest ?? window.start)) ||
+    (window.end && window.end < (window.latest ?? window.end)),
+  );
+});
+
+const windowStartRequest = ref("");
+const windowEndRequest = ref("");
+
+/**
+ * Ask the backend for a different slice of history.
+ *
+ * The date controls request a window rather than filtering rows already in the
+ * browser, so narrowing a range shrinks the transfer instead of only hiding
+ * what was already paid for. The remaining filters stay client-side: they
+ * select within the loaded window, which needs no round trip. Leaving both
+ * dates empty asks for nothing in particular, which the backend answers with
+ * its recent-quarter default.
+ */
+function applyWindow() {
+  setHistoryWindow({
+    start: windowStartRequest.value || null,
+    end: windowEndRequest.value || null,
+  });
+}
+
+/**
+ * Load the whole recorded history.
+ *
+ * Requested as the observed range rather than as no window at all: no window is
+ * what the backend answers with its default, so clearing the dates would ask
+ * for the same slice already loaded. The full range is above fifty megabytes,
+ * which is why it is a deliberate action and not what a first view does.
+ */
+function loadEverything() {
+  const { earliest, latest } = loadedWindow.value;
+  if (!earliest || !latest) return;
+  windowStartRequest.value = "";
+  windowEndRequest.value = "";
+  setHistoryWindow({ start: earliest, end: latest });
+}
 
 const historyDates = computed(() => distinct(budgetHistory.value, "report_date"));
 const historyProviders = computed(() => distinct(budgetHistory.value, "provider"));
@@ -162,29 +214,75 @@ const interactionHistoryLayout = computed(() => theme.layout({
   height: 300, legend: false, yaxis: { title: { text: "Spend" } },
 }));
 
+/**
+ * The grid sizes offered for the delivery-response chart.
+ *
+ * The reader chooses how finely observations are merged. A coarse grid reads
+ * as shape and is quick to scan; a fine one resolves where a dense band
+ * actually separates. Both draw at most `resolution²` marks regardless of how
+ * many observations were merged into them, which is what keeps the chart
+ * drawable at the supported history size.
+ */
+const DENSITY_RESOLUTIONS = [10, 40, 100];
+const densityResolution = ref(40);
+
+const historyHighest = computed(() =>
+  maxOf(scopedHistory.value, ["configured_budget", "actual_spend"], 1),
+);
+
+/**
+ * Observations merged into a fixed grid, coloured by how many share a cell.
+ *
+ * This replaces a per-Campaign scatter. That drew one marker per observation
+ * -- 100,000 of them for a full history, of which roughly 85% landed where
+ * another had already drawn -- across 40 overlapping series whose colours could
+ * no longer be told apart at that density. The count the overplotting was
+ * hiding is the thing worth showing, so it is the encoded value here.
+ */
+const historyDensity = computed(() =>
+  densityGrid(
+    scopedHistory.value,
+    "configured_budget",
+    "actual_spend",
+    historyHighest.value,
+    densityResolution.value,
+  ),
+);
+
 const budgetHistoryTraces = computed(() => {
-  const campaigns = distinct(scopedHistory.value, "campaign_id");
-  const colors = theme.seriesColors(campaigns);
-  return campaigns.map((campaign) => {
-    const rows = scopedHistory.value.filter((row) => row.campaign_id === campaign);
-    return {
-      type: "scatter",
-      mode: "markers",
-      name: campaign,
-      x: rows.map((row) => row.configured_budget),
-      y: rows.map((row) => row.actual_spend),
-      customdata: rows.map((row) => [row.report_date, row.budget_level]),
-      marker: { color: colors[campaign], size: 8, opacity: 0.68 },
-      hovertemplate:
-        `<b>${campaign}</b><br>%{customdata[0]} · %{customdata[1]}×<br>` +
-        "Budget %{x:$,.2f}<br>Spend %{y:$,.2f}<extra></extra>",
-    };
-  });
+  const grid = historyDensity.value;
+  if (!grid.total) return [];
+  return [{
+    type: "heatmap",
+    z: grid.z,
+    x0: grid.x0,
+    dx: grid.dx,
+    y0: grid.y0,
+    dy: grid.dy,
+    colorscale: theme.SEQUENTIAL.map((color, index) => [
+      index / (theme.SEQUENTIAL.length - 1),
+      color,
+    ]),
+    // An empty cell is left as the plane rather than drawn as the palette's
+    // lightest colour, so "nothing here" is not read as "a few here".
+    hoverongaps: false,
+    colorbar: {
+      title: { text: "Observations", side: "right", font: { size: 11 } },
+      thickness: 12,
+      outlinewidth: 0,
+      tickfont: { size: 10, color: theme.MUTED },
+    },
+    hovertemplate:
+      "Budget %{x:$,.2f}<br>Spend %{y:$,.2f}<br>" +
+      "%{z:,.0f} observations in this cell<extra></extra>",
+  }];
 });
+
 const budgetHistoryLayout = computed(() => {
-  const highest = maxOf(scopedHistory.value, ["configured_budget", "actual_spend"], 1);
+  const highest = historyHighest.value;
   return theme.layout({
     height: 360,
+    legend: false,
     xaxis: { title: { text: "Configured budget" }, range: [0, highest * 1.04] },
     yaxis: { title: { text: "Actual spend" }, range: [0, highest * 1.04] },
     shapes: [{
@@ -192,6 +290,15 @@ const budgetHistoryLayout = computed(() => {
       line: { color: theme.AXIS, width: 1.5, dash: "dash" },
     }],
   });
+});
+
+/** What the grid merged, for the card's subtitle. */
+const densitySummary = computed(() => {
+  const { total, occupied, densest } = historyDensity.value;
+  if (!total) return "No observations to plot";
+  return `${total.toLocaleString()} observation${total === 1 ? "" : "s"} merged into ` +
+    `${occupied.toLocaleString()} cell${occupied === 1 ? "" : "s"} · ` +
+    `densest holds ${densest.toLocaleString()}`;
 });
 
 const historicalColumns = [
@@ -629,6 +736,11 @@ const historyRowKey = (row) =>
     .filter((part) => part !== null && part !== undefined && part !== "")
     .join(":");
 
+const similarityRowKey = (row) =>
+  [row.run_id, row.campaign_id, row.product_id, row.historical_period]
+    .filter((part) => part !== null && part !== undefined && part !== "")
+    .join(":");
+
 const bridgeRowKey = (row) =>
   [row.campaign_id, row.ad_group_id, row.touchpoint, row.sku_id, row.target_id,
     row.audience_id, row.keyword_id]
@@ -685,12 +797,70 @@ const scopedRowKey = (row) =>
         </div>
       </article>
 
+      <article class="card">
+        <div class="card-head">
+          <h2>Loaded history window</h2>
+          <span class="sub">Requests a slice from the backend rather than filtering what is already here</span>
+        </div>
+        <div class="card-body">
+          <div class="filter-row">
+            <div class="field">
+              <label for="window-start">Load from</label>
+              <input id="window-start" v-model="windowStartRequest" type="date" :min="loadedWindow.earliest" :max="loadedWindow.latest" />
+            </div>
+            <div class="field">
+              <label for="window-end">Load to</label>
+              <input id="window-end" v-model="windowEndRequest" type="date" :min="loadedWindow.earliest" :max="loadedWindow.latest" />
+            </div>
+            <div class="field">
+              <label>&nbsp;</label>
+              <button class="btn" @click="applyWindow">Load this window</button>
+            </div>
+            <div v-if="windowIsPartial" class="field">
+              <label>&nbsp;</label>
+              <button class="btn small" @click="loadEverything">Load everything</button>
+            </div>
+          </div>
+          <p class="caption">
+            <template v-if="windowIsPartial">
+              Showing {{ loadedWindow.start || loadedWindow.earliest }} to
+              {{ loadedWindow.end || loadedWindow.latest }}. The source holds
+              {{ loadedWindow.earliest }} to {{ loadedWindow.latest }}; every
+              figure on this page describes the loaded window only. Loading the
+              complete history transfers considerably more.
+            </template>
+            <template v-else-if="loadedWindow.earliest">
+              Showing the complete recorded history, {{ loadedWindow.earliest }}
+              to {{ loadedWindow.latest }}.
+            </template>
+          </p>
+        </div>
+      </article>
+
       <template v-if="scopedHistory.length">
         <MetricRow :items="historyTiles" />
         <article class="card">
-          <div class="card-head"><h2>Budget delivery response</h2><span class="sub">Configured budget vs actual spend · dashed line is full delivery</span></div>
+          <div class="card-head">
+            <h2>Configured budget vs actual spend</h2>
+            <span class="sub">{{ densitySummary }} · dashed line is full delivery</span>
+          </div>
           <div class="card-body">
-            <PlotlyChart :traces="budgetHistoryTraces" :layout="budgetHistoryLayout" label="Configured Campaign budget compared with actual spend" />
+            <div class="filter-row">
+              <div class="field">
+                <label for="density-resolution">Grid resolution</label>
+                <select id="density-resolution" v-model.number="densityResolution">
+                  <option v-for="size in DENSITY_RESOLUTIONS" :key="size" :value="size">
+                    {{ size }} × {{ size }}
+                  </option>
+                </select>
+              </div>
+            </div>
+            <PlotlyChart :traces="budgetHistoryTraces" :layout="budgetHistoryLayout" label="Observation density by configured Campaign budget against actual spend" />
+            <p class="caption">
+              Colour is how many observations fall in a cell, so a dense band
+              reads as density rather than as overlapping marks. Per-observation
+              values are in the table below.
+            </p>
             <EntityTable
               :columns="historicalColumns"
               :rows="scopedHistory"
@@ -705,13 +875,6 @@ const scopedRowKey = (row) =>
           <div class="card-body">
             <PlotlyChart :traces="interactionHistoryTraces" :layout="interactionHistoryLayout" label="Spend and event counts split by interaction type" />
             <p class="caption">Ordered path frequencies, path length, and transition evidence remain available in Conversion paths; no Multi-Touch Attribution is recomputed here.</p>
-          </div>
-        </article>
-        <article class="card">
-          <div class="card-head"><h2>Attribution evidence</h2></div>
-          <div class="card-body">
-            <p v-if="data.attributionResults.length">Existing attribution output is available in Campaign Optimizer; this explorer does not recompute it.</p>
-            <p v-else class="table-empty">Attribution not available.</p>
           </div>
         </article>
       </template>
@@ -950,7 +1113,19 @@ const scopedRowKey = (row) =>
             <div class="field"><label for="similar-budget">Configured budget</label><input id="similar-budget" v-model="similarityBudget" type="number" min="0" step="1" /></div>
             <div class="field"><label for="similar-threshold">Threshold {{ Number(similarityThreshold).toFixed(2) }}</label><input id="similar-threshold" v-model.number="similarityThreshold" type="range" min="0" max="1" step="0.05" /></div>
           </div>
-          <DataTable :columns="similarityColumns" :rows="similarityMatches" empty="No historical references meet this threshold." />
+          <!--
+            Paged rather than rendered whole. A selected Campaign makes every
+            observation sharing its Provider score 1.0, so the match list is
+            thousands of rows long at a low threshold, not the fixed short list
+            a plain table can afford inside a dialog.
+          -->
+          <EntityTable
+            :columns="similarityColumns"
+            :rows="similarityMatches"
+            :row-key="similarityRowKey"
+            noun="reference"
+            empty="No historical references meet this threshold."
+          />
         </div>
       </section>
     </div>

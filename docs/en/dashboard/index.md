@@ -80,6 +80,23 @@ its own catalogue and the drafts needed by its editor. A database-scale history 
 exceed 50 megabytes as JavaScript Object Notation (JSON); unrelated routes
 never download or parse it.
 
+The two resources carrying observations — `research-overview` and
+`research-campaign-history` — additionally accept `start` and `end` query
+parameters bounding `report_date` inclusively. Both are validated as
+`YYYY-MM-DD` before they reach a loader, a malformed bound is dropped rather
+than refused, and a reversed pair is swapped. They become whole appended
+predicates with the dates bound as SQL parameters; nothing from the query string
+is ever formatted into a statement. A request naming neither bound receives the
+most recent quarter rather than the whole history — 17.5 megabytes instead of
+48.6 — and a view asks for the rest explicitly. A windowed resource is cached
+under its bounds as well as its name in both the backend and the client, so
+widening the range refetches rather than being answered from the narrower slice,
+and every windowed payload carries `historyWindow` — the bounds applied, plus
+the earliest and latest dates the source holds — so a view can state what it
+excluded. The static build has files rather than queries, so
+`src/api/client.js` applies the same bounds to the payload after it arrives and
+reports them identically.
+
 ### Progress for a slow dataset
 
 Every resource uses the same streamed reader in

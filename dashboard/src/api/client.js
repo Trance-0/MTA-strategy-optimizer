@@ -61,66 +61,140 @@ async function readJson(response, onProgress = null) {
   }
 }
 
+/**
+ * How much must transfer before the byte counter is republished.
+ *
+ * A reader cannot perceive a counter moving every 16 KiB, but every republish
+ * is a reactive write that repaints the progress bar. A 48 MB Campaign history
+ * arrives in roughly three thousand chunks, so reporting each one spends more
+ * time repainting the report than the transfer it describes.
+ */
+const PROGRESS_BYTE_STEP = 512 * 1024;
+
 /** Read newline-delimited backend milestones followed by one result frame. */
 async function readResourceStream(response, onProgress) {
   if (!response.body?.getReader) return readJson(response, onProgress);
   const reader = response.body.getReader();
   const decoder = new TextDecoder();
-  let buffer = "";
+  /**
+   * The undelimited pieces of the line still being read, joined only once its
+   * newline arrives.
+   *
+   * Held as pieces rather than as one growing string because the result frame
+   * is the whole resource on a single line -- tens of megabytes for a full
+   * Campaign history. Appending to one string and splitting it per chunk
+   * rescans every byte already received, so the scan is quadratic in the frame
+   * size: on a 48 MB history that is tens of seconds of blocked main thread,
+   * during which the progress report this function feeds cannot repaint.
+   * Scanning only the newly decoded chunk keeps the cost linear.
+   */
+  let parts = [];
   let transferred = 0;
+  let announced = 0;
   let result = null;
+
+  const consume = (line) => {
+    if (!line.trim()) return;
+    const frame = JSON.parse(line);
+    if (frame.type === "progress") {
+      onProgress?.({
+        phase: frame.phase,
+        percent: frame.percent,
+        loaded: transferred,
+        total: null,
+      });
+    } else if (frame.type === "error") {
+      const payload = frame.payload ?? {};
+      const error = new Error(payload.message ?? "Dashboard resource load failed.");
+      error.code = payload.error;
+      error.source = payload.source;
+      throw error;
+    } else if (frame.type === "result") {
+      result = frame.payload;
+    }
+  };
+
   while (true) {
     const { done, value } = await reader.read();
     if (done) break;
     transferred += value.byteLength;
-    buffer += decoder.decode(value, { stream: true });
-    const lines = buffer.split("\n");
-    buffer = lines.pop() ?? "";
-    for (const line of lines) {
-      if (!line.trim()) continue;
-      const frame = JSON.parse(line);
-      if (frame.type === "progress") {
-        onProgress?.({
-          phase: frame.phase,
-          percent: frame.percent,
-          loaded: transferred,
-          total: null,
-        });
-      } else if (frame.type === "error") {
-        const payload = frame.payload ?? {};
-        const error = new Error(payload.message ?? "Dashboard resource load failed.");
-        error.code = payload.error;
-        error.source = payload.source;
-        throw error;
-      } else if (frame.type === "result") {
-        result = frame.payload;
-      }
+    let piece = decoder.decode(value, { stream: true });
+    let index;
+    while ((index = piece.indexOf("\n")) !== -1) {
+      parts.push(piece.slice(0, index));
+      const line = parts.join("");
+      parts = [];
+      piece = piece.slice(index + 1);
+      consume(line);
     }
-    if (result === null) {
-      onProgress?.({
-        loaded: transferred,
-        total: null,
-      });
+    if (piece) parts.push(piece);
+    if (result === null && transferred - announced >= PROGRESS_BYTE_STEP) {
+      announced = transferred;
+      onProgress?.({ loaded: transferred, total: null });
     }
   }
-  buffer += decoder.decode();
-  if (buffer.trim()) {
-    const frame = JSON.parse(buffer);
-    if (frame.type === "result") result = frame.payload;
-  }
+  parts.push(decoder.decode());
+  consume(parts.join(""));
   if (result === null) throw new Error("The backend resource stream ended without data.");
   onProgress?.({ phase: "Dashboard data ready", percent: 100, loaded: transferred });
   return result;
 }
 
-/** Fetch one declared dashboard resource. */
-export async function fetchDashboardResource(resource, onProgress = null) {
+/**
+ * Apply a history window to a resource a static host served whole.
+ *
+ * A static file is written at build time and cannot be re-queried, so the
+ * bounds are applied here instead of in SQL. The payload is rewritten to report
+ * the window that was applied, exactly as the backend does, so a view reads one
+ * contract and never asks which deployment it is running in. `earliest` and
+ * `latest` are left as the file wrote them: they describe the whole recorded
+ * range, which is what tells the reader what a narrowed window excluded.
+ */
+function windowStaticPayload(payload, window) {
+  const research = payload?.simulationResearch;
+  if (!research?.historyWindow) return payload;
+  const start = window?.start ?? null;
+  const end = window?.end ?? null;
+  const within = (rows) =>
+    (rows ?? []).filter((row) => {
+      const date = row.report_date;
+      if (!date) return false;
+      return !(start && date < start) && !(end && date > end);
+    });
+  return {
+    ...payload,
+    simulationResearch: {
+      ...research,
+      history: start || end ? within(research.history) : research.history ?? [],
+      delivery: start || end ? within(research.delivery) : research.delivery ?? [],
+      historyWindow: { ...research.historyWindow, start, end },
+    },
+  };
+}
+
+/**
+ * Fetch one declared dashboard resource.
+ *
+ * `window` optionally bounds the observation history by `report_date` as
+ * `{start, end}`. A live backend pushes the bounds into its queries so a
+ * narrower window transfers less; a static host has only whole files, so the
+ * same bounds are applied to the payload after it arrives. Either way the
+ * result states the window it was read under.
+ */
+export async function fetchDashboardResource(
+  resource,
+  onProgress = null,
+  window = null,
+) {
   if (!DASHBOARD_RESOURCES.includes(resource)) {
     throw new Error(`Unknown dashboard resource: ${resource}`);
   }
+  const query = new URLSearchParams({ stream: "1" });
+  if (window?.start) query.set("start", window.start);
+  if (window?.end) query.set("end", window.end);
   const url = IS_STATIC
     ? `data/resources/${resource}.json`
-    : `/api/dashboard/resources/${encodeURIComponent(resource)}?stream=1`;
+    : `/api/dashboard/resources/${encodeURIComponent(resource)}?${query}`;
   const response = await fetch(url, { headers: { Accept: "application/json" } });
   if (!response.ok) {
     const payload = await readJson(response);
@@ -142,7 +216,7 @@ export async function fetchDashboardResource(resource, onProgress = null) {
     error.source = payload.source;
     throw error;
   }
-  return payload;
+  return IS_STATIC ? windowStaticPayload(payload, window) : payload;
 }
 
 /** List every queued, active, and retained backend operator task. */
