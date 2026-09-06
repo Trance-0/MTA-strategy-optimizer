@@ -11,11 +11,19 @@ lang: en-US
 > Project: Marketing ROI Analysis
 > Handle: `Trance-0`
 > Role: Project manager — pipeline development, data simulation and integration, algorithm testing
-> Last updated: 2026-09-03
+> Last updated: 2026-09-06
 
 Entries are reconstructed from Git history. They record the change set behind each commit, not a separate narrative.
 
 ---
+
+## 2026-09-06
+
+### Completed
+
+- Completed the lossless sectioned Data Generator configuration workflow across Guided/JSON editing, preset protection, touchpoint/path/regional controls, field-linked validation, and static capability handling.
+- Added authoritative side-effect-free backend preflight reused before runs, with bounded structured issues, selected-loader capability checks, storage safeguards, and stale-response lifecycle guards.
+- Verified 132 dashboard tests, 143 backend tests, 31 pinned Data Generator integration tests, production/static/documentation builds, and baseline/regional browser workflows at 610px and 1280px.
 
 ## 2026-09-03
 

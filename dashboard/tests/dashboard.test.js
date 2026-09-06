@@ -656,10 +656,10 @@ test("the rail becomes a bar, not a tall block, below the wide breakpoint", () =
 });
 
 test("Data Generator keeps execution and storage behind backend APIs", () => {
-  assert.match(DATA_GENERATOR, /editorMode = ref\("guided"\)/);
+  assert.match(DATA_GENERATOR, /GeneratorConfigEditor/);
+  assert.match(DATA_GENERATOR, /runPreflight/);
+  assert.match(DATA_GENERATOR, /validateGeneratorConfiguration/);
   assert.doesNotMatch(DATA_GENERATOR, /structuredClone/);
-  assert.match(DATA_GENERATOR, /chooseMode\(['"]json['"]\)/);
-  assert.match(DATA_GENERATOR, /JSON configuration/);
   assert.match(DATA_GENERATOR, /preview\.rows/);
   assert.match(DATA_GENERATOR, /maximum 20/i);
   assert.match(DATA_GENERATOR, /generatorDownloadUrl/);

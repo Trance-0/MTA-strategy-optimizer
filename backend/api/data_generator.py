@@ -5,12 +5,14 @@ from __future__ import annotations
 from flask import Blueprint, jsonify, request, send_file
 
 from backend.services.data_generator import (
+    InvalidConfigurationError,
     download_path,
     generator_overview,
     get_run,
     preset_configuration,
     start_generation,
     start_postgresql_export,
+    validate_configuration,
 )
 
 
@@ -55,17 +57,53 @@ def preset(variant: str, preset: str):
         )
 
 
+@blueprint.post("/api/data-generator/validate")
+def validate():
+    """Preflight a configuration without allocating generator run resources."""
+
+    body = request.get_json(silent=True)
+    body = body if isinstance(body, dict) else {}
+    try:
+        validate_configuration(body.get("variant"), body.get("configuration"))
+        return jsonify({"valid": True, "issues": []})
+    except InvalidConfigurationError as error:
+        return (
+            jsonify(
+                {
+                    "valid": False,
+                    "error": "invalid_configuration",
+                    "issues": error.issues,
+                }
+            ),
+            400,
+        )
+    except RuntimeError as error:
+        return jsonify({"error": "generator_unavailable", "message": str(error)}), 503
+
+
 @blueprint.post("/api/data-generator/runs")
 def create_run():
     """Start one bounded asynchronous generator run."""
 
-    body = request.get_json(silent=True) or {}
+    body = request.get_json(silent=True)
+    body = body if isinstance(body, dict) else {}
     try:
         state = start_generation(
-            str(body.get("variant") or "baseline"),
+            body.get("variant"),
             body.get("configuration"),
         )
         return jsonify(state), 202
+    except InvalidConfigurationError as error:
+        return (
+            jsonify(
+                {
+                    "valid": False,
+                    "error": "invalid_configuration",
+                    "issues": error.issues,
+                }
+            ),
+            400,
+        )
     except ValueError as error:
         return jsonify({"error": "invalid_configuration", "message": str(error)}), 400
     except RuntimeError as error:

@@ -358,7 +358,9 @@ export async function fetchGeneratorOverview() {
   if (IS_STATIC) {
     return {
       available: false,
-      reason: "The static build has no backend to run MTA-SIM.",
+      reason:
+        "Generation, downloads, and PostgreSQL export require a local or " +
+        "container full-stack deployment with the MTA-SIM backend.",
       variants: [],
       configuration: {},
     };
@@ -369,36 +371,54 @@ export async function fetchGeneratorOverview() {
 
 /** Load one reviewed generator preset. */
 export async function fetchGeneratorPreset(variant, preset) {
+  refuseStaticGeneratorOperation();
   const response = await fetch(
     `/api/data-generator/presets/${encodeURIComponent(variant)}/${encodeURIComponent(preset)}`,
   );
   const result = await readJson(response);
-  if (!response.ok) throw new Error(result.message ?? "The preset was not loaded.");
+  if (!response.ok) throw generatorResponseError(result, "The preset was not loaded.");
+  return result;
+}
+
+/** Validate a complete generator configuration without allocating a run. */
+export async function validateGeneratorConfiguration(variant, configuration, options = {}) {
+  refuseStaticGeneratorOperation();
+  const response = await fetch("/api/data-generator/validate", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ variant, configuration }),
+    signal: options.signal,
+  });
+  const result = await readJson(response);
+  if (!response.ok) throw generatorResponseError(result, "The configuration did not pass preflight.");
   return result;
 }
 
 /** Start a configured generator run. */
 export async function startGeneratorRun(variant, configuration) {
+  refuseStaticGeneratorOperation();
   const response = await fetch("/api/data-generator/runs", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ variant, configuration }),
   });
   const result = await readJson(response);
-  if (!response.ok) throw new Error(result.message ?? "Generation was not started.");
+  if (!response.ok) throw generatorResponseError(result, "Generation was not started.");
   return result;
 }
 
 /** Poll one configured generator run. */
 export async function fetchGeneratorRun(runId) {
+  refuseStaticGeneratorOperation();
   const response = await fetch(`/api/data-generator/runs/${encodeURIComponent(runId)}`);
   const result = await readJson(response);
-  if (!response.ok) throw new Error(result.message ?? "The generator run was not found.");
+  if (!response.ok) throw generatorResponseError(result, "The generator run was not found.");
   return result;
 }
 
 /** Start backend-only PostgreSQL export for a completed run. */
 export async function exportGeneratorRun(runId, connection, replace = false) {
+  refuseStaticGeneratorOperation();
   const response = await fetch(
     `/api/data-generator/runs/${encodeURIComponent(runId)}/postgresql`,
     {
@@ -408,13 +428,31 @@ export async function exportGeneratorRun(runId, connection, replace = false) {
     },
   );
   const result = await readJson(response);
-  if (!response.ok) throw new Error(result.message ?? "PostgreSQL export was not started.");
+  if (!response.ok) throw generatorResponseError(result, "PostgreSQL export was not started.");
   return result;
 }
 
 /** URL for one declared generated table download. */
 export function generatorDownloadUrl(runId, table) {
+  refuseStaticGeneratorOperation();
   return `/api/data-generator/runs/${encodeURIComponent(runId)}/files/${encodeURIComponent(table)}`;
+}
+
+function refuseStaticGeneratorOperation() {
+  if (IS_STATIC) {
+    throw new Error(
+      "Data Generator operations are unavailable in the static build. Run a local or " +
+      "container full-stack deployment with the MTA-SIM backend.",
+    );
+  }
+}
+
+function generatorResponseError(result, fallback) {
+  const error = new Error(result.message ?? fallback);
+  error.code = result.error;
+  error.valid = result.valid;
+  error.issues = Array.isArray(result.issues) ? result.issues : [];
+  return error;
 }
 
 /**

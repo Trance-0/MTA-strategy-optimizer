@@ -1,7 +1,7 @@
 ---
 title: Dashboard
 description: The Vue dashboard's architecture, its dual data source contract, and where each topic is documented
-compact: "Vue/Flask boundary: route-owned lazy resources, caching and byte progress; `client.js` also sends model files through fixed backend artifact upload/download/import routes. Python alone owns parsing, storage, database access, and static-build capability refusals."
+compact: "Vue/Flask client boundary: route-owned lazy resources, caching, byte progress, artifact transfer, and Data Generator overview, preflight, run, preview, download, and export routes in `client.js`; Python owns parsing, storage, database access, and static-build capability refusals."
 lang: en-US
 source_files: dashboard/src/api/client.js, dashboard/src/lib/useDashboard.js, dashboard/tests/dashboard.test.js, backend/repository/coercion.py, backend/tests/test_coercion.py
 ---
@@ -204,8 +204,14 @@ Source: `dashboard/src/api/client.js`, `dashboard/src/lib/useDashboard.js`
 
 - Responsibility: Be the client's single route to the data, and hold the single shared copy of it.
 - Inputs: `/api/dashboard/resources/<resource>` in a local run, or `data/resources/<resource>.json` in the published build; resource names come only from `src/pages.js`.
-- Outputs: `IS_STATIC`, `fetchDashboardResource()` with byte progress, reload/settings calls, master-data calls, job start/stop, `uploadJobArtifacts()`, `importJobArtifacts()`, schema-operation calls, and `useDashboard()` resource state. Static settings carry `backendIdentity: null`; static job descriptors disable run, upload, and database import.
-- Behavior contract: `IS_STATIC` is baked in at build time by `vite build --mode static`, and it alone selects live resource routes or relative generated resource files; **no view branches on it.** `fetchDashboardResource(resource)` rejects a key absent from the exported allow-list before constructing a URL. A response that is not JSON is reported by status rather than as a parse error naming character 0. `useDashboard()` holds one merged object, a completed-key set, one in-flight promise per resource, and per-resource failures. It merges nested `simulationResearch` slices without replacing completed siblings. Concurrent callers share each request, a completed key is not fetched twice, and Reload invalidates all resources. Progress is byte-based where possible, indeterminate otherwise, hidden for the first three seconds, and reset on completion or failure.
+- Outputs: `IS_STATIC`, `fetchDashboardResource()` with byte progress,
+  reload/settings calls, master-data calls, job start/stop,
+  `uploadJobArtifacts()`, `importJobArtifacts()`, schema-operation calls,
+  Data Generator overview, preset, preflight, run, preview, download, and
+  export calls, and `useDashboard()` resource state. Static settings carry
+  `backendIdentity: null`; static job descriptors disable run, upload, and
+  database import.
+- Behavior contract: `IS_STATIC` is baked in at build time by `vite build --mode static`, and it alone selects live resource routes or relative generated resource files; **no view branches on it.** `fetchDashboardResource(resource)` rejects a key absent from the exported allow-list before constructing a URL. A response that is not JSON is reported by status rather than as a parse error naming character 0. `useDashboard()` holds one merged object, a completed-key set, one in-flight promise per resource, and per-resource failures. It merges nested `simulationResearch` slices without replacing completed siblings. Concurrent callers share each request, a completed key is not fetched twice, and Reload invalidates all resources. Progress is byte-based where possible, indeterminate otherwise, hidden for the first three seconds, and reset on completion or failure. In a static build, the Data Generator overview returns its dedicated unavailable capability response without a request; its preset, preflight, run, polling, download, and export helpers refuse before creating a backend URL.
 - Dependencies: Vue's reactivity.
 - Verification: Driven in a real browser against both the API and the static snapshot; the data-backed views render identically and the backend-only generator names its unavailable state in static mode.
 
