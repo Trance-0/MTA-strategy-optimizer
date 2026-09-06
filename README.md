@@ -39,7 +39,7 @@ The current results are appropriate for reproducible development, contract testi
 | Review dual-model governance | [Model governance](docs/en/attribution/model-governance.md) |
 | Interpret touchpoint reliability | [Reliability guide](docs/en/attribution/reliability.md) |
 | Review maturity and planned work | [Progress and todos](docs/en/introduction/progress.md) |
-| Review implementation specifications | [Specification catalog](docs/en/specifications/index.md) |
+| Retrieve owning specifications and focused tests | [Specification workflow](docs/en/introduction/specification-workflow.md) |
 | Review who did what and when | [Work log roster](docs/worklog/index.md) |
 | Review all maintained commands | [Project command directory](script/README.md) |
 | Inspect historical product decisions | [Design artifacts](design-artifacts/README.md) |
@@ -81,7 +81,6 @@ marketing-roi-analysis/
 ├── docs/
 │   ├── en/                           # Active published English documentation
 │   ├── zh/                           # Preserved Chinese sources; currently excluded from publication
-│   ├── en/specifications/            # Project-level English specification catalog
 │   ├── zh/specifications/            # Chinese specification source backups for future publication
 │   ├── research/                     # External references; never runtime model input
 │   └── .vitepress/                   # Documentation site configuration
@@ -102,7 +101,7 @@ Only `modules/` contains the current business implementations. Historical artifa
 - Git with submodule support
 - Node.js 20 or a newer Long-Term Support release, and npm, only for the documentation site
 
-The Python implementation uses only the standard library. The `uv` configuration is intentionally non-package: it creates an environment for running and testing this repository but does not build, install, or publish it as a Python module.
+The core attribution and initialization modules use the Python standard library. The backend and contributed evaluation models use the optional dependency groups in `pyproject.toml`. The `uv` configuration is intentionally non-package: it creates an environment for running and testing this repository but does not build, install, or publish it as a Python module.
 
 ## Initialize the data-generator submodule
 
@@ -184,6 +183,19 @@ uv run python -X utf8 script/validate_simulated_hierarchy.py
 Without `--check-output`, the generator writes a newly calculated result to standard output. It does not activate campaigns or change advertising budgets.
 
 ## Run all business-module tests
+
+First select the owning behavior contracts and their checks:
+
+```sh
+uv run python -X utf8 -B script/spec_docs.py search "history window" --limit 5
+uv run python -X utf8 -B script/spec_docs.py check
+uv run python -X utf8 -B script/check_deployment_inputs.py
+```
+
+The preflight requires the pinned generator checkout for release verification.
+See [Specification workflow](docs/en/introduction/specification-workflow.md) for
+metadata retrieval and [Deployment preflight](docs/en/introduction/backend/deployment-preflight.md)
+for the missing-submodule host failure and recovery commands.
 
 ```sh
 uv run python -X utf8 -B -m unittest discover -s modules/mta_attribution/tests -p "test_*.py"

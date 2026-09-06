@@ -3,7 +3,8 @@ title: Data Generator
 description: Dashboard workflow for configured MTA-SIM generation, preview, CSV download, and backend-only PostgreSQL export
 compact: "Data Generator contract for `DataGenerator.vue` and `/api/data-generator`: bounded structured/JSON configuration, pinned MTA-SIM availability and execution, two 20-row previews, CSV downloads, write-only PostgreSQL credentials, and backend-only export."
 lang: en-US
-source_files: dashboard/src/views/DataGenerator.vue, backend/api/data_generator.py, backend/services/data_generator.py, backend/tests/test_data_generator.py
+source_files: dashboard/src/views/DataGenerator.vue, backend/api/data_generator.py, backend/services/data_generator.py
+test_files: backend/tests/test_data_generator.py
 ---
 
 # Data Generator
@@ -210,9 +211,16 @@ Source: `backend/api/data_generator.py`, `backend/services/data_generator.py`
   and the pinned MTA-SIM submodule.
 - Verification: `backend/tests/test_data_generator.py`.
 
-### `backend/tests/test_data_generator.py`
+## Verification
 
-Source: `backend/tests/test_data_generator.py`
+- **Scope:** The behavior and owned test files of Data Generator.
+- **Cases:** Unavailable generator, bounded configuration, previews, downloads, export validation and credential redaction.
+- **Command:** `uv run --extra backend python -X utf8 -B -m unittest backend.tests.test_data_generator`.
+- **Limitations:** Runs against local fixtures or mocks, not a live production database. External generator execution requires the pinned checkout.
+
+#### `backend/tests/test_data_generator.py`
+
+Tests: `backend/tests/test_data_generator.py`
 
 - Responsibility: Pin request limits, asynchronous state, preview bounds,
   declared downloads, hidden ground truth, missing-submodule behavior,

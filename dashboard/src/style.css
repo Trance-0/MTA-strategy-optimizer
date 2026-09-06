@@ -8,8 +8,8 @@
  * charts, so a colour is declared once and read by both.
  *
  * Additions this project needs and the prototype has no counterpart for: the
- * rail's settings module, the reliability banner, the chart surface, the
- * settings modal, and the log stream.
+ * routed Settings page, the reliability banner, the chart surface, the
+ * schema confirmation modal, and the log stream.
  */
 
 /*
@@ -164,6 +164,7 @@ code {
   display: flex;
   flex-direction: column;
   flex: 1 1 auto;
+  min-width: 0;
   min-height: 0;
 }
 
@@ -229,12 +230,7 @@ code {
   color: #fff;
 }
 
-.nav-item.foot {
-  min-height: 50px;
-}
-
-/* The settings module: pinned to the foot and ruled off from the views, so
-   dashboard plumbing never reads as a seventh place to navigate to. */
+/* Source status and external links remain separate from page navigation. */
 .side-foot {
   margin-top: auto;
   flex: none;
@@ -1026,6 +1022,42 @@ td.num {
   white-space: nowrap;
 }
 
+.table-sort-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  max-width: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  cursor: pointer;
+}
+
+th.num .table-sort-button {
+  justify-content: flex-end;
+}
+
+.table-sort-button:hover,
+.table-sort-button.active {
+  color: var(--text);
+}
+
+.table-sort-button:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+.table-sort-arrow {
+  color: var(--blue);
+  font-size: 8px;
+  line-height: 1;
+}
+
 .table-empty {
   color: var(--muted);
   font-size: 12px;
@@ -1167,7 +1199,7 @@ tbody tr.selected:hover {
   background: var(--blue2);
 }
 
-/* The confirmation is narrower than the settings modal: it asks one question
+/* The confirmation is narrower than the Settings page: it asks one question
    and a wide dialog would suggest there is more to read. */
 .confirm-modal {
   width: min(520px, 100%);
@@ -1293,7 +1325,7 @@ tbody tr.selected:hover {
 }
 
 /* ---------------------------------------------------------------------------
-   Settings modal
+   Settings page and schema confirmation
    --------------------------------------------------------------------------- */
 
 .modal-backdrop {
@@ -1333,6 +1365,14 @@ tbody tr.selected:hover {
 
 .modal .tabs {
   padding: 0 18px;
+}
+
+.settings-page .tabs {
+  padding: 0 18px;
+}
+
+.settings-page {
+  min-height: min(720px, calc(100vh - 130px));
 }
 
 .modal-body {
@@ -1981,7 +2021,7 @@ tbody tr.selected:hover {
  * than a full-width navy block above the content.
  *
  * Stacking the rail's own vertical layout at full width was the defect: the
- * brand, six stacked items, the status block, and the foot controls together
+ * brand, eight stacked items, and the status block together
  * filled most of a short viewport, so the dashboard itself began below the
  * fold and every view opened on an empty screen. A bar keeps the same items on
  * one or two wrapped rows and hands the rest of the height back to the
@@ -1990,7 +2030,7 @@ tbody tr.selected:hover {
  */
 @media (max-width: 1024px) {
   .app-shell {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
     grid-template-rows: auto 1fr;
   }
 
@@ -2163,10 +2203,6 @@ tbody tr.selected:hover {
     padding: 6px 0 6px 10px;
   }
 
-  .side-foot .nav-item.foot {
-    min-height: 36px;
-  }
-
   /* The two-line source detail and the logging pill are reference information,
      not controls; the status dot and label still say which deployment this is,
      and Settings carries the detail. */
@@ -2183,8 +2219,8 @@ tbody tr.selected:hover {
 }
 
 /*
- * Narrower still, the item labels go and the rail becomes icons only. Six
- * labelled items plus two foot controls cannot share a phone-width row without
+ * Narrower still, the item labels go and the rail becomes icons only. Eight
+ * labelled items plus the status block cannot share a phone-width row without
  * wrapping into the same tall block the bar exists to avoid; the title
  * attribute and the header's own heading keep each item identifiable.
  */

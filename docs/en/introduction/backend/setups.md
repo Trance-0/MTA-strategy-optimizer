@@ -1,9 +1,10 @@
 ---
 title: Backend Setup and Deployment
 description: Local Flask startup and Yunxiao AppStack deployment configuration
-compact: "Flask and AppStack setup: local commands, direct-interpreter jobs, default writable pipeline runtime, read-only root plus `/pipeline-output`, protected settings, build identity, PostgreSQL schema census, probes, ingress, connectivity, and Docker metadata without copied Git history."
+compact: "Flask and AppStack setup: local commands, direct-interpreter jobs, writable pipeline runtime, read-only root plus `/pipeline-output`, protected routed Settings, build identity, PostgreSQL schema census, Docker build allow-list, ingress, connectivity, and metadata."
 lang: en-US
-source_files: backend/app.py, backend/config.py, backend/database.py, backend/services/schemas.py, backend/wsgi.py, backend/tests/test_app.py, backend/tests/test_schemas.py, deploy/appstack/Dockerfile, deploy/appstack/orchestration.yaml, deploy/appstack/values.example.yaml, .dockerignore
+source_files: backend/app.py, backend/config.py, backend/database.py, backend/services/schemas.py, backend/wsgi.py, deploy/appstack/Dockerfile, deploy/appstack/orchestration.yaml, deploy/appstack/values.example.yaml
+test_files: backend/tests/test_app.py, backend/tests/test_schemas.py
 ---
 
 # Backend Setup and Deployment
@@ -233,6 +234,11 @@ built-in user authentication and includes data-mutation routes. The PostgreSQL
 host must be reachable through the same Virtual Private Cloud (VPC), with its
 firewall or security group allowing the pod network.
 
+Before tests and source synchronization, run the
+[deployment input preflight](./deployment-preflight.md). The AppStack client
+build receives the same tracked fixture importer and Willow model as the
+separate dashboard image before invoking `npm run build`.
+
 ## Validation Sequence
 
 AppStack must run these gates in order:
@@ -312,7 +318,7 @@ Source: `backend/services/schemas.py`
   `available_schemas()` reads through the service engine and
   `probe_schemas()` through a throwaway engine for credentials not yet saved.
   Neither raises: each returns `{schemas, selected, error}` so an unreachable
-  database renders as a dialog that says so rather than a settings page that
+  database renders as a diagnosis on the Settings page rather than a page that
   fails to load. The probe deliberately pins no search path, since asking which
   schemas exist must not depend on the answer.
 - Inputs: The configured connection, or a candidate `PG_*` mapping.
@@ -336,25 +342,9 @@ Source: `backend/services/schemas.py`
 - Dependencies: `backend/config.py`, `backend/database.py`, SQLAlchemy.
 - Verification: `backend/tests/test_schemas.py`.
 
-### `backend/tests/test_app.py` and `backend/tests/test_schemas.py`
-
-Source: `backend/tests/test_app.py`, `backend/tests/test_schemas.py`
-
-- Responsibility: Verify liveness independence, JSON routing errors, and the
-  request-size boundary; and separately that a schema name is accepted only as
-  a plain identifier, that the selected schema is the whole search path with no
-  fallback behind it, and that a schema is offered as selectable only when it
-  holds every required table.
-- Inputs: Flask test-client requests, and recorded census rows rather than a
-  live server, so the classification is proven without a database.
-- Outputs: `unittest` assertions.
-- Dependencies: The application factory, `dashboard/config.py`,
-  `backend/services/schemas.py`.
-- Verification: Backend discovery command.
-
 ### AppStack build and orchestration files
 
-Source: `.dockerignore`, `deploy/appstack/Dockerfile`,
+Source: `deploy/appstack/Dockerfile`,
 `deploy/appstack/orchestration.yaml`, `deploy/appstack/values.example.yaml`
 
 - Responsibility: Build one credential-free full-stack image and declare its
@@ -386,3 +376,26 @@ Source: `.dockerignore`, `deploy/appstack/Dockerfile`,
 - Verification: Render placeholders with the example values, validate the
   resulting Kubernetes resources, build the image, and complete the AppStack
   validation sequence.
+
+## Verification
+
+- **Scope:** The behavior and owned test files of Backend Setup and Deployment.
+- **Cases:** Liveness without a database; error envelopes and request sizes; identifier validation; schema completeness and selection isolation.
+- **Command:** `uv run --extra backend python -X utf8 -B -m unittest backend.tests.test_app backend.tests.test_schemas`.
+- **Limitations:** Runs against local fixtures or mocks, not a live production database. External generator execution requires the pinned checkout.
+
+#### `backend/tests/test_app.py` and `backend/tests/test_schemas.py`
+
+Tests: `backend/tests/test_app.py`, `backend/tests/test_schemas.py`
+
+- Responsibility: Verify liveness independence, JSON routing errors, and the
+  request-size boundary; and separately that a schema name is accepted only as
+  a plain identifier, that the selected schema is the whole search path with no
+  fallback behind it, and that a schema is offered as selectable only when it
+  holds every required table.
+- Inputs: Flask test-client requests, and recorded census rows rather than a
+  live server, so the classification is proven without a database.
+- Outputs: `unittest` assertions.
+- Dependencies: The application factory, `dashboard/config.py`,
+  `backend/services/schemas.py`.
+- Verification: Backend discovery command.

@@ -105,6 +105,7 @@ coverage/
 # Obsolete project-owned script directories must not be recreated.
 /modules/*/scripts/
 /docs/scripts/
+/scripts/
 
 # Agent-only scratch files are local and must never be committed or pushed.
 /.agent-scratch/

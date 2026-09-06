@@ -6,7 +6,7 @@ effect and pretending otherwise would invite a real password into a page that
 cannot use it.
 
 Data flow:
-    the settings dialog -> here -> backend/services/settings.py -> .env
+    the Settings page -> here -> backend/services/settings.py -> .env
 """
 
 from __future__ import annotations
@@ -35,7 +35,7 @@ blueprint = Blueprint("settings", __name__)
 
 @blueprint.get("/api/settings")
 def get_settings():
-    """The state the settings dialog renders. Carries no stored password."""
+    """The state the Settings page renders. Carries no stored password."""
     return jsonify(settings_state())
 
 
@@ -158,7 +158,7 @@ def post_schema_selection():
             jsonify({"error": "schema_selection_unavailable", "message": str(error)}),
             409,
         )
-    except Exception as error:  # noqa: BLE001 - bounded for the settings dialog
+    except Exception as error:  # noqa: BLE001 - bounded for the Settings page
         return (
             jsonify(
                 {

@@ -1,6 +1,6 @@
 ---
 title: Populating PostgreSQL
-compact: "PostgreSQL schema initialization and simulator parsing through `import_to_database.py`, `derive_scenario_schemas.py`, `PG_SCHEMA`, and current-interpreter schema setup, plus optional `ModelArtifact` storage created only by explicit validated artifact import."
+compact: "PostgreSQL schema initialization and simulator parsing through `import_to_database.py`, `derive_scenario_schemas.py`, `PG_SCHEMA`, routed Settings setup, plus optional `ModelArtifact` storage created only by explicit validated artifact import."
 lang: en-US
 source_files: dashboard/config.py, dashboard/models.py, script/import_to_database.py, script/derive_scenario_schemas.py
 ---
@@ -66,7 +66,7 @@ user, host, database, and — when it is not `public` — the schema, so a
 destructive run states where it is about to act. The same selection governs
 reads: `PG_SCHEMA` is described in
 [Backend Setup and Deployment](../introduction/backend/setups.md#schema-selection),
-and the settings dialog lists the schemas the connected server offers,
+and the Settings page lists the schemas the connected server offers,
 disabling the ones that cannot serve the dashboard.
 
 ## Deriving a Schema per Scenario
@@ -146,13 +146,13 @@ copy action for the complete detail. The log retains at most 600 lines and
 reports how many earlier lines were dropped. A successful operation clears database read
 caches and refreshes the schema census, so newly initialized or derived
 schemas become available in the active selector without restarting the
-dashboard. Closing the dialog does not stop an operation; the operator may
+dashboard. Leaving the Settings page does not stop an operation; the operator may
 request termination explicitly, including while it is still queued.
 
 Setup is available on a protected server. `DASHBOARD_CONFIG_READ_ONLY` keeps
 the browser from rewriting credentials; it does not decide whether the database
 those credentials already name may be populated. `SCHEMA_SETUP_ENABLED=false`
-is how an operator withholds these two operations, and the dialog then says so
+is how an operator withholds these two operations, and the Settings page then says so
 rather than offering a button the route would refuse.
 
 ### Recovering from a schema that cannot be read
@@ -164,8 +164,8 @@ the same select, parse, or initialize action described above. The list omits the
 schema that just failed and omits any schema with no available action, since it
 exists only to be acted on.
 
-Nothing offered there replaces anything. Replacement stays in the settings
-dialog behind the explicit checkbox and its confirmation, because a reader
+Nothing offered there replaces anything. Replacement stays on the Settings
+page behind the explicit checkbox and its confirmation, because a reader
 recovering from an error is the reader least placed to judge what is about to
 be overwritten.
 
@@ -208,4 +208,4 @@ Source: `script/derive_scenario_schemas.py`
 - Outputs: One schema per scenario, holding the dashboard model plus a copy of that scenario's research tables; a per-table row count per scenario; and a stated reason for each layer that could not be derived.
 - Behavior contract: The source schema is **read only** — a target equal to it is refused before any write, and the reading connection is deliberately unpinned so that which schema is read depends on the argument rather than on a setting. Every scenario's daily path rows are summed per path into the one report window `compare_attribution_models()` requires, using every row rather than sampling a day; row-level invariants survive the sum because they hold termwise. `interaction_type` is read back off the fifth segment of the stored touchpoint key and `cost_type` follows from it by the project's CPC/CPM pairing rule, so `touchpoint_key_from_ads_row()` verifies each rebuilt key against the value the simulator wrote. Attribution, spend aggregation, and model comparison are **imported from the modules that own them** rather than reimplemented. The touchpoint-to-entity bridge is the one derived quantity with no direct source: a touchpoint delivered by a single Campaign carries its whole attributed outcome, and one shared by several is split by each Campaign's share of that touchpoint's cost, then divided across Products by the revenue the simulator recorded per Campaign, touchpoint, and Product. Candidate counts state only what the scenario establishes; a count the simulator does not model is written as zero rather than invented, and `budget_blockers()` reports **every** reason a recommendation is impossible rather than the first, because fixing one alone would not make it possible. The `mta_sim_*` tables are copied per `run_id` into each derived schema, since the Research view reads them reflectively through `search_path` and a schema without them shows no history.
 - Dependencies: SQLAlchemy, `psycopg`, and `python-dotenv`, plus `dashboard/config.py`, `dashboard/models.py`, `script/import_to_database.py`, and the attribution and strategy modules. Installed with `uv sync --extra dashboard`.
-- Verification: `uv run --extra dashboard python script/derive_scenario_schemas.py --source mta --list` reports the scenarios without writing; selecting a derived schema in the settings dialog serves every view.
+- Verification: `uv run --extra dashboard python script/derive_scenario_schemas.py --source mta --list` reports the scenarios without writing; selecting a derived schema on the Settings page serves every data view.

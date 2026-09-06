@@ -2,7 +2,7 @@
  * The client entry point: mount the shell into `index.html`.
  *
  * Data flow:
- *     index.html -> here -> App.vue -> the seven views
+ *     index.html -> here -> App.vue -> the eight routed pages
  */
 
 import { createApp } from "vue";

@@ -4,6 +4,7 @@ description: Algorithm, formulas, and code mapping for AggregatedShapleyAttribut
 compact: "Line-by-line internals of `AggregatedShapleyAttribution` in `attribution_contract.py`: `amc_rows_to_shapley_rows`, the `channels` coalition field, path-unanimity `coalition_value`, closed-form equal split over unique touchpoints in `_scores`, share normalization. Explains why order and repeats do not change credit."
 lang: en-US
 source_files: modules/mta_attribution/src/shapley_attribution_model.py, modules/mta_attribution/src/shapley_standard_attribution_model.py
+test_files: modules/mta_attribution/tests/test_shapley_standard_attribution_model.py
 ---
 
 # Shapley Path Attribution
@@ -253,3 +254,10 @@ Source: `modules/mta_attribution/src/shapley_standard_attribution_model.py`
 ## References
 
 - [Shapley Value Methods for Attribution Modeling in Online Advertising (PDF)](/research/mta/Shapley%20Value%20Methods%20for%20Attribution%20Modeling%20in%20Online%20Advertising.pdf)
+
+## Verification
+
+- **Scope:** The behavior and owned test files of Shapley Path Attribution.
+- **Cases:** Unique-touchpoint coalition shares, repeated paths and deterministic standardized output.
+- **Command:** `uv run python -X utf8 -B -m unittest modules.mta_attribution.tests.test_shapley_standard_attribution_model`.
+- **Limitations:** Runs against local fixtures or mocks, not a live production database. External generator execution requires the pinned checkout.

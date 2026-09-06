@@ -3,7 +3,8 @@ title: Backend API
 description: Flask service boundary and model route family
 compact: "Backend service map for `backend/`: Flask owns runtime data access, serves the Vue client contract, runs three model jobs including strategy evaluation, and exposes synchronous attribution, recommendation, and attribution-evaluation endpoints. Routes share JSON error rules."
 lang: en-US
-source_files: backend/api/models.py, backend/services/models.py, backend/tests/test_models.py
+source_files: backend/api/models.py, backend/services/models.py
+test_files: backend/tests/test_models.py
 ---
 
 # Backend API
@@ -72,9 +73,16 @@ Source: `backend/services/models.py`
 - Verification: `backend/tests/test_models.py` exercises a real uniform model,
   comparison, recommendation, evaluation success, and unavailable states.
 
-### `backend/tests/test_models.py`
+## Verification
 
-Source: `backend/tests/test_models.py`
+- **Scope:** The behavior and owned test files of Backend API.
+- **Cases:** Model discovery, malformed requests, valid options, route status codes and model-result conservation.
+- **Command:** `uv run --extra backend python -X utf8 -B -m unittest backend.tests.test_models`.
+- **Limitations:** Runs against local fixtures or mocks, not a live production database. External generator execution requires the pinned checkout.
+
+#### `backend/tests/test_models.py`
+
+Tests: `backend/tests/test_models.py`
 
 - Responsibility: Holds the model route acceptance tests, including the
   structural isolation of evaluation input from training input.

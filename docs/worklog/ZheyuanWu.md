@@ -1,7 +1,7 @@
 ---
 title: Zheyuan Wu (Trance-0)
 description: Project manager work log covering pipeline development, integration, and algorithm testing
-compact: "Zheyuan Wu's project-management work log: simulator integration, runnable attribution and strategy pipelines, backend task orchestration, model artifact transfer, PostgreSQL schema setup, route-owned Vue delivery, specification-oriented documentation, GitHub Pages, and deployment automation."
+compact: "Zheyuan Wu's project-management work log: simulator integration, runnable attribution and strategy pipelines, backend task orchestration, model artifact transfer, PostgreSQL schema setup, routed Vue delivery, history performance, compact specification retrieval, scoped verification, GitHub Pages, and deployment automation."
 order: 10
 lang: en-US
 ---
@@ -11,11 +11,19 @@ lang: en-US
 > Project: Marketing ROI Analysis
 > Handle: `Trance-0`
 > Role: Project manager — pipeline development, data simulation and integration, algorithm testing
-> Last updated: 2026-09-03
+> Last updated: 2026-09-06
 
 Entries are reconstructed from Git history. They record the change set behind each commit, not a separate narrative.
 
 ---
+
+## 2026-09-06
+
+### Completed
+
+- Integrated saved Settings and history changes, including recovery access, bounded queries, deferred charts, and stable sorting.
+- Added compact specification retrieval and scoped source/test documentation, preserving contributor-owned contracts.
+- Fixed deployment inputs and verified 606 Python, 106 frontend, and 10 tooling tests, Linux builds, and Pages assembly.
 
 ## 2026-09-03
 

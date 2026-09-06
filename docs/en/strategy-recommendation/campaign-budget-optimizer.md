@@ -4,6 +4,7 @@ description: Fitted two-stage Campaign response curves and the constrained alloc
 compact: "Optimizer contract: selected MTA-SIM sidecar or snapshot-shaped database export feeds episode_bridge without evaluation truth; response_dataset groups intervention arms; response_model fits evidence-labelled curves; budget_optimizer uses shadow prices; generate_campaign_strategy selects one marketplace."
 lang: en-US
 source_files: modules/mta_strategy_recommendation/src/response_dataset.py, modules/mta_strategy_recommendation/src/response_model.py, modules/mta_strategy_recommendation/src/budget_optimizer.py, modules/mta_strategy_recommendation/src/episode_bridge.py, script/generate_campaign_strategy.py
+test_files: modules/mta_strategy_recommendation/tests/test_budget_optimizer.py, modules/mta_strategy_recommendation/tests/test_response_dataset.py, modules/mta_strategy_recommendation/tests/test_response_model.py, modules/mta_strategy_recommendation/tests/test_response_pipeline.py
 ---
 
 # Campaign Budget Response Model and Optimizer <span class="status-label status-verified" aria-label="Verified"></span>
@@ -316,3 +317,10 @@ Campaign-period observations. The Initial Strategy's basis is
 otherwise; a Campaign is active when its status is `ACTIVE`, case-insensitively.
 
 **Verification.** `modules/mta_strategy_recommendation/tests/test_response_pipeline.py` covers the chain this command wraps.
+
+## Verification
+
+- **Scope:** The behavior and owned test files of Campaign Budget Response Model and Optimizer.
+- **Cases:** Repeated-budget training support, response fit, budget policy and allocation constraints, pipeline serialization and insufficient data.
+- **Command:** `uv run python -X utf8 -B -m unittest modules.mta_strategy_recommendation.tests.test_budget_optimizer modules.mta_strategy_recommendation.tests.test_response_dataset modules.mta_strategy_recommendation.tests.test_response_model modules.mta_strategy_recommendation.tests.test_response_pipeline`.
+- **Limitations:** Runs against local fixtures or mocks, not a live production database. External generator execution requires the pinned checkout.

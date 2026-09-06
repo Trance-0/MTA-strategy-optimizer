@@ -20,7 +20,7 @@ Enumeration is restricted to schemas the connected role may actually read:
 schema whose selection would fail with a permission error.
 
 Data flow:
-    the settings dialog -> GET /api/settings -> here -> information_schema
+    the Settings page -> GET /api/settings -> here -> information_schema
 """
 
 from __future__ import annotations
@@ -164,7 +164,7 @@ def _describe(
         kind = "source"
     elif research:
         # Worded without naming the research pipeline: this string is rendered
-        # in the settings dialog, and the dashboard does not describe the
+        # on the Settings page, and the dashboard does not describe the
         # account it reports on in terms of how its history was produced.
         detail = (
             f"Carries {len(research)} research history table(s) but none of the "

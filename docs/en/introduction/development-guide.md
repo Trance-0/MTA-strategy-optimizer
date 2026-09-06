@@ -1,6 +1,6 @@
 ---
 title: Development and Verification Guide
-compact: "Runnable commands for the pipeline, canonical data, attribution, standard, recommendation, strategy-evaluation, backend, and dashboard test suites, plus strategy validation and change principles. Read when executing or verifying the project."
+compact: "Python 3.12 and Node 22 commands for pipeline, six Python suites, frontend tests, spec_docs.py retrieval and ownership checks, deployment preflight, live/static builds and planned database migrations."
 lang: en-US
 ---
 
@@ -8,8 +8,8 @@ lang: en-US
 
 ## Environment
 
-- Python 3.10 or newer;
-- Node.js only for the documentation site and its maintained root `script/` helpers;
+- Python 3.12, selected by `.python-version`;
+- Node.js 22 for the Vue dashboard, documentation, and maintained root `script/` helpers;
 - Git;
 - no third-party Python package is required by AMC MTA itself.
 
@@ -78,6 +78,16 @@ Historical tool-layer checks are not run or counted with product verification. F
 - Treat `.agents`, `_bmad`, and `_bmad-output` as preserved reference assets. Do not use their workflows or scripts for Trance-0 development unless a task explicitly requests BMad.
 - Do not restore the removed legacy `modules/mta` directory.
 
-## Engineering Processes Not Present
+## Specification and release verification
 
-The audited repository had no continuous integration/deployment, container configuration, deployment manifest, database migration, web service, or package-publication configuration. There is therefore no production-deployment procedure to document. Productionization should begin with dependency locking and a continuous-integration test gate.
+Use [Specification Workflow and Retrieval](./specification-workflow.md) to
+retrieve compact contracts and select their tests. Run
+`uv run python -X utf8 -B script/spec_docs.py check` before considering a change
+complete. The verification workflow runs product suites and both frontend
+build targets. [Deployment preflight](./backend/deployment-preflight.md) rejects
+incomplete external generator checkouts before release tests.
+
+[Backend setup](./backend/setups.md) specifies Flask and AppStack;
+[Dashboard deployment](/en/dashboard/deployment) specifies static Pages and
+the separate container stack. Database migration automation remains a
+[planned contract](./backend/database-migrations.md), not an implemented ledger.

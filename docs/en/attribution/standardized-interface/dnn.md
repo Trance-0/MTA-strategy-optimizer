@@ -4,6 +4,7 @@ description: Architecture, features, training, and new-campaign prediction for D
 compact: "Internals of model_id `dnn_credit` in `dnn_attribution_model.py`: 16/8 tanh listwise softmax scorer, hidden_sizes, epochs 400, learning_rate 0.5, seed 20260803, `build_touchpoint_features` (appearance_ratio, mean_relative_position, user_share), Shapley-share targets, `predict_new_campaign`, JSON persistence."
 lang: en-US
 source_files: modules/mta_attribution/src/dnn_attribution_model.py
+test_files: modules/mta_attribution/tests/test_dnn_attribution_model.py
 ---
 
 # DNN Credit Model
@@ -170,3 +171,10 @@ Source: `modules/mta_attribution/src/dnn_attribution_model.py`
 - [Standardized MTA interface](./index.md)
 - [Path-level Shapley](./shapley.md)
 - [Model comparison governance](../model-governance.md)
+
+## Verification
+
+- **Scope:** The behavior and owned test files of DNN Credit Model.
+- **Cases:** Deterministic training and prediction, nonnegative shares, persisted state and unsupported input refusal.
+- **Command:** `uv run python -X utf8 -B -m unittest modules.mta_attribution.tests.test_dnn_attribution_model`.
+- **Limitations:** Runs against local fixtures or mocks, not a live production database. External generator execution requires the pinned checkout.

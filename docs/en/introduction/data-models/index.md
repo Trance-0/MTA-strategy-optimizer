@@ -4,6 +4,7 @@ description: Provider-independent domain model foundation shared across attribut
 compact: "Provider-independent canonical dataclasses and their relationship diagram, grouped into vocabularies, provider/touchpoint contracts, identities, observations, evidence, episodes, and presentation-only types. Covers the legacy compatibility bridge; this module implements no optimizer, incrementality estimation, or similarity calculation of its own."
 lang: en-US
 source_files: modules/mta_common/src/enums.py, modules/mta_common/src/provider_capabilities.py, modules/mta_common/src/touchpoint.py, modules/mta_common/src/reporting_scope.py, modules/mta_common/src/campaign.py, modules/mta_common/src/product.py, modules/mta_common/src/budget.py, modules/mta_common/src/delivery.py, modules/mta_common/src/outcome.py, modules/mta_common/src/attribution_evidence.py, modules/mta_common/src/lineage.py, modules/mta_common/src/episode.py, modules/mta_common/src/evaluation_only.py, modules/mta_common/src/presentation/similarity.py, modules/mta_common/src/legacy_adapters.py
+test_files: modules/mta_common/tests/test_budget_and_delivery.py, modules/mta_common/tests/test_campaign.py, modules/mta_common/tests/test_enums_and_capabilities.py, modules/mta_common/tests/test_episode_and_evaluation_isolation.py, modules/mta_common/tests/test_legacy_adapters.py, modules/mta_common/tests/test_outcome_and_attribution_evidence.py, modules/mta_common/tests/test_product_and_economics.py, modules/mta_common/tests/test_similarity_isolation.py, modules/mta_common/tests/test_touchpoint.py
 ---
 
 # Canonical Data Model
@@ -292,3 +293,10 @@ Every class described here is implemented and tested: 103 tests across 9 files i
 - No incrementality-estimation source or similarity calculation is implemented; the classes that would carry their output (`OutcomeObservation`'s incremental fields, `SimilarityReference`) exist and stay unpopulated. The Campaign budget optimizer is implemented, but in `modules/mta_strategy_recommendation` rather than here, and it estimates budget response rather than causal incrementality.
 - `enums.py` uses `enum.StrEnum` for its seven vocabularies, a deliberate deviation from this repository's otherwise near-total avoidance of the `Enum` family, chosen so `Provider`, `FieldAvailability`, and the rest are not restatable as five different ad-hoc string conventions across the classes that reference them.
 - No current pipeline component calls `legacy_adapters.py`; it is exercised only by its own test suite until a future change wires a real caller to it.
+
+## Verification
+
+- **Scope:** The behavior and owned test files of Canonical Data Model.
+- **Cases:** Required identities and enums; immutable values; scope and budget constraints; missing economics; legacy adapters; isolation of evaluation-only truth and display-only similarity.
+- **Command:** `uv run python -X utf8 -B -m unittest modules.mta_common.tests.test_budget_and_delivery modules.mta_common.tests.test_campaign modules.mta_common.tests.test_enums_and_capabilities modules.mta_common.tests.test_episode_and_evaluation_isolation modules.mta_common.tests.test_legacy_adapters modules.mta_common.tests.test_outcome_and_attribution_evidence modules.mta_common.tests.test_product_and_economics modules.mta_common.tests.test_similarity_isolation modules.mta_common.tests.test_touchpoint`.
+- **Limitations:** Runs against local fixtures or mocks, not a live production database. External generator execution requires the pinned checkout.

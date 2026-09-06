@@ -1,5 +1,5 @@
 /**
- * The seven views, their flat navigation order, and their rail icons.
+ * The eight pages, their flat navigation order, and their rail icons.
  *
  * This is the single place a view is registered. A page key appears here, in
  * `PAGE_KEYS`, and in `App.vue`'s component map; the test asserts the three
@@ -8,7 +8,7 @@
  *
  * The grouping and the icon set are the reference prototype's
  * (`external/UI_design/brandlens-vue`, by Rouxin Jin), redrawn for this
- * project's seven views.
+ * project's eight pages.
  */
 
 export const PAGES = {
@@ -93,9 +93,16 @@ export const PAGES = {
     icon: '<path d="M4 5h7v14H4V5zm9 0h7v14h-7V5zM7 9h1m8 0h1" stroke="currentColor" stroke-width="1.6"/>',
   },
 
-  // The foot control. It is not a view and is excluded from `PAGE_KEYS`.
   settings: {
     title: "Settings",
+    crumb: "AI-MTA / Settings",
+    defaultSection: "general",
+    sections: {
+      general: [],
+      source: [],
+      logging: [],
+      tasks: [],
+    },
     icon:
       '<path d="M12 15.2a3.2 3.2 0 100-6.4 3.2 3.2 0 000 6.4z" stroke="currentColor" stroke-width="1.6"/>' +
       '<path d="M18.7 14.4a1.5 1.5 0 00.3 1.65l.05.06a1.8 1.8 0 11-2.55 2.55l-.05-.06a1.5 1.5 0 00-1.65-.3 1.5 1.5 0 00-.9 1.37v.16a1.8 1.8 0 11-3.6 0v-.09a1.5 1.5 0 00-.98-1.37 1.5 1.5 0 00-1.65.3l-.06.06a1.8 1.8 0 11-2.55-2.55l.06-.06a1.5 1.5 0 00.3-1.65 1.5 1.5 0 00-1.38-.9h-.15a1.8 1.8 0 010-3.6h.09a1.5 1.5 0 001.37-.98 1.5 1.5 0 00-.3-1.65l-.06-.06a1.8 1.8 0 112.55-2.55l.06.06a1.5 1.5 0 001.65.3h.07a1.5 1.5 0 00.9-1.38v-.15a1.8 1.8 0 013.6 0v.09a1.5 1.5 0 00.9 1.37 1.5 1.5 0 001.65-.3l.06-.06a1.8 1.8 0 112.55 2.55l-.06.06a1.5 1.5 0 00-.3 1.65v.07a1.5 1.5 0 001.38.9h.15a1.8 1.8 0 010 3.6h-.09a1.5 1.5 0 00-1.37.9z" stroke="currentColor" stroke-width="1.35"/>',
@@ -111,6 +118,7 @@ export const PAGE_KEYS = [
   "optimizer",
   "log",
   "knowledge",
+  "settings",
 ];
 
 export const DEFAULT_PAGE = PAGE_KEYS[0];
@@ -135,6 +143,17 @@ export const DASHBOARD_RESOURCES = Object.freeze([
   "research-generation-configs",
   "research-campaign-history",
 ]);
+
+/**
+ * The resources whose payload depends on the requested history window.
+ *
+ * Mirrors `WINDOWED_FIELDS` in `backend/repository/snapshot.py`. These are the
+ * two resources carrying observation arrays; every other one ignores a window,
+ * so requesting them with bounds would only fragment their cache entry.
+ */
+export const WINDOWED_RESOURCES = Object.freeze(
+  new Set(["research-overview", "research-campaign-history"]),
+);
 
 /** Normalize a location hash to one declared page and subsection. */
 export function parseRoute(hash) {

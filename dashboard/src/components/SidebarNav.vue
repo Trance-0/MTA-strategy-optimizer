@@ -1,5 +1,5 @@
 <script setup>
-/** The flat navigation rail and its Settings-only foot module. */
+/** The flat navigation rail and its status-only foot module. */
 import { PAGES, PAGE_KEYS } from "../pages.js";
 
 defineProps({
@@ -10,7 +10,7 @@ defineProps({
   repoHref: { type: String, required: true },
 });
 
-const emit = defineEmits(["go", "settings"]);
+const emit = defineEmits(["go"]);
 </script>
 
 <template>
@@ -46,10 +46,6 @@ const emit = defineEmits(["go", "settings"]);
       <div class="rail-log" :class="{ on: loggingOn }">
         LOGGING {{ loggingOn ? "ON" : "OFF" }}
       </div>
-      <button class="nav-item foot" aria-label="Settings" title="Settings" @click="emit('settings')">
-        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" v-html="PAGES.settings.icon" />
-        <span>Settings</span>
-      </button>
       <div class="rail-links">
         <a :href="docsHref" target="_blank" rel="noopener">Docs</a>
         <span>·</span>

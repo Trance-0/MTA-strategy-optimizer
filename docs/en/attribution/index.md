@@ -4,6 +4,7 @@ description: MTA components, objectives, files, and output relationships
 compact: "Orientation map of the attribution layer: which source file owns what, from `attribution_contract.py` and `markov_attribution_model.py` to `modules/mta_standard/`. Names the three Outcomes and the Markov-official / Shapley-reference rule. Read first; skip once you know the layout."
 lang: en-US
 source_files: modules/mta_attribution/src/touchpoint_key.py, modules/mta_attribution/src/attribution_contract.py, modules/mta_attribution/src/path_report_builder.py
+test_files: modules/mta_attribution/tests/test_attribution_contract.py, modules/mta_attribution/tests/test_auto_report_window.py, modules/mta_attribution/tests/test_end_to_end_pipeline.py, modules/mta_attribution/tests/test_path_report_builder.py, modules/mta_attribution/tests/test_touchpoint_key.py
 ---
 
 # Attribution Model Overview
@@ -88,7 +89,7 @@ Continue with [Markov removal effect](./standardized-interface/markov.md) and [S
 
 The same interface admits models the original two cannot express. `dnn_credit` learns credit from touchpoint segment structure, which lets it predict a split for a campaign that has produced no paths yet.
 
-Continue with [the standardized interface](./standardized-interface/) and [the DNN credit model](./standardized-interface/dnn.md). For how the four models are verified and scored against each other, see [model testing and comparison](./model-testing.md).
+Continue with [the standardized interface](./standardized-interface/) and [the DNN credit model](./standardized-interface/dnn.md). For how the four models are verified and scored against each other, see [model testing and comparison](./model-testing/index.md).
 
 
 ## Source Files <span class="status-label status-verified" aria-label="Verified"></span>
@@ -129,3 +130,10 @@ Source: `modules/mta_attribution/src/path_report_builder.py`
 
 - [Mapping the Customer Journey (PDF)](/research/mta/Mapping%20the%20customer%20journey.pdf)
 - [Data-driven Multi-touch Attribution Models (PDF)](/research/mta/Data-driven%20Multi-touch%20Attribution%20Models.pdf)
+
+## Verification
+
+- **Scope:** The behavior and owned test files of Attribution Model Overview.
+- **Cases:** Five-part keys, path ordering and aggregation; report-window detection; malformed inputs; Markov/Shapley conservation and complete pipeline output.
+- **Command:** `uv run python -X utf8 -B -m unittest modules.mta_attribution.tests.test_attribution_contract modules.mta_attribution.tests.test_auto_report_window modules.mta_attribution.tests.test_end_to_end_pipeline modules.mta_attribution.tests.test_path_report_builder modules.mta_attribution.tests.test_touchpoint_key`.
+- **Limitations:** Runs against local fixtures or mocks, not a live production database. External generator execution requires the pinned checkout.

@@ -19,7 +19,12 @@ SUBMODULE_ROOT = PROJECT_ROOT / "external" / "mta_sim_dataset"
 # here for the absence of another project rather than for a defect in this
 # one. Skipped rather than failed, so the suite reports what this repository
 # is answerable for. The two tests below need no checkout and always run.
-SUBMODULE_AVAILABLE = (SUBMODULE_ROOT / "ZheyuanWu" / "simulations").is_dir()
+SUBMODULE_AVAILABLE = all((SUBMODULE_ROOT / name).is_file() for name in (
+    "ZheyuanWu/simulations/__init__.py",
+    "ZheyuanWu/simulations/baseline/mta_dataset/__init__.py",
+    "ZheyuanWu/simulations/baseline/mta_dataset/configuration.py",
+    "ZheyuanWu/examples/baseline.toy.json",
+))
 
 from modules.mta_standard.src.evaluation import load_simulation_ground_truth  # noqa: E402
 from modules.mta_standard.src.mta_sim_generator_adapter import (  # noqa: E402
@@ -35,7 +40,7 @@ class MtaSimGeneratorAdapterTests(unittest.TestCase):
 
     @unittest.skipUnless(
         SUBMODULE_AVAILABLE,
-        f"the MTA-SIM submodule is not checked out at {SUBMODULE_ROOT}",
+        f"MTA-SIM inputs are incomplete at {SUBMODULE_ROOT}; run git submodule update --init -- external/mta_sim_dataset",
     )
     def test_generates_and_loads_baseline_toy_dataset(self) -> None:
         """Generate the public toy fixture and keep ground truth evaluation-only."""

@@ -242,7 +242,7 @@ A future [Campaign Episode](/en/introduction/data-models/composed-episodes-and-e
 
 ### Relationship to Attribution Model Documentation
 
-The two shapes this class adapts, `AttributionResult` and `StandardAttributionRow`, are specified in [Attribution Model Overview](/en/attribution/index.md) and [Model Testing and Comparison](/en/attribution/model-testing.md). `AttributionEvidence` restates neither model's calculation; it only carries their already-computed output.
+The two shapes this class adapts, `AttributionResult` and `StandardAttributionRow`, are specified in [Attribution Model Overview](/en/attribution/index.md) and [Model Testing and Comparison](/en/attribution/model-testing/index.md). `AttributionEvidence` restates neither model's calculation; it only carries their already-computed output.
 
 ## Legacy Mapping <span class="status-label status-verified" aria-label="Verified"></span>
 

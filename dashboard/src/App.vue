@@ -5,24 +5,17 @@
  * The layout is the reference prototype's App.vue
  * (`external/UI_design/brandlens-vue`, by Rouxin Jin) -- an `.app-shell` grid
  * of the navigation rail beside a main column, hash routing, and a toast for
- * transient confirmations. The seven views behind it are this project's own.
+ * transient confirmations. The eight routed pages behind it are this project's own.
  *
  * Data flow:
  *     src/lib/useDashboard.js -> here -> the selected view
  */
-import { computed, onMounted, onUnmounted, ref } from "vue";
+import { computed, defineAsyncComponent, h, onMounted, onUnmounted, ref } from "vue";
 
-import SettingsDialog from "./components/SettingsDialog.vue";
 import LoadingProgress from "./components/LoadingProgress.vue";
 import SidebarNav from "./components/SidebarNav.vue";
 import TopBar from "./components/TopBar.vue";
-import BudgetManager from "./views/BudgetManager.vue";
-import CampaignOptimizer from "./views/CampaignOptimizer.vue";
-import Campaigns from "./views/Campaigns.vue";
-import CommandCenter from "./views/CommandCenter.vue";
-import DataGenerator from "./views/DataGenerator.vue";
 import KnowledgeBase from "./views/KnowledgeBase.vue";
-import OptimizationLog from "./views/OptimizationLog.vue";
 import SchemaRecovery from "./components/SchemaRecovery.vue";
 import { IS_STATIC, fetchSettings } from "./api/client.js";
 import { useDashboard } from "./lib/useDashboard.js";
@@ -39,6 +32,23 @@ import {
   routeResources,
 } from "./pages.js";
 
+function lazyView(loader) {
+  return defineAsyncComponent({
+    loader,
+    delay: 0,
+    loadingComponent: { render: () => h("p", { role: "status" }, "Loading page…") },
+    errorComponent: { render: () => h("p", { role: "alert" }, "The page could not load. Reload this browser page to retry.") },
+  });
+}
+
+const CommandCenter = lazyView(() => import("./views/CommandCenter.vue"));
+const DataGenerator = lazyView(() => import("./views/DataGenerator.vue"));
+const BudgetManager = lazyView(() => import("./views/BudgetManager.vue"));
+const Campaigns = lazyView(() => import("./views/Campaigns.vue"));
+const CampaignOptimizer = lazyView(() => import("./views/CampaignOptimizer.vue"));
+const OptimizationLog = lazyView(() => import("./views/OptimizationLog.vue"));
+const Settings = lazyView(() => import("./views/Settings.vue"));
+
 const VIEWS = {
   overview: CommandCenter,
   generator: DataGenerator,
@@ -47,6 +57,7 @@ const VIEWS = {
   optimizer: CampaignOptimizer,
   log: OptimizationLog,
   knowledge: KnowledgeBase,
+  settings: Settings,
 };
 
 const { data, loadingProgress, ensureResources, errorFor, isLoaded, reload } = useDashboard();
@@ -60,7 +71,6 @@ const { diagnosticsOn } = useDiagnostics();
 
 const page = ref(DEFAULT_PAGE);
 const section = ref(PAGES[DEFAULT_PAGE].defaultSection);
-const settingsOpen = ref(false);
 const toast = ref("");
 const status = ref({});
 const loggingOn = ref(false);
@@ -211,7 +221,6 @@ const docsHref = computed(() => (IS_STATIC ? "./docs/" : `${DOCS_URL}/`));
       :docs-href="docsHref"
       :repo-href="REPO_URL"
       @go="go"
-      @settings="settingsOpen = true"
     />
 
     <main class="main">
@@ -230,7 +239,7 @@ const docsHref = computed(() => (IS_STATIC ? "./docs/" : `${DOCS_URL}/`));
           governs. A reader who cannot edit should learn that from the page,
           not by hunting for a button that is not there.
         -->
-        <div v-if="routeLoaded && !writable" class="notice deployment-notice">
+        <div v-if="page !== 'settings' && routeLoaded && !writable" class="notice deployment-notice">
           <b>Read-only deployment.</b> {{ readOnlyReason }}
         </div>
         <div v-if="!routeLoaded && !routeError" class="card empty-card">
@@ -255,11 +264,11 @@ const docsHref = computed(() => (IS_STATIC ? "./docs/" : `${DOCS_URL}/`));
           <SchemaRecovery
             v-if="routeError.code === 'database_unavailable'"
             @recovered="onReload"
-            @settings="settingsOpen = true"
+            @settings="writeRoute('settings', 'source')"
           />
           <div class="rec-actions">
             <button class="btn" @click="onReload">Try again</button>
-            <button class="btn primary" @click="settingsOpen = true">Settings</button>
+            <button class="btn primary" @click="writeRoute('settings', 'source')">Settings</button>
           </div>
         </div>
 
@@ -268,16 +277,11 @@ const docsHref = computed(() => (IS_STATIC ? "./docs/" : `${DOCS_URL}/`));
           v-else
           :section="section"
           @navigate="goSection"
+          @changed="onSettingsChanged"
+          @reload="onReload"
         />
       </div>
     </main>
-
-    <SettingsDialog
-      :open="settingsOpen"
-      @close="settingsOpen = false"
-      @changed="onSettingsChanged"
-      @reload="onReload"
-    />
 
     <div class="toast" :class="{ show: toast }">{{ toast }}</div>
   </div>

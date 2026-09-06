@@ -1,9 +1,10 @@
 ---
 title: Dashboard
 description: The Vue dashboard's architecture, its dual data source contract, and where each topic is documented
-compact: "Vue/Flask boundary: route-owned lazy resources, caching and byte progress; `client.js` also sends model files through fixed backend artifact upload/download/import routes. Python alone owns parsing, storage, database access, and static-build capability refusals."
+compact: "Vue/Flask resource boundary; immutable shallow snapshots, generation-safe history window changes, streamed progress, static/live date parity, typed values and artifact APIs. Owns client.js, useDashboard.js and client contract tests."
 lang: en-US
-source_files: dashboard/src/api/client.js, dashboard/src/lib/useDashboard.js, dashboard/tests/dashboard.test.js, backend/repository/coercion.py, backend/tests/test_coercion.py
+source_files: dashboard/src/api/client.js, dashboard/src/lib/useDashboard.js
+test_files: dashboard/tests/dashboard_store.test.js, dashboard/tests/dashboard.test.js
 ---
 
 # Dashboard
@@ -80,15 +81,48 @@ its own catalogue and the drafts needed by its editor. A database-scale history 
 exceed 50 megabytes as JavaScript Object Notation (JSON); unrelated routes
 never download or parse it.
 
+The two resources carrying observations — `research-overview` and
+`research-campaign-history` — additionally accept `start` and `end` query
+parameters bounding `report_date` inclusively. Both are validated as
+`YYYY-MM-DD` before they reach a loader, a malformed bound is dropped rather
+than refused, and a reversed pair is swapped. They become whole appended
+predicates with the dates bound as SQL parameters; nothing from the query string
+is ever formatted into a statement. A request naming neither bound receives the
+most recent quarter rather than the whole history — 17.5 megabytes instead of
+48.6 — and a view asks for the rest explicitly. A windowed resource is cached
+under its bounds as well as its name in both the backend and the client, so
+widening the range refetches rather than being answered from the narrower slice,
+and every windowed payload carries `historyWindow` — the bounds applied, plus
+the earliest and latest dates the source holds — so a view can state what it
+excluded. The static build has files rather than queries, so
+`src/api/client.js` applies the same bounds to the payload after it arrives and
+reports them identically.
+
 ### Progress for a slow dataset
 
 Every resource uses the same streamed reader in
 `src/api/client.js`. The client counts received bytes against `Content-Length`
 when the server provides it; without a length it reports an indeterminate
-load. A progress bar appears only after a request remains unresolved for three
-seconds, so a fast request does not flash transient interface chrome. The bar
+load. An immediate route transition acknowledges the click while data is loading. The bar
 and its accessible value read the same progress state. A failed lazy request
 remains retryable and never marks the section loaded.
+
+### Snapshot reactivity
+
+Only the current requested history window is retained in the client. Changing
+bounds invalidates completed and failed windowed keys while keeping unrelated
+catalogues. Every window change has a generation number: a late response from
+an older generation may settle its caller but cannot merge data, mark the new
+window complete, publish progress, or replace its error. Returning to an earlier
+window fetches it again, rather than treating a completed flag as cached rows.
+The static adapter applies the same valid-date, reversed-range and default
+90-day rules as the live route after reading the generated full-history file.
+
+The store replaces its root snapshot whenever a resource completes. Received
+rows are immutable observations and remain plain objects through a shallow
+reactive root; readers must create editable drafts rather than mutate them.
+This avoids tracking every field of a 100,000-row history while still notifying
+views after a merge or reload.
 
 ### Dependency boundary
 
@@ -156,9 +190,9 @@ readers have no shell is not told to run one. See
 
 Continue with [Populating PostgreSQL](./database-import.md) for the importer that writes this schema.
 
-## The Seven Views <span class="status-label status-verified" aria-label="Verified"></span>
+## The Eight Pages <span class="status-label status-verified" aria-label="Verified"></span>
 
-The navigation mirrors the reference prototype in `external/UI_design/brandlens-vue`, by Rouxin Jin. Each view is one Single-File Component under `dashboard/src/views/`; tabbed views receive their selected subsection and emit a route change, while all data remains in the shared resource store.
+The navigation mirrors the reference prototype in `external/UI_design/brandlens-vue`, by Rouxin Jin. Each page is one Single-File Component under `dashboard/src/views/`; tabbed pages receive their selected subsection and emit a route change, while all data remains in the shared resource store.
 
 ### Command Center
 
@@ -192,7 +226,13 @@ Reserved for a future backend-owned knowledge service. Until that contract is
 implemented, the Vue view contains only an unavailable notice and does not
 derive an ontology from the current snapshot.
 
-Continue with [Views and visual contract](./views.md) for the reliability rule every view honors, the colour and chart system, and the per-component specification. The rail that switches between them, and its settings module, are specified on [Navigation rail and settings](./navigation.md).
+### Settings
+
+Which build and data source are active, how can the database be inspected or
+prepared, what requests were logged, and which backend tasks are running? The
+four deep-linked tabs render as a normal page rather than a modal.
+
+Continue with [Views and visual contract](./views/index.md) for the reliability rule every view honors, the colour and chart system, and the per-component specification. The rail that switches between them, and its settings module, are specified on [Navigation rail and settings](./navigation.md).
 
 ## Source Files <span class="status-label status-verified" aria-label="Verified"></span>
 
@@ -205,13 +245,20 @@ Source: `dashboard/src/api/client.js`, `dashboard/src/lib/useDashboard.js`
 - Responsibility: Be the client's single route to the data, and hold the single shared copy of it.
 - Inputs: `/api/dashboard/resources/<resource>` in a local run, or `data/resources/<resource>.json` in the published build; resource names come only from `src/pages.js`.
 - Outputs: `IS_STATIC`, `fetchDashboardResource()` with byte progress, reload/settings calls, master-data calls, job start/stop, `uploadJobArtifacts()`, `importJobArtifacts()`, schema-operation calls, and `useDashboard()` resource state. Static settings carry `backendIdentity: null`; static job descriptors disable run, upload, and database import.
-- Behavior contract: `IS_STATIC` is baked in at build time by `vite build --mode static`, and it alone selects live resource routes or relative generated resource files; **no view branches on it.** `fetchDashboardResource(resource)` rejects a key absent from the exported allow-list before constructing a URL. A response that is not JSON is reported by status rather than as a parse error naming character 0. `useDashboard()` holds one merged object, a completed-key set, one in-flight promise per resource, and per-resource failures. It merges nested `simulationResearch` slices without replacing completed siblings. Concurrent callers share each request, a completed key is not fetched twice, and Reload invalidates all resources. Progress is byte-based where possible, indeterminate otherwise, hidden for the first three seconds, and reset on completion or failure.
+- Behavior contract: `IS_STATIC` is baked in at build time by `vite build --mode static`, and it alone selects live resource routes or relative generated resource files; **no view branches on it.** `fetchDashboardResource(resource)` rejects a key absent from the exported allow-list before constructing a URL. A response that is not JSON is reported by status rather than as a parse error naming character 0. `useDashboard()` holds one merged object, a completed-key set, one in-flight promise per resource, and per-resource failures. It merges nested `simulationResearch` slices without replacing completed siblings. Concurrent callers share each request, a completed key is not fetched twice, and Reload invalidates all resources. Progress is byte-based where possible, indeterminate otherwise, visible immediately during a route transition, and reset on completion or failure.
 - Dependencies: Vue's reactivity.
 - Verification: Driven in a real browser against both the API and the static snapshot; the data-backed views render identically and the backend-only generator names its unavailable state in static mode.
 
-### `tests/dashboard.test.js`
+## Verification
 
-Source: `dashboard/tests/dashboard.test.js`
+- **Scope:** The behavior and owned test files of Dashboard.
+- **Cases:** Reordered history responses, revisited windows and shallow observation rows; canonical routes and resource allow-lists; static/live window parity; split stream frames; retry and cache invalidation; typed cells and stable sort order.
+- **Command:** `npm --prefix dashboard test`.
+- **Limitations:** Node source-text checks do not prove rendered interaction; verify navigation and chart lifecycle in a browser.
+
+#### `tests/dashboard.test.js`
+
+Tests: `dashboard/tests/dashboard.test.js`
 
 - Responsibility: Verify the contracts a clean checkout can check without a database.
 - Inputs: The committed artifacts, and temporary files for the `.env` tests.
@@ -219,24 +266,3 @@ Source: `dashboard/tests/dashboard.test.js`
 - Behavior contract: Every test runs without a database and without a browser, so a clean checkout can run the whole suite. It covers the navigation registration contract; the entity table's paging and identity-keyed selection; the run options and refusals; and the snapshot invariants — real booleans rather than the string `"false"`, dates as `YYYY-MM-DD`, absent text as `null` rather than `""`, finite numbers rather than strings, the five touchpoint segments, and that the whole snapshot survives JSON serialisation unchanged. Several tests assert against **source text** rather than a rendered component, because the suite runs without a Document Object Model (DOM): they pin contracts a reader cannot see in a screenshot — that a progress bar's `aria-valuenow` and its visible percentage read one value, that a phase pattern still matches a line the Python actually prints, that the offered budget policies are the ones the enum declares. Two of those read Python sources directly, because the contract they pin is now owned by `backend/services/`; the reader is the client, so the test stays here.
 - Dependencies: Node's built-in test runner. No database.
 - Verification: `npm test` in `dashboard/`; the exact passing count is printed by the command.
-
-### `backend/tests/test_coercion.py`
-
-Source: `backend/tests/test_coercion.py`
-
-- Responsibility: Hold the CSV reader contracts that the deleted Node suite
-  proved, so removing that code did not remove the coverage.
-- Inputs: Temporary files only. Neither test reads the repository's own `.env`
-  or opens a connection.
-- Outputs: Pass or fail per test, under `uv run --extra backend python -m unittest`.
-- Behavior contract: `read_csv` drops the Chinese field-description row by
-  matching its exact marker rather than by heuristic — an earlier heuristic
-  that tested for the absence of digits silently discarded a real data row from
-  the files that carry no such row — strips a Unicode Transformation Format
-  8-bit (UTF-8) byte-order mark that would otherwise become part of the first
-  header name, keeps quoting, embedded newlines, and Carriage Return Line Feed
-  (CRLF) intact, discards the empty row a trailing newline produces, and
-  returns no rows rather than raising for an artifact that has not been
-  produced.
-- Dependencies: The backend dependency extra. No database.
-- Verification: `uv run --extra backend python -m unittest discover -s backend/tests -t .`. Thirty-two tests pass.

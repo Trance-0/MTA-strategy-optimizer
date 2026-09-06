@@ -1,17 +1,17 @@
 ---
 title: Navigation Rail and Settings
-compact: "Navigation contract for canonical deep links including Knowledge status/Ontology Review, route-owned lazy resources, the flat rail, Settings tabs, schema recovery, runtime PostgreSQL selection, queued setup, write-only passwords, and INFO logging."
+compact: "Eight lazy page imports and canonical deep links; Settings loads independently of dashboard data; Knowledge Base operational and review tabs; schema doctor, recovery, protected configuration and queued tasks."
 lang: en-US
-source_files: dashboard/src/pages.js, dashboard/src/App.vue, dashboard/src/main.js, dashboard/src/components/SettingsDialog.vue, dashboard/src/components/BackendTasks.vue, dashboard/src/components/SchemaRecovery.vue
+source_files: dashboard/src/pages.js, dashboard/src/App.vue, dashboard/src/main.js, dashboard/src/views/Settings.vue, dashboard/src/components/BackendTasks.vue, dashboard/src/components/SchemaRecovery.vue
 ---
 
 # Navigation Rail and Settings
 
-The rail is the shell around the seven views listed on [Dashboard](./index.md#the-seven-views). This page specifies the rail itself and the settings module pinned to its foot.
+The rail is the shell around the eight pages listed on [Dashboard](./index.md#the-eight-pages). This page specifies the rail and the routed Settings page.
 
 ## Navigation Rail <span class="status-label status-verified" aria-label="Verified"></span>
 
-The sidebar is one navy column of seven stacked destination buttons, with the
+The sidebar is one navy column of eight stacked destination buttons, with the
 active item filled. It has no `OVERVIEW`, `PLANNING`, or `INSIGHTS` section
 labels and no group containers. Data Generator follows Command Center; the
 remaining destinations keep their existing relative order.
@@ -27,7 +27,7 @@ The canonical form is `#/page/section`: examples are
 `#/optimizer/optimization`. Every destination has a default subsection, so a
 single-panel page is still explicit: Command Center is `#/overview/summary`,
 Data Generator is `#/generator/configure`, and Knowledge Base is
-`#/knowledge/notice`.
+`#/knowledge/notice`. Settings is `#/settings/general`.
 
 Clicking the rail opens that page's default subsection. Clicking an in-page tab
 pushes another history entry, and browser Back and Forward restore both the
@@ -47,8 +47,9 @@ cache.
 
 ### Route and resource declarations
 
-The exact declarations are part of the navigation contract. Every entry starts
-with `shell`, which supplies deployment and report context.
+The exact declarations are part of the navigation contract. Every data page starts
+with `shell`, which supplies deployment and report context. Settings has no
+dashboard resource dependency, so recovery survives a failing data source.
 
 #### Command Center, Data Generator, and Knowledge Base
 
@@ -57,6 +58,12 @@ with `shell`, which supplies deployment and report context.
   its own backend capability endpoint only after this route mounts.
 - `knowledge/notice`: preserves the unavailable backend-knowledge status; no data beyond `shell`.
 - `knowledge/ontology-review`: displays the separately imported canonical fixture release; no dashboard application programming interface (API) resource beyond `shell`.
+
+#### Settings
+
+- `settings/general`, `settings/source`, `settings/logging`, and
+  `settings/tasks`: no dashboard resources, including `shell`; the page reads its own
+  settings, schema-operation, and task endpoints only after the route mounts.
 
 #### Budget Manager
 
@@ -91,13 +98,26 @@ with `shell`, which supplies deployment and report context.
 At `1024px` the rail becomes a sticky, horizontally scrollable bar. The same
 flat order is retained, and no disclosure or group state is introduced. The
 selected destination stays visible through horizontal scrolling and carries
-`aria-current="page"`.
+`aria-current="page"`. Both the single-column shell track and navigation
+element have zero minimums, so the rail's own overflow scrolls without widening
+the document or any page beneath it.
 
-### The settings module
+### The Settings page
 
-Everything about the dashboard's own plumbing is pinned to the foot of the rail, ruled off from the view navigation above it, so it never reads as another destination. It shows the active source, a status dot, and whether logging is on, and opens a modal with four tabs. **General** is first and contains basic deployment identity only. **Data source** owns a four-step database doctor. **Logging** owns request-log capture and inspection. **Tasks** owns long-running service history, detail logs, queue state, copy, and stop controls. Deployment identity appears nowhere in the latter three tabs.
+Settings is the eighth routed destination and the last item in the same flat rail
+as the data pages. It renders in the normal content area instead of a modal,
+so its address, title, breadcrumb, browser history, and responsive layout follow
+the same shell contract as every other page. The rail foot remains status-only:
+it shows the active source, a status dot, whether logging is on, and the Docs and
+Repo links.
 
-When `DASHBOARD_CONFIG_READ_ONLY=true`, the server continues to report its configured source but rejects every settings mutation. The modal replaces its connection form with the server-configuration instruction and disables logging controls, so a team-server visitor cannot rewrite protected credentials or process state through the browser.
+The Settings page has four deep-linked tabs. **General** is first and contains
+basic deployment identity only. **Data source** owns a four-step database doctor.
+**Logging** owns request-log capture and inspection. **Tasks** owns long-running
+service history, detail logs, queue state, copy, and stop controls. Deployment
+identity appears nowhere in the latter three tabs.
+
+When `DASHBOARD_CONFIG_READ_ONLY=true`, the server continues to report its configured source but rejects every settings mutation. The page replaces its connection form with the server-configuration instruction and disables logging controls, so a team-server visitor cannot rewrite protected credentials or process state through the browser.
 
 That flag governs credentials, not data. Which schema is loaded, and setting one
 up, stay available on a protected deployment: both act on the database the
@@ -111,7 +131,7 @@ Contains the `DATABASE` toggle and the PostgreSQL host, port, database, user, pa
 
 It also contains **Reload data**. Reload is not rendered in the sidebar. The
 button clears backend and client caches, reloads the selected schema, and keeps
-the Settings dialog open long enough to report success or failure.
+the reader on the Settings page long enough to report success or failure.
 
 The database doctor presents one standard sequence rather than mixing connection,
 selection, and destructive setup controls in one undifferentiated form:
@@ -126,7 +146,7 @@ selection, and destructive setup controls in one undifferentiated form:
    dashboard-ready schema and reload its actual data.
 
 Each step reports `complete`, `current`, `blocked`, or `optional` from the state
-already returned by the backend. Starting import switches the modal to Tasks and
+already returned by the backend. Starting import switches the route to Tasks and
 selects that task, so a bare “Parsing started” notice never substitutes for
 observable work.
 
@@ -158,8 +178,8 @@ because it destroys what is already there.
 
 Whether setup is offered comes from the server, in the `available` and `reason`
 fields `GET /api/schema-operations` returns beside the operation record, rather
-than from a rule the dialog reconstructs. `SCHEMA_SETUP_ENABLED=false` withholds
-it, and the dialog then states why instead of showing buttons the route would
+than from a rule the page reconstructs. `SCHEMA_SETUP_ENABLED=false` withholds
+it, and the page then states why instead of showing buttons the route would
 refuse. `DASHBOARD_CONFIG_READ_ONLY` does not withhold it, on the same grounds
 as `PIPELINE_RUNS_ENABLED`.
 
@@ -176,7 +196,7 @@ answer 503, and the client renders its error card. Under that card,
 `GET /api/schema-recovery` lists what the reader can do about it as controls:
 load another schema that is ready, build dashboard schemas from a source schema,
 or write the sample account into an empty one. Each is the same action the
-Settings dialog offers, carried out by the same route and revalidated there.
+Settings page offers, carried out by the same route and revalidated there.
 
 The list excludes the schema that just failed, and excludes any schema nothing
 can be done with — unlike the Settings dropdown, which lists an unusable schema
@@ -227,6 +247,15 @@ schema, and replacement choice.
 
 The rail closes with **Docs** and **Repo**. A reader who arrives at the published dashboard has no other route to the specification or the source, so the app carries them. The documentation link is relative in the published build, where the documentation is a sibling directory, and absolute in a local run, where there is no sibling to point at.
 
+## Deferred view loading
+
+The shell loads the seven Trance-0 page components with dynamic imports.
+Knowledge Base retains its existing component import and behavior. Unvisited
+Trance-0 pages and their chart dependencies load only when selected. The shell and navigation remain available during loading.
+Settings declares no dashboard resources: even a failing database-backed shell
+must leave the database doctor reachable at `#/settings/source`. Async component
+loading shows an accessible status and a failed chunk shows a reload remedy.
+
 ## Source Files <span class="status-label status-verified" aria-label="Verified"></span>
 
 The code-level specification for the files this page describes. Each entry states responsibility, inputs, outputs, dependencies, and the test that verifies it.
@@ -235,27 +264,28 @@ The code-level specification for the files this page describes. Each entry state
 
 Source: `dashboard/src/main.js`, `dashboard/src/App.vue`, `dashboard/src/pages.js`
 
-- Responsibility: Register the seven views, draw the shell around them, and dispatch to the selected one.
+- Responsibility: Register the eight routed pages, draw the shell around them, and dispatch to the selected one.
 - Inputs: The location hash and the selected route's declared resource keys.
 - Outputs: The rendered application. `PAGES` carries each view's title, breadcrumb, and inline icon; `PAGE_KEYS` is the one-column order; `REPO_URL` and `DOCS_URL` are where the app points a reader who wants the source or the specification.
-- Behavior contract: `src/pages.js` is the single place a view and its subsections are registered, and `tests/dashboard.test.js` asserts that `PAGES`, `PAGE_KEYS`, route parsing, canonical serialization, defaults, and `App.vue`'s component map agree. Data Generator follows Command Center. No group label or group container is rendered. Settings is a foot control rather than a page, and reload exists only inside its dialog. Canonical hashes have the form `#/page/section`; reader navigation uses `pushState`, normalization uses `replaceState`, and Back and Forward restore the selected subsection. `App.vue` requests only the current route's resource declaration before mounting that view and passes the selected subsection plus a navigation event to tabbed views. It renders loading, error, and loaded states itself, and a `database_unavailable` error carries `SchemaRecovery.vue` beneath it. Header context comes from the small `shell` resource rather than forcing a view payload to load.
+- Behavior contract: `src/pages.js` is the single place a page and its subsections are registered, and `tests/dashboard.test.js` asserts that `PAGES`, `PAGE_KEYS`, route parsing, canonical serialization, defaults, and `App.vue`'s component map agree. Data Generator follows Command Center and Settings is the last destination. No group label, group container, or separate Settings foot button is rendered. Reload exists only on the Data source tab. Canonical hashes have the form `#/page/section`; reader navigation uses `pushState`, normalization uses `replaceState`, and Back and Forward restore the selected subsection. `App.vue` requests only the current route's resource declaration before mounting that page and passes the selected subsection plus a navigation event to tabbed pages. It renders loading, error, and loaded states itself, and a `database_unavailable` error links to `#/settings/source` while carrying `SchemaRecovery.vue` beneath it. Header context comes from the small `shell` resource on data pages. Settings remains reachable independently of that resource.
 - Dependencies: Vue 3.
-- Verification: `dashboard/tests/dashboard.test.js` for the registration contract; the rendered result is verified in a real browser for all seven views.
+- Verification: `dashboard/tests/dashboard.test.js` for the registration contract; the rendered result is verified in a real browser for all eight pages.
 
-### `src/components/SettingsDialog.vue` and `src/components/BackendTasks.vue`
+### `src/views/Settings.vue` and `src/components/BackendTasks.vue`
 
-Source: `dashboard/src/components/SettingsDialog.vue`,
+Source: `dashboard/src/views/Settings.vue`,
 `dashboard/src/components/BackendTasks.vue`
 
-- Responsibility: Own every control the rail's foot opens — General deployment
+- Responsibility: Own the four routed Settings tabs — General deployment
   identity, the database doctor, reload, runtime schema selection, schema setup,
   request logging, and task inspection — and own
   none of the decisions about whether they are permitted.
 - Inputs: `GET /api/settings`, `GET /api/schema-operations`, `GET /api/tasks`, and what the
   reader types. A stored password is never among them.
 - Outputs: Settings, schema-selection, schema-operation, and task-stop requests,
-  and the rendered dialog.
-- Behavior contract: The modal defaults to General. Deployment identity renders
+  and the rendered page. Only the schema-selection confirmation is a modal.
+- Behavior contract: The page defaults to General and each tab navigates to its
+  canonical `#/settings/<tab>` hash. Deployment identity renders
   only there; it is basic build/runtime information with no setting control.
   **Protection and capability are separate branches.**
   Protected configuration replaces the credential form; it does not enclose
@@ -264,12 +294,12 @@ Source: `dashboard/src/components/SettingsDialog.vue`,
   and the test asserting that the `Schema setup` heading falls outside the
   editable branch exists to keep it from recurring. Whether the setup buttons
   are enabled is read from the server's `available` and `reason` fields rather
-  than reconstructed, so the dialog and the route cannot disagree. The census
+  than reconstructed, so the page and the backend route cannot disagree. The census
   is refreshed by reading settings on a protected server and by a connection
   test on an editable one, because the test action is itself refused when
   configuration is protected. The password field is write-only, and an empty
   one means keep the stored value. The Data source tab renders Connect, Inspect,
-  Import, and Verify in that order; starting a schema operation opens Tasks with
+  Import, and Verify in that order; starting a schema operation navigates to Tasks with
   its returned identifier. Tasks polls only while at least one operation is
   queued, running, or stopping, keeps terminal records selectable, copies one
   complete detail log, and can stop the selected queued or running task.
@@ -288,10 +318,10 @@ Source: `dashboard/src/components/SchemaRecovery.vue`
 - Inputs: `GET /api/schema-recovery`.
 - Outputs: A grouped list of select, derive, and initialize controls; a
   `recovered` event when an action succeeds; a `settings` event for the reader
-  who wants the full dialog.
+  who wants the full Settings page.
 - Behavior contract: It renders only what the server offered, so it grants
   nothing: the chosen action is sent to the same schema-selection or
-  schema-operation route the dialog uses and revalidated there against a fresh
+  schema-operation route the Settings page uses and revalidated there against a fresh
   census. **It never sends `replace: true`.** Overwriting stays behind the
   settings checkbox that states what it destroys, because the reader here is
   the one least placed to judge what is about to be lost. A running operation

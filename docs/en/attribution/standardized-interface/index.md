@@ -4,6 +4,7 @@ description: The framework boundary between mta_standard and the concrete models
 compact: "Contract layer for native five-segment MTA-SIM loading and attribution: model interface/capabilities, dataloader, five-segment StandardAttributionRow invariants, ground-truth isolation, and the explicit four-segment compatibility adapter retained only for historical fixtures."
 lang: en-US
 source_files: modules/mta_attribution/src/attribution_model_interface.py, modules/mta_standard/src/dataloader.py, modules/mta_standard/src/touchpoint_adapter.py, modules/mta_standard/src/output_contract.py, modules/mta_standard/src/model_registry.py, modules/mta_standard/src/model_pipeline.py
+test_files: modules/mta_attribution/tests/test_attribution_model_interface.py, modules/mta_standard/tests/test_dataloader.py, modules/mta_standard/tests/test_model_pipeline.py, modules/mta_standard/tests/test_output_contract.py, modules/mta_standard/tests/test_touchpoint_adapter.py
 ---
 
 # Standardized MTA Interface
@@ -478,3 +479,10 @@ Source: `modules/mta_standard/src/model_pipeline.py`
 - [Markov removal effect](./markov.md)
 - [Path-level Shapley](./shapley.md)
 - [DNN credit model](./dnn.md)
+
+## Verification
+
+- **Scope:** The behavior and owned test files of Standardized MTA Interface.
+- **Cases:** Required input columns and scopes; key adaptation and collisions; registered-model conformance; exact output shape and share/value conservation.
+- **Command:** `uv run python -X utf8 -B -m unittest modules.mta_attribution.tests.test_attribution_model_interface modules.mta_standard.tests.test_dataloader modules.mta_standard.tests.test_model_pipeline modules.mta_standard.tests.test_output_contract modules.mta_standard.tests.test_touchpoint_adapter`.
+- **Limitations:** Runs against local fixtures or mocks, not a live production database. External generator execution requires the pinned checkout.

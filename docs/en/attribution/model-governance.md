@@ -3,6 +3,7 @@ title: AMC MTA Dual-Model Comparison and Reliability Specification
 compact: "Source of truth for exact column order of the 14-column touchpoint comparison, 13-column summary, and 15-column recommendation CSVs. Defines gap_pp, relative_gap, tvd, spearman_rho, top_k_overlap_rate, and the `[low,high]` recommended_value union type."
 lang: en-US
 source_files: modules/mta_attribution/src/attribution_model_comparison.py
+test_files: modules/mta_attribution/tests/test_attribution_model_comparison.py
 ---
 
 # AMC MTA Dual-Model Comparison and Reliability Specification
@@ -108,3 +109,9 @@ Source: `modules/mta_attribution/src/attribution_model_comparison.py`
 - Dependencies: `attribution_contract.py` and `touchpoint_key.py`.
 - Verification: `modules/mta_attribution/tests/test_attribution_model_comparison.py`.
 
+## Verification
+
+- **Scope:** The behavior and owned test files of AMC MTA Dual-Model Comparison and Reliability Specification.
+- **Cases:** Aligned scopes and outcomes; reliability boundaries; official Markov shares and ascending disagreement intervals.
+- **Command:** `uv run python -X utf8 -B -m unittest modules.mta_attribution.tests.test_attribution_model_comparison`.
+- **Limitations:** Runs against local fixtures or mocks, not a live production database. External generator execution requires the pinned checkout.

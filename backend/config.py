@@ -78,7 +78,7 @@ def project_commit() -> str:
 
 @lru_cache(maxsize=1)
 def backend_identity() -> dict:
-    """Project and runtime versions rendered by the Settings dialog."""
+    """Project and runtime versions rendered by the Settings page."""
     try:
         flask_version = package_version("flask")
     except PackageNotFoundError:

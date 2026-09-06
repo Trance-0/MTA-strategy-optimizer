@@ -4,6 +4,7 @@ description: Algorithm, formulas, and code mapping for WeightedMarkovAttribution
 compact: "Line-by-line internals of `WeightedMarkovAttribution` in `attribution_contract.py`: START/CONVERSION/NULL states, `amc_rows_to_markov_rows`, weighted `transition_matrix`, `conversion_probability` fixed-point iteration capped at 1000 steps and 1e-12, removal-effect normalization, `run_markov_attribution` output."
 lang: en-US
 source_files: modules/mta_attribution/src/markov_attribution_model.py, modules/mta_attribution/src/markov_standard_attribution_model.py
+test_files: modules/mta_attribution/tests/test_markov_standard_attribution_model.py
 ---
 
 # Markov Removal Effect
@@ -310,3 +311,10 @@ Source: `modules/mta_attribution/src/markov_standard_attribution_model.py`
 ## References
 
 - [Data-driven Multi-touch Attribution Models (PDF)](/research/mta/Data-driven%20Multi-touch%20Attribution%20Models.pdf)
+
+## Verification
+
+- **Scope:** The behavior and owned test files of Markov Removal Effect.
+- **Cases:** Removal-effect adapters, repeated touchpoints, degenerate paths and conserved output.
+- **Command:** `uv run python -X utf8 -B -m unittest modules.mta_attribution.tests.test_markov_standard_attribution_model`.
+- **Limitations:** Runs against local fixtures or mocks, not a live production database. External generator execution requires the pinned checkout.

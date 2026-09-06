@@ -3,6 +3,7 @@ title: Initializer Source Files
 compact: "Code-level specification for hierarchy_validator.py, budget_recommender.py, generate_initial_budget.py, and validate_simulated_hierarchy.py: entry points, schemas, ordering, hashing, arithmetic, refusals, output publication, and verification commands."
 lang: en-US
 source_files: modules/mta_strategy_recommendation/src/hierarchy_validator.py, modules/mta_strategy_recommendation/src/budget_recommender.py, script/generate_initial_budget.py, script/validate_simulated_hierarchy.py
+test_files: modules/mta_strategy_recommendation/tests/test_hierarchy_validator.py
 ---
 
 # Initializer Source Files
@@ -280,3 +281,10 @@ Prints `INVALID: <reason>` to standard error and exits `1`.
 
 `main()` resolves current repository paths, delegates the complete contract to
 `validate_simulated_hierarchy()`, and writes no artifacts.
+
+## Verification
+
+- **Scope:** The behavior and owned test files of Initializer Source Files.
+- **Cases:** Hierarchy scope and lineage, capacity counts, all touchpoint bridges, budget conservation and canonical output reproduction.
+- **Command:** `uv run python -X utf8 -B -m unittest modules.mta_strategy_recommendation.tests.test_hierarchy_validator`.
+- **Limitations:** Runs against local fixtures or mocks, not a live production database. External generator execution requires the pinned checkout.

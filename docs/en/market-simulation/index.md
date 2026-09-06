@@ -4,6 +4,7 @@ description: The MTA-SIM contract, this project's inputs, and compatibility boun
 compact: "Routes MTA-SIM native five-segment tables, legacy four-segment compatibility, simulator-local versus `mta_common` models, Provider missingness, Campaign/Product budget experiments, 10k CSV and 100k PostgreSQL modes, and the centralized `modules/mta_standard/` boundary."
 lang: en-US
 source_files: modules/mta_standard/src/mta_sim_research_adapter.py
+test_files: modules/mta_standard/tests/test_mta_sim_research_adapter.py
 ---
 
 # Market Simulation
@@ -184,3 +185,10 @@ Source: `modules/mta_standard/src/mta_sim_research_adapter.py`
 - Outputs: `MtaSimResearchSnapshot`, whose domain-record fields contain canonical `mta_common` objects and whose context fields preserve non-canonical run/profile/join metadata.
 - Dependencies: Python standard library and `modules/mta_common`; it has no import from the MTA-SIM repository.
 - Verification: `modules/mta_standard/tests/test_mta_sim_research_adapter.py`.
+
+## Verification
+
+- **Scope:** The behavior and owned test files of Market Simulation.
+- **Cases:** Research sidecar adaptation; native and compatibility identities; observation shape, missing fields and evaluation-data isolation.
+- **Command:** `uv run python -X utf8 -B -m unittest modules.mta_standard.tests.test_mta_sim_research_adapter`.
+- **Limitations:** Runs against local fixtures or mocks, not a live production database. External generator execution requires the pinned checkout.

@@ -38,3 +38,14 @@ These commands preserve the behavior of the repository-specific generator that c
 | `export_drawio_diagrams.mjs` | Render each `.drawio` source to its light and dark SVG pair; run through `npm run diagrams` in `docs/` |
 
 The `.agents` and `_bmad` directories are installed development-tool bundles. Their internal `scripts/` folders are vendored implementation details and are not project command locations.
+## Specification and release checks
+
+`uv run python -X utf8 -B script/spec_docs.py search "history window"` selects
+compact owning contracts and their test files. `index` emits Trance-0 routing records;
+`check` verifies unique ownership, metadata, verification sections, and page length
+within that scope; Knowledge Base and strategy evaluation are excluded.
+See [Specification workflow](../docs/en/introduction/specification-workflow.md).
+
+`uv run python -X utf8 -B script/check_deployment_inputs.py` verifies the pinned
+generator source and toy configuration before release tests or synchronization.
+See [Deployment preflight](../docs/en/introduction/backend/deployment-preflight.md).

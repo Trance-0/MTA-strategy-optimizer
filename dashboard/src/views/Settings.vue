@@ -1,6 +1,6 @@
 <script setup>
 /**
- * The settings modal behind the rail's gear button.
+ * The routed Settings page behind the rail's final destination.
  *
  * Four tabs: basic deployment identity, a database doctor, the request log,
  * and queued backend tasks. The published build renders
@@ -13,9 +13,9 @@
  * back, and leaving the field blank keeps the stored one rather than clearing
  * it, so the value is never rendered into the page.
  */
-import { computed, onUnmounted, ref, watch } from "vue";
+import { computed, onMounted, onUnmounted, ref } from "vue";
 
-import BackendTasks from "./BackendTasks.vue";
+import BackendTasks from "../components/BackendTasks.vue";
 import {
   fetchSchemaOperation,
   fetchSettings,
@@ -30,12 +30,12 @@ import { DOCS_URL, REPO_URL } from "../pages.js";
 const { diagnosticsOn, setDiagnostics } = useDiagnostics();
 
 const props = defineProps({
-  open: { type: Boolean, default: false },
+  section: { type: String, default: "general" },
 });
 
-const emit = defineEmits(["close", "changed", "reload"]);
+const emit = defineEmits(["changed", "reload", "navigate"]);
 
-const tab = ref("general");
+const tab = computed(() => props.section);
 const state = ref(null);
 const busy = ref(false);
 const message = ref(null);
@@ -318,10 +318,14 @@ function requestReload() {
   message.value = { ok: true, text: "Reloading data from the active source." };
 }
 
+function navigate(nextTab) {
+  emit("navigate", nextTab);
+}
+
 function scheduleOperationPoll() {
   if (operationTimer !== null) window.clearTimeout(operationTimer);
   operationTimer = null;
-  if (props.open && operationRunning.value) {
+  if (operationRunning.value) {
     operationTimer = window.setTimeout(refreshOperation, 900);
   }
 }
@@ -381,16 +385,10 @@ async function refresh() {
   await refreshOperation();
 }
 
-watch(
-  () => props.open,
-  (isOpen) => {
-    if (isOpen) {
-      message.value = null;
-      refresh();
-    }
-  },
-  { immediate: true },
-);
+onMounted(() => {
+  message.value = null;
+  refresh();
+});
 
 onUnmounted(() => {
   if (operationTimer !== null) window.clearTimeout(operationTimer);
@@ -430,7 +428,7 @@ async function send(action, extra = {}) {
         ok: result.ok !== false,
         text:
           result.message ??
-          "Saved to .env and caches cleared. Close this dialog to reload.",
+          "Saved to .env and caches cleared. Dashboard data is reloading.",
       };
       await refresh();
       emit("changed");
@@ -475,7 +473,7 @@ async function runSchemaOperation(action) {
       replaceSchemas.value,
     );
     focusedTaskId.value = String(schemaOperation.value.current?.id ?? "");
-    tab.value = "tasks";
+    navigate("tasks");
     scheduleOperationPoll();
   } catch (error) {
     message.value = { ok: false, text: `${error.name}: ${error.message}` };
@@ -535,20 +533,14 @@ async function copyVisibleLogs() {
 </script>
 
 <template>
-  <div v-if="open" class="modal-backdrop" @click.self="emit('close')">
-    <div class="modal" role="dialog" aria-modal="true" aria-label="Settings">
-      <div class="modal-head">
-        <h2>Settings</h2>
-        <button class="btn small" @click="emit('close')">Close</button>
-      </div>
-
-      <div class="tabs" role="tablist">
+  <section class="settings-page card" aria-label="Settings">
+      <div class="tabs settings-tabs" role="tablist" aria-label="Settings sections">
         <button
           class="tab"
           role="tab"
           :aria-selected="tab === 'general'"
           :class="{ active: tab === 'general' }"
-          @click="tab = 'general'"
+          @click="navigate('general')"
         >
           General
         </button>
@@ -557,7 +549,7 @@ async function copyVisibleLogs() {
           role="tab"
           :aria-selected="tab === 'source'"
           :class="{ active: tab === 'source' }"
-          @click="tab = 'source'"
+          @click="navigate('source')"
         >
           Data source
         </button>
@@ -566,7 +558,7 @@ async function copyVisibleLogs() {
           role="tab"
           :aria-selected="tab === 'logging'"
           :class="{ active: tab === 'logging' }"
-          @click="tab = 'logging'"
+          @click="navigate('logging')"
         >
           Logging
         </button>
@@ -575,13 +567,13 @@ async function copyVisibleLogs() {
           role="tab"
           :aria-selected="tab === 'tasks'"
           :class="{ active: tab === 'tasks' }"
-          @click="tab = 'tasks'"
+          @click="navigate('tasks')"
         >
           Tasks
         </button>
       </div>
 
-      <div class="modal-body">
+      <div class="settings-body modal-body">
         <section
           v-if="tab === 'general'"
           class="deployment-identity"
@@ -1057,13 +1049,13 @@ cp sample.env .env      # set DATABASE=true and the PG_* values
 
         <BackendTasks
           v-else-if="tab === 'tasks'"
-          :active="open && tab === 'tasks'"
+          :active="tab === 'tasks'"
           :focus-task-id="focusedTaskId"
         />
       </div>
-    </div>
+  </section>
 
-    <div v-if="pendingSchema" class="modal-backdrop schema-select-backdrop">
+  <div v-if="pendingSchema" class="modal-backdrop schema-select-backdrop">
       <div class="modal confirm-modal" role="dialog" aria-modal="true" aria-label="Select database schema">
         <div class="modal-head">
           <h2>Load another database schema?</h2>
@@ -1086,6 +1078,5 @@ cp sample.env .env      # set DATABASE=true and the PG_* values
           </div>
         </div>
       </div>
-    </div>
   </div>
 </template>

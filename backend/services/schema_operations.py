@@ -3,10 +3,10 @@
 The root commands remain the only implementations of import and derivation.
 This service validates a browser request against a fresh schema census, starts
 the appropriate command as a fixed argument vector, and retains bounded output
-for polling by the settings dialog.
+for polling by the Settings page.
 
 Data flow:
-    settings dialog -> /api/schema-operations -> root command -> PostgreSQL
+    Settings page -> /api/schema-operations -> root command -> PostgreSQL
 """
 
 from __future__ import annotations

@@ -455,5 +455,5 @@ Hierarchy preflight.
 ## References
 
 - [Standardized MTA interface](../attribution/standardized-interface/)
-- [Model testing and comparison](../attribution/model-testing.md)
+- [Model testing and comparison](../attribution/model-testing/index.md)
 - [Project structure and data flow](../introduction/project-structure.md)

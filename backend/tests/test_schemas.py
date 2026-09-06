@@ -173,7 +173,7 @@ class SchemaDescriptionTests(unittest.TestCase):
         self.assertTrue(described["canInitialize"])
 
     def test_no_description_names_the_research_pipeline(self) -> None:
-        # These strings are rendered in the settings dialog, which the client
+        # These strings are rendered on the Settings page, which the client
         # suite holds to describing a live advertising account rather than how
         # its history was produced.
         for present, total in (

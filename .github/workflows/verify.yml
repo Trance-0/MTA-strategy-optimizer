@@ -1,0 +1,56 @@
+name: Verify specifications and product
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    env:
+      DATABASE: "false"
+    steps:
+      - uses: actions/checkout@v6
+      - name: Initialize pinned generator only
+        run: |
+          git submodule sync -- external/mta_sim_dataset
+          git submodule update --init -- external/mta_sim_dataset
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - uses: astral-sh/setup-uv@v7
+        with:
+          version: "0.12.2"
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            dashboard/package-lock.json
+            docs/package-lock.json
+      - name: Install locked dependencies
+        run: |
+          uv sync --locked --extra backend
+          npm --prefix dashboard ci
+          npm --prefix docs ci
+      - name: Check documentation and deployment inputs
+        run: |
+          uv run python -X utf8 -B script/spec_docs.py check
+          uv run python -X utf8 -B script/check_deployment_inputs.py
+          uv run python -X utf8 -B -m unittest discover -s tests -p 'test_*.py'
+      - name: Test product contracts
+        run: |
+          for suite in modules/mta_common modules/mta_attribution modules/mta_standard modules/mta_strategy_recommendation backend; do
+            uv run --extra backend python -X utf8 -B -m unittest discover -s "$suite/tests" -t . -p 'test_*.py'
+          done
+          npm --prefix dashboard test
+      - name: Build live and static clients and documentation
+        env:
+          DOCS_BASE_PATH: /MTA-strategy-optimizer/docs/
+        run: |
+          npm --prefix dashboard run build
+          npm --prefix dashboard run build:static
+          npm --prefix docs run build
+          node script/build_pages_site.mjs

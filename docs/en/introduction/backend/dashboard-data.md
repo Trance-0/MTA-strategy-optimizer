@@ -1,9 +1,10 @@
 ---
 title: Dashboard Data Endpoints
 description: Snapshot, reload, master-object, and repository behavior
-compact: "Specifies allow-listed dashboard resources, streamed server milestones, optimized Campaign-history queries, loader caches, research slices, structured timing, reload invalidation, compatibility snapshots, artifact precedence, immutable observations, editable master drafts, SQLAlchemy queries, and normalized JSON types."
+compact: "Dashboard resource routes, streamed progress and inclusive valid-date history windows with a 90-day default; parameterized database queries, window caches, typed coercion, runtime artifact precedence, immutable observations and editable drafts."
 lang: en-US
-source_files: backend/api/dashboard.py, backend/repository/attribution.py, backend/repository/coercion.py, backend/repository/evaluation.py, backend/repository/history.py, backend/repository/master_data.py, backend/repository/research.py, backend/repository/snapshot.py, backend/repository/strategy.py, backend/tests/test_snapshot.py
+source_files: backend/api/dashboard.py, backend/repository/attribution.py, backend/repository/coercion.py, backend/repository/history.py, backend/repository/master_data.py, backend/repository/research.py, backend/repository/snapshot.py, backend/repository/strategy.py
+test_files: backend/tests/test_coercion.py, backend/tests/test_snapshot.py
 ---
 
 # Dashboard Data Endpoints
@@ -44,6 +45,34 @@ separate cached layers. In database mode the observation layer issues only
 the budget/outcome join and delivery query; it does not re-read providers,
 Products, Campaigns, Ad Groups, touchpoints, economics, or master drafts a
 second time.
+
+The two resources carrying observations — `research-overview` and
+`research-campaign-history` — accept optional `start` and `end` query parameters
+bounding `report_date` inclusively. `parse_history_window()` accepts only
+a real calendar date in `YYYY-MM-DD` form, drops a bound that does not match rather than refusing the
+request, and swaps a reversed pair so the earlier date is always the start.
+A bound that survives becomes a whole appended predicate with its date bound as
+a SQL parameter; no part of the query string is ever formatted into a statement,
+which is the same rule the resource allow-list keeps for names. Local file mode
+applies the identical bounds to the rows it read, so both modes answer one
+contract.
+
+A request naming neither bound is served the most recent `DEFAULT_HISTORY_DAYS`
+— 90 — rather than the whole history. That default is resolved on the route, not
+inside a loader, because an unbounded load must keep meaning the whole history
+for the static exporter and the compatibility snapshot. A range already shorter
+than the default is reported unbounded, so a complete history is never described
+as a partial one.
+
+The observation cache is keyed by its bounds as well as by the loader, so
+widening a window issues a fresh query instead of returning the narrower slice
+already held. Every windowed response carries `simulationResearch.historyWindow`
+— the bounds applied, plus `earliest` and `latest` from
+`history_window_bounds()`. Those two are read as aggregates over the indexed
+`report_date` column rather than from the rows, so they stay cheap enough to
+answer beside every history load, and they are what lets a client state the
+range a narrowed window excluded. Resources that carry no observations ignore a
+window entirely.
 
 `load_snapshot()` remains an internal compatibility assembly for schema
 validation and Python parity tests; the Vue client does not call the legacy
@@ -102,11 +131,10 @@ Source: `backend/api/dashboard.py`, `backend/repository/snapshot.py`
 - Dependencies: Backend repositories, settings log, and database probe.
 - Verification: `backend/tests/test_snapshot.py`.
 
-### Attribution, history, strategy, and evaluation repositories
+### Attribution, history, and strategy repositories
 
 Source: `backend/repository/attribution.py`,
-`backend/repository/history.py`, `backend/repository/strategy.py`,
-`backend/repository/evaluation.py`
+`backend/repository/history.py`, `backend/repository/strategy.py`
 
 - Responsibility: Reproduce each existing file loader in local mode and build
   database statements from the shared SQLAlchemy models in database mode;
@@ -151,9 +179,16 @@ Source: `backend/repository/master_data.py`, `backend/repository/research.py`
 - Dependencies: Backend repositories and database execution boundary.
 - Verification: Snapshot parity and master-route refusal tests.
 
-### `backend/tests/test_snapshot.py`
+## Verification
 
-Source: `backend/tests/test_snapshot.py`
+- **Scope:** The behavior and owned test files of Dashboard Data Endpoints.
+- **Cases:** File/database value normalization; zero versus missing; inclusive windows and default quarter; parameterized history predicates; runtime precedence and cache clearing.
+- **Command:** `uv run --extra backend python -X utf8 -B -m unittest backend.tests.test_coercion backend.tests.test_snapshot`.
+- **Limitations:** Runs against local fixtures or mocks, not a live production database. External generator execution requires the pinned checkout.
+
+#### `backend/tests/test_snapshot.py`
+
+Tests: `backend/tests/test_snapshot.py`
 
 - Responsibility: Assert the full key set, fixture row counts, cache clearing,
   and measured-zero behavior.
@@ -161,3 +196,25 @@ Source: `backend/tests/test_snapshot.py`
 - Outputs: `unittest` assertions.
 - Dependencies: Application factory and public repository functions.
 - Verification: Backend discovery command.
+
+
+#### `backend/tests/test_coercion.py`
+
+Tests: `backend/tests/test_coercion.py`
+
+- Responsibility: Hold the CSV reader contracts that the deleted Node suite
+  proved, so removing that code did not remove the coverage.
+- Inputs: Temporary files only. Neither test reads the repository's own `.env`
+  or opens a connection.
+- Outputs: Pass or fail per test, under `uv run --extra backend python -m unittest`.
+- Behavior contract: `read_csv` drops the Chinese field-description row by
+  matching its exact marker rather than by heuristic — an earlier heuristic
+  that tested for the absence of digits silently discarded a real data row from
+  the files that carry no such row — strips a Unicode Transformation Format
+  8-bit (UTF-8) byte-order mark that would otherwise become part of the first
+  header name, keeps quoting, embedded newlines, and Carriage Return Line Feed
+  (CRLF) intact, discards the empty row a trailing newline produces, and
+  returns no rows rather than raising for an artifact that has not been
+  produced.
+- Dependencies: The backend dependency extra. No database.
+- Verification: `uv run --extra backend python -m unittest discover -s backend/tests -t .`. Use the current test-run result for the count.

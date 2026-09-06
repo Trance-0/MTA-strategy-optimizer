@@ -1,9 +1,10 @@
 ---
 title: Backend Jobs and Settings
 description: Pipeline job polling and protected runtime settings contracts
-compact: "Contracts for the single-worker backend task queue, model jobs, schema operations, safe task summaries, task event logs and termination, settings, INFO request logging, schema selection/recovery, artifacts, runtime storage, cache invalidation, and capability flags."
+compact: "Contracts for the single-worker task queue, model jobs, schema operations, safe logs and termination, routed Settings APIs, INFO request logging, schema selection/recovery, artifacts, runtime storage, cache invalidation, and capability flags."
 lang: en-US
-source_files: backend/api/jobs.py, backend/api/tasks.py, backend/api/settings.py, backend/api/schema_operations.py, backend/api/schema_recovery.py, backend/services/jobs.py, backend/services/tasks.py, backend/services/model_datasets.py, backend/services/model_outputs.py, backend/services/settings.py, backend/services/schema_operations.py, backend/services/schema_recovery.py, backend/tests/test_jobs.py, backend/tests/test_tasks.py, backend/tests/test_model_outputs.py, backend/tests/test_settings.py, backend/tests/test_schema_operations.py, backend/tests/test_schema_recovery.py
+source_files: backend/api/jobs.py, backend/api/tasks.py, backend/api/settings.py, backend/api/schema_operations.py, backend/api/schema_recovery.py, backend/services/jobs.py, backend/services/tasks.py, backend/services/model_datasets.py, backend/services/model_outputs.py, backend/services/settings.py, backend/services/schema_operations.py, backend/services/schema_recovery.py
+test_files: backend/tests/test_jobs.py, backend/tests/test_model_outputs.py, backend/tests/test_schema_operations.py, backend/tests/test_schema_recovery.py, backend/tests/test_settings.py, backend/tests/test_tasks.py
 ---
 
 # Backend Jobs and Settings
@@ -167,7 +168,7 @@ while retaining this service's in-memory-only storage policy.
 `PG_SCHEMA` is written to `.env` alongside the other connection values, and a
 successful `test` returns `schemas` for the server just reached — the only
 moment the list is knowable for credentials that have not been saved, so the
-dialog fills its dropdown from the connection under test rather than from the
+Settings page fills its dropdown from the connection under test rather than from the
 stored one. A `test` also counts tables in the selected schema rather than
 always in `public`, so the number it reports describes what selecting it would
 read.
@@ -176,7 +177,7 @@ A schema name reaches PostgreSQL as an identifier inside a libpq connect
 option, never as a bound value. Both routes therefore refuse a name that is not
 a plain identifier: `POST /api/settings` returns `400` with
 `error: invalid_schema` **before** `.env` is read or written, and
-`test_connection()` refuses before opening a socket. The dialog offers a list,
+`test_connection()` refuses before opening a socket. The Settings page offers a list,
 so a name failing this check arrived from something other than the dropdown.
 The census, its `selectable` rule, and the `search_path` behavior are specified
 in [Backend Setup and Deployment](./setups.md#schema-selection).
@@ -194,7 +195,7 @@ The route rejects a source, partial, empty, unrelated, missing, or malformed
 schema before any dashboard query is run. If the target cannot serve a probe
 snapshot, the service restores the prior schema, clears the failed target's
 state, and reports the failure. `GET /api/settings` marks the runtime selection
-active and carries the configured schema separately so the dialog can state
+active and carries the configured schema separately so the Settings page can state
 that a restart returns to deployment configuration.
 
 AppStack sets `DASHBOARD_CONFIG_READ_ONLY=true`, so deployed save and test
@@ -390,9 +391,16 @@ Source: `backend/api/schema_recovery.py`,
 - Dependencies: `backend/services/schemas.py` and backend configuration.
 - Verification: `backend/tests/test_schema_recovery.py`.
 
-### `backend/tests/test_schema_recovery.py`
+## Verification
 
-Source: `backend/tests/test_schema_recovery.py`
+- **Scope:** The behavior and owned test files of Backend Jobs and Settings.
+- **Cases:** Queued success, failure and cancellation; protected settings; validated dataset and artifact selection; schema recovery refusals and cache invalidation.
+- **Command:** `uv run --extra backend python -X utf8 -B -m unittest backend.tests.test_jobs backend.tests.test_model_outputs backend.tests.test_schema_operations backend.tests.test_schema_recovery backend.tests.test_settings backend.tests.test_tasks`.
+- **Limitations:** Runs against local fixtures or mocks, not a live production database. External generator execution requires the pinned checkout.
+
+#### `backend/tests/test_schema_recovery.py`
+
+Tests: `backend/tests/test_schema_recovery.py`
 
 - Responsibility: Prove recovery choice filtering and the read-only route.
 - Inputs: Mocked schema census and capability flags; no live database.

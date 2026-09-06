@@ -12,7 +12,7 @@ either -- the dialog receives a flag saying whether one is stored, which is all
 it needs to explain a blank field.
 
 Data flow:
-    the settings dialog -> POST /api/settings -> here -> .env -> backend/config.py
+    the Settings page -> POST /api/settings -> here -> .env -> backend/config.py
 """
 
 from __future__ import annotations
@@ -296,7 +296,7 @@ def test_connection(updates: dict[str, str]) -> dict:
 
 
 def settings_state() -> dict:
-    """The state the settings dialog renders.
+    """The state the Settings page renders.
 
     Carries no credential beyond the host, port, database, and user the reader
     typed themselves.

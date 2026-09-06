@@ -5,6 +5,7 @@ compact: "Full source of `UniformCreditModel` in `uniform_attribution_model.py`:
 lang: en-US
 order: 200
 source_files: modules/mta_attribution/src/uniform_attribution_model.py
+test_files: modules/mta_attribution/tests/test_uniform_attribution_model.py
 ---
 
 # Uniform Credit Baseline
@@ -168,5 +169,12 @@ Source: `modules/mta_attribution/src/uniform_attribution_model.py`
 ## References
 
 - [Standardized MTA interface](./index.md)
-- [Model testing and comparison](../model-testing.md)
+- [Model testing and comparison](../model-testing/index.md)
 - [Model comparison governance](../model-governance.md)
+
+## Verification
+
+- **Scope:** The behavior and owned test files of Uniform Credit Baseline.
+- **Cases:** Equal nonnegative credit, empty data and conserved outcome totals.
+- **Command:** `uv run python -X utf8 -B -m unittest modules.mta_attribution.tests.test_uniform_attribution_model`.
+- **Limitations:** Runs against local fixtures or mocks, not a live production database. External generator execution requires the pinned checkout.

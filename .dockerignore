@@ -3,6 +3,7 @@
 .github
 .agents
 .agent-scratch
+dashboard/public/data
 _bmad
 _bmad-output
 docs

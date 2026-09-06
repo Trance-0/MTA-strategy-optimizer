@@ -9,8 +9,6 @@
  */
 import { onBeforeUnmount, onMounted, ref, watch } from "vue";
 
-import Plotly from "plotly.js-dist-min";
-
 import { PLOT_CONFIG } from "../theme.js";
 
 const props = defineProps({
@@ -21,21 +19,49 @@ const props = defineProps({
 });
 
 const host = ref(null);
+const error = ref("");
+let plotly;
+let frame;
+let disposed = false;
+let drawing = false;
+let revision = 0;
 
-function draw() {
-  if (!host.value) return;
-  Plotly.react(host.value, props.traces, props.layout, PLOT_CONFIG);
+async function draw() {
+  frame = null;
+  if (disposed || !host.value || drawing) return;
+  drawing = true;
+  const current = revision;
+  const element = host.value;
+  try {
+    plotly ??= (await import("plotly.js-dist-min")).default;
+    if (disposed) return;
+    await plotly.react(element, props.traces, props.layout, PLOT_CONFIG);
+    error.value = "";
+  } catch {
+    if (!disposed) error.value = "The chart could not load. The values remain available in the table.";
+  } finally {
+    drawing = false;
+    if (disposed) plotly?.purge(element);
+    else if (current !== revision) schedule();
+  }
 }
 
-onMounted(draw);
-watch(() => [props.traces, props.layout], draw, { deep: true });
+function schedule() {
+  revision += 1;
+  if (!disposed && frame == null && !drawing) frame = requestAnimationFrame(draw);
+}
+
+onMounted(schedule);
+watch(() => [props.traces, props.layout], schedule);
 
 onBeforeUnmount(() => {
-  // Plotly attaches window resize listeners per plot; purging releases them.
-  if (host.value) Plotly.purge(host.value);
+  disposed = true;
+  if (frame != null) cancelAnimationFrame(frame);
+  if (host.value && !drawing) plotly?.purge(host.value);
 });
 </script>
 
 <template>
   <div ref="host" class="plot" role="img" :aria-label="label"></div>
+  <p v-if="error" role="alert">{{ error }}</p>
 </template>

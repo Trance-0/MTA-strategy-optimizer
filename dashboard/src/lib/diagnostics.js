@@ -17,7 +17,7 @@
  * hosted dashboard can want different answers.
  *
  * Data flow:
- *     the settings dialog -> here (localStorage) -> the views that gate on it
+ *     the Settings page -> here (localStorage) -> the views that gate on it
  */
 
 import { computed, ref } from "vue";

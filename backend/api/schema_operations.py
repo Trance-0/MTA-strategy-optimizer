@@ -1,7 +1,7 @@
 """Start, poll, and stop PostgreSQL schema setup operations.
 
 Data flow:
-    settings dialog -> here -> schema_operations service -> root import command
+    Settings page -> here -> schema_operations service -> root import command
 """
 
 from __future__ import annotations
