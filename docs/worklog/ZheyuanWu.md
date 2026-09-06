@@ -21,9 +21,9 @@ Entries are reconstructed from Git history. They record the change set behind ea
 
 ### Completed
 
-- Integrated saved Settings and history changes, including recovery access, bounded queries, deferred charts, and stable sorting.
-- Added compact specification retrieval and scoped source/test documentation, preserving contributor-owned contracts.
-- Fixed deployment inputs and verified 606 Python, 106 frontend, and 10 tooling tests, Linux builds, and Pages assembly.
+- Integrated saved Settings and history changes with deferred charts and stable sorting; added compact specification retrieval and scoped source/test documentation while preserving contributor-owned contracts.
+- Delivered the Data Generator lossless configuration workflow (Guided/JSON editor, presets, touchpoint/path controls), added an authoritative side-effect-free backend preflight, and implemented stale-response lifecycle guards and static-capability handling.
+- Verified dashboard, backend, and generator test suites and builds (examples: 143 backend tests, 132 dashboard tests, 31 generator integration tests), production/static/documentation builds, and baseline browser checks.
 
 ## 2026-09-03
 

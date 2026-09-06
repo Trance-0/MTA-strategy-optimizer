@@ -14,7 +14,7 @@ This section records **what** changed. See the [work log](../worklog/) for **who
 ## [0.9.45](0.9.45.md)
 
 - Date: 2026-09-06
-- Summary: Integrated routed Settings and bounded history, deferred dashboard rendering, compact specification retrieval and scoped test ownership, and generator deployment preflight with verified Linux builds
+- Summary: Integrated routed Settings and bounded history, deferred dashboard rendering, compact specification retrieval and scoped test ownership; and added the full lossless Data Generator configuration workflow, authoritative preflight, stale-response guards, static capability boundary, and bounded generator operations.
 
 ## [0.9.44](0.9.44.md)
 
