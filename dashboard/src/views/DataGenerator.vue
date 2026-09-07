@@ -3,6 +3,8 @@
 import { computed, onMounted, onUnmounted, ref } from "vue";
 
 import DataTable from "../components/DataTable.vue";
+import GeneratorConfigEditor from "../components/GeneratorConfigEditor.vue";
+import { createGeneratorLifecycle, replacePresetIfConfirmed } from "../generator/lifecycle.js";
 import {
   exportGeneratorRun,
   fetchGeneratorOverview,
@@ -10,15 +12,18 @@ import {
   fetchGeneratorRun,
   generatorDownloadUrl,
   startGeneratorRun,
+  validateGeneratorConfiguration,
 } from "../api/client.js";
 
 const overview = ref(null);
 const variant = ref("baseline");
 const preset = ref("toy");
-const editorMode = ref("guided");
 const configuration = ref({});
-const editorText = ref("{}");
-const editorError = ref("");
+const editorKey = ref(0);
+const backendIssues = ref([]);
+const localIssues = ref([]);
+const configurationDirty = ref(false);
+const preflight = ref({ status: "not_run", message: "Run preflight before generation." });
 const busy = ref(false);
 const error = ref("");
 const run = ref(null);
@@ -34,59 +39,136 @@ const exportForm = ref({
   replace: false,
 });
 let pollTimer = null;
+let presetSequence = 0;
+const lifecycle = createGeneratorLifecycle();
 
-const marketplace = computed(() => configuration.value.marketplaces?.[0] ?? {});
 const availablePresets = computed(
   () => overview.value?.variants?.find((item) => item.key === variant.value)?.presets ?? [],
 );
 const running = computed(() => ["queued", "running"].includes(run.value?.status));
 const completed = computed(() => run.value?.status === "completed");
+const operationActive = computed(() =>
+  running.value || run.value?.export?.status === "running",
+);
+const canRunPreflight = computed(() =>
+  overview.value?.available && !busy.value && !operationActive.value && !localIssues.value.length,
+);
+const canGenerate = computed(() =>
+  canRunPreflight.value
+    && preflight.value.status === "valid"
+    && lifecycle.canGenerate(variant.value, configuration.value),
+);
 const secureExport = computed(() =>
   window.location.protocol === "https:" ||
   ["localhost", "127.0.0.1", "::1"].includes(window.location.hostname),
 );
 
 function setConfiguration(value) {
+  if (pollTimer !== null) window.clearTimeout(pollTimer);
+  pollTimer = null;
+  lifecycle.clearRun();
   configuration.value = JSON.parse(JSON.stringify(value ?? {}));
-  editorText.value = JSON.stringify(configuration.value, null, 2);
-  editorError.value = "";
+  backendIssues.value = [];
+  localIssues.value = [];
+  configurationDirty.value = false;
+  preflight.value = { status: "not_run", message: "Run preflight before generation." };
+  lifecycle.configurationChanged(variant.value, configuration.value);
+  editorKey.value += 1;
 }
 
-function parseEditor() {
-  try {
-    const value = JSON.parse(editorText.value);
-    if (!value || Array.isArray(value) || typeof value !== "object") {
-      throw new Error("The configuration must be a JSON object.");
-    }
-    configuration.value = value;
-    editorError.value = "";
-    return true;
-  } catch (cause) {
-    editorError.value = cause.message;
-    return false;
+function updateConfiguration(value) {
+  configuration.value = JSON.parse(JSON.stringify(value ?? {}));
+  backendIssues.value = [];
+  preflight.value = { status: "not_run", message: "Configuration changed; run preflight again." };
+  lifecycle.configurationChanged(variant.value, configuration.value);
+}
+
+function updateLocalIssues(issues) {
+  localIssues.value = issues;
+  if (preflight.value.status === "valid" || issues.length) {
+    preflight.value = { status: "not_run", message: "Configuration changed; run preflight again." };
   }
 }
 
-function formatEditor() {
-  if (!parseEditor()) return;
-  editorText.value = JSON.stringify(configuration.value, null, 2);
-}
-
-function chooseMode(mode) {
-  if (mode === "guided" && !parseEditor()) return;
-  if (mode === "json") editorText.value = JSON.stringify(configuration.value, null, 2);
-  editorMode.value = mode;
-}
-
-async function loadPreset() {
+async function loadPreset(nextVariant, nextPreset) {
+  const sequence = ++presetSequence;
   busy.value = true;
   error.value = "";
   try {
-    const result = await fetchGeneratorPreset(variant.value, preset.value);
+    const result = await fetchGeneratorPreset(nextVariant, nextPreset);
+    if (sequence !== presetSequence) return false;
+    variant.value = nextVariant;
+    preset.value = nextPreset;
     setConfiguration(result.configuration);
     run.value = null;
+    return true;
   } catch (cause) {
+    if (sequence !== presetSequence) return false;
     error.value = cause.message;
+    return false;
+  } finally {
+    if (sequence === presetSequence) busy.value = false;
+  }
+}
+
+function resetSelect(event, value) {
+  event.target.value = value;
+}
+
+async function requestPresetChange(nextVariant, nextPreset, event) {
+  if (nextVariant === variant.value && nextPreset === preset.value) return;
+  const changed = await replacePresetIfConfirmed({
+    dirty: configurationDirty.value,
+    confirm: () => window.confirm("Changing the preset or variant discards the current configuration edit. Continue?"),
+    loadPreset,
+    variant: nextVariant,
+    preset: nextPreset,
+  });
+  if (!changed) {
+    resetSelect(event, nextVariant === variant.value ? preset.value : variant.value);
+  }
+}
+
+function chooseVariant(event) {
+  const nextVariant = event.target.value;
+  const nextPreset = overview.value?.variants
+    ?.find((item) => item.key === nextVariant)?.presets?.[0]?.key;
+  if (!nextPreset) {
+    resetSelect(event, variant.value);
+    return;
+  }
+  requestPresetChange(nextVariant, nextPreset, event);
+}
+
+function choosePreset(event) {
+  requestPresetChange(variant.value, event.target.value, event);
+}
+
+async function runPreflight() {
+  if (!canRunPreflight.value) return;
+  busy.value = true;
+  error.value = "";
+  backendIssues.value = [];
+  const request = lifecycle.beginPreflight(variant.value, configuration.value);
+  try {
+    const signal = typeof AbortSignal !== "undefined" && typeof AbortSignal.timeout === "function"
+      ? AbortSignal.timeout(15000)
+      : undefined;
+    const result = await validateGeneratorConfiguration(variant.value, configuration.value, { signal });
+    if (!lifecycle.isCurrentPreflight(request)) return;
+    preflight.value = result.valid === false
+      ? { status: "invalid", message: "The configuration did not pass preflight." }
+      : { status: "valid", message: "Preflight passed. Generation is enabled." };
+    backendIssues.value = result.issues ?? [];
+    if (result.valid !== false) lifecycle.acceptPreflight(request);
+  } catch (cause) {
+    if (!lifecycle.isCurrentPreflight(request)) return;
+    backendIssues.value = cause.issues ?? [];
+    const message = cause.name === "TimeoutError" || cause.name === "AbortError"
+      ? "Preflight timed out after 15 seconds. Check the backend and try again."
+      : cause.message;
+    preflight.value = { status: "invalid", message };
+    error.value = message;
   } finally {
     busy.value = false;
   }
@@ -95,29 +177,40 @@ async function loadPreset() {
 function schedulePoll() {
   if (pollTimer !== null) window.clearTimeout(pollTimer);
   pollTimer = null;
-  if (running.value || run.value?.export?.status === "running") {
-    pollTimer = window.setTimeout(pollRun, 600);
+  const runId = run.value?.runId;
+  const token = runId ? lifecycle.beginRun(runId) : null;
+  if (runId && operationActive.value) {
+    pollTimer = window.setTimeout(() => pollRun(runId, token), 600);
   }
 }
 
-async function pollRun() {
+async function pollRun(runId, token) {
+  if (!runId || !token || !lifecycle.isCurrentRun(token, runId) || run.value?.runId !== runId) return;
   try {
-    run.value = await fetchGeneratorRun(run.value.runId);
+    const result = await fetchGeneratorRun(runId);
+    if (!lifecycle.isCurrentRun(token, runId) || run.value?.runId !== runId) return;
+    run.value = result;
   } catch (cause) {
+    if (!lifecycle.isCurrentRun(token, runId) || run.value?.runId !== runId) return;
     error.value = cause.message;
   } finally {
-    schedulePoll();
+    if (lifecycle.isCurrentRun(token, runId)) schedulePoll();
   }
 }
 
 async function generate() {
-  if (editorMode.value === "json" && !parseEditor()) return;
+  if (!canGenerate.value) return;
   busy.value = true;
   error.value = "";
   try {
     run.value = await startGeneratorRun(variant.value, configuration.value);
+    lifecycle.beginRun(run.value.runId);
     schedulePoll();
   } catch (cause) {
+    if (cause.issues?.length) {
+      backendIssues.value = cause.issues;
+      preflight.value = { status: "invalid", message: cause.message };
+    }
     error.value = cause.message;
   } finally {
     busy.value = false;
@@ -177,6 +270,7 @@ onMounted(async () => {
 
 onUnmounted(() => {
   if (pollTimer !== null) window.clearTimeout(pollTimer);
+  lifecycle.clearRun();
 });
 </script>
 
@@ -202,7 +296,7 @@ onUnmounted(() => {
           <div class="form-grid">
             <div class="field">
               <label for="generator-variant">Generator variant</label>
-              <select id="generator-variant" v-model="variant" @change="loadPreset">
+              <select id="generator-variant" :value="variant" :disabled="busy || operationActive" @change="chooseVariant">
                 <option v-for="item in overview.variants" :key="item.key" :value="item.key">
                   {{ item.key }}
                 </option>
@@ -210,7 +304,7 @@ onUnmounted(() => {
             </div>
             <div class="field">
               <label for="generator-preset">Reviewed preset</label>
-              <select id="generator-preset" v-model="preset" @change="loadPreset">
+              <select id="generator-preset" :value="preset" :disabled="busy || operationActive" @change="choosePreset">
                 <option v-for="item in availablePresets" :key="item.key" :value="item.key">
                   {{ item.label }}
                 </option>
@@ -218,65 +312,27 @@ onUnmounted(() => {
             </div>
           </div>
 
-          <div class="tabs editor-mode-tabs" role="tablist">
-            <button class="tab" :class="{ active: editorMode === 'guided' }" @click="chooseMode('guided')">
-              Guided editor
-            </button>
-            <button class="tab" :class="{ active: editorMode === 'json' }" @click="chooseMode('json')">
-              JSON configuration
-            </button>
-          </div>
+          <GeneratorConfigEditor
+            :key="editorKey"
+            :model-value="configuration"
+            :variant="variant"
+            :backend-issues="backendIssues"
+            :disabled="busy || operationActive"
+            @update:model-value="updateConfiguration"
+            @local-issues-change="updateLocalIssues"
+            @dirty-change="configurationDirty = $event"
+          />
 
-          <div v-if="editorMode === 'guided'" class="form-grid generator-guided">
-            <div class="field">
-              <label for="generator-seed">Random seed</label>
-              <input id="generator-seed" v-model.number="configuration.seed" type="number" step="1" />
-            </div>
-            <div class="field span-2">
-              <label for="generator-advertiser">Synthetic advertiser identifier</label>
-              <input id="generator-advertiser" v-model="configuration.advertiser_id" type="text" />
-            </div>
-            <div class="field">
-              <label for="generator-start">Report start</label>
-              <input id="generator-start" v-model="configuration.report_start_date" type="date" />
-            </div>
-            <div class="field">
-              <label for="generator-end">Report end</label>
-              <input id="generator-end" v-model="configuration.report_end_date" type="date" />
-            </div>
-            <div class="field">
-              <label for="generator-market">Marketplace</label>
-              <input id="generator-market" v-model="marketplace.code" type="text" />
-            </div>
-            <div class="field">
-              <label for="generator-currency">ISO currency</label>
-              <input id="generator-currency" v-model="marketplace.currency_code" type="text" />
-            </div>
-            <div class="field">
-              <label for="generator-price">Base product price</label>
-              <input id="generator-price" v-model.number="configuration.base_product_price" type="number" min="0" step="0.01" />
-            </div>
-            <div class="field">
-              <label for="generator-replications">Campaign replications</label>
-              <input id="generator-replications" v-model.number="configuration.campaign_replications" type="number" min="1" :max="overview.limits?.campaignReplications" step="1" />
-            </div>
-          </div>
-
-          <div v-else class="generator-json-editor">
-            <textarea
-              v-model="editorText"
-              aria-label="MTA-SIM JSON configuration"
-              spellcheck="false"
-              rows="24"
-            ></textarea>
-            <div class="rec-actions">
-              <button class="btn" @click="formatEditor">Validate and format JSON</button>
-            </div>
-            <p v-if="editorError" class="notice bad">{{ editorError }}</p>
-          </div>
+          <p
+            class="notice"
+            :class="preflight.status === 'valid' ? 'good' : preflight.status === 'invalid' ? 'bad' : 'warn'"
+          >{{ preflight.message }}</p>
 
           <div class="rec-actions">
-            <button class="btn primary" :disabled="busy || running" @click="generate">
+            <button class="btn" :disabled="!canRunPreflight" @click="runPreflight">
+              Run preflight
+            </button>
+            <button class="btn primary" :disabled="!canGenerate" @click="generate">
               Generate dataset
             </button>
           </div>
