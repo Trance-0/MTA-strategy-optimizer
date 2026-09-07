@@ -1,7 +1,7 @@
 ---
 title: Environment Setup
 description: Local execution, documentation development, and directory responsibilities
-compact: "Setup and toolchain: Python, uv, Node prerequisites; module and documentation verification; GitHub/Gitea mirrors; local Flask dashboard startup; and Yunxiao AppStack full-stack container deployment through reviewable Kubernetes orchestration and protected environment variables."
+compact: "Python module and Node package commands; documentation build modules in docs/.vitepress; inline GitHub-to-Gitea materialized main publication; deploy/yunxiao host command and operator settings, plus the separate AppStack deployment."
 lang: en-US
 ---
 
@@ -28,7 +28,7 @@ Alternatively, invoke Python with `python -X utf8 ...`. Without UTF-8 mode, Chin
 ```bash
 git submodule update --init
 uv sync --locked
-uv run python -X utf8 -B script/generate_mta_sim_dataset.py
+uv run python -X utf8 -B -m modules.mta_standard.src.generate_mta_sim_dataset
 ```
 
 Initialize one level only. `external/campaign-optimizer-llm-integration` declares this repository as one of its own submodules, so `--recursive` re-enters the project and retrieves a stale copy of itself.
@@ -40,14 +40,14 @@ The generated bundle is stored under ignored `generated/mta_sim/`. See [Generate
 Run from the repository root:
 
 ```bash
-uv run python -X utf8 -B script/run_pipeline.py
-uv run python -X utf8 script/validate_data_alignment.py
+uv run python -X utf8 -B -m modules.mta_attribution.src.run_pipeline
+uv run python -X utf8 -m modules.mta_attribution.src.validate_data_alignment
 uv run python -X utf8 -B -m unittest discover -s modules/mta_attribution/tests -p "test_*.py"
 
 uv run python -X utf8 -B -m unittest discover -s modules/mta_standard/tests -p "test_*.py"
 
-uv run python -X utf8 -B script/generate_initial_budget.py --check-output
-uv run python -X utf8 script/validate_simulated_hierarchy.py
+uv run python -X utf8 -B -m modules.mta_strategy_recommendation.src.generate_initial_budget --check-output
+uv run python -X utf8 -m modules.mta_strategy_recommendation.src.validate_simulated_hierarchy
 uv run python -X utf8 -B -m unittest discover -s modules/mta_strategy_recommendation/tests -p "test_*.py"
 
 uv run python -X utf8 -B -m unittest discover -s modules/mta_strategy_evaluation/tests -p "test_*.py"
@@ -71,23 +71,43 @@ npm run preview        # Preview the production build
 npm run diagrams       # Re-render every .drawio source to its light and dark SVG pair
 ```
 
-Three maintained helpers back these commands. `script/export_drawio_diagrams.mjs` renders each editable `.drawio` source into the `.light.drawio.svg` and `.dark.drawio.svg` pair that `DrawioDiagram` selects between; run it after editing any diagram source. `script/copy_static_assets.mjs` runs at `buildEnd` to copy research attachments and map preserved Chinese routes to the construction placeholder. `script/static_pdf_dev_plugin.mjs` serves research PDFs with byte-range support during local development.
+Three maintained VitePress modules back these commands. `docs/.vitepress/export_drawio_diagrams.mjs` renders each editable `.drawio` source into the `.light.drawio.svg` and `.dark.drawio.svg` pair that `DrawioDiagram` selects between; run it after editing any diagram source. `docs/.vitepress/copy_static_assets.mjs` runs at `buildEnd` to copy research attachments and map preserved Chinese routes to the construction placeholder. `docs/.vitepress/static_pdf_dev_plugin.mjs` serves research PDFs with byte-range support during local development.
 
 A source whose name ends in `-human.drawio` is a hand-authored counterpart of a diagram that also has an agent-authored version. Both files are tracked, because the pair is worth keeping side by side, but the exporter renders only the unsuffixed source and reports how many it skipped. Rendering both would give one page two published pictures of the same subject with nothing to say which is authoritative, so the unsuffixed name is the published diagram and the `-human` file is opened from the repository. To publish a hand-authored version instead, replace the unsuffixed source with it and re-run the command rather than adding a second embed.
 
 On Windows, you can also run `run-doc-site.bat dev`; on macOS/Linux, run `sh run-doc-site.sh dev`.
 
-The public site is built and deployed by `.github/workflows/deploy-pages.yml` after a push to `main`. The workflow obtains the repository-specific base path from GitHub Pages, runs `npm ci` and `npm run build`, uploads `docs/.vitepress/dist`, and deploys through the protected `github-pages` environment.
+The `.vitepress` source directory is tracked. Root `.gitignore` excludes only its `cache/` and `dist/` outputs; its configuration and build modules must be included in every checkout. `.dockerignore` excludes `.vitepress` from application images because GitHub Pages builds documentation directly from the checkout.
+
+The public site is built and deployed by `.github/workflows/deploy-pages.yml` after a push to `main`. The workflow obtains the repository-specific base path from GitHub Pages, installs both Node packages, builds the static dashboard and documentation, assembles `site/` through `docs/.vitepress/build_pages_site.mjs`, uploads that combined artifact, and deploys through the protected `github-pages` environment.
 
 ## Repository Mirrors <span class="status-label status-verified" aria-label="Verified"></span>
 
-GitHub is the source of truth. `.github/workflows/mirror-to-gitea.yml` force-updates every branch and tag on its configured Gitea destination after a push, deletion, manual dispatch, or scheduled run, then compares the destination references with GitHub and fails unless they match exactly. When GitHub has `main` but no `master`, the destination's protected `master` is retained as an alias of `main`.
+GitHub is the only source of authored changes. Gitea is a generated mirror;
+never edit code there. `.github/workflows/mirror-to-gitea.yml` synchronizes
+branches and tags after a push, deletion, manual dispatch, or scheduled run.
+The default branch (`main`) contains one generated child of the GitHub commit,
+with its pinned submodules expanded into ordinary files. When GitHub has no
+`master`, Gitea `master` aliases that same completed snapshot. Other branches
+and tags match GitHub exactly. Yunxiao deploys Gitea `main` only.
 
-### The submodule snapshot branch
+### Materialized submodules on main
 
-A mirror copies references, so a mirrored submodule arrives as the recorded commit identifier and nothing else. Gitea cannot reach `github.com`, so it cannot resolve that identifier into files. The same workflow therefore publishes one additional branch, `gitea-snapshot`, whose tree has the submodule content committed as ordinary tracked files and no `.gitmodules`. A Gitea checkout of that branch is self-contained and needs no submodule step.
+A raw Git mirror transfers a submodule's commit identifier without its files.
+The GitHub runner downloads the recorded submodule revisions and builds the
+complete snapshot **before updating any Gitea branch**. It publishes all final
+branch and tag references in one atomic push, including pruning obsolete
+references, and verifies the resulting reference set. A failed snapshot or a
+rejected push leaves the previous deployment references intact. No intermediate
+`main` containing GitHub submodule links is published to trigger deployment.
 
-That branch is the one destination reference that is deliberately not a copy of a GitHub reference. It is exempt from pruning and excluded from the exact-match verification; every other branch and tag still has to match GitHub exactly. It is generated, so it is never a place to commit: each run force-updates it, and its commit message records the pinned submodule commits it was built from. Bumping a submodule pin on GitHub is what changes it.
+There is no separate deployment snapshot branch. Gitea `main` contains no root
+`.gitmodules` and no Git links anywhere in its tree. Its commit message records
+every top-level pin, and its sole parent is the exact GitHub default-branch
+revision used to build it. Fixed identity and timestamps make an unchanged
+source produce the same snapshot commit, so scheduled synchronization is a
+no-op. See [Mirror publication](./repository-mirror.md) for the command contract
+and failure verification.
 
 Submodules are initialized one level deep, never recursively. `external/campaign-optimizer-llm-integration` declares this repository as one of its own submodules, so a recursive update re-enters the project and retrieves a stale copy of itself; one level costs about 8 megabytes, while recursion costs about 62.
 
@@ -104,8 +124,14 @@ The local launchers build Vue and start the Flask backend on one port. Install
 the backend independently with `uv sync --extra backend`, or use
 `dashboard/run.sh` on macOS/Linux and `dashboard/run.bat` on Windows.
 
-Production no longer transfers an interactive host script or a real `.env`.
-Alibaba Cloud Yunxiao AppStack builds `deploy/appstack/Dockerfile`, pushes the
+The existing Yunxiao host pipeline deploys Gitea `main` to an
+[Elastic Compute Service (ECS)](/en/definitions#ecs-elastic-compute-service)
+machine without containers. Its [host deployment contract](../backend/yunxiao-ecs.md)
+owns `deploy/yunxiao/pipeline.yaml`: clone, preflight, tests, source activation
+and service checks. Copy that file into the existing cloud job. It never
+downloads source from GitHub. The host's `.env` stays on the host.
+
+The separate Alibaba Cloud Yunxiao AppStack option builds `deploy/appstack/Dockerfile`, pushes the
 image to Alibaba Cloud Container Registry (ACR), and applies the native
 Kubernetes orchestration in `deploy/appstack/orchestration.yaml`. AppStack
 environment placeholders inject PostgreSQL configuration; the password is a
@@ -133,9 +159,9 @@ Modify the model interface or an individual attribution implementation.
 
 Inspect the pinned external generator source; update only through Git submodule workflows.
 
-### `script/`
+### Native package entry points
 
-Run every maintained project data, attribution, strategy, or documentation command.
+Run model operations with `python -m modules.<module>.src.<entry>` and database operations with `python -m backend.<entry>`; frontend and documentation commands remain npm package tasks.
 
 ### `deploy/`
 

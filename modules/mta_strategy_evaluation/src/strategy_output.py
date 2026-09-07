@@ -24,7 +24,7 @@ well-formed allocation that this layer's job is to report.
 
 Data flow: ``strategy_projection`` reads the committed artifacts into this
 type -> ``evaluation_episode`` pairs one with the observations that followed
-it -> ``script/evaluate_strategies.py`` writes the result.
+it -> ``modules/mta_strategy_evaluation/src/evaluate_strategies.py`` writes the result.
 """
 
 from __future__ import annotations

@@ -8,7 +8,7 @@ compact: "Per-run Markov and Shapley agreement, reliability thresholds and publi
 `attribution_model_comparison.py` compares Markov against Shapley on every pipeline run and decides whether a point estimate can be published.
 
 ```bash
-uv run python -X utf8 -B script/run_pipeline.py
+uv run python -X utf8 -B -m modules.mta_attribution.src.run_pipeline
 ```
 
 Three artifacts result:
@@ -71,7 +71,7 @@ Reliability requires all three criteria:
 To re-compare two stored model CSVs without re-running attribution:
 
 ```bash
-uv run python -X utf8 -B script/compare_attribution_models.py \
+uv run python -X utf8 -B -m modules.mta_attribution.src.compare_attribution_models \
   --markov-file  modules/mta_attribution/outputs/attribution/amc_markov_attribution_results.csv \
   --shapley-file modules/mta_attribution/outputs/attribution/amc_shapley_attribution_results.csv \
   --amc-report   modules/mta_attribution/data/simulated/amc_mta_path_report_raw_sample.csv \

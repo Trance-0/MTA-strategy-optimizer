@@ -77,7 +77,7 @@ Two neural networks predicting Gross Merchandise Value (GMV) from a four-way adv
 
 ### `classical/`
 
-Reserved for the second contribution to the evaluation module, a non-neural response model. It currently holds a `README.md` describing the layout an adapter will expect, and no model. Nothing in the pipeline references it, and `script/evaluate_strategies.py` does not fail when it is empty.
+Reserved for the second contribution to the evaluation module, a non-neural response model. It currently holds a `README.md` describing the layout an adapter will expect, and no model. Nothing in the pipeline references it, and `modules/mta_strategy_evaluation/src/evaluate_strategies.py` does not fail when it is empty.
 
 ## Adding a Contributed Model <span class="status-label status-verified" aria-label="Verified"></span>
 
@@ -85,7 +85,7 @@ Reserved for the second contribution to the evaluation module, a non-neural resp
 2. If the contribution needs dependencies, restate them in the `strategy-evaluation` extra in `pyproject.toml`. Do not point the build at their file.
 3. Write `adapters/<model>_adapter.py` meeting the four obligations above.
 4. Write the owning page under `docs/en/strategy-evaluation/contributed-models/`, opening with the model's measured quality.
-5. Register the adapter in `script/evaluate_strategies.py` so the stage can run it, and keep the stage working when the model is absent.
+5. Register the adapter in `modules/mta_strategy_evaluation/src/evaluate_strategies.py` so the stage can run it, and keep the stage working when the model is absent.
 
 ## Known Limitations <span class="status-label status-verified" aria-label="Verified"></span>
 

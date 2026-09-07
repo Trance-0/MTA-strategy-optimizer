@@ -40,7 +40,7 @@ class ArgumentTests(unittest.TestCase):
         args = arguments_for("initialize", "public")
 
         self.assertEqual(args[:4], [sys.executable, "-X", "utf8", "-B"])
-        self.assertIn("script/import_to_database.py", args)
+        self.assertEqual(args[4:6], ["-m", "backend.import_to_database"])
         self.assertEqual(args[args.index("--schema") + 1], "public")
         self.assertNotIn("--replace", args)
 
@@ -48,7 +48,7 @@ class ArgumentTests(unittest.TestCase):
         args = arguments_for("derive", "mta", replace=True)
 
         self.assertEqual(args[:4], [sys.executable, "-X", "utf8", "-B"])
-        self.assertIn("script/derive_scenario_schemas.py", args)
+        self.assertEqual(args[4:6], ["-m", "backend.derive_scenario_schemas"])
         self.assertEqual(args[args.index("--source") + 1], "mta")
         self.assertIn("--all", args)
         self.assertIn("--replace", args)

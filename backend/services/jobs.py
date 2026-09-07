@@ -16,7 +16,7 @@ deployment is read-only, and refused before anything is spawned so a refusal
 never leaves a half-started run behind.
 
 Data flow:
-    POST /api/jobs/<stage> -> here -> python script/&#42;.py -> modules/&#42;/outputs
+    POST /api/jobs/<stage> -> here -> python -m modules.<module>.src.<entry> -> model outputs
     GET  /api/jobs         -> here -> the Campaign Optimizer's log tabs
 """
 
@@ -72,7 +72,7 @@ MAX_HISTORY = 6
 STAGES: dict[str, dict[str, Any]] = {
     "attribution": {
         "label": "MTA attribution",
-        "script": "script/run_attribution_models.py",
+        "script": "modules/mta_attribution/src/run_attribution_models.py",
         "phases": [
             (
                 8,
@@ -103,7 +103,7 @@ STAGES: dict[str, dict[str, Any]] = {
     },
     "optimization": {
         "label": "MTA strategy optimization",
-        "script": "script/generate_campaign_strategy.py",
+        "script": "modules/mta_strategy_recommendation/src/generate_campaign_strategy.py",
         "phases": [
             (
                 10,
@@ -130,7 +130,7 @@ STAGES: dict[str, dict[str, Any]] = {
     },
     "evaluation": {
         "label": "MTA strategy evaluation",
-        "script": "script/evaluate_strategies.py",
+        "script": "modules/mta_strategy_evaluation/src/evaluate_strategies.py",
         "phases": [
             (
                 10,
@@ -227,7 +227,8 @@ def arguments_for(
     script = script_for(stage)
     if prepared is None:
         raise DatasetError("A prepared server dataset is required.")
-    args = [sys.executable, "-X", "utf8", "-B", script]
+    module = script.removesuffix(".py").replace("/", ".")
+    args = [sys.executable, "-X", "utf8", "-B", "-m", module]
     if stage == "attribution":
         args += [
             "--amc-report",

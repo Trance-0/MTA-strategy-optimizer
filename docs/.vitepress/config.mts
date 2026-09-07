@@ -1,7 +1,7 @@
 import { defineConfig, type DefaultTheme } from "vitepress";
 import { generateSidebar } from "vitepress-sidebar";
-import { copyStaticAssets } from "../../script/copy_static_assets.mjs";
-import { researchPdfDevPlugin } from "../../script/static_pdf_dev_plugin.mjs";
+import { copyStaticAssets } from "./copy_static_assets.mjs";
+import { researchPdfDevPlugin } from "./static_pdf_dev_plugin.mjs";
 
 const repositoryUrl = "https://github.com/Trance-0/MTA-strategy-optimizer";
 const configuredBase = process.env.DOCS_BASE_PATH ?? "/";

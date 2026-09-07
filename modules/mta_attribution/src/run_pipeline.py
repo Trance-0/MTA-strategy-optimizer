@@ -31,11 +31,10 @@ from collections.abc import Callable
 from datetime import date
 from pathlib import Path
 
-PROJECT_ROOT = Path(__file__).resolve().parents[1]
+PROJECT_ROOT = Path(__file__).resolve().parents[3]
 AMC_MTA_ROOT = PROJECT_ROOT / "modules" / "mta_attribution"
-sys.path.insert(0, str(PROJECT_ROOT))
 
-from modules.mta_attribution.config import (  # noqa: E402
+from modules.mta_attribution.config import (
     AMAZON_ADS_REPORT_FILE,
     AMC_REPORT_FILE,
     AMC_MTA_ROOT,
@@ -49,23 +48,23 @@ from modules.mta_attribution.config import (  # noqa: E402
     SHAPLEY_OUTPUT_FILE,
 )
 
-from modules.mta_attribution.src.attribution_contract import (  # noqa: E402
+from modules.mta_attribution.src.attribution_contract import (
     read_csv,
     read_csv_normalized,
     write_csv_atomic,
 )
-from modules.mta_attribution.src.path_report_builder import (  # noqa: E402
+from modules.mta_attribution.src.path_report_builder import (
     build_aggregated_path_rows,
 )
-from modules.mta_attribution.src.touchpoint_key import (  # noqa: E402
+from modules.mta_attribution.src.touchpoint_key import (
     touchpoint_key_from_ads_row,
 )
-from script.validate_data_alignment import (  # noqa: E402
+from modules.mta_attribution.src.validate_data_alignment import (
     infer_ads_report_window,
     touchpoints_from_amc_path,
 )
-from script.build_path_report import build_path_report  # noqa: E402
-from script.run_attribution_models import run_attribution_models  # noqa: E402
+from modules.mta_attribution.src.build_path_report import build_path_report
+from modules.mta_attribution.src.run_attribution_models import run_attribution_models
 
 
 def publish_with_rollback(

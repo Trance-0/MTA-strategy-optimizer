@@ -6,7 +6,7 @@ lang: en-US
 
 # Module Inventory
 
-`modules/` contains the currently runnable business implementations. Each module owns reusable source code, inputs, outputs, and tests; all maintained commands are centralized under project-level `script/`.
+`modules/` contains the currently runnable business implementations. Each module owns reusable source code, inputs, outputs, and tests; maintained entry points live in their owning packages and run with `python -m`.
 
 ## MTA Attribution (`modules/mta_attribution/`)
 
@@ -54,7 +54,7 @@ Automated tests, when present.
 
 For what each file receives and hands to the next, see [module and script data flow](data-flow.md). See the [English documentation home](/en/) for the current architecture, capability assessment, and reading order. External papers and references are stored under `docs/research/` and are not mixed with module runtime inputs.
 
-The project-level `script/` directory contains the data-generation, attribution, strategy, validation, and documentation entry points. `external/mta_sim_dataset/` pins the ZheyuanWu generator used by the MTA Standard adapter.
+Model commands live in their owning `src/` package, backend operations in `backend/`, frontend build integration in `dashboard/build/`, and documentation build integration in `docs/.vitepress/`. `external/mta_sim_dataset/` pins the ZheyuanWu generator used by the MTA Standard adapter.
 
 The boundary between the attribution and strategy modules is: MTA Attribution outputs five-segment touchpoint evidence within Group scope; for four fixed Campaigns under one Campaign Group, the strategy initializer produces only the new Ad Group count and budget `INITIAL_SEED`. It does not assign specific candidates or perform later optimization.
 

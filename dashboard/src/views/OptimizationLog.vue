@@ -454,7 +454,7 @@ const reliabilityMatrixLayout = computed(() => theme.layout({
           </template>
           <template v-else>
             Stage 5 has not run. Run
-            <code>script/generate_campaign_strategy.py</code> to fit the
+            <code>uv run python -m modules.mta_strategy_recommendation.src.generate_campaign_strategy</code> to fit the
             response models and optimize.
           </template>
         </p>

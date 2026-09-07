@@ -2,7 +2,7 @@
 
 Four snapshot keys come from here. Each is read either from the four
 attribution result files the pipeline publishes, or from the four tables
-`script/import_to_database.py` loads them into, and both produce identical
+`backend/import_to_database.py` loads them into, and both produce identical
 rows.
 
 The database statements are built from `dashboard/models.py` columns rather

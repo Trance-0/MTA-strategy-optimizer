@@ -121,7 +121,7 @@ Attribution, standard adapter, and strategy modules; code, data, and outputs onl
 
 Pinned external MTA-SIM-dataset repository and its generator
 
-### `script/`
+### Native package entry points
 
 Maintained project command-line entry points
 

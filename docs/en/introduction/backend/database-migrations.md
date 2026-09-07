@@ -26,8 +26,8 @@ Statements below use these labels:
 
 ### Creation and replacement
 
-**Repository fact:** `script/import_to_database.py` and
-`script/derive_scenario_schemas.py` call SQLAlchemy `create_all()`. Their
+**Repository fact:** `backend/import_to_database.py` and
+`backend/derive_scenario_schemas.py` call SQLAlchemy `create_all()`. Their
 replacement paths call `drop_all()` before recreating the model. There is no
 ordered migration directory or database structure revision ledger.
 
@@ -71,7 +71,7 @@ Structured Query Language (SQL), and upgrade testing from a previous release.
 Those are measurable capabilities not provided by `create_all()`.
 
 Each dashboard schema receives its own `alembic_version` ledger. The external
-source schema remains untouched. A project command in `script/` discovers
+source schema remains untouched. A backend command module discovers
 dashboard schemas through the same capability census as Settings, validates
 their names, acquires one PostgreSQL advisory lock for the database, and runs
 the ordered revisions against each target through that schema's isolated

@@ -33,9 +33,9 @@ lang: en-US
 - Project responsibility: Pin the external MTA-SIM-dataset repository and its ZheyuanWu generator
 - Key entry point: Git submodule
 
-### `script/`
+### Native package entry points
 
-- Project responsibility: Hold all maintained project command-line entry points
+- Project responsibility: Run model commands from their owning `src/` package, backend commands from `backend/`, and build integrations from their owning application
 - Key entry point: `generate_mta_sim_dataset.py`, `run_pipeline.py`
 
 ### `docs/`

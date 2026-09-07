@@ -11,7 +11,7 @@ lang: en-US
 ## Required: Core Package
 
 - `README.md` and `SUBMISSION_MANIFEST.md`;
-- module `src/` and `config.py`, plus the project-level commands under `script/`;
+- module `src/` and `config.py`, including their native command entry points;
 - `tests/`;
 - `docs/`, including the complete usage guide and canonical output index;
 - `docs/en/introduction/data-flow.drawio` and its generated light/dark SVG renders;

@@ -22,6 +22,8 @@ Entries are reconstructed from Git history. They record the change set behind ea
 ### Completed
 
 - Reconciled the completed Data Generator workflow with the concurrently advanced `main` and published feature-branch history, assigned version 0.9.46, and verified 151 backend, 141 dashboard, and 31 focused generator tests plus production, static, documentation, scoped-ownership, and responsive browser checks.
+- Resolved the version collision between the merged Data Generator release and the concurrent script-removal work: kept 0.9.46 for the Data Generator, renumbered the script removal, inline mirror and Yunxiao pipeline changes to 0.9.47, and archived 0.9.43 to keep four flat version pages.
+- Added the file-count, single-file deliverable, markdown-placement and script-commenting rules to the repository instructions, folded `deploy/yunxiao/` into one commented `pipeline.yaml` by removing its shell and README companions, and added Chenghao Jin to the work-log roster as the Data Generator owner.
 
 ## 2026-09-06
 

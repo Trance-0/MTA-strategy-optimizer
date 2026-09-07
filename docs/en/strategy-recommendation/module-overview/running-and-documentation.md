@@ -9,8 +9,8 @@ lang: en-US
 ## Run
 
 ```bash
-uv run python -X utf8 -B script/generate_initial_budget.py --check-output
-uv run python -X utf8 -B script/validate_simulated_hierarchy.py
+uv run python -X utf8 -B -m modules.mta_strategy_recommendation.src.generate_initial_budget --check-output
+uv run python -X utf8 -B -m modules.mta_strategy_recommendation.src.validate_simulated_hierarchy
 python3 -B -m unittest discover -s modules/mta_strategy_recommendation/tests -p 'test_*.py'
 ```
 

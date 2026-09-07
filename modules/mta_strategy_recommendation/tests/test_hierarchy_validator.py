@@ -150,7 +150,8 @@ class BudgetOnlyStrategyTests(unittest.TestCase):
         command = [
             sys.executable,
             "-B",
-            str(PROJECT_ROOT / "script" / "generate_initial_budget.py"),
+            "-m",
+            "modules.mta_strategy_recommendation.src.generate_initial_budget",
         ]
         for option in ("--check-output", "--check-fixture"):
             with self.subTest(option=option):

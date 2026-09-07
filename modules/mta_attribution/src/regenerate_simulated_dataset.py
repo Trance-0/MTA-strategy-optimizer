@@ -11,11 +11,10 @@ import sys
 import tempfile
 from pathlib import Path
 
-PROJECT_ROOT = Path(__file__).resolve().parents[1]
+PROJECT_ROOT = Path(__file__).resolve().parents[3]
 AMC_MTA_ROOT = PROJECT_ROOT / "modules" / "mta_attribution"
-sys.path.insert(0, str(PROJECT_ROOT))
 
-from modules.mta_attribution.config import (  # noqa: E402
+from modules.mta_attribution.config import (
     AMAZON_ADS_REPORT_FILE, AMC_REPORT_FILE, AMC_TOUCHPOINT_ENTITY_AGGREGATE_FILE,
     AMC_TOUCHPOINT_EVENTS_FILE, SYNTHETIC_USER_EVENTS_FILE,
     ATTRIBUTION_OUTPUT_DIR, MARKOV_OUTPUT_FILE, MODEL_COMPARISON_SUMMARY_FILE,
@@ -23,12 +22,12 @@ from modules.mta_attribution.config import (  # noqa: E402
     REPORT_END_DATE, REPORT_START_DATE, SHAPLEY_OUTPUT_FILE,
     SIMULATED_MAX_USER_EVENT_ROWS, SIMULATED_PRIVACY_MIN_USERS,
 )
-from modules.mta_attribution.src.attribution_contract import (  # noqa: E402
+from modules.mta_attribution.src.attribution_contract import (
     ADS_FIELD_DESCRIPTIONS,
     read_csv,
     write_csv_atomic,
 )
-from modules.mta_attribution.src.synthetic_event_pipeline import (  # noqa: E402
+from modules.mta_attribution.src.synthetic_event_pipeline import (
     ADS_FIELDS,
     AMC_EVENT_FIELDS,
     ENTITY_AGGREGATE_FIELDS,
@@ -40,9 +39,9 @@ from modules.mta_attribution.src.synthetic_event_pipeline import (  # noqa: E402
     validate_derivations,
     validate_no_user_identifiers,
 )
-from script.build_path_report import build_path_report  # noqa: E402
-from script.run_attribution_models import run_attribution_models  # noqa: E402
-from script.run_pipeline import match_outputs_by_name, publish_with_rollback  # noqa: E402
+from modules.mta_attribution.src.build_path_report import build_path_report
+from modules.mta_attribution.src.run_attribution_models import run_attribution_models
+from modules.mta_attribution.src.run_pipeline import match_outputs_by_name, publish_with_rollback
 
 
 def default_destinations() -> list[Path]:

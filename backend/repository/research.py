@@ -552,7 +552,7 @@ def ensure_master_object_table() -> None:
 
     Created on demand rather than by the import command because a draft is
     dashboard state rather than pipeline output: a database populated by
-    `script/import_to_database.py` has no reason to carry the table until
+    `backend/import_to_database.py` has no reason to carry the table until
     someone edits something, and a deployment that never edits never gets it.
     """
     execute(

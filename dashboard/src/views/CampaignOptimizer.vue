@@ -845,7 +845,7 @@ const evaluationAvailable = computed(
           <div v-if="!evaluationAvailable" class="notice">
             This deployment cannot start the evaluation command. Run the
             dashboard in a writable deployment, or execute
-            <code>script/evaluate_strategies.py</code> from a terminal.
+            <code>uv run --extra strategy-evaluation python -m modules.mta_strategy_evaluation.src.evaluate_strategies</code> from a terminal.
           </div>
         </div>
       </article>

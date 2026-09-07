@@ -10,10 +10,10 @@
  *
  * Run it after both builds:
  *
- *   uv run --extra backend python -m script.export_dashboard_snapshot
+ *   uv run --extra backend python -m backend.export_dashboard_snapshot
  *   cd dashboard && npm run build:static && cd ..
  *   cd docs && DOCS_BASE_PATH=/<repo>/docs/ npm run build && cd ..
- *   node script/build_pages_site.mjs
+ *   node docs/.vitepress/build_pages_site.mjs
  *
  * The documentation must be built with `DOCS_BASE_PATH` ending in `/docs/`,
  * because Pages performs no rewrites and every internal link is resolved at
@@ -30,10 +30,10 @@ import { existsSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { verifyPublishedOntologyReviewBundle } from "./import_ontology_review_fixtures.mjs";
+import { verifyPublishedOntologyReviewBundle } from "../../dashboard/build/import_ontology_review_fixtures.mjs";
 
 const scriptDirectory = dirname(fileURLToPath(import.meta.url));
-const repositoryRoot = resolve(scriptDirectory, "..");
+const repositoryRoot = resolve(scriptDirectory, "../..");
 const outputRoot = resolve(repositoryRoot, "site");
 
 const dashboardBuild = resolve(repositoryRoot, "dashboard", "dist-static");
@@ -76,7 +76,7 @@ const shellResource = resolve(dashboardBuild, "data", "resources", "shell.json")
 if (!existsSync(shellResource)) {
   fail(
     "The static build carries no data/resources/shell.json. Run " +
-      "`uv run --extra backend python -m script.export_dashboard_snapshot` " +
+      "`uv run --extra backend python -m backend.export_dashboard_snapshot` " +
       "before building the client.",
   );
 }

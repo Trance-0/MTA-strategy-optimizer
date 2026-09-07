@@ -3,8 +3,8 @@
 One PostgreSQL instance commonly holds several schemas -- one per simulation
 scenario -- and they are not interchangeable. A schema written by the external
 simulator carries the `mta_sim_*` tables but none of this project's own; a
-schema populated by `script/import_to_database.py` or
-`script/derive_scenario_schemas.py` carries the model in `dashboard/models.py`.
+schema populated by `backend/import_to_database.py` or
+`backend/derive_scenario_schemas.py` carries the model in `dashboard/models.py`.
 Selecting the first as though it were the second gives a dashboard whose every
 view is empty, with nothing on the page saying why.
 
@@ -62,7 +62,7 @@ RESEARCH_TABLES: tuple[str, ...] = (
 )
 
 #: The complete source contract consumed by
-#: `script/derive_scenario_schemas.py`. Keeping the census aware of all of it
+#: `backend/derive_scenario_schemas.py`. Keeping the census aware of all of it
 #: prevents a schema with only a few similarly named research tables from
 #: being offered a parse action that can only fail after a process starts.
 SIMULATOR_SOURCE_TABLES: tuple[str, ...] = (
@@ -84,7 +84,7 @@ SIMULATOR_SOURCE_TABLES: tuple[str, ...] = (
 #: over them, so the remedy offered here is deliberately the derivation.
 #: Each scenario becomes its own schema, which is why no target is named.
 DERIVE_COMMAND = (
-    "uv run --extra dashboard python script/derive_scenario_schemas.py "
+    "uv run --extra dashboard python -m backend.derive_scenario_schemas "
     "--source {schema} --all --replace"
 )
 
@@ -92,7 +92,7 @@ DERIVE_COMMAND = (
 #: its own account with it and so must never be pointed at a schema that
 #: already holds someone else's data.
 IMPORT_COMMAND = (
-    "uv run --extra dashboard python script/import_to_database.py "
+    "uv run --extra dashboard python -m backend.import_to_database "
     "--schema {schema} --replace"
 )
 

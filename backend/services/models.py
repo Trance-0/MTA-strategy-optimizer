@@ -242,7 +242,7 @@ def recommend(body: dict | None = None) -> dict:
     Inputs default to what the repository already carries -- the strategy
     request, the candidate pool, the published attribution results, and the
     entity bridge -- so a caller can post an empty body and get the same
-    recommendation `script/generate_initial_budget.py` writes.
+    recommendation `modules/mta_strategy_recommendation/src/generate_initial_budget.py` writes.
     """
     from modules.mta_strategy_recommendation.src.budget_recommender import (
         BudgetRecommendationError,
@@ -398,7 +398,7 @@ def _initial_strategy(dataset: Any) -> dict:
     Uses each Campaign's own configured baseline budget when the history
     records one, which is the honest starting point for a Campaign that has
     been running, and splits equally only where no history exists. Mirrors what
-    `script/generate_campaign_strategy.py` builds, so the two agree.
+    `modules/mta_strategy_recommendation/src/generate_campaign_strategy.py` builds, so the two agree.
     """
     by_campaign: dict[str, dict] = {}
     for observation in dataset.observations:
@@ -582,7 +582,7 @@ def catalogue() -> dict:
             ),
             "strategyEvaluation": {
                 "available": True,
-                "script": "script/evaluate_strategies.py",
+                "script": "modules/mta_strategy_evaluation/src/evaluate_strategies.py",
                 "unavailableReason": None,
             },
         },

@@ -38,7 +38,7 @@ import {
   validateCanonicalSourceManifestBytes,
   validateImportPathSeparation,
   verifyPublishedOntologyReviewBundle,
-} from "../../script/import_ontology_review_fixtures.mjs";
+} from "../build/import_ontology_review_fixtures.mjs";
 
 const SOURCE_COMMIT = "816958b7c5fa44cedf55408a0797fea93b1f44bc";
 const RELEASE_COMMIT = "cf5f2a7b78fb3d384f6d4fd815c830dfc2c21363";

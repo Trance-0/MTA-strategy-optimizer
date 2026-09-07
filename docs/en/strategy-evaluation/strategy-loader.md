@@ -272,11 +272,11 @@ Stage 1 runs at registry load time. Stages 2 and 3 run when `allocate()` is call
 
 ## Integration with Existing Pipeline <span class="status-label status-recommendation" aria-label="Recommendation"></span>
 
-The strategy loader does not replace the existing `script/generate_initial_budget.py`. It wraps it:
+The strategy loader does not replace the existing `modules/mta_strategy_recommendation/src/generate_initial_budget.py`. It wraps it:
 
 ```
-Current:  script/generate_initial_budget.py → modules/mta_strategy_recommendation/
-Future:   script/evaluate_strategies.py      → modules/mta_strategy_evaluation/
+Current:  modules/mta_strategy_recommendation/src/generate_initial_budget.py → modules/mta_strategy_recommendation/
+Future:   modules/mta_strategy_evaluation/src/evaluate_strategies.py      → modules/mta_strategy_evaluation/
                ↓
           build_strategy("budget_seed_v4")    → wraps generate_budget_recommendation()
           build_strategy("future_optimizer")  → new implementation

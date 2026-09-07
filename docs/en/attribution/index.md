@@ -45,7 +45,7 @@ For background on reconstructing and interpreting customer journeys, read [Mappi
 
 ### Pipeline
 
-- Primary file: `script/run_pipeline.py`
+- Primary file: `modules/mta_attribution/src/run_pipeline.py`
 - Objective: Run and publish validated artifacts together
 
 ### Attribution implementations

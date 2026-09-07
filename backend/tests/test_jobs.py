@@ -30,7 +30,7 @@ from backend.services.jobs import (
 from backend.services.model_datasets import DatasetError, PreparedDataset
 from backend.services import model_datasets
 from modules.mta_standard.src.dataloader import MTA_SIM_ADS_FIELDS
-from script.run_attribution_models import read_attribution_ads_rows
+from modules.mta_attribution.src.run_attribution_models import read_attribution_ads_rows
 
 
 class JobServiceTests(unittest.TestCase):
@@ -130,13 +130,14 @@ class JobServiceTests(unittest.TestCase):
         arguments = arguments_for("attribution", options, prepared)
 
         self.assertEqual(
-            arguments[:5],
+            arguments[:6],
             [
                 sys.executable,
                 "-X",
                 "utf8",
                 "-B",
-                "script/run_attribution_models.py",
+                "-m",
+                "modules.mta_attribution.src.run_attribution_models",
             ],
         )
         self.assertEqual(arguments[arguments.index("--amc-report") + 1], "path.csv")
@@ -324,7 +325,7 @@ class JobRouteTests(unittest.TestCase):
         self.client = create_app().test_client()
 
     def test_protected_deployment_can_start_an_enabled_stage(self) -> None:
-        job = SimpleNamespace(command="uv run python script/run_pipeline.py")
+        job = SimpleNamespace(command="uv run python -m modules.mta_attribution.src.run_pipeline")
         with (
             patch("backend.api.jobs.is_hosted", return_value=False),
             patch("backend.api.jobs.pipeline_runs_enabled", return_value=True),

@@ -18,17 +18,16 @@ import sys
 from pathlib import Path
 from typing import Mapping, Sequence
 
-PROJECT_ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(PROJECT_ROOT))
+PROJECT_ROOT = Path(__file__).resolve().parents[3]
 
-from modules.mta_attribution.config import (  # noqa: E402
+from modules.mta_attribution.config import (
     AMC_TOUCHPOINT_ENTITY_AGGREGATE_FILE,
     REPORT_END_DATE,
     REPORT_START_DATE,
     SIMULATED_PRIVACY_MIN_USERS,
 )
-from modules.mta_attribution.src.attribution_contract import write_csv_atomic  # noqa: E402
-from modules.mta_attribution.src.synthetic_event_pipeline import (  # noqa: E402
+from modules.mta_attribution.src.attribution_contract import write_csv_atomic
+from modules.mta_attribution.src.synthetic_event_pipeline import (
     ENTITY_AGGREGATE_FIELDS,
     derive_touchpoint_entity_aggregate,
     generate_synthetic_user_events,

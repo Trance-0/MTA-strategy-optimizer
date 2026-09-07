@@ -12,7 +12,7 @@ from contextlib import redirect_stdout
 from pathlib import Path
 from unittest.mock import patch
 
-from script import evaluate_strategies
+from modules.mta_strategy_evaluation.src import evaluate_strategies
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[3]

@@ -19,19 +19,18 @@ from datetime import date, timedelta
 from pathlib import Path
 from typing import Mapping, Sequence
 
-PROJECT_ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(PROJECT_ROOT))
+PROJECT_ROOT = Path(__file__).resolve().parents[3]
 
-from modules.mta_attribution.config import (  # noqa: E402
+from modules.mta_attribution.config import (
     AMAZON_ADS_REPORT_FILE,
     REPORT_END_DATE,
     REPORT_START_DATE,
 )
-from modules.mta_attribution.src.attribution_contract import (  # noqa: E402
+from modules.mta_attribution.src.attribution_contract import (
     ADS_FIELD_DESCRIPTIONS,
-    write_csv_atomic  # noqa: E402,
+    write_csv_atomic,
 )
-from modules.mta_attribution.src.synthetic_event_pipeline import (  # noqa: E402
+from modules.mta_attribution.src.synthetic_event_pipeline import (
     ADS_FIELDS,
     derive_amazon_ads_rows,
     generate_synthetic_user_events,

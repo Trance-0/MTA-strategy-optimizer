@@ -20,7 +20,7 @@ returns a not-run marker rather than a zero when no ground truth exists: a
 zero would read as a strategy that scored nothing, while not-run reads as a
 question that was not asked.
 
-Data flow: ``strategy_projection`` -> here -> ``script/evaluate_strategies.py``
+Data flow: ``strategy_projection`` -> here -> ``modules/mta_strategy_evaluation/src/evaluate_strategies.py``
 -> ``modules/mta_strategy_evaluation/outputs/strategy_evaluation.json``.
 """
 

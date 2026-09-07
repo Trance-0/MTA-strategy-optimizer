@@ -1,6 +1,6 @@
 ---
 title: Development and Verification Guide
-compact: "Python 3.12 and Node 22 commands for pipeline, six Python suites, frontend tests, spec_docs.py retrieval and ownership checks, deployment preflight, live/static builds and planned database migrations."
+compact: "Python module entry points and Node package commands after removal of root script/: six Python suites, frontend tests, manual specification checks, inline deployment validation, live/static builds and database operations."
 lang: en-US
 ---
 
@@ -9,7 +9,7 @@ lang: en-US
 ## Environment
 
 - Python 3.12, selected by `.python-version`;
-- Node.js 22 for the Vue dashboard, documentation, and maintained root `script/` helpers;
+- Node.js 22 for the Vue dashboard and documentation build modules;
 - Git;
 - no third-party Python package is required by AMC MTA itself.
 
@@ -18,13 +18,11 @@ Preserved `.agents` and `_bmad` files are historical tool assets. Their scripts 
 ## Run the Business Pipeline
 
 ```bash
-uv run python -X utf8 -B script/run_pipeline.py
-uv run python -X utf8 script/validate_data_alignment.py
+uv run python -X utf8 -B -m modules.mta_attribution.src.run_pipeline
+uv run python -X utf8 -m modules.mta_attribution.src.validate_data_alignment
 ```
 
 The pipeline derives its window from the earliest through latest Amazon Ads `reportDate`; adding data should not require changing configured dates. See [AMC MTA execution](./environment/amc-mta-usage.md) for custom input and output arguments.
-
-Canonical attribution output is stored in:
 
 Attribution outputs are written under `modules/mta_attribution/outputs/attribution/`.
 
@@ -37,7 +35,7 @@ uv run python -X utf8 -B -m unittest discover -s modules/mta_common/tests -t . -
 uv run python -X utf8 -B -m unittest discover -s modules/mta_attribution/tests -t . -p 'test_*.py'
 uv run python -X utf8 -B -m unittest discover -s modules/mta_standard/tests -t . -p 'test_*.py'
 uv run python -X utf8 -B -m unittest discover -s modules/mta_strategy_recommendation/tests -t . -p 'test_*.py'
-uv run python -X utf8 -B -m unittest discover -s modules/mta_strategy_evaluation/tests -t . -p 'test_*.py'
+uv run --extra strategy-evaluation python -X utf8 -B -m unittest discover -s modules/mta_strategy_evaluation/tests -t . -p 'test_*.py'
 uv run --extra backend python -X utf8 -B -m unittest discover -s backend/tests -t . -p 'test_*.py'
 Set-Location dashboard
 npm test
@@ -49,8 +47,8 @@ note, as ground truth.
 ## Validate the Campaign Group Initial-Strategy Sample
 
 ```bash
-uv run python -X utf8 -B script/generate_initial_budget.py --check-output
-uv run python -X utf8 script/validate_simulated_hierarchy.py
+uv run python -X utf8 -B -m modules.mta_strategy_recommendation.src.generate_initial_budget --check-output
+uv run python -X utf8 -m modules.mta_strategy_recommendation.src.validate_simulated_hierarchy
 python3 -B -m unittest discover -s modules/mta_strategy_recommendation/tests -p 'test_*.py'
 ```
 
@@ -66,7 +64,7 @@ The full-workspace audit used these read-only check categories:
 - Markdown: verify local links in project-authored documentation exist.
 - JSON/TOML: parse actual configuration and data files.
 
-Historical tool-layer checks are not run or counted with product verification. Future development uses the module tests, maintained root scripts, and documentation build described on this page.
+Historical tool-layer checks are not run or counted with product verification. Use the module entry points, product tests and documentation build described on this page. One-off inspection helpers stay local and are deleted after use.
 
 ## Change Principles
 
@@ -81,9 +79,8 @@ Historical tool-layer checks are not run or counted with product verification. F
 ## Specification and release verification
 
 Use [Specification Workflow and Retrieval](./specification-workflow.md) to
-retrieve compact contracts and select their tests. Run
-`uv run python -X utf8 -B script/spec_docs.py check` before considering a change
-complete. The verification workflow runs product suites and both frontend
+retrieve compact contracts and select their tests. Inspect owning metadata and
+source contracts before considering a change complete. The verification workflow runs product suites and both frontend
 build targets. [Deployment preflight](./backend/deployment-preflight.md) rejects
 incomplete external generator checkouts before release tests.
 

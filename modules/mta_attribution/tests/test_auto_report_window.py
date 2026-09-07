@@ -24,11 +24,11 @@ from modules.mta_attribution.config import (
     SHAPLEY_OUTPUT_FILE,
 )
 from modules.mta_attribution.src.attribution_contract import read_csv, write_csv
-from script.build_path_report import build_path_report
-from script.generate_simulated_amazon_ads_report import FIELDS as ADS_FIELDS
-from script.generate_simulated_amc_touchpoint_events import FIELDS as EVENT_FIELDS
-from script.run_pipeline import parse_args, run_pipeline
-from script.validate_data_alignment import infer_ads_report_window
+from modules.mta_attribution.src.build_path_report import build_path_report
+from modules.mta_attribution.src.generate_simulated_amazon_ads_report import FIELDS as ADS_FIELDS
+from modules.mta_attribution.src.generate_simulated_amc_touchpoint_events import FIELDS as EVENT_FIELDS
+from modules.mta_attribution.src.run_pipeline import parse_args, run_pipeline
+from modules.mta_attribution.src.validate_data_alignment import infer_ads_report_window
 
 
 TOUCHPOINT = "SPONSORED_PRODUCTS:PRODUCT_AD:TOP_OF_SEARCH:UNSPECIFIED:CLICK"

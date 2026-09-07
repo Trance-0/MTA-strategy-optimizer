@@ -1,12 +1,12 @@
 """Initialize dashboard schemas and parse simulator schemas with live logs.
 
-The root commands remain the only implementations of import and derivation.
+The backend module commands remain the only implementations of import and derivation.
 This service validates a browser request against a fresh schema census, starts
 the appropriate command as a fixed argument vector, and retains bounded output
 for polling by the Settings page.
 
 Data flow:
-    Settings page -> /api/schema-operations -> root command -> PostgreSQL
+    Settings page -> /api/schema-operations -> backend module command -> PostgreSQL
 """
 
 from __future__ import annotations
@@ -114,7 +114,8 @@ def arguments_for(action: str, schema: str, replace: bool = False) -> list[str]:
             "-X",
             "utf8",
             "-B",
-            "script/import_to_database.py",
+            "-m",
+            "backend.import_to_database",
             "--schema",
             schema,
         ]
@@ -124,7 +125,8 @@ def arguments_for(action: str, schema: str, replace: bool = False) -> list[str]:
             "-X",
             "utf8",
             "-B",
-            "script/derive_scenario_schemas.py",
+            "-m",
+            "backend.derive_scenario_schemas",
             "--source",
             schema,
             "--all",

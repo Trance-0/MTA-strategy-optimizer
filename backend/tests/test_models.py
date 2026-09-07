@@ -47,7 +47,7 @@ class ModelEndpointTests(unittest.TestCase):
         self.assertTrue(payload["evaluation"]["strategyEvaluation"]["available"])
         self.assertEqual(
             payload["evaluation"]["strategyEvaluation"]["script"],
-            "script/evaluate_strategies.py",
+            "modules/mta_strategy_evaluation/src/evaluate_strategies.py",
         )
 
     def test_uniform_attribution_executes_against_the_default_report(self) -> None:

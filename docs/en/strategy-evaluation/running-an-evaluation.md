@@ -1,9 +1,9 @@
 ---
 title: Running an Evaluation
 description: The evaluation pipeline stage, its command, its output artifact, and how the dashboard reads it
-compact: "Specifies script/evaluate_strategies.py, the strategy_evaluation.json artifact, the dashboard `evaluation` stage with runtime output precedence and phase patterns, and the strategyEvaluation snapshot key. Explains why training runs on demand instead of shipping checkpoints."
+compact: "Specifies modules/mta_strategy_evaluation/src/evaluate_strategies.py, the strategy_evaluation.json artifact, the dashboard `evaluation` stage with runtime output precedence and phase patterns, and the strategyEvaluation snapshot key. Explains why training runs on demand instead of shipping checkpoints."
 lang: en-US
-source_files: script/evaluate_strategies.py, backend/repository/evaluation.py
+source_files: modules/mta_strategy_evaluation/src/evaluate_strategies.py, backend/repository/evaluation.py
 ---
 
 # Running an Evaluation
@@ -27,14 +27,14 @@ The mechanism is the existing one. `backend/services/jobs.py` spawns a stage as 
 ## The Command <span class="status-label status-verified" aria-label="Verified"></span>
 
 ```bash
-uv run python -X utf8 -B script/evaluate_strategies.py
+uv run python -X utf8 -B -m modules.mta_strategy_evaluation.src.evaluate_strategies
 ```
 
 With the contributed model, which needs the numerical stack:
 
 ```bash
 uv sync --extra strategy-evaluation
-uv run python -X utf8 -B script/evaluate_strategies.py --fit-contributed-model
+uv run python -X utf8 -B -m modules.mta_strategy_evaluation.src.evaluate_strategies --fit-contributed-model
 ```
 
 #### `--strategy-directory`
@@ -99,7 +99,7 @@ The key set is asserted exactly by `backend/tests/test_snapshot.py`, so adding i
 
 ### `evaluate_strategies.py`
 
-Source: `script/evaluate_strategies.py`
+Source: `modules/mta_strategy_evaluation/src/evaluate_strategies.py`
 
 - Responsibility: Command-line entry point for the strategy evaluation layer. Projects the committed strategy artifacts, runs the three evaluation layers over each, optionally fits the contributed model, and writes one JSON artifact.
 - Inputs: `initial_budget_recommendation.json` and `campaign_strategy.json`;

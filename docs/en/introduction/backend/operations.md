@@ -1,7 +1,7 @@
 ---
 title: Backend Jobs and Settings
 description: Pipeline job polling and protected runtime settings contracts
-compact: "Contracts for the single-worker task queue, model jobs, schema operations, safe logs and termination, routed Settings APIs, INFO request logging, schema selection/recovery, artifacts, runtime storage, cache invalidation, and capability flags."
+compact: "Contracts for the single-worker task queue, package-native model and schema commands, safe logs and termination, routed Settings APIs, INFO request logging, schema selection/recovery, artifacts, runtime storage, cache invalidation, and capability flags."
 lang: en-US
 source_files: backend/api/jobs.py, backend/api/tasks.py, backend/api/settings.py, backend/api/schema_operations.py, backend/api/schema_recovery.py, backend/services/jobs.py, backend/services/tasks.py, backend/services/model_datasets.py, backend/services/model_outputs.py, backend/services/settings.py, backend/services/schema_operations.py, backend/services/schema_recovery.py
 test_files: backend/tests/test_jobs.py, backend/tests/test_model_outputs.py, backend/tests/test_schema_operations.py, backend/tests/test_schema_recovery.py, backend/tests/test_settings.py, backend/tests/test_tasks.py
@@ -38,11 +38,11 @@ selections contain observed budget, delivery, and outcome records;
 evaluation-only simulator outcomes are excluded from model input. No arbitrary
 schema, query, or filesystem path reaches the command line from the client.
 
-Attribution runs `script/run_attribution_models.py` against path and daily
+Attribution runs `modules/mta_attribution/src/run_attribution_models.py` against path and daily
 performance files materialized from the selected database report scope.
-Optimization runs `script/generate_campaign_strategy.py` against the selected
+Optimization runs `modules/mta_strategy_recommendation/src/generate_campaign_strategy.py` against the selected
 research run and marketplace. Strategy evaluation runs
-`script/evaluate_strategies.py` against the same kind of selected research
+`modules/mta_strategy_evaluation/src/evaluate_strategies.py` against the same kind of selected research
 scope and the current strategy artifacts.
 File-mode deployments may start jobs and download their outputs. Server
 deployments with `PIPELINE_RUNS_ENABLED=false` cannot start jobs.
@@ -50,6 +50,12 @@ deployments with `PIPELINE_RUNS_ENABLED=false` cannot start jobs.
 logging configuration only; it does not refuse a pipeline run. Conflating the
 two permissions made AppStack advertise a database-backed writable dashboard
 while every job start returned `403`.
+
+Stage descriptors retain the `script` field as a repository-relative source
+path. The fixed stage mapping converts it to a dotted package name and runs
+`[sys.executable, "-X", "utf8", "-B", "-m", module, ...]`; clients cannot supply
+a module or executable. Schema operations likewise run `backend.import_to_database`
+or `backend.derive_scenario_schemas` through `-m`.
 
 Model jobs invoke the already-running environment's `sys.executable` directly
 instead of nesting `uv run`. The container image has already installed the
@@ -221,7 +227,7 @@ currently holds every simulator source table required by
 `derive_scenario_schemas.py`. This classification is repeated immediately
 before the process starts rather than trusting an earlier browser census.
 
-Both actions queue the documented root script as a fixed argument vector with
+Both actions queue the documented backend module using `python -m` as a fixed argument vector with
 no shell. The vector begins with the already-running environment's
 `sys.executable`; it never performs an environment-manager lookup, because a
 deployed runtime has already installed the required backend dependencies and
@@ -294,7 +300,7 @@ Source: `backend/api/jobs.py`, `backend/services/jobs.py`, `backend/services/mod
   clears the snapshot cache; a preparation failure is retained as a failed
   job. AppStack falls back to committed image artifacts when a rollout removes
   its runtime volume.
-- Dependencies: Root scripts, subprocess, database repositories, and the
+- Dependencies: Backend command modules, subprocess, database repositories, and the
   configured runtime output directory.
 - Verification: `backend/tests/test_jobs.py` and the backend discovery command.
 
@@ -366,8 +372,8 @@ Source: `backend/api/schema_operations.py`,
   parser never writes to its source; replacement is absent unless explicitly
   requested. Logs retain 600 lines of at most 500 characters each and report
   truncation.
-- Dependencies: `script/import_to_database.py`,
-  `script/derive_scenario_schemas.py`, database pool disposal, and snapshot
+- Dependencies: `backend/import_to_database.py`,
+  `backend/derive_scenario_schemas.py`, database pool disposal, and snapshot
   cache invalidation.
 - Verification: `backend/tests/test_schema_operations.py` proves argument
   construction, capability refusals, bounded logs, lifecycle state, and route

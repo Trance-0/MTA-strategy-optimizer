@@ -3,7 +3,7 @@ title: Campaign Budget Response Model and Optimizer
 description: Fitted two-stage Campaign response curves and the constrained allocation solved from them
 compact: "Optimizer contract: selected MTA-SIM sidecar or snapshot-shaped database export feeds episode_bridge without evaluation truth; response_dataset groups intervention arms; response_model fits evidence-labelled curves; budget_optimizer uses shadow prices; generate_campaign_strategy selects one marketplace."
 lang: en-US
-source_files: modules/mta_strategy_recommendation/src/response_dataset.py, modules/mta_strategy_recommendation/src/response_model.py, modules/mta_strategy_recommendation/src/budget_optimizer.py, modules/mta_strategy_recommendation/src/episode_bridge.py, script/generate_campaign_strategy.py
+source_files: modules/mta_strategy_recommendation/src/response_dataset.py, modules/mta_strategy_recommendation/src/response_model.py, modules/mta_strategy_recommendation/src/budget_optimizer.py, modules/mta_strategy_recommendation/src/episode_bridge.py, modules/mta_strategy_recommendation/src/generate_campaign_strategy.py
 test_files: modules/mta_strategy_recommendation/tests/test_budget_optimizer.py, modules/mta_strategy_recommendation/tests/test_response_dataset.py, modules/mta_strategy_recommendation/tests/test_response_model.py, modules/mta_strategy_recommendation/tests/test_response_pipeline.py
 ---
 
@@ -171,7 +171,7 @@ This matters most for a Campaign whose budget genuinely bound: its observed rang
 
 ## 7. Output Artifact
 
-`script/generate_campaign_strategy.py` writes `modules/mta_strategy_recommendation/outputs/campaign_strategy.json` with JavaScript Object Notation (JSON) keys sorted, so two runs over one snapshot produce identical files.
+`modules/mta_strategy_recommendation/src/generate_campaign_strategy.py` writes `modules/mta_strategy_recommendation/outputs/campaign_strategy.json` with JavaScript Object Notation (JSON) keys sorted, so two runs over one snapshot produce identical files.
 
 `--marketplace <code>` scopes a multi-marketplace research snapshot before the
 response dataset is built. Every observation, fitted model, currency, and
@@ -208,7 +208,7 @@ The flattened Campaign-period rows the fit consumed, so the evidence behind a cu
 ## 8. Run
 
 ```bash
-uv run python -X utf8 -B script/generate_campaign_strategy.py \
+uv run python -X utf8 -B -m modules.mta_strategy_recommendation.src.generate_campaign_strategy \
   --research-snapshot path/to/simulation_research.json
 ```
 
@@ -302,7 +302,7 @@ Source: `modules/mta_strategy_recommendation/src/episode_bridge.py`
 
 ### `generate_campaign_strategy.py`
 
-Source: `script/generate_campaign_strategy.py`
+Source: `modules/mta_strategy_recommendation/src/generate_campaign_strategy.py`
 
 **Responsibility.** Command-line entry point running the full chain and writing the artifact holding both strategies.
 

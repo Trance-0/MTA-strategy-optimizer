@@ -37,7 +37,7 @@ Dependencies are explicit Python package imports. `mta_standard` owns loading an
 
 ## Layer 0 — Simulated data generation <span class="status-label status-verified" aria-label="Verified"></span>
 
-The primary path runs `script/generate_mta_sim_dataset.py`. It invokes the pinned `external/mta_sim_dataset/ZheyuanWu` generator, preserves the original CSV schemas with native five-segment values, aggregates the generated daily path windows into one report scope, and loads the result through `modules/mta_standard/src/mta_sim_generator_adapter.py`. Ground truth remains separate for evaluation.
+The primary path runs `modules/mta_standard/src/generate_mta_sim_dataset.py`. It invokes the pinned `external/mta_sim_dataset/ZheyuanWu` generator, preserves the original CSV schemas with native five-segment values, aggregates the generated daily path windows into one report scope, and loads the result through `modules/mta_standard/src/mta_sim_generator_adapter.py`. Ground truth remains separate for evaluation.
 
 The following event pipeline is retained only to reproduce the repository's committed historical five-segment fixture and the entity bridge required by the current strategy example.
 
@@ -45,7 +45,7 @@ Everything shipped in `data/simulated/` descends from one synthetic event stream
 
 `synthetic_event_pipeline.generate_synthetic_user_events()` feeds four independent command wrappers: `generate_simulated_synthetic_user_events.py`, `generate_simulated_amc_touchpoint_events.py`, `generate_simulated_amazon_ads_report.py`, and `generate_simulated_touchpoint_entity_aggregate.py`. They publish `synthetic_user_events_sample.csv`, `amc_touchpoint_events_sample.csv`, `amazon_ads_report_sample.csv`, and `amc_touchpoint_entity_aggregate_sample.csv`, respectively.
 
-`script/regenerate_simulated_dataset.py` retains the legacy behavior and runs all four as one atomic set. New data generation uses `script/generate_mta_sim_dataset.py` and the pinned ZheyuanWu submodule.
+`modules/mta_attribution/src/regenerate_simulated_dataset.py` retains the legacy behavior and runs all four as one atomic set. New data generation uses `modules/mta_standard/src/generate_mta_sim_dataset.py` and the pinned ZheyuanWu submodule.
 
 > [!IMPORTANT]
 > The four samples are **derived from a common source**, not written independently. Editing one by hand breaks alignment validation, because the Ads report would then describe delivery that the paths never saw. Regenerate the set instead.
@@ -74,7 +74,7 @@ Everything shipped in `data/simulated/` descends from one synthetic event stream
 
 ## Layer 1 — Path construction <span class="status-label status-verified" aria-label="Verified"></span>
 
-**`src/path_report_builder.py`**, driven by **`script/build_path_report.py`**.
+**`src/path_report_builder.py`**, driven by **`modules/mta_attribution/src/build_path_report.py`**.
 
 ### In
 
@@ -207,14 +207,14 @@ Gap ≤1.0 pp **and** relative gap ≤0.20.
 
 ## Layer 5 — Publication <span class="status-label status-verified" aria-label="Verified"></span>
 
-**`script/run_pipeline.py`** builds everything in one temporary directory and only then moves it into place.
+**`modules/mta_attribution/src/run_pipeline.py`** builds everything in one temporary directory and only then moves it into place.
 
 Inside `tempfile.TemporaryDirectory()`, `build_path_report()` creates a temporary path report and `run_attribution_models()` creates five temporary CSVs. `publish_with_rollback()` then replaces all six files together or restores all prior files.
 
 > [!WARNING]
 > This is the reason a failed run leaves no half-updated report. Writing directly would let a validation error in the comparison stage strand a new path report beside four stale model outputs, and nothing downstream would be able to tell.
 
-`script/validate_data_alignment.py` runs first and is also the public preflight command. It enforces one marketplace/account/currency scope per side, identical report windows, a continuous date grid, the same touchpoint set every day, and billing consistency between `cost_type` and `interaction_type`.
+`modules/mta_attribution/src/validate_data_alignment.py` runs first and is also the public preflight command. It enforces one marketplace/account/currency scope per side, identical report windows, a continuous date grid, the same touchpoint set every day, and billing consistency between `cost_type` and `interaction_type`.
 
 ---
 
@@ -282,7 +282,7 @@ The strategy module combines `amc_mta_recommended_attribution.csv` and `amc_touc
 
 The seed above allocates where no response evidence exists. Where a Campaign's budget has been varied and observed, a separate chain allocates from that evidence instead, and it does not read attribution at all.
 
-`episode_bridge` joins the research snapshot's observed records into `CampaignEpisode` values; `response_dataset` aggregates them into one row per Campaign-period; `response_model` fits a two-stage budget-to-spend-to-revenue curve per Campaign; and `budget_optimizer` allocates by equalizing marginal expected revenue at a single shadow price on budget. `script/generate_campaign_strategy.py` runs the chain and writes `campaign_strategy.json`, which the dashboard's Optimization Log reads.
+`episode_bridge` joins the research snapshot's observed records into `CampaignEpisode` values; `response_dataset` aggregates them into one row per Campaign-period; `response_model` fits a two-stage budget-to-spend-to-revenue curve per Campaign; and `budget_optimizer` allocates by equalizing marginal expected revenue at a single shadow price on budget. `modules/mta_strategy_recommendation/src/generate_campaign_strategy.py` runs the chain and writes `campaign_strategy.json`, which the dashboard's Optimization Log reads.
 
 See [Campaign Budget Response Model and Optimizer](../strategy-recommendation/campaign-budget-optimizer.md) for the fitted forms, the solver, and the output contract.
 
@@ -304,7 +304,7 @@ Every file states its own role and position in its module docstring. The heading
 
 Default paths, report window, thresholds.
 
-#### `script/run_pipeline.py`
+#### `modules/mta_attribution/src/run_pipeline.py`
 
 End-to-end entry point with atomic publication.
 
@@ -360,31 +360,31 @@ Learned model and new-campaign prediction.
 
 Gaps, support, reliability, recommendation.
 
-#### `script/build_path_report.py`
+#### `modules/mta_attribution/src/build_path_report.py`
 
 Path report CLI.
 
-#### `script/run_attribution_models.py`
+#### `modules/mta_attribution/src/run_attribution_models.py`
 
 Attribution and comparison CLI.
 
-#### `script/compare_attribution_models.py`
+#### `modules/mta_attribution/src/compare_attribution_models.py`
 
 Re-compare two stored model CSVs.
 
-#### `script/validate_data_alignment.py`
+#### `modules/mta_attribution/src/validate_data_alignment.py`
 
 Preflight alignment check.
 
-#### `script/regenerate_simulated_dataset.py`
+#### `modules/mta_attribution/src/regenerate_simulated_dataset.py`
 
 Reproduce the four legacy samples atomically.
 
-#### `script/generate_mta_sim_dataset.py`
+#### `modules/mta_standard/src/generate_mta_sim_dataset.py`
 
 Run and adapt the pinned ZheyuanWu generator.
 
-#### `script/generate_simulated_*.py`
+#### `modules/mta_attribution/src/generate_simulated_*.py`
 
 One legacy sample each.
 
@@ -440,15 +440,15 @@ Two-stage fitted budget response per Campaign.
 
 Constrained Campaign budget allocation.
 
-#### `script/generate_initial_budget.py`
+#### `modules/mta_strategy_recommendation/src/generate_initial_budget.py`
 
 Budget JSON CLI, with `--check-output`.
 
-#### `script/generate_campaign_strategy.py`
+#### `modules/mta_strategy_recommendation/src/generate_campaign_strategy.py`
 
 Response fitting and optimization CLI, writing `campaign_strategy.json`.
 
-#### `script/validate_simulated_hierarchy.py`
+#### `modules/mta_strategy_recommendation/src/validate_simulated_hierarchy.py`
 
 Hierarchy preflight.
 

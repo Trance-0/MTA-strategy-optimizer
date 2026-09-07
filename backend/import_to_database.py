@@ -20,10 +20,10 @@ does not exist; `--replace` then drops and rebuilds the tables within it and
 never touches another schema.
 
 Usage:
-    uv run --extra dashboard python script/import_to_database.py --dry-run
-    uv run --extra dashboard python script/import_to_database.py
-    uv run --extra dashboard python script/import_to_database.py --replace
-    uv run --extra dashboard python script/import_to_database.py --schema mta --replace
+    uv run --extra dashboard python -m backend.import_to_database --dry-run
+    uv run --extra dashboard python -m backend.import_to_database
+    uv run --extra dashboard python -m backend.import_to_database --replace
+    uv run --extra dashboard python -m backend.import_to_database --schema mta --replace
 """
 
 from __future__ import annotations
@@ -37,14 +37,12 @@ from datetime import datetime
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
-if str(REPO_ROOT) not in sys.path:
-    sys.path.insert(0, str(REPO_ROOT))
 
-from sqlalchemy import create_engine, func, select, text  # noqa: E402
-from sqlalchemy.orm import Session  # noqa: E402
+from sqlalchemy import create_engine, func, select, text
+from sqlalchemy.orm import Session
 
-from dashboard import config  # noqa: E402
-from dashboard.models import (  # noqa: E402
+from dashboard import config
+from dashboard.models import (
     Advertiser,
     AdGroup,
     AdGroupBudgetSlot,

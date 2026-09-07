@@ -1,13 +1,17 @@
 ---
 title: Backend Setup and Deployment
 description: Local Flask startup and Yunxiao AppStack deployment configuration
-compact: "Flask and AppStack setup: local commands, direct-interpreter jobs, writable pipeline runtime, read-only root plus `/pipeline-output`, protected routed Settings, build identity, PostgreSQL schema census, Docker build allow-list, ingress, connectivity, and metadata."
+compact: "Flask and AppStack setup: local commands, writable pipeline runtime, protected Settings, build identity, PostgreSQL schema census, Docker inputs, ingress and connectivity; links the separate Yunxiao ECS host deployment contract."
 lang: en-US
 source_files: backend/app.py, backend/config.py, backend/database.py, backend/services/schemas.py, backend/wsgi.py, deploy/appstack/Dockerfile, deploy/appstack/orchestration.yaml, deploy/appstack/values.example.yaml
 test_files: backend/tests/test_app.py, backend/tests/test_schemas.py
 ---
 
 # Backend Setup and Deployment
+
+The existing Yunxiao pipeline uses the separate
+[Elastic Compute Service (ECS) host deployment](./yunxiao-ecs.md) contract.
+The container build and Kubernetes sections below describe the AppStack option.
 
 ## Local Setup
 
@@ -40,7 +44,7 @@ backend separately. Vite proxies `/api` to port 8501.
 
 One PostgreSQL instance commonly holds several schemas, one per scenario, and
 they are not interchangeable. `PG_SCHEMA` names the single schema every
-connection reads and `script/import_to_database.py` writes. It defaults to
+connection reads and `backend/import_to_database.py` writes. It defaults to
 `public`, which is what every deployment predating the setting was reading.
 
 ### The connection carries the selection
@@ -333,8 +337,8 @@ Source: `backend/services/schemas.py`
   against their database client would reasonably conclude the connection was
   pointing elsewhere. The command offered depends on what the schema already
   holds — one carrying research history is offered
-  `script/derive_scenario_schemas.py`, and only an empty one is offered
-  `script/import_to_database.py`, because the importer writes its own
+  `backend/derive_scenario_schemas.py`, and only an empty one is offered
+  `backend/import_to_database.py`, because the importer writes its own
   advertiser and Campaigns and would otherwise attach them to another
   account's observations. Selectable entries sort first, then by name. A schema
   whose name is not a plain identifier is dropped rather than offered and later

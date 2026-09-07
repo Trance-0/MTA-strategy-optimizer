@@ -74,7 +74,7 @@ coverage/
 *.tsbuildinfo
 
 # The dashboard's published resource files are exported from the committed
-# artifacts by `script/export_dashboard_snapshot.py` at build time. They are
+# artifacts by `backend/export_dashboard_snapshot.py` at build time. They are
 # generated, not authored, so they are never committed.
 /dashboard/public/data/
 
@@ -101,8 +101,9 @@ coverage/
 *.njsproj
 *.sln
 
-# Project command-line entry points are tracked only under /script.
-# Obsolete project-owned script directories must not be recreated.
+# Project-root helper directories must never be uploaded. Product entry
+# points live in their owning module; one-off agent work uses .agent-scratch.
+/script/
 /modules/*/scripts/
 /docs/scripts/
 /scripts/
@@ -111,7 +112,7 @@ coverage/
 /.agent-scratch/
 
 # The GitHub Pages site is assembled from tracked sources by
-# script/build_pages_site.mjs on every deployment; it is never committed.
+# docs/.vitepress/build_pages_site.mjs on every deployment; it is never committed.
 /site/
 
 # Local configuration and secrets

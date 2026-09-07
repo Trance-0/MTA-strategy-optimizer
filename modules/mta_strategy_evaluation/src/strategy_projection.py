@@ -12,7 +12,7 @@ by the caller, and each is a keyword rather than a guess:
 - ``initial_budget_recommendation.json`` carries no currency. It is required
   with no default, because mislabelling currency is exactly what
   ``ReportingScope`` exists to prevent and no conservative default exists.
-  ``script/evaluate_strategies.py`` reads it from ``strategy_request.json``.
+  ``modules/mta_strategy_evaluation/src/evaluate_strategies.py`` reads it from ``strategy_request.json``.
 - ``campaign_strategy.json`` carries no advertiser. It defaults to the
   ``UNRECORDED_ADVERTISER`` sentinel, which is visibly not an identifier, so a
   reader cannot mistake it for one.

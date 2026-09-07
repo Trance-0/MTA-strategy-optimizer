@@ -16,7 +16,7 @@ jobs:
       - name: Initialize pinned generator only
         run: |
           git submodule sync -- external/mta_sim_dataset
-          git submodule update --init -- external/mta_sim_dataset
+          git -c submodule.recurse=false submodule update --init -- external/mta_sim_dataset
       - uses: actions/setup-python@v6
         with:
           python-version: "3.12"
@@ -32,18 +32,29 @@ jobs:
             docs/package-lock.json
       - name: Install locked dependencies
         run: |
-          uv sync --locked --extra backend
+          uv sync --frozen --extra backend --extra strategy-evaluation
           npm --prefix dashboard ci
           npm --prefix docs ci
-      - name: Check documentation and deployment inputs
+      - name: Check pinned deployment inputs
         run: |
-          uv run python -X utf8 -B script/spec_docs.py check
-          uv run python -X utf8 -B script/check_deployment_inputs.py
-          uv run python -X utf8 -B -m unittest discover -s tests -p 'test_*.py'
+          pin=$(git rev-parse HEAD:external/mta_sim_dataset)
+          test "$(git -C external/mta_sim_dataset rev-parse HEAD)" = "$pin"
+          git -C external/mta_sim_dataset diff --exit-code HEAD
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          root = Path('external/mta_sim_dataset/ZheyuanWu')
+          for name in ('simulations/__init__.py', 'simulations/baseline/mta_dataset/__init__.py',
+                       'simulations/baseline/mta_dataset/configuration.py', 'examples/baseline.toy.json'):
+              if not (root / name).is_file():
+                  raise SystemExit(f'Missing generator input: {name}')
+          if not isinstance(json.loads((root / 'examples/baseline.toy.json').read_text(encoding='utf-8')), dict):
+              raise SystemExit('Toy configuration must be a JSON object')
+          PY
       - name: Test product contracts
         run: |
-          for suite in modules/mta_common modules/mta_attribution modules/mta_standard modules/mta_strategy_recommendation backend; do
-            uv run --extra backend python -X utf8 -B -m unittest discover -s "$suite/tests" -t . -p 'test_*.py'
+          for suite in modules/mta_common modules/mta_attribution modules/mta_standard modules/mta_strategy_recommendation modules/mta_strategy_evaluation backend; do
+            .venv/bin/python -X utf8 -B -m unittest discover -s "$suite/tests" -t . -p 'test_*.py'
           done
           npm --prefix dashboard test
       - name: Build live and static clients and documentation
@@ -53,4 +64,4 @@ jobs:
           npm --prefix dashboard run build
           npm --prefix dashboard run build:static
           npm --prefix docs run build
-          node script/build_pages_site.mjs
+          node docs/.vitepress/build_pages_site.mjs

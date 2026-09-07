@@ -1,0 +1,99 @@
+---
+title: GitHub to Gitea Publication
+compact: "mirror-to-gitea.yml prepares complete main/master snapshots before one atomic mirror push. Specifies frozen refs, pinned files, deterministic provenance, pruning, validation and the manual GitHub Actions Run workflow procedure; no separate helper script."
+source_files: .github/workflows/mirror-to-gitea.yml
+---
+
+# GitHub to Gitea Publication
+
+GitHub owns authored code and submodule pins. Gitea is a generated full mirror;
+its default branch (`main`) contains one child of the GitHub commit with the
+pins expanded into ordinary files. Yunxiao clones this `main`. There is no
+separate snapshot branch and no development on Gitea.
+
+## Publication contract
+
+The existing workflow contains the complete operation inline:
+
+1. Clone every GitHub branch and tag into a temporary bare repository. Freeze
+   the default branch and its exact commit from this clone.
+2. Check out that commit on the GitHub runner. Restore its original GitHub
+   origin so relative submodule addresses resolve correctly. Initialize the
+   top-level pinned submodules with recursion disabled. The integration
+   submodule links back to this project, so recursive initialization is forbidden.
+3. Import each pinned tree directly into the snapshot index, including tracked
+   files matched by ignore or export rules. Remove root `.gitmodules` and
+   uninitialized nested Git links. Verify each downloaded revision against its pin.
+4. Create one snapshot with the frozen default-branch commit as its sole parent.
+   Record all top-level pins in its message. Fixed author, committer and source
+   timestamp make unchanged inputs produce the same commit.
+5. Reject any remaining Git link. Require the generator package entry points,
+   configuration loader and `examples/baseline.toy.json` to be tracked, present
+   and unmodified; parse the configuration as a
+   [JavaScript Object Notation (JSON)](/en/definitions#json-javascript-object-notation)
+   object before publication.
+6. Substitute the snapshot for the default branch and, if GitHub has `main`
+   but no `master`, for its Gitea `master` alias. Other branches and tags remain
+   exact GitHub references. Prune destination-only references.
+7. Publish all final references with one atomic force push. Compare the entire
+   destination branch/tag set with the prepared references; a mismatch fails.
+
+No destination reference changes before preparation succeeds. A failed pin,
+invalid configuration, unsupported atomic push or rejected reference leaves
+the old references intact. Never fall back to a non-atomic push. The raw
+GitHub parent is never published to `main` before the complete snapshot, so
+a webhook cannot start deployment during the old intermediate interval.
+
+Snapshot-to-snapshot updates require force-update permission: each snapshot
+is a child of its corresponding GitHub commit. The existing mirror account
+must be allowed to update the destination branches. Concurrent mirror runs
+remain serialized with `cancel-in-progress: false`.
+
+## Run the existing Action
+
+After the workflow change is committed and pushed to GitHub `main`:
+
+1. Open the repository's **Actions** tab and select **Mirror GitHub to Gitea**.
+2. Choose **Run workflow**, select `main`, then **Run workflow**.
+3. Wait for snapshot preparation, atomic publication and reference verification
+   to succeed. Do not deploy from a failed or unfinished mirror run.
+4. Open Gitea `main`. Its latest message must begin with
+   `snapshot: materialize submodules`; the generator's toy configuration must
+   be browsable as an ordinary file.
+5. Apply the [Yunxiao settings](../backend/yunxiao-ecs.md), then run that pipeline.
+
+The owner controls manual Action and pipeline runs. Agents provide these steps
+and diagnose the resulting logs. The maintained pipeline configuration lives in
+`deploy/yunxiao/pipeline.yaml`; copy it into the existing cloud job as documented.
+
+## Authentication
+
+Retain `GITEA_USERNAME`, `GITEA_PASSWORD` and `GITEA_REPOSITORY` secrets.
+The existing destination validation accepts a complete
+[Hypertext Transfer Protocol Secure (HTTPS)](/en/definitions#https-hypertext-transfer-protocol-secure)
+address or `owner/repository.git` on `gitea.com`; embedded credentials and
+invalid addresses fail. A temporary runner-local askpass file supplies the
+secrets from the environment and is removed on exit. It is not a repository file.
+
+## Source Files
+
+### `.github/workflows/mirror-to-gitea.yml`
+
+Source: `.github/workflows/mirror-to-gitea.yml`
+
+- Responsibility: Prepare and publish the full mirror using the inline sequence above.
+- Inputs: Push, delete, manual or scheduled trigger and existing Gitea secrets.
+- Outputs: Verified final Gitea references or a failed job. Missing secrets
+  retain the existing unconfigured warning and perform no publication.
+- Dependencies: Git and Python on the GitHub runner; no project helper script.
+- Verification: Parse configuration, check Bash syntax, exercise the inline
+  transaction against disposable local Git repositories, then run the Action.
+
+## Verification
+
+Local disposable repositories must cover ignored tracked files, nested Git
+links, complete snapshots, deterministic repetition, exact branches/tags and
+pruning. Rejecting one reference or failing preparation must preserve every
+destination reference. One-off verification helpers stay in ignored
+`/.agent-scratch/` and are deleted after use. Only the production Action proves
+Gitea authentication, permissions and actual webhook behavior.

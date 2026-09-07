@@ -65,16 +65,16 @@ from modules.mta_attribution.src.synthetic_event_pipeline import (
     validate_synthetic_user_events,
 )
 from modules.mta_attribution.src.touchpoint_key import canonicalize_amc_touchpoint_key
-from script.build_path_report import build_path_report
-from script.compare_attribution_models import compare_model_files
-from script.generate_simulated_amazon_ads_report import FIELDS, generate_file, generate_rows
-from script.generate_simulated_amc_touchpoint_events import (
+from modules.mta_attribution.src.build_path_report import build_path_report
+from modules.mta_attribution.src.compare_attribution_models import compare_model_files
+from modules.mta_attribution.src.generate_simulated_amazon_ads_report import FIELDS, generate_file, generate_rows
+from modules.mta_attribution.src.generate_simulated_amc_touchpoint_events import (
     generate_rows as generate_event_rows,
 )
-from script.regenerate_simulated_dataset import regenerate
-from script.run_attribution_models import run_attribution_models
-from script.run_pipeline import match_outputs_by_name, publish_with_rollback
-from script.validate_data_alignment import validate_data_alignment_rows
+from modules.mta_attribution.src.regenerate_simulated_dataset import regenerate
+from modules.mta_attribution.src.run_attribution_models import run_attribution_models
+from modules.mta_attribution.src.run_pipeline import match_outputs_by_name, publish_with_rollback
+from modules.mta_attribution.src.validate_data_alignment import validate_data_alignment_rows
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -823,7 +823,7 @@ class EndToEndSampleTests(unittest.TestCase):
                 real_replace(source, destination)
 
             with patch(
-                "script.run_pipeline.os.replace", side_effect=fail_on_second_replace
+                "modules.mta_attribution.src.run_pipeline.os.replace", side_effect=fail_on_second_replace
             ):
                 with self.assertRaisesRegex(OSError, "simulated publication failure"):
                     publish_with_rollback(
@@ -876,7 +876,7 @@ class EndToEndSampleTests(unittest.TestCase):
                 real_replace(source, destination)
 
             with patch(
-                "script.run_pipeline.os.replace", side_effect=fail_on_fifth_replace
+                "modules.mta_attribution.src.run_pipeline.os.replace", side_effect=fail_on_fifth_replace
             ):
                 with self.assertRaisesRegex(OSError, "fifth publication failure"):
                     regenerate(destinations)

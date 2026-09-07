@@ -52,7 +52,7 @@ one application process because job progress is process-local.
 
 ### Strategy evaluation is a runnable model stage
 
-The evaluation tab starts `script/evaluate_strategies.py` through the same job
+The evaluation tab starts `modules/mta_strategy_evaluation/src/evaluate_strategies.py` through the same job
 runner as attribution and optimization. The script projects both strategy
 artifacts, checks conservation, compares only allocations whose Campaigns are
 observed, and publishes `strategyEvaluation`. The current view explains those

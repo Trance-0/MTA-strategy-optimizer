@@ -1,7 +1,7 @@
 ---
 title: Work Log
 description: Who is involved in this project, what they own, and where their day-by-day record lives
-compact: "Roster of everyone involved: yao-LLL (Jiahao Yao) attribution and strategy models before 2026-08-08, Trance-0 (Zheyuan Wu) project manager since, tianlc6-design (Tianle Chen) SQL database, Willow-sakura (Yi Liu) evaluation, Yayu Yu knowledge base. Read to find who owns an area."
+compact: "Roster of everyone involved: yao-LLL (Jiahao Yao) attribution and strategy models before 2026-08-08, Trance-0 (Zheyuan Wu) project manager since, tianlc6-design (Tianle Chen) SQL database, Willow-sakura (Yi Liu) evaluation, Yayu Yu knowledge base, kim383706382-ship-it (Chenghao Jin) Data Generator. Read to find who owns an area."
 order: 1
 ---
 
@@ -43,6 +43,12 @@ Each person owns one page. Entries are reverse-chronological `## YYYY-MM-DD` sec
 - Responsibility: Knowledge base building, ontology evaluation, and research
 - Active period: Ongoing
 
+### [`kim383706382-ship-it`](./ChenghaoJin.md)
+
+- Name: Chenghao Jin
+- Responsibility: Data Generator configuration workflow and data simulation: the Guided/JSON configuration editor, the generator's backend preflight contract, and its run lifecycle
+- Active period: Since 2026-09-06
+
 The 2026-08-08 boundary marks the handover of development ownership from Jiahao Yao to Zheyuan Wu. Work recorded before that date under the attribution and strategy modules belongs to the earlier author; the Git history preserves the exact authorship.
 
 ## Areas and Owning Modules
@@ -57,15 +63,20 @@ The 2026-08-08 boundary marks the handover of development ownership from Jiahao 
 - Owner: Jiahao Yao, under review by Zheyuan Wu
 - Where the work lands: `modules/mta_strategy_recommendation/`
 
-### Pipeline, integration, script centralization
+### Pipeline, integration, module-owned commands
 
 - Owner: Zheyuan Wu
-- Where the work lands: `script/`, `modules/mta_standard/`
+- Where the work lands: `modules/mta_standard/`, `backend/`, and each module's own `src/` entry points
 
 ### Data simulation
 
 - Owner: Zheyuan Wu, with the earlier data-collection groups
 - Where the work lands: `external/mta_sim_dataset/`, `modules/*/data/simulated/`
+
+### Data Generator configuration workflow
+
+- Owner: Chenghao Jin
+- Where the work lands: `backend/services/data_generator.py`, `backend/api/data_generator.py`, `dashboard/src/generator/`, specified in [Data Generator](../en/dashboard/data-generator.md)
 
 ### Algorithm testing, DNN attribution
 

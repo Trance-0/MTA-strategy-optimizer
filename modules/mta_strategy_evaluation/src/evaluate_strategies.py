@@ -21,56 +21,55 @@ from pathlib import Path
 from typing import Any, Iterable, Mapping
 
 
-PROJECT_ROOT = Path(__file__).resolve().parents[1]
+PROJECT_ROOT = Path(__file__).resolve().parents[3]
 MODULE_ROOT = PROJECT_ROOT / "modules" / "mta_strategy_evaluation"
-sys.path.insert(0, str(PROJECT_ROOT))
 
-from modules.mta_common.src.budget import (  # noqa: E402
+from modules.mta_common.src.budget import (
     BudgetConstraints,
     BudgetObservation,
 )
-from modules.mta_common.src.campaign import Campaign  # noqa: E402
-from modules.mta_common.src.delivery import DeliveryObservation  # noqa: E402
-from modules.mta_common.src.enums import (  # noqa: E402
+from modules.mta_common.src.campaign import Campaign
+from modules.mta_common.src.delivery import DeliveryObservation
+from modules.mta_common.src.enums import (
     AssignmentType,
     BudgetUsagePolicy,
     FieldAvailability,
     Provider,
 )
-from modules.mta_common.src.episode import CampaignEpisode  # noqa: E402
-from modules.mta_common.src.outcome import OutcomeObservation  # noqa: E402
-from modules.mta_common.src.reporting_scope import ReportingScope  # noqa: E402
-from modules.mta_common.src.touchpoint import (  # noqa: E402
+from modules.mta_common.src.episode import CampaignEpisode
+from modules.mta_common.src.outcome import OutcomeObservation
+from modules.mta_common.src.reporting_scope import ReportingScope
+from modules.mta_common.src.touchpoint import (
     Touchpoint,
     TouchpointFieldAvailability,
 )
-from modules.mta_standard.src.mta_sim_research_adapter import (  # noqa: E402
+from modules.mta_standard.src.mta_sim_research_adapter import (
     load_mta_sim_research_snapshot,
 )
-from modules.mta_strategy_evaluation.adapters.asin_gmv_nn_adapter import (  # noqa: E402
+from modules.mta_strategy_evaluation.adapters.asin_gmv_nn_adapter import (
     ContributedModelError,
     DEFAULT_NETWORK,
     MINIMUM_PANEL_ROWS,
     contributed_model_report,
 )
-from modules.mta_strategy_evaluation.src.evaluation_episode import (  # noqa: E402
+from modules.mta_strategy_evaluation.src.evaluation_episode import (
     GroundTruthScore,
     StrategyEvaluationEpisode,
     check_contract,
     run_evaluation_layers,
 )
-from modules.mta_strategy_evaluation.src.strategy_output import (  # noqa: E402
+from modules.mta_strategy_evaluation.src.strategy_output import (
     StrategyOutput,
 )
-from modules.mta_strategy_evaluation.src.strategy_projection import (  # noqa: E402
+from modules.mta_strategy_evaluation.src.strategy_projection import (
     CAMPAIGN_STRATEGY_ARTIFACT,
     UNRECORDED_ADVERTISER,
     load_strategy_outputs,
 )
-from modules.mta_strategy_recommendation.src.episode_bridge import (  # noqa: E402
+from modules.mta_strategy_recommendation.src.episode_bridge import (
     campaign_episodes_from_research_snapshot,
 )
-from modules.mta_strategy_recommendation.src.response_dataset import (  # noqa: E402
+from modules.mta_strategy_recommendation.src.response_dataset import (
     build_campaign_response_dataset,
 )
 

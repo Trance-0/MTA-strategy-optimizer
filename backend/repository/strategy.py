@@ -182,7 +182,7 @@ def campaign_strategy() -> dict:
     """The optimized Campaign budget plan and the response evidence behind it.
 
     Read in its own shape in both modes. This artifact has no database
-    representation: it is produced by `script/generate_campaign_strategy.py`
+    representation: it is produced by `modules/mta_strategy_recommendation/src/generate_campaign_strategy.py`
     rather than by the import pipeline.
     """
     fallback = pipeline_artifact_path(

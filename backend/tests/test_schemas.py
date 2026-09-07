@@ -137,7 +137,7 @@ class SchemaDescriptionTests(unittest.TestCase):
         self.assertEqual(described["missingCount"], len(REQUIRED_TABLES))
         # The reason and the fix travel with the option, so the dialog does not
         # have to reconstruct either.
-        self.assertIn("derive_scenario_schemas.py --source mta", described["detail"])
+        self.assertIn("-m backend.derive_scenario_schemas --source mta", described["detail"])
 
     def test_a_complete_source_is_parseable_but_not_selectable(self) -> None:
         described = _describe("mta", set(SIMULATOR_SOURCE_TABLES), 19, "public")
@@ -168,7 +168,7 @@ class SchemaDescriptionTests(unittest.TestCase):
         described = _describe("blank", set(), 0, "public")
 
         self.assertIn(
-            "script/import_to_database.py --schema blank", described["detail"]
+            "-m backend.import_to_database --schema blank", described["detail"]
         )
         self.assertTrue(described["canInitialize"])
 

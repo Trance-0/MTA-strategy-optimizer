@@ -1,0 +1,202 @@
+# Yunxiao ECS host deployment: the complete replacement configuration for the
+# existing pipeline 1406431, job 拉取-测试-部署到ECS(非容器). It deploys the
+# materialized Gitea main snapshot to the existing Linux host without
+# containers. Every deployment command is inline in the run: block below;
+# there is no companion shell file, wrapper or bootstrap step to install.
+#
+# Operating steps for the owner:
+#   1. Run GitHub Actions -> "Mirror GitHub to Gitea" -> Run workflow -> main.
+#      Wait for success, then confirm Gitea main carries the generator's
+#      examples/baseline.toy.json as a real file rather than a submodule link.
+#   2. Open pipeline 1406431 -> Edit and replace its configuration with this
+#      file. When editing only the job in the visual editor, paste the run:
+#      block's contents into the command field without the YAML indentation.
+#   3. Set GITEA_PASSWORD as a masked private variable in the host command
+#      environment. GITEA_USERNAME defaults to the existing mta-user account.
+#      Never write a credential into this file or into GIT_URL.
+#   4. Trigger on Gitea main only, allow one concurrent host deployment, and
+#      keep sources: {}, the machine group, root execution, one batch, no
+#      artifact download and the existing failure-email plugin below.
+#   5. Run it, then check all six phases and the final "CICD DEPLOY OK". On
+#      failure, capture the first failed command and its surrounding log.
+#
+# The host must already provide Bash, Git, rsync, curl, systemctl,
+# /root/.local/bin/uv, /usr/local/bin/npm, the configured mta-backend.service
+# and nginx. This command deploys in place and has no automatic rollback; its
+# tests run in file mode and never touch the service's database configuration.
+#
+# Full specification, including source gates, preserved runtime files,
+# dependency extras and health addresses:
+#   docs/en/introduction/backend/yunxiao-ecs.md
+sources: {}
+stages:
+  cicd_stage:
+    name: "CICD"
+    jobs:
+      cicd_job:
+        name: "拉取-测试-部署到ECS(非容器)"
+        component: VMDockerDeploy
+        with:
+          machineGroup: "u6c168aem8ppjg64"
+          executeUser: "root"
+          pauseStrategy: "noPause"
+          batchNumber: 1
+          downloadArtifact: false
+          run: |
+            # Disable tracing so the credential helper below never echoes the
+            # Gitea password into the pipeline log. Keep it off for the whole run.
+            set +x
+            set -eu
+
+            # Existing host layout. REPO holds live source, FRONTEND the built
+            # client that nginx serves; both already exist on the machine.
+            UV=/root/.local/bin/uv
+            NPM=/usr/local/bin/npm
+            APP=/opt/mta-app
+            REPO="$APP/backend"
+            FRONTEND="$APP/frontend-dist"
+            GIT_URL="https://git.trance-0.com/Trance-0/MTA-strategy-optimizer.git"
+            GITEA_USERNAME="${GITEA_USERNAME:-mta-user}"
+            # Fail immediately with a usable message when the masked variable is
+            # absent, rather than letting the clone hang on a credential prompt.
+            : "${GITEA_PASSWORD:?Set the private GITEA_PASSWORD variable in the host command environment}"
+            export GITEA_USERNAME GITEA_PASSWORD GIT_TERMINAL_PROMPT=0
+            # Mainland-China mirror; the default registry is unreachable here.
+            export NPM_CONFIG_REGISTRY=https://registry.npmmirror.com
+
+            # Stage the clone outside the live tree so a failed or incomplete
+            # snapshot can never partially overwrite a working deployment.
+            TMP=$(mktemp -d)
+            trap 'rm -rf -- "$TMP"' EXIT
+
+            echo "==> [1/6] clone and check main (self-hosted Gitea)"
+            # Read credentials from the environment for this clone only: the
+            # empty first helper clears any inherited one, so nothing is written
+            # to disk or left configured on the host afterwards. Submodules stay
+            # off because Gitea main is a materialized snapshot with no links,
+            # and recursion would reach github.com from a host that cannot.
+            git -c credential.helper= \
+              -c 'credential.helper=!f() { test "$1" != get || printf "username=%s\npassword=%s\n" "$GITEA_USERNAME" "$GITEA_PASSWORD"; }; f' \
+              -c submodule.recurse=false clone --no-recurse-submodules \
+              --depth 2 --single-branch --branch main "$GIT_URL" "$TMP/repo"
+            # Drop the credentials before running any repository code.
+            unset GITEA_USERNAME GITEA_PASSWORD
+
+            # Source gates, all before the rsync below: a snapshot missing the
+            # generator inputs must abort while the live tree is still intact.
+            # A .gitmodules file or a gitlink means the mirror published the
+            # submodule pointer instead of materializing its content.
+            test ! -e "$TMP/repo/.gitmodules" || {
+              echo "Gitea main is not the completed snapshot" >&2
+              exit 1
+            }
+            tree=$(git -C "$TMP/repo" ls-tree -r HEAD)
+            if printf '%s\n' "$tree" | grep '^160000 ' >/dev/null; then
+              echo "Gitea main still contains unresolved submodules" >&2
+              exit 1
+            fi
+            # Depth 2 must expose a parent: the snapshot is a generated child
+            # commit, so a root commit here means publication was incomplete.
+            git -C "$TMP/repo" rev-parse --verify 'HEAD^' >/dev/null
+            # Require the pinned generator's own inputs as real tracked files.
+            # ls-files rejects a path present but untracked, which would mean
+            # leftover host state rather than published content.
+            for input in \
+              simulations/__init__.py \
+              simulations/baseline/mta_dataset/__init__.py \
+              simulations/baseline/mta_dataset/configuration.py \
+              examples/baseline.toy.json; do
+              path="external/mta_sim_dataset/ZheyuanWu/$input"
+              test -f "$TMP/repo/$path" || {
+                echo "Missing generator input: $input" >&2
+                exit 1
+              }
+              git -C "$TMP/repo" ls-files --error-unmatch -- "$path" >/dev/null
+            done
+
+            echo "==> [2/6] sync source into $REPO (preserve runtime files)"
+            # --delete removes files dropped from main, so every exclusion below
+            # names host state that must survive: the service's own .env and
+            # virtualenv, installed dependency trees, build output rebuilt in
+            # step 5, caches, logs, and generated data that exists only here.
+            mkdir -p "$REPO"
+            rsync -a --delete \
+              --exclude='.git' \
+              --exclude='.env' \
+              --exclude='.venv' \
+              --exclude='node_modules' \
+              --exclude='dashboard/dist' \
+              --exclude='__pycache__' \
+              --exclude='*.log' \
+              --exclude='.mplconfig' \
+              --exclude='generated/' \
+              "$TMP/repo/" "$REPO/"
+
+            echo "==> [3/6] backend and evaluation dependencies"
+            cd "$REPO"
+            # --frozen installs the locked versions exactly; the two extras are
+            # what the backend service and the evaluation suites in step 4 need.
+            "$UV" sync --frozen --extra backend --extra strategy-evaluation
+
+            echo "==> [4/6] unit tests (DATABASE=false for test processes only)"
+            # Test the new source before it goes live. DATABASE=false is set per
+            # process, so the suites run in file mode and never read or write the
+            # service's configured database; it does not change that service.
+            for suite in \
+              modules/mta_common \
+              modules/mta_attribution \
+              modules/mta_standard \
+              modules/mta_strategy_recommendation \
+              modules/mta_strategy_evaluation \
+              backend; do
+              echo "--- $suite/tests"
+              DATABASE=false "$REPO/.venv/bin/python" -X utf8 -B \
+                -m unittest discover -s "$suite/tests" -t . -p 'test_*.py'
+            done
+
+            echo "==> [5/6] frontend ci + test + build"
+            cd "$REPO/dashboard"
+            # ci installs from the lockfile against the mirror registry above.
+            # Build last so a failing test aborts before producing dist/.
+            "$NPM" ci
+            "$NPM" test
+            "$NPM" run build
+
+            echo "==> [6/6] deploy frontend + restart backend + verify"
+            # Everything above passed, so publish the client and restart the
+            # service. This is the first step that changes what users see.
+            mkdir -p "$FRONTEND"
+            rsync -a --delete "$REPO/dashboard/dist/" "$FRONTEND/"
+            systemctl restart mta-backend.service
+            # Give the service time to bind its port before the checks below.
+            sleep 3
+
+            # Four checks widening from the service outward, so a failure says
+            # which layer broke: the backend itself, the nginx proxy, the served
+            # client, then the public address. --noproxy bypasses any host proxy
+            # that would answer for the server and mask a real outage; -f makes
+            # an error status fail the job instead of printing an error body.
+            echo "--- /api/health direct (127.0.0.1:8501)"
+            curl --noproxy '*' -fsS --connect-timeout 10 --max-time 30 \
+              http://127.0.0.1:8501/api/health
+            echo ""
+            echo "--- /api/health via nginx (127.0.0.1:8080)"
+            curl --noproxy '*' -fsS --connect-timeout 10 --max-time 30 \
+              http://127.0.0.1:8080/api/health
+            echo ""
+            echo "--- frontend index (127.0.0.1:8080)"
+            curl --noproxy '*' -fsS --connect-timeout 10 --max-time 30 \
+              -o /dev/null http://127.0.0.1:8080/
+            echo ""
+            echo "--- /api/health public (47.102.115.250:8080)"
+            curl --noproxy '*' -fsS --connect-timeout 10 --max-time 30 \
+              http://47.102.115.250:8080/api/health
+            echo ""
+            echo "CICD DEPLOY OK"
+        plugins:
+          - name: "部署失败邮件告警"
+            plugin: EmailPlugin
+            triggerState:
+              - fail
+            with:
+              email: wuzheyuan.86@gmail.com

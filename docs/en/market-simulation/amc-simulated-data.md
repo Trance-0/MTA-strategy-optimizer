@@ -2,6 +2,7 @@
 title: AMC MTA Simulated Data
 compact: "Maps the five simulated CSVs derived from `synthetic_user_events_sample.csv`: `amc_touchpoint_events_sample.csv`, `amc_mta_path_report_raw_sample.csv`, `amazon_ads_report_sample.csv`, `amc_touchpoint_entity_aggregate_sample.csv`. Gives row counts 11,147 events, 2,400 users, 153 paths, 1,530 Ads rows, 34 entity aggregates, plus regenerate and validate commands."
 lang: en-US
+source_files: modules/mta_attribution/src/generate_simulated_synthetic_user_events.py, modules/mta_attribution/src/generate_simulated_amc_touchpoint_events.py, modules/mta_attribution/src/generate_simulated_amazon_ads_report.py, modules/mta_attribution/src/generate_simulated_touchpoint_entity_aggregate.py
 ---
 
 # AMC MTA Simulated Data
@@ -45,8 +46,66 @@ Reconciliation follows metric semantics. Impressions, clicks, and cost conserve 
 Regenerate and validate:
 
 ```bash
-uv run python -X utf8 -B script/regenerate_simulated_dataset.py
-uv run python -X utf8 -B script/validate_data_alignment.py
+uv run python -X utf8 -B -m modules.mta_attribution.src.regenerate_simulated_dataset
+uv run python -X utf8 -B -m modules.mta_attribution.src.validate_data_alignment
 ```
 
 Complete regeneration publishes all ten artifacts atomically; any failed step rolls back the operation, and fixed inputs reproduce byte-for-byte.
+
+## Source Files
+
+### `generate_simulated_synthetic_user_events.py`
+
+Source: `modules/mta_attribution/src/generate_simulated_synthetic_user_events.py`
+
+- Responsibility: Project the common synthetic events into `synthetic_user_events_sample.csv` using
+  `synthetic_event_pipeline.py`, retaining the field list exported as `FIELDS`.
+- Inputs: Deterministic template events and the documented sample window;
+  `generate_rows(...)` returns the projected row dictionaries. The Ads command
+  additionally accepts date/output overrides through `generate_file(output, start, end)`.
+- Outputs: Rows in the existing contract's order; `main()` writes the named
+  sample artifact. Fixed inputs preserve bytes and reconciliation rules above.
+- Dependencies: Owning attribution modules and Python standard library.
+- Verification: `modules/mta_attribution/tests/test_end_to_end_pipeline.py`.
+
+### `generate_simulated_amc_touchpoint_events.py`
+
+Source: `modules/mta_attribution/src/generate_simulated_amc_touchpoint_events.py`
+
+- Responsibility: Project the common synthetic events into `amc_touchpoint_events_sample.csv` using
+  `synthetic_event_pipeline.py`, retaining the field list exported as `FIELDS`.
+- Inputs: Deterministic template events and the documented sample window;
+  `generate_rows(...)` returns the projected row dictionaries. The Ads command
+  additionally accepts date/output overrides through `generate_file(output, start, end)`.
+- Outputs: Rows in the existing contract's order; `main()` writes the named
+  sample artifact. Fixed inputs preserve bytes and reconciliation rules above.
+- Dependencies: Owning attribution modules and Python standard library.
+- Verification: `modules/mta_attribution/tests/test_end_to_end_pipeline.py`.
+
+### `generate_simulated_amazon_ads_report.py`
+
+Source: `modules/mta_attribution/src/generate_simulated_amazon_ads_report.py`
+
+- Responsibility: Project the common synthetic events into `amazon_ads_report_sample.csv` using
+  `synthetic_event_pipeline.py`, retaining the field list exported as `FIELDS`.
+- Inputs: Deterministic template events and the documented sample window;
+  `generate_rows(...)` returns the projected row dictionaries. The Ads command
+  additionally accepts date/output overrides through `generate_file(output, start, end)`.
+- Outputs: Rows in the existing contract's order; `main()` writes the named
+  sample artifact. Fixed inputs preserve bytes and reconciliation rules above.
+- Dependencies: Owning attribution modules and Python standard library.
+- Verification: `modules/mta_attribution/tests/test_end_to_end_pipeline.py`.
+
+### `generate_simulated_touchpoint_entity_aggregate.py`
+
+Source: `modules/mta_attribution/src/generate_simulated_touchpoint_entity_aggregate.py`
+
+- Responsibility: Project the common synthetic events into `amc_touchpoint_entity_aggregate_sample.csv` using
+  `synthetic_event_pipeline.py`, retaining the field list exported as `FIELDS`.
+- Inputs: Deterministic template events and the documented sample window;
+  `generate_rows(...)` returns the projected row dictionaries. The Ads command
+  additionally accepts date/output overrides through `generate_file(output, start, end)`.
+- Outputs: Rows in the existing contract's order; `main()` writes the named
+  sample artifact. Fixed inputs preserve bytes and reconciliation rules above.
+- Dependencies: Owning attribution modules and Python standard library.
+- Verification: `modules/mta_attribution/tests/test_end_to_end_pipeline.py`.

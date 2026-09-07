@@ -1,8 +1,9 @@
 ---
 title: Generate MTA-SIM Data
 description: Run the pinned ZheyuanWu generator and adapt its output for local models
-compact: "Governs `script/generate_mta_sim_dataset.py` with `--variant baseline|regional`, `--config`, `--output`, the `external/mta_sim_dataset` submodule, and the files written to `generated/mta_sim/`: `amc_path_report.csv`, `dataset_manifest.json`, `validation_report.json`, `model_input_amc_path_report.csv`, `model_evaluation_ground_truth.csv`. Read when generating new synthetic data."
+compact: "Governs `modules/mta_standard/src/generate_mta_sim_dataset.py` with `--variant baseline|regional`, `--config`, `--output`, the `external/mta_sim_dataset` submodule, and the files written to `generated/mta_sim/`: `amc_path_report.csv`, `dataset_manifest.json`, `validation_report.json`, `model_input_amc_path_report.csv`, `model_evaluation_ground_truth.csv`. Read when generating new synthetic data."
 lang: en-US
+source_files: modules/mta_standard/src/generate_mta_sim_dataset.py
 ---
 
 # Generate MTA-SIM Data
@@ -39,7 +40,7 @@ For a new clone, `git clone --recurse-submodules` would recurse the same way; cl
 
 ```sh
 uv sync --locked
-uv run python -X utf8 -B script/generate_mta_sim_dataset.py
+uv run python -X utf8 -B -m modules.mta_standard.src.generate_mta_sim_dataset
 ```
 
 The default command uses `external/mta_sim_dataset/ZheyuanWu/examples/baseline.toy.json` and writes to the ignored `generated/mta_sim/` directory. It prints the generator version, report scope, path count, performance count, and touchpoint count after local adaptation succeeds.
@@ -47,7 +48,7 @@ The default command uses `external/mta_sim_dataset/ZheyuanWu/examples/baseline.t
 Use caller-owned paths for another approved configuration:
 
 ```sh
-uv run python -X utf8 -B script/generate_mta_sim_dataset.py \
+uv run python -X utf8 -B -m modules.mta_standard.src.generate_mta_sim_dataset \
   --variant baseline \
   --config path/to/config.json \
   --output path/to/generated-data
@@ -101,4 +102,23 @@ At the pinned revision, the submodule's 10 baseline tests and six regional tests
 
 ## Legacy compatibility commands <span class="status-label status-historical" aria-label="Historical"></span>
 
-The root `script/generate_simulated_*.py` and `script/regenerate_simulated_dataset.py` commands retain the behavior of the earlier repository-specific five-segment fixture generator. They exist to reproduce the committed historical sample and its strategy bridge. New data-generation work should use `script/generate_mta_sim_dataset.py`.
+The root `modules/mta_attribution/src/generate_simulated_*.py` and `modules/mta_attribution/src/regenerate_simulated_dataset.py` commands retain the behavior of the earlier repository-specific five-segment fixture generator. They exist to reproduce the committed historical sample and its strategy bridge. New data-generation work should use `modules/mta_standard/src/generate_mta_sim_dataset.py`.
+
+## Source Files
+
+### `generate_mta_sim_dataset.py`
+
+Source: `modules/mta_standard/src/generate_mta_sim_dataset.py`
+
+- Responsibility: Expose the pinned generator adapter through `main(arguments=None)`
+  and `build_argument_parser()` using the flags documented above.
+- Inputs: `--submodule`, `--config`, `--output`, and `--variant baseline|regional`.
+  Defaults point to the pinned generator toy preset and ignored `generated/mta_sim/`.
+- Outputs: Generated artifacts and a JSON summary containing generator identity,
+  output directory, counts, report dates, marketplace and evaluation-only ground-truth role.
+- Errors: Missing input, runtime and validation errors print a bounded diagnostic
+  and return one; successful generation and adaptation return zero.
+- Dependencies: `mta_sim_generator_adapter.py` and Python standard library;
+  execution uses `python -m` without changing import paths.
+- Verification: `modules/mta_standard/tests/test_mta_sim_generator_adapter.py`
+  and the documented toy-generation command.

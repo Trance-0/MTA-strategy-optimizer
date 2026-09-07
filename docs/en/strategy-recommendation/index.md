@@ -44,7 +44,7 @@ File: `src/budget_recommender.py`
 
 ### Generation entry point
 
-File: `script/generate_initial_budget.py`
+File: `modules/mta_strategy_recommendation/src/generate_initial_budget.py`
 
 ### Strategy input
 
@@ -95,7 +95,7 @@ File: `src/budget_optimizer.py`
 
 ### Generation entry point
 
-File: `script/generate_campaign_strategy.py`
+File: `modules/mta_strategy_recommendation/src/generate_campaign_strategy.py`
 
 ### Current output
 

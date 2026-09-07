@@ -670,7 +670,7 @@ cp sample.env .env      # set DATABASE=true and the PG_* values
 ./dashboard/run.sh      # dashboard\run.bat on Windows</code></pre>
             <p class="caption">
               The import command that populates the mirror is
-              <code>uv run --extra dashboard python script/import_to_database.py</code>.
+              <code>uv run --extra dashboard python -m backend.import_to_database</code>.
               The specification is at <a :href="DOCS_URL" target="_blank" rel="noopener">the
               documentation site</a>.
             </p>

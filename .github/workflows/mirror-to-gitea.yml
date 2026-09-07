@@ -22,12 +22,6 @@ jobs:
   mirror:
     if: github.event_name != 'delete' || github.event.ref_type == 'branch' || github.event.ref_type == 'tag'
     runs-on: ubuntu-latest
-    outputs:
-      ready: ${{ steps.configuration.outputs.ready }}
-      base_url: ${{ steps.configuration.outputs.base_url }}
-      repository_path: ${{ steps.configuration.outputs.repository_path }}
-      default_branch: ${{ steps.sync.outputs.default_branch }}
-      alias_master: ${{ steps.sync.outputs.alias_master }}
     steps:
       - name: Check mirror configuration
         id: configuration
@@ -92,8 +86,7 @@ jobs:
           echo "base_url=$gitea_base_url" >> "$GITHUB_OUTPUT"
           echo "repository_path=$repository_path" >> "$GITHUB_OUTPUT"
 
-      - name: Mirror branches and tags
-        id: sync
+      - name: Prepare and atomically publish the complete mirror
         if: steps.configuration.outputs.ready == 'true'
         shell: bash
         env:
@@ -103,253 +96,86 @@ jobs:
           GITEA_REPOSITORY_PATH: ${{ steps.configuration.outputs.repository_path }}
         run: |
           set -euo pipefail
-
-          progress() {
-            local percent="$1"
-            local label="$2"
-            local width=20
-            local filled=$((percent * width / 100))
-            local empty=$((width - filled))
-            local filled_bar empty_bar
-            printf -v filled_bar '%*s' "$filled" ''
-            printf -v empty_bar '%*s' "$empty" ''
-            filled_bar="${filled_bar// /#}"
-            empty_bar="${empty_bar// /-}"
-            printf '[%s%s] %3d%% %s\n' "$filled_bar" "$empty_bar" "$percent" "$label"
-            printf '| `%3d%%` | %s |\n' "$percent" "$label" >> "$GITHUB_STEP_SUMMARY"
-          }
-
-          cat >> "$GITHUB_STEP_SUMMARY" <<'EOF'
-          ### GitHub-to-Gitea mirror
-
-          GitHub is the source of truth. Gitea branches and tags are force-updated to the GitHub refs. Gitea's protected `master` branch is retained as an alias of GitHub `main` when GitHub has no `master` branch. A later job then adds one commit on top of the default branch that materializes the submodule files.
-
-          | Progress | Status |
-          | ---: | --- |
+          work=$(mktemp -d)
+          trap 'rm -rf "$work"' EXIT
+          cat > "$work/askpass" <<'EOF'
+          #!/usr/bin/env bash
+          case "$1" in
+            *Username*) printf '%s\n' "$GITEA_USERNAME" ;;
+            *Password*) printf '%s\n' "$GITEA_PASSWORD" ;;
+            *) exit 1 ;;
+          esac
           EOF
-
-          progress 5 "Preparing credential helper"
-
-          askpass="$RUNNER_TEMP/gitea-askpass.sh"
-          printf '%s\n' \
-            '#!/usr/bin/env bash' \
-            'case "$1" in' \
-            '  *Username*) printf '\''%s\n'\'' "$GITEA_USERNAME" ;;' \
-            '  *Password*) printf '\''%s\n'\'' "$GITEA_PASSWORD" ;;' \
-            '  *) exit 1 ;;' \
-            'esac' > "$askpass"
-          chmod 700 "$askpass"
-
-          export GIT_ASKPASS="$askpass"
-          export GIT_TERMINAL_PROMPT=0
-
-          progress 15 "Cloning the authoritative GitHub repository"
-          git clone --bare --filter=blob:none "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY.git" source.git
-          progress 30 "Refreshing every GitHub branch and tag"
-          git -C source.git fetch origin "+refs/heads/*:refs/heads/*" "+refs/tags/*:refs/tags/*" --prune --force
-          git -C source.git remote add gitea "${GITEA_BASE_URL}/${GITEA_REPOSITORY_PATH}.git"
-
-          progress 45 "Force-updating Gitea branches from GitHub"
-          while IFS= read -r branch; do
-            git -C source.git push gitea --force "refs/heads/${branch}:refs/heads/${branch}"
-          done < <(git -C source.git for-each-ref --format='%(refname:strip=2)' refs/heads)
-
-          alias_master=false
-          if git -C source.git show-ref --verify --quiet refs/heads/main &&
-             ! git -C source.git show-ref --verify --quiet refs/heads/master; then
-            progress 55 "Aligning protected Gitea master with GitHub main"
-            git -C source.git push gitea --force "refs/heads/main:refs/heads/master"
-            alias_master=true
-          fi
-
-          # The snapshot job commits on top of these, so it needs to know which
-          # branch is authoritative and whether master is an alias of it. The
-          # workflow fires on pushes to every branch, and a feature-branch run
-          # must not publish a feature branch as the Gitea default. `clone
-          # --bare` points HEAD at the remote's default branch, which answers
-          # this without an API call on every trigger type.
-          default_branch="$(git -C source.git symbolic-ref --short HEAD)"
-          if test -z "$default_branch" ||
-             ! git -C source.git show-ref --verify --quiet "refs/heads/${default_branch}"; then
-            echo "Could not resolve the GitHub default branch from the mirror clone."
+          chmod 700 "$work/askpass"
+          export GIT_ASKPASS="$work/askpass" GIT_TERMINAL_PROMPT=0
+          source_url="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY.git"
+          git clone --bare --no-local "$source_url" "$work/source.git"
+          default_branch=$(git -C "$work/source.git" symbolic-ref --short HEAD)
+          parent=$(git -C "$work/source.git" rev-parse "refs/heads/$default_branch")
+          git clone --no-local --no-checkout "$work/source.git" "$work/snapshot"
+          cd "$work/snapshot"
+          git remote set-url origin "$source_url"
+          git -c submodule.recurse=false checkout --detach "$parent"
+          git ls-tree -r HEAD | awk '$1 == "160000" {print $4 " " $3}' > "$work/pins"
+          test -s "$work/pins"
+          git -c submodule.recurse=false submodule update --init
+          while read -r path pin; do
+            test "$(git -C "$path" rev-parse HEAD)" = "$pin"
+            git -c submodule.recurse=false fetch --no-tags "$PWD/$path" "$pin"
+            git rm --cached --quiet -- "$path"
+            git read-tree --prefix="$path/" "$pin"
+            rm -f "$path/.git"
+          done < "$work/pins"
+          git ls-files --stage | awk '$1 == "160000" {print $4}' > "$work/nested-links"
+          while IFS= read -r path; do
+            git update-index --force-remove -- "$path"
+          done < "$work/nested-links"
+          git rm --quiet -- .gitmodules
+          export GIT_AUTHOR_NAME='Gitea mirror' GIT_COMMITTER_NAME='Gitea mirror'
+          export GIT_AUTHOR_EMAIL='mirror@users.noreply.github.com'
+          export GIT_COMMITTER_EMAIL="$GIT_AUTHOR_EMAIL"
+          GIT_AUTHOR_DATE=$(git show -s --format=%cI "$parent")
+          export GIT_AUTHOR_DATE GIT_COMMITTER_DATE="$GIT_AUTHOR_DATE"
+          {
+            printf 'snapshot: materialize submodules at %.12s\n\n' "$parent"
+            printf 'Generated by .github/workflows/mirror-to-gitea.yml.\n'
+            printf 'GitHub is authoritative: %s is its %s. Edit GitHub only.\n\n' "$parent" "$default_branch"
+            printf 'Pinned submodule commits:\n'
+            sed 's/^/  /' "$work/pins"
+          } > "$work/message"
+          git -c commit.gpgsign=false commit --quiet -F "$work/message"
+          test "$(git rev-parse HEAD^)" = "$parent"
+          tree=$(git ls-tree -r HEAD)
+          if printf '%s\n' "$tree" | grep -q '^160000 '; then
+            echo 'Snapshot still contains a Git link' >&2
             exit 1
           fi
-          echo "default_branch=$default_branch" >> "$GITHUB_OUTPUT"
-          echo "alias_master=$alias_master" >> "$GITHUB_OUTPUT"
-
-          progress 65 "Pruning Gitea-only branches except protected master"
-          while IFS= read -r remote_ref; do
-            branch="${remote_ref#refs/heads/}"
-            if test "$branch" = "master"; then
-              continue
-            fi
-            if ! git -C source.git show-ref --verify --quiet "refs/heads/${branch}"; then
-              git -C source.git push gitea --delete "$branch"
-            fi
-          done < <(git -C source.git ls-remote --refs --heads gitea | awk '{print $2}')
-
-          progress 75 "Force-updating and pruning Gitea tags"
-          git -C source.git push gitea --force --prune "refs/tags/*:refs/tags/*"
-
-          progress 85 "Verifying branch and tag refs"
-          expected_refs="$RUNNER_TEMP/expected-refs.txt"
-          actual_refs="$RUNNER_TEMP/actual-refs.txt"
-          git -C source.git for-each-ref --format='%(objectname) refs/heads/%(refname:strip=2)' refs/heads > "$expected_refs"
-          if git -C source.git show-ref --verify --quiet refs/heads/main &&
-             ! git -C source.git show-ref --verify --quiet refs/heads/master; then
-            printf '%s refs/heads/master\n' "$(git -C source.git rev-parse refs/heads/main)" >> "$expected_refs"
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          import subprocess
+          root = Path('external/mta_sim_dataset/ZheyuanWu')
+          required = [root / name for name in (
+              'simulations/__init__.py', 'simulations/baseline/mta_dataset/__init__.py',
+              'simulations/baseline/mta_dataset/configuration.py', 'examples/baseline.toy.json')]
+          if not all(path.is_file() for path in required):
+              raise SystemExit('Snapshot is missing required generator inputs')
+          subprocess.run(['git', 'ls-files', '--error-unmatch', '--', *map(str, required)], check=True)
+          subprocess.run(['git', 'diff', '--exit-code', 'HEAD', '--', str(root)], check=True)
+          if not isinstance(json.loads(required[-1].read_text(encoding='utf-8')), dict):
+              raise SystemExit('Toy configuration must be a JSON object')
+          PY
+          snapshot=$(git rev-parse HEAD)
+          git -C "$work/source.git" -c submodule.recurse=false fetch --no-tags "$PWD" HEAD
+          git -C "$work/source.git" update-ref "refs/heads/$default_branch" "$snapshot"
+          cd "$work/source.git"
+          if git show-ref --verify --quiet refs/heads/main &&
+             ! git show-ref --verify --quiet refs/heads/master; then
+            git update-ref refs/heads/master "$(git rev-parse refs/heads/main)"
           fi
-          git -C source.git for-each-ref --format='%(objectname) refs/tags/%(refname:strip=2)' refs/tags >> "$expected_refs"
-          # This check runs before the snapshot job adds its commit, so an exact
-          # match is the right assertion here: at this instant every Gitea ref is
-          # still a GitHub ref. The snapshot job re-verifies its own two refs.
-          git -C source.git ls-remote --refs gitea 'refs/heads/*' 'refs/tags/*' |
-            awk '{print $1 " " $2}' > "$actual_refs"
-          sort -o "$expected_refs" "$expected_refs"
-          sort -o "$actual_refs" "$actual_refs"
-          if ! diff --unified=3 "$expected_refs" "$actual_refs"; then
-            echo "Gitea refs do not exactly match the authoritative GitHub refs."
-            exit 1
-          fi
-
-          progress 100 "Sync complete; Gitea refs match GitHub"
-
-          rm -f "$askpass"
-
-  # Gitea cannot reach github.com, so a mirrored gitlink there resolves to
-  # nothing: the destination receives the recorded submodule commit identifier
-  # and no way to fetch its content. This job adds one commit on top of the
-  # mirrored default branch whose tree has the submodule files materialized as
-  # ordinary tracked files, so a Gitea checkout is self-contained without
-  # vendoring anything into GitHub.
-  #
-  # GitHub stays authoritative and Gitea's history stays a superset of it: the
-  # snapshot is one child commit, never a rewrite. Nothing is copied by hand,
-  # so bumping a submodule pin here regenerates the files on the next run.
-  snapshot:
-    needs: mirror
-    if: needs.mirror.outputs.ready == 'true'
-    runs-on: ubuntu-latest
-    steps:
-      # `ref` pins this to the default branch. The workflow fires on a push to
-      # any branch, but only one branch is published to Gitea with its files
-      # materialized, so a feature-branch run must still snapshot the default.
-      #
-      # Deliberately without `submodules`. The next step initializes them by
-      # recorded commit instead, because `actions/checkout` fetches the branch
-      # named in `.gitmodules` and one pin is currently reachable only from a
-      # different branch. It also avoids `recursive`: `campaign-optimizer`
-      # declares this repository as its own submodule, so recursion re-enters
-      # the project and pulls a stale copy of itself.
-      - name: Checkout repository
-        uses: actions/checkout@v6
-        with:
-          ref: ${{ needs.mirror.outputs.default_branch }}
-
-      - name: Initialize submodules one level deep
-        shell: bash
-        run: |
-          set -euo pipefail
-          # One level only. There is no `--no-recursive` flag to write here:
-          # one level is already the default, and adding `--recursive` is what
-          # would opt into the cycle above. This line stays as it is.
-          git submodule update --init
-          git submodule status
-
-      - name: Publish the materialized snapshot commit
-        shell: bash
-        env:
-          GITEA_USERNAME: ${{ secrets.GITEA_USERNAME }}
-          GITEA_PASSWORD: ${{ secrets.GITEA_PASSWORD }}
-          GITEA_BASE_URL: ${{ needs.mirror.outputs.base_url }}
-          GITEA_REPOSITORY_PATH: ${{ needs.mirror.outputs.repository_path }}
-          DEFAULT_BRANCH: ${{ needs.mirror.outputs.default_branch }}
-          ALIAS_MASTER: ${{ needs.mirror.outputs.alias_master }}
-        run: |
-          set -euo pipefail
-
-          askpass="$RUNNER_TEMP/gitea-askpass.sh"
-          printf '%s\n' \
-            '#!/usr/bin/env bash' \
-            'case "$1" in' \
-            '  *Username*) printf '\''%s\n'\'' "$GITEA_USERNAME" ;;' \
-            '  *Password*) printf '\''%s\n'\'' "$GITEA_PASSWORD" ;;' \
-            '  *) exit 1 ;;' \
-            'esac' > "$askpass"
-          chmod 700 "$askpass"
-          export GIT_ASKPASS="$askpass"
-          export GIT_TERMINAL_PROMPT=0
-
-          # Record what was pinned before the gitlinks are replaced, so the
-          # snapshot commit message states the exact provenance of its files.
-          pinned="$(git submodule status --cached | awk '{print "  " $2 " " $1}')"
-
-          # A submodule working tree carries its own `.git` -- a file pointing
-          # into `.git/modules/`. Removing it demotes the directory to ordinary
-          # files that the superproject can track.
-          while IFS= read -r submodule_path; do
-            rm -rf "${submodule_path:?}/.git"
-          done < <(git config --file .gitmodules --get-regexp '^submodule\..*\.path$' | awk '{print $2}')
-
-          git rm --cached --quiet --ignore-unmatch -r -- external
-          rm -f .gitmodules
-
-          # Each vendored project keeps its own ignore files, and they are
-          # written for a standalone checkout rather than for this tree, so
-          # `--force` is what makes the snapshot complete rather than partial.
-          git add --force --all -- external
-          git add --all -- .gitmodules
-
-          # Fixed timestamps make the commit a pure function of its tree and
-          # parent. An unchanged repository therefore recomputes the identical
-          # commit, and the push below becomes a no-op instead of adding one
-          # empty commit to Gitea's default branch on every nightly run.
-          mirrored_head="$(git rev-parse HEAD)"
-          commit_date="$(git show --no-patch --format=%cI "$mirrored_head")"
-          export GIT_AUTHOR_DATE="$commit_date" GIT_COMMITTER_DATE="$commit_date"
-
-          git -c user.name='Gitea mirror' \
-              -c user.email='mirror@users.noreply.github.com' \
-              commit --quiet --allow-empty -m "$(printf 'snapshot: materialize submodules at %s\n\nGenerated by .github/workflows/mirror-to-gitea.yml, which is why this commit\nexists only on Gitea. GitHub remains the source of truth: %s is its\n%s, and this commit is its direct child. Commit to GitHub instead;\nanything committed here is replaced on the next mirror run.\n\nPinned submodule commits:\n%s\n' "${mirrored_head:0:12}" "${mirrored_head:0:12}" "$DEFAULT_BRANCH" "$pinned")"
-
-          # Refuse to publish a snapshot that would not actually help Gitea.
-          if test -z "$(git ls-files -- external)"; then
-            echo "The snapshot tree records no files below external/."
-            exit 1
-          fi
-          if git ls-files --stage -- external | grep -q '^160000'; then
-            echo "The snapshot tree still records a gitlink below external/."
-            exit 1
-          fi
-          # The whole point is that Gitea's history stays a superset of
-          # GitHub's. If this commit were not a child of the ref the mirror
-          # just pushed, publishing it would discard mirrored history.
-          if test "$(git rev-parse HEAD^)" != "$mirrored_head"; then
-            echo "The snapshot commit is not a direct child of the mirrored head."
-            exit 1
-          fi
-
-          git remote add gitea "${GITEA_BASE_URL}/${GITEA_REPOSITORY_PATH}.git"
-
-          # Not a force push. The mirror job has already force-updated these
-          # refs to the GitHub commit that is this commit's parent, so this is
-          # a fast-forward -- and if anything else moved them meanwhile, the
-          # rejection is the correct outcome rather than silent data loss.
-          snapshot_head="$(git rev-parse HEAD)"
-          git push gitea "HEAD:refs/heads/${DEFAULT_BRANCH}"
-          if test "$ALIAS_MASTER" = "true"; then
-            git push gitea "HEAD:refs/heads/master"
-          fi
-
-          published="$(git ls-remote --heads gitea "refs/heads/${DEFAULT_BRANCH}" | awk '{print $1}')"
-          if test "$published" != "$snapshot_head"; then
-            echo "Gitea ${DEFAULT_BRANCH} is at ${published:-nothing}, not the published snapshot."
-            exit 1
-          fi
-
-          printf '### Gitea submodule snapshot\n\nCommitted %s tracked files below `external/` onto Gitea `%s`%s as a child of GitHub `%s`.\n' \
-            "$(git ls-files -- external | wc -l)" "$DEFAULT_BRANCH" \
-            "$(test "$ALIAS_MASTER" = "true" && printf ' and `master`')" \
-            "${mirrored_head:0:12}" >> "$GITHUB_STEP_SUMMARY"
-
-          rm -f "$askpass"
+          git remote add gitea "$GITEA_BASE_URL/$GITEA_REPOSITORY_PATH.git"
+          git push --atomic --force --prune gitea 'refs/heads/*:refs/heads/*' 'refs/tags/*:refs/tags/*'
+          git for-each-ref --format='%(objectname) %(refname)' refs/heads refs/tags | sort > "$work/expected"
+          git ls-remote --refs gitea 'refs/heads/*' 'refs/tags/*' | awk '{print $1 " " $2}' | sort > "$work/actual"
+          diff -u "$work/expected" "$work/actual"
+          printf 'Complete Gitea mirror verified: %s snapshot %s\n' "$default_branch" "$snapshot"

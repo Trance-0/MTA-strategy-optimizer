@@ -370,7 +370,7 @@ assert report.is_conserving, report.violations
 
 ## Downstream Usage <span class="status-label status-verified" aria-label="Verified"></span>
 
-`script/evaluate_strategies.py` projects both committed artifacts into `StrategyOutput`, checks each one's conservation, and passes the conserving ones to the contributed response model described in [Contributed Models](./contributed-models/index.md). The result is written to `modules/mta_strategy_evaluation/outputs/strategy_evaluation.json` and served to the dashboard under the `strategyEvaluation` snapshot key. See [Running an Evaluation](./running-an-evaluation.md).
+`modules/mta_strategy_evaluation/src/evaluate_strategies.py` projects both committed artifacts into `StrategyOutput`, checks each one's conservation, and passes the conserving ones to the contributed response model described in [Contributed Models](./contributed-models/index.md). The result is written to `modules/mta_strategy_evaluation/outputs/strategy_evaluation.json` and served to the dashboard under the `strategyEvaluation` snapshot key. See [Running an Evaluation](./running-an-evaluation.md).
 
 ## Current Availability <span class="status-label status-verified" aria-label="Verified"></span>
 

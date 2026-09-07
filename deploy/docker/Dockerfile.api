@@ -33,7 +33,6 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 COPY backend/ backend/
 COPY dashboard/config.py dashboard/models.py dashboard/
 COPY modules/ modules/
-COPY script/ script/
 
 # The pinned MTA-SIM generator, imported in-process by
 # `modules/mta_standard/src/mta_sim_generator_adapter.py`. `externa[l]` is a

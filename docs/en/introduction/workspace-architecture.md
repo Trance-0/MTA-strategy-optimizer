@@ -38,7 +38,7 @@ This order resolves cases where an early vision is broader than the implementati
 
 ## Development Boundary
 
-Trance-0 development uses the repository's root commands, package imports, unit tests, and documentation build. `_bmad`, `_bmad-output`, and `.agents` are preserved for historical traceability only; their workflow scripts are not used for future development unless a task explicitly opts in. Runtime code does not import any of them.
+Trance-0 development uses the repository's native package entry points, package imports, unit tests, and documentation build. `_bmad`, `_bmad-output`, and `.agents` are preserved for historical traceability only; their workflow scripts are not used for future development unless a task explicitly opts in. Runtime code does not import any of them.
 
 ## Technology Stack
 

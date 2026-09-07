@@ -11,7 +11,6 @@ WORKDIR /workspace/dashboard
 COPY VERSION /workspace/VERSION
 COPY dashboard/package.json dashboard/package-lock.json ./
 RUN --mount=type=cache,target=/root/.npm npm ci
-COPY script/import_ontology_review_fixtures.mjs /workspace/script/import_ontology_review_fixtures.mjs
 COPY docs/en/strategy-evaluation/asin-gmv-nn-v1/results/demo_mlp_extended27.json \
      /workspace/docs/en/strategy-evaluation/asin-gmv-nn-v1/results/demo_mlp_extended27.json
 COPY dashboard/ ./
@@ -38,7 +37,6 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 COPY backend/ backend/
 COPY dashboard/config.py dashboard/models.py dashboard/
 COPY modules/ modules/
-COPY script/ script/
 
 # The pinned MTA-SIM generator, imported in-process by
 # `modules/mta_standard/src/mta_sim_generator_adapter.py`. Only the package and

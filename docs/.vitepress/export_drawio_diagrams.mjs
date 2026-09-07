@@ -18,7 +18,7 @@ import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 
 const scriptDirectory = dirname(fileURLToPath(import.meta.url));
-const repositoryRoot = resolve(scriptDirectory, "..");
+const repositoryRoot = resolve(scriptDirectory, "../..");
 const englishDocumentationRoot = resolve(repositoryRoot, "docs", "en");
 
 /** Sources kept for reference but never rendered to a published SVG. */

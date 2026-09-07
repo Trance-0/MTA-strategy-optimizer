@@ -11,7 +11,7 @@ dependencies = []
 # These dependencies belong to the database import alone; install with:
 #   uv sync --extra dashboard
 #
-# What is here is what `script/import_to_database.py` needs to populate the
+# What is here is what `backend/import_to_database.py` needs to populate the
 # PostgreSQL mirror from the committed artifacts, and what the backend shares
 # with it: one definition of the schema and one reader of `.env`.
 dashboard = [

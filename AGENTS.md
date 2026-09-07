@@ -7,6 +7,23 @@
 - Never "correct" a documentation page by copying current code behavior into it. If the code has drifted, report the drift and ask which side is authoritative before editing.
 - The documentation set must be sufficient on its own: a reader with no access to this repository's source should be able to rebuild an equivalent implementation from `docs/en/` alone. Treat it as the project's development memory.
 
+## File count and placement
+
+- **Create the fewest files the task allows.** Before adding a file, check whether an existing one should hold the content instead. Every additional file is another path to find, keep consistent, and update when the others change; a structure spread across several files costs more to read than the one file it replaces.
+- **Keep a deliverable in one file whenever its format can carry the whole thing.** When asked for a deployment configuration, write one `.yaml` that holds the operations inline, rather than a YAML file plus a shell script plus a README. Comment blocks inside the file carry the operating steps, the required private variables, and the prerequisites, so the reader configures it from the file they are already looking at.
+- Prefer inline commands in the format's own execution field — a `run: |` block, a job step, a package script — over a companion file the format merely calls. A configuration that installs helpers before it works cannot be copied into a cloud pipeline that has none of them.
+- Do not split content across files to make each one shorter. The only size rule that forces a split is the 500-line documentation ceiling below, and it applies to markdown under `docs/`, not to configuration or code.
+- **Never create a markdown file outside `docs/`.** Explanation belongs in the documentation set, where the `compact` routing field and the sidebar can find it. Do not add a `README.md` beside a configuration, a module, or a deployment directory to explain it; write or extend the owning page under `docs/en/` and link to it from a comment in the file itself.
+- The exceptions are the existing repository-root files, which are entry points rather than documentation pages: `README.md` for a visitor, `AGENTS.md` for these instructions, and `CREDITS.md` for provenance. Edit those in place; do not add a fourth. Contributor-authored pages already under `modules/*/contrib/` belong to their owners and stay where they are.
+- The same applies to notes, plans, checklists, and summaries: put them in the ignored `/.agent-scratch/` directory and delete them when finished, or write them into the owning documentation page. Do not leave a stray markdown file in a source or configuration directory.
+
+## Comments in scripts
+
+- **Comment the functional code in every maintained script.** A reader who did not write it must be able to follow what each stage does and why it is ordered that way, without reconstructing the intent from the commands.
+- Mark the operational stages of a script — the clone, the validation gate, the synchronization, the tests, the build, the activation, the health check — with a comment or an echoed progress marker naming the stage and its position in the sequence.
+- Comment the reasoning a command cannot state on its own: why a check must run before a destructive step, why a path is excluded, why a variable is unset after use, why a version is pinned. Do not restate what the command already says.
+- Keep the file-level docstring or header comment required below, and let the inline comments carry the stage-by-stage detail underneath it.
+
 ## Documentation frontmatter
 
 - Every markdown file under `docs/en/`, `docs/version/`, and `docs/worklog/` must carry a `compact` frontmatter field.
@@ -52,11 +69,13 @@
 
 ## Script placement
 
-- Keep every maintained project command-line entry point in the project-root `/script` directory. Its contents are tracked product code.
+- Do not track a project-root `/script` or `/scripts` directory. Both are ignored. Remove one-off agent helpers instead of publishing them.
+- Existing product functions belong to their owning module: Python entry points run with `python -m modules.<module>.src.<entry>` or `python -m backend.<entry>`; dashboard build integration belongs in `dashboard/build/`, and documentation build integration belongs in `docs/.vitepress/`.
 - Do not create project-owned `scripts/` or `script/` directories below `modules/` or `docs/`; those obsolete locations are ignored.
-- Keep reusable business logic in the owning module's `src/` directory. Root scripts may import that logic but source modules must not import command wrappers.
+- Keep reusable business logic and its command entry point in the owning module's `src/` directory, using package-native imports without `sys.path` changes. Do not replace `/script` with another shared helper directory.
 - Installed `.agents` and `_bmad` tool bundles retain their internal `scripts/` directories because those paths are part of the vendored tools; do not relocate them as project commands.
 - Put one-off agent inspection, migration, scratch, and debugging files in the ignored project-root `/.agent-scratch/` directory and delete them when finished.
+- Keep the mirror operation inline in its existing GitHub Actions workflow. Keep only the maintained pipeline YAML in `deploy/yunxiao/`, with all deployment commands inline in `run: |`; do not add shell files, helper scripts, wrappers, or a `README.md` there. Its header comments carry the operating steps and private variables, and the specification lives at `docs/en/introduction/backend/yunxiao-ecs.md`. It must be ready to copy into the existing Yunxiao pipeline to repair deployment without first installing repository helpers. Ask the owner to run Actions or Yunxiao.
 - Start every maintained Python script with a module docstring that states its command purpose and place in the data flow. Start every maintained JavaScript script with an equivalent file-level documentation comment.
 
 ## Ignore rules

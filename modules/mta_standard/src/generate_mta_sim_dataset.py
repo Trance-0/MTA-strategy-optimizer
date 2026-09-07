@@ -15,10 +15,9 @@ import sys
 from pathlib import Path
 
 
-PROJECT_ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(PROJECT_ROOT))
+PROJECT_ROOT = Path(__file__).resolve().parents[3]
 
-from modules.mta_standard.src.mta_sim_generator_adapter import (  # noqa: E402
+from modules.mta_standard.src.mta_sim_generator_adapter import (
     SUPPORTED_VARIANTS,
     generate_and_load_mta_sim_dataset,
 )

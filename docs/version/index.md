@@ -1,7 +1,7 @@
 ---
 title: Version Log
 description: Release history and material changes for the maintained project
-compact: "Routes release history from VERSION to one page per patch, keeping 0.9.43–0.9.46 flat and older patches in minor-version folders; includes dates, material summaries, historical group links, and planned follow-ups."
+compact: "Routes release history from VERSION to one page per patch, keeping 0.9.44–0.9.47 flat and older patches in minor-version folders; includes dates, material summaries, historical group links, and planned follow-ups."
 order: 1
 ---
 
@@ -10,6 +10,11 @@ order: 1
 The project version is recorded in the repository-root `VERSION` file. Each page here is one small patch description covering a coherent change set, rather than a reproduction of every commit message. Every patch keeps its own permanent page; older minor versions are grouped into a collapsed folder per minor version instead of being compacted away.
 
 This section records **what** changed. See the [work log](../worklog/) for **who** did the work and when.
+
+## [0.9.47](0.9.47.md)
+
+- Date: 2026-09-07
+- Summary: Removed root script/ through native product commands and build integrations; published complete Gitea main snapshots atomically and added the copyable deploy/yunxiao pipeline YAML with inline host commands and owner-run setup
 
 ## [0.9.46](0.9.46.md)
 
@@ -26,7 +31,7 @@ This section records **what** changed. See the [work log](../worklog/) for **who
 - Date: 2026-09-05
 - Summary: Completed the Dashboard image's allow-listed inputs so its existing Willow demonstration model and canonical Ontology Review preparation resolve in a clean repository-root Docker context
 
-## [0.9.43](0.9.43.md)
+## [0.9.43](0.9/0.9.43.md)
 
 - Date: 2026-09-04
 - Summary: Restored the four snapshot-backed Knowledge Base reference tabs beside canonical Ontology Review, and restored clean Dashboard container builds by copying the root importer before prebuild

@@ -184,7 +184,7 @@ A strategy optimizer reads `BudgetConstraints` together with [Strategy Objective
 
 ## Current Availability <span class="status-label status-verified" aria-label="Verified"></span>
 
-Implemented and tested. Direct validation is covered by `BudgetConstraintsTests` in `modules/mta_common/tests/test_budget_and_delivery.py` (minimum-above-maximum rejection, negative-bound rejection, both usage policies constructible). The adapter path is covered by `test_maximum_daily_budget_is_always_none` in `BudgetOutputAdapterTests`, `modules/mta_common/tests/test_legacy_adapters.py`. Nothing in `script/`, `modules/mta_attribution`, `modules/mta_standard`, `modules/mta_strategy_recommendation`, or the dashboard currently constructs a `BudgetConstraints`; it is exercised only by its own test suite.
+Implemented and tested. Direct validation is covered by `BudgetConstraintsTests` in `modules/mta_common/tests/test_budget_and_delivery.py` (minimum-above-maximum rejection, negative-bound rejection, both usage policies constructible). The adapter path is covered by `test_maximum_daily_budget_is_always_none` in `BudgetOutputAdapterTests`, `modules/mta_common/tests/test_legacy_adapters.py`. Nothing in `modules/mta_attribution`, `modules/mta_standard`, `modules/mta_strategy_recommendation`, or the dashboard currently constructs a `BudgetConstraints`; it is exercised only by its own test suite.
 
 ## Known Limitations <span class="status-label status-verified" aria-label="Verified"></span>
 

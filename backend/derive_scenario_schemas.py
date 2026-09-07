@@ -1,6 +1,6 @@
 """Derive the dashboard's tables from a simulator-populated schema.
 
-`script/import_to_database.py` loads the committed fixture: one demo
+`backend/import_to_database.py` loads the committed fixture: one demo
 advertiser, one marketplace, one quarter. A schema written by the external
 simulator holds something else entirely -- its own advertisers, its own
 marketplaces, and a full year of daily observations -- and the two must never
@@ -30,10 +30,10 @@ row. Splitting on the way out keeps that contract intact and makes the schema
 dropdown the scenario picker, rather than teaching every loader to filter.
 
 Usage:
-    uv run --extra dashboard python script/derive_scenario_schemas.py --list
-    uv run --extra dashboard python script/derive_scenario_schemas.py \
+    uv run --extra dashboard python -m backend.derive_scenario_schemas --list
+    uv run --extra dashboard python -m backend.derive_scenario_schemas \
         --source mta --marketplace US --schema mta_us --replace
-    uv run --extra dashboard python script/derive_scenario_schemas.py \
+    uv run --extra dashboard python -m backend.derive_scenario_schemas \
         --source mta --all --replace
 """
 
@@ -50,14 +50,12 @@ from pathlib import Path
 from typing import Any, Mapping, Sequence
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
-if str(REPO_ROOT) not in sys.path:
-    sys.path.insert(0, str(REPO_ROOT))
 
-from sqlalchemy import create_engine, text  # noqa: E402
-from sqlalchemy.orm import Session  # noqa: E402
+from sqlalchemy import create_engine, text
+from sqlalchemy.orm import Session
 
-from dashboard import config  # noqa: E402
-from dashboard.models import (  # noqa: E402
+from dashboard import config
+from dashboard.models import (
     AdGroup,
     AdsDailyPerformance,
     AttributionResult,
@@ -69,26 +67,26 @@ from dashboard.models import (  # noqa: E402
     RecommendedAttribution,
     TouchpointEntityBridge,
 )
-from modules.mta_attribution.src.attribution_contract import (  # noqa: E402
+from modules.mta_attribution.src.attribution_contract import (
     aggregate_spend_by_touchpoint,
     result_rows,
 )
-from modules.mta_attribution.src.attribution_model_comparison import (  # noqa: E402
+from modules.mta_attribution.src.attribution_model_comparison import (
     compare_attribution_models,
 )
-from modules.mta_attribution.src.markov_attribution_model import (  # noqa: E402
+from modules.mta_attribution.src.markov_attribution_model import (
     run_markov_attribution,
 )
-from modules.mta_attribution.src.shapley_attribution_model import (  # noqa: E402
+from modules.mta_attribution.src.shapley_attribution_model import (
     run_shapley_attribution,
 )
-from modules.mta_strategy_recommendation.src.budget_recommender import (  # noqa: E402
+from modules.mta_strategy_recommendation.src.budget_recommender import (
     SEARCH_AD_PRODUCTS,
     SUPPORTED_AD_PRODUCTS,
     BudgetRecommendationError,
     generate_budget_recommendation,
 )
-from script.import_to_database import (  # noqa: E402
+from backend.import_to_database import (
     Importer,
     as_bool,
     as_date,

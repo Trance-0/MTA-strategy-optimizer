@@ -8,7 +8,7 @@ import { dirname, extname, relative, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
 const scriptDirectory = dirname(fileURLToPath(import.meta.url));
-const documentationRoot = resolve(scriptDirectory, "..", "docs");
+const documentationRoot = resolve(scriptDirectory, "..");
 const researchRoot = resolve(documentationRoot, "research");
 const chineseSourceRoot = resolve(documentationRoot, "zh");
 const publishedDocumentationRoot = resolve(documentationRoot, "en");

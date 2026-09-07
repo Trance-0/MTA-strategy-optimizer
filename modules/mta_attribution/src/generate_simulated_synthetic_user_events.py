@@ -17,16 +17,15 @@ import argparse
 import sys
 from pathlib import Path
 
-PROJECT_ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(PROJECT_ROOT))
+PROJECT_ROOT = Path(__file__).resolve().parents[3]
 
-from modules.mta_attribution.config import (  # noqa: E402
+from modules.mta_attribution.config import (
     REPORT_END_DATE,
     REPORT_START_DATE,
     SYNTHETIC_USER_EVENTS_FILE,
 )
-from modules.mta_attribution.src.attribution_contract import write_csv_atomic  # noqa: E402
-from modules.mta_attribution.src.synthetic_event_pipeline import (  # noqa: E402
+from modules.mta_attribution.src.attribution_contract import write_csv_atomic
+from modules.mta_attribution.src.synthetic_event_pipeline import (
     SYNTHETIC_EVENT_FIELDS,
     generate_synthetic_user_events,
 )

@@ -123,7 +123,7 @@ const WILLOW_FORECAST = readFileSync(
   "utf8",
 );
 const RUN_PIPELINE_PY = readFileSync(
-  resolve(HERE, "..", "..", "script", "run_pipeline.py"),
+  resolve(HERE, "..", "..", "modules", "mta_attribution", "src", "run_pipeline.py"),
   "utf8",
 );
 
@@ -536,7 +536,7 @@ test("settings compares independently detected frontend and backend builds", () 
 test("dashboard image admits only its complete external build inputs", () => {
   assert.match(
     DASHBOARD_DOCKERFILE,
-    /COPY script\/import_ontology_review_fixtures\.mjs \/workspace\/script\/import_ontology_review_fixtures\.mjs/,
+    /COPY dashboard\/ \.\//,
   );
   assert.match(
     DASHBOARD_DOCKERFILE,

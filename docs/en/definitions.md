@@ -1,6 +1,6 @@
 ---
 title: Development Definitions
-compact: "Defines SDD, RAG, JSON, and CI for specification retrieval and verification; links the maintained advertising, attribution, data, and model terminology glossary."
+compact: "Defines SDD, RAG, JSON, CI, ECS, YAML, HTTPS and URL for specification, verification and deployment configuration; links the maintained advertising, attribution, data, and model terminology glossary."
 ---
 
 # Development Definitions
@@ -22,12 +22,33 @@ compact page summaries and source/test ownership route the agent to a few pages.
 #### JSON (JavaScript Object Notation)
 
 A text format for objects, arrays, strings, numbers, booleans, and null values.
-The retrieval command emits it so agents can consume results without scraping prose.
+The mirror validates generator configuration as an object in this format before publication.
 
 #### CI (Continuous Integration)
 
 Automatic verification of a proposed code revision. This repository's verification
-workflow checks documentation ownership, product tests, and production builds.
+workflow checks deployment inputs, product tests, and production builds; documentation ownership is reviewed against the owning pages.
+
+#### ECS (Elastic Compute Service)
+
+Alibaba Cloud's virtual-machine hosting service. This project's existing
+Yunxiao host job runs commands on an already provisioned machine and restarts
+the `mta-backend.service` service without building a container.
+
+#### YAML (YAML Ain't Markup Language)
+
+A text format using indentation to describe configuration. Yunxiao's pipeline
+file defines jobs and embeds the host bootstrap command as a multiline value.
+
+#### HTTPS (Hypertext Transfer Protocol Secure)
+
+Encrypted web transport with server-certificate validation. The Gitea clone
+address uses it without embedding a password in the address.
+
+#### URL (Uniform Resource Locator)
+
+An address naming a resource and how to access it. Deployment configuration
+uses one address for the Gitea repository and another optional public health check.
 
 #### USD (United States Dollar)
 

@@ -1,6 +1,6 @@
 ---
 title: Page Behavior
-compact: "CommandCenter, BudgetManager, Campaigns, CampaignOptimizer, and OptimizationLog display contracts; bounded date windows, density grids, stable ordering and route-owned data loading."
+compact: "CommandCenter, BudgetManager, Campaigns, CampaignOptimizer, and OptimizationLog display contracts; bounded date windows, density grids, stable ordering, route-owned data loading and package-native terminal commands for unavailable model stages."
 source_files: dashboard/src/views/CommandCenter.vue, dashboard/src/views/BudgetManager.vue, dashboard/src/views/Campaigns.vue, dashboard/src/views/CampaignOptimizer.vue, dashboard/src/views/OptimizationLog.vue
 ---
 
@@ -16,7 +16,7 @@ define the evidence and controls that appear when the reader selects a route.
 
 Source: `dashboard/src/views/CommandCenter.vue`, `dashboard/src/views/BudgetManager.vue`, `dashboard/src/views/Campaigns.vue`, `dashboard/src/views/CampaignOptimizer.vue`, `dashboard/src/views/OptimizationLog.vue`
 
-The five share one contract and are specified together.
+The five share one contract and are specified together. Terminal fallback instructions use runnable module commands: `uv run --extra strategy-evaluation python -m modules.mta_strategy_evaluation.src.evaluate_strategies` for evaluation and `uv run python -m modules.mta_strategy_recommendation.src.generate_campaign_strategy` for optimization.
 
 - Responsibility: Render the five pages of the dashboard, one component per view, in the prototype's navigation order.
 

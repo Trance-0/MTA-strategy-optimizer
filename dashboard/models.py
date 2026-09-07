@@ -8,7 +8,7 @@ the same information is read from those files instead.
 
 Data flow:
     modules/*/data/simulated/*.csv   -.
-    modules/*/outputs/**            --+-> script/import_to_database.py
+    modules/*/outputs/**            --+-> backend/import_to_database.py
     modules/*/data/simulated/*.json  -'        |
                                                v
                                         these tables

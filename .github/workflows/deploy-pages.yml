@@ -65,9 +65,6 @@ jobs:
       - name: Install backend dependencies
         run: uv sync --frozen --extra backend
 
-      - name: Validate specification ownership
-        run: uv run python -X utf8 -B script/spec_docs.py check
-
       - name: Install documentation dependencies
         working-directory: docs
         run: npm ci
@@ -101,7 +98,7 @@ jobs:
           DOCS_BASE_PATH="$DOCS_BASE_PATH" npm run build
 
       - name: Assemble the Pages site
-        run: node script/build_pages_site.mjs
+        run: node docs/.vitepress/build_pages_site.mjs
 
       - name: Upload GitHub Pages artifact
         uses: actions/upload-pages-artifact@v4

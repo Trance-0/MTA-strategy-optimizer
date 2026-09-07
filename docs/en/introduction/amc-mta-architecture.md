@@ -42,11 +42,11 @@ input validation, Markov, Shapley, Ads cost aggregation, efficiency measures, at
 
 five-segment support, model gaps, three reliability criteria, total variation distance, ranking, governed recommendations
 
-### `script/`
+### Native package entry points
 
-project-level path building, compatibility generation, attribution, comparison, and validation entry points
+path building, compatibility generation, attribution, comparison and validation inside `modules/mta_attribution/src/`, run with `python -m`
 
-### `script/run_pipeline.py`
+### `modules/mta_attribution/src/run_pipeline.py`
 
 derive the window from Ads dates, build complete temporary artifacts, and restore previous files if publication fails
 
@@ -54,7 +54,7 @@ derive the window from Ads dates, build complete temporary artifacts, and restor
 
 lock field contracts, boundaries, conservation, strict parsing, and publication rollback
 
-The runtime modules are regular Python packages. Maintained command wrappers add only the project root when invoked directly; reusable model and framework modules use explicit package-relative imports.
+The runtime modules are regular Python packages. Entry points run through `python -m` from the repository root and use package-native imports without changing `sys.path`.
 
 The canonical entry point does not use simulated dates from configuration. Users may replace the default event and Ads files or pass custom inputs, path output, and attribution output directories. The program publishes the path report and five model/governance files without modifying the two source inputs. Ads rows must form a contiguous daily grid with the same touchpoint set every day. Input or model failure occurs before the six derived artifacts are published as a set.
 
@@ -179,7 +179,7 @@ Implementation: `src/attribution_model_comparison.py`. Principal test: `test_mod
 
 ### full reproduction and publication rollback
 
-Implementation: `script/run_pipeline.py`, `script/`. Principal test: `test_end_to_end_pipeline.py`.
+Implementation: `modules/mta_attribution/src/run_pipeline.py`. Principal test: `test_end_to_end_pipeline.py`.
 
 The migrated source recorded baseline commit `1000bcc` plus its reliability implementation and stated that code, tests, documents, and five outputs were synchronized to the three-criterion contract. Current code and tests supersede that dated statement if they differ.
 

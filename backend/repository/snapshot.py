@@ -96,7 +96,7 @@ def load_snapshot() -> dict:
     """Every loader's result in one object.
 
     The keys and their order are the contract `dashboard/src/api/client.js`
-    reads and `script/export_dashboard_snapshot.py` writes to
+    reads and `backend/export_dashboard_snapshot.py` writes to
     the compatibility snapshot used by schema validation and Python parity
     tests. Browser delivery is partitioned by `RESOURCE_LOADERS` below.
     """

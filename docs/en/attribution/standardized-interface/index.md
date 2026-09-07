@@ -161,7 +161,7 @@ For the maintained generation path, initialize the submodule and run:
 
 ```sh
 git submodule update --init
-uv run python -X utf8 -B script/generate_mta_sim_dataset.py
+uv run python -X utf8 -B -m modules.mta_standard.src.generate_mta_sim_dataset
 ```
 
 The generator adapter receives native interaction-aware values from the resolved ZheyuanWu configuration. It preserves the original daily-window CSV schemas, aggregates path rows into the single reporting scope required by the local model interface, and keeps the normalized ground-truth view separate for evaluation. See [Generate MTA-SIM data](../../introduction/environment/mta-sim-generation.md).

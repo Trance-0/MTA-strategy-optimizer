@@ -17,7 +17,7 @@ from modules.mta_attribution.src.touchpoint_key import (
     canonicalize_touchpoint_key,
     touchpoint_key_from_ads_row,
 )
-from script.validate_data_alignment import (
+from modules.mta_attribution.src.validate_data_alignment import (
     touchpoints_from_amc_path,
     validate_data_alignment_rows,
 )

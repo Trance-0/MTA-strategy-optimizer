@@ -37,7 +37,7 @@ The catalogue reports this before a request is made.
 
 This route evaluates attribution models. Strategy evaluation is a separate
 pipeline concern: `POST /api/jobs/evaluation` runs
-`script/evaluate_strategies.py`, and the resulting report is returned under
+`modules/mta_strategy_evaluation/src/evaluate_strategies.py`, and the resulting report is returned under
 the `strategyEvaluation` dashboard snapshot key. The model catalogue reports
 that capability independently from whether attribution ground truth is
 configured.

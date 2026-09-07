@@ -41,7 +41,7 @@ The current results are appropriate for reproducible development, contract testi
 | Review maturity and planned work | [Progress and todos](docs/en/introduction/progress.md) |
 | Retrieve owning specifications and focused tests | [Specification workflow](docs/en/introduction/specification-workflow.md) |
 | Review who did what and when | [Work log roster](docs/worklog/index.md) |
-| Review all maintained commands | [Project command directory](script/README.md) |
+| Review all maintained commands | [Native module commands](docs/en/introduction/development-guide.md) |
 | Inspect historical product decisions | [Design artifacts](design-artifacts/README.md) |
 | Inspect specifications and implementation records | [BMad output index](_bmad-output/README.md) |
 
@@ -77,7 +77,7 @@ marketing-roi-analysis/
 ├── external/
 │   └── mta_sim_dataset/              # Pinned MTA-SIM-dataset Git submodule and ZheyuanWu generator
 ├── deploy/appstack/                   # Full-stack image and Yunxiao Kubernetes orchestration
-├── script/                            # All maintained project command-line entry points
+├── deploy/yunxiao/                    # Copyable YAML for the existing ECS host pipeline
 ├── docs/
 │   ├── en/                           # Active published English documentation
 │   ├── zh/                           # Preserved Chinese sources; currently excluded from publication
@@ -140,7 +140,7 @@ source .venv/bin/activate
 The primary data-generation command runs the pinned ZheyuanWu baseline toy configuration and validates the generated tables through the local four-to-five-segment adapter:
 
 ```sh
-uv run python -X utf8 -B script/generate_mta_sim_dataset.py
+uv run python -X utf8 -B -m modules.mta_standard.src.generate_mta_sim_dataset
 ```
 
 Generated files are written to the ignored `generated/mta_sim/` directory. The original four-segment ZheyuanWu tables remain unchanged. The adapter additionally creates a single-scope path report for local models and a separate evaluation-only ground-truth view.
@@ -148,17 +148,17 @@ Generated files are written to the ignored `generated/mta_sim/` directory. The o
 Use another public or private configuration and caller-owned output directory with:
 
 ```sh
-uv run python -X utf8 -B script/generate_mta_sim_dataset.py --config path/to/config.json --output path/to/generated-data
+uv run python -X utf8 -B -m modules.mta_standard.src.generate_mta_sim_dataset --config path/to/config.json --output path/to/generated-data
 ```
 
-The older repository-specific generators remain under `script/` as compatibility commands for reproducing the committed five-segment demonstration dataset, but they are no longer the primary data source.
+The older repository-specific generators remain in `modules/mta_attribution/src/` as compatibility commands for reproducing the committed five-segment demonstration dataset, but they are no longer the primary data source.
 
 ## Run the attribution pipeline
 
 Run from the repository root:
 
 ```sh
-uv run python -X utf8 -B script/run_pipeline.py
+uv run python -X utf8 -B -m modules.mta_attribution.src.run_pipeline
 ```
 
 The default pipeline reads synthetic inputs under `modules/mta_attribution/data/simulated/`, rebuilds the aggregate path report, runs Markov and Shapley attribution, validates the complete result, and publishes five canonical attribution CSV files under `modules/mta_attribution/outputs/attribution/`.
@@ -166,7 +166,7 @@ The default pipeline reads synthetic inputs under `modules/mta_attribution/data/
 Use caller-owned paths when testing other approved datasets:
 
 ```sh
-uv run python -X utf8 -B script/run_pipeline.py --events-file path/to/amc_touchpoint_events.csv --amazon-ads-report path/to/amazon_ads_report.csv --path-report path/to/amc_path_report.csv --output-dir path/to/attribution_outputs
+uv run python -X utf8 -B -m modules.mta_attribution.src.run_pipeline --events-file path/to/amc_touchpoint_events.csv --amazon-ads-report path/to/amazon_ads_report.csv --path-report path/to/amc_path_report.csv --output-dir path/to/attribution_outputs
 ```
 
 The pipeline detects its reporting window from the Amazon Ads input. Review the [AMC data contract](docs/en/market-simulation/amc-data-contract.md) before replacing inputs.
@@ -176,8 +176,8 @@ The pipeline detects its reporting window from the Amazon Ads input. Review the 
 Check that the deterministic strategy result still matches the committed canonical output:
 
 ```sh
-uv run python -X utf8 -B script/generate_initial_budget.py --check-output
-uv run python -X utf8 script/validate_simulated_hierarchy.py
+uv run python -X utf8 -B -m modules.mta_strategy_recommendation.src.generate_initial_budget --check-output
+uv run python -X utf8 -m modules.mta_strategy_recommendation.src.validate_simulated_hierarchy
 ```
 
 Without `--check-output`, the generator writes a newly calculated result to standard output. It does not activate campaigns or change advertising budgets.
@@ -186,13 +186,9 @@ Without `--check-output`, the generator writes a newly calculated result to stan
 
 First select the owning behavior contracts and their checks:
 
-```sh
-uv run python -X utf8 -B script/spec_docs.py search "history window" --limit 5
-uv run python -X utf8 -B script/spec_docs.py check
-uv run python -X utf8 -B script/check_deployment_inputs.py
-```
+Search `compact`, `source_files` and `test_files` under `docs/en/`, then read the owning contracts and run their product tests.
 
-The preflight requires the pinned generator checkout for release verification.
+Release verification requires the pinned generator checkout and its toy configuration.
 See [Specification workflow](docs/en/introduction/specification-workflow.md) for
 metadata retrieval and [Deployment preflight](docs/en/introduction/backend/deployment-preflight.md)
 for the missing-submodule host failure and recovery commands.
@@ -211,8 +207,8 @@ current results rather than historical counts as authoritative.
 ## Run focused validation
 
 ```sh
-uv run python -X utf8 script/validate_data_alignment.py
-uv run python -X utf8 script/validate_simulated_hierarchy.py
+uv run python -X utf8 -m modules.mta_attribution.src.validate_data_alignment
+uv run python -X utf8 -m modules.mta_strategy_recommendation.src.validate_simulated_hierarchy
 uv run python -X utf8 -m compileall modules
 ```
 

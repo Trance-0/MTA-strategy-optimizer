@@ -1,7 +1,7 @@
 /**
  * Verify the canonical Gate D R5 fixture suite and import ignored dashboard assets.
  *
- * This root command is the trust boundary between the external canonical release
+ * This build module is the trust boundary between the external canonical release
  * and the browser-facing display adapter. It validates every byte before writing.
  */
 
@@ -74,7 +74,7 @@ export const CANONICAL_FIXTURES = Object.freeze([
   }),
 ]);
 
-const PROJECT_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
+const PROJECT_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 export const DEFAULT_SOURCE = join(
   PROJECT_ROOT,
   "dashboard",

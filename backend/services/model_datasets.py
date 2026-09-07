@@ -8,7 +8,7 @@ existing command-line stage.
 
 Data flow:
     selected database schema -> dataset descriptor -> stage input files
-      -> backend.services.jobs -> script/* model command
+      -> backend.services.jobs -> owning model package entry point
 """
 
 from __future__ import annotations

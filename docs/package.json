@@ -7,7 +7,7 @@
     "start": "npm run dev",
     "dev": "vitepress dev .",
     "build": "vitepress build .",
-    "diagrams": "node ../script/export_drawio_diagrams.mjs",
+    "diagrams": "node .vitepress/export_drawio_diagrams.mjs",
     "preview": "npm run build && vitepress preview ."
   },
   "devDependencies": {

@@ -9,7 +9,7 @@ import { dirname, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const scriptDirectory = dirname(fileURLToPath(import.meta.url));
-const documentationRoot = resolve(scriptDirectory, "..", "docs");
+const documentationRoot = resolve(scriptDirectory, "..");
 const researchRoot = resolve(documentationRoot, "research");
 const researchPrefix = `${researchRoot}${sep}`;
 

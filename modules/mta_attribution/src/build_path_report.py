@@ -18,25 +18,24 @@ import sys
 from pathlib import Path
 
 
-PROJECT_ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(PROJECT_ROOT))
+PROJECT_ROOT = Path(__file__).resolve().parents[3]
 
-from modules.mta_attribution.config import (  # noqa: E402
+from modules.mta_attribution.config import (
     AMAZON_ADS_REPORT_FILE,
     AMC_REPORT_FILE,
     AMC_TOUCHPOINT_EVENTS_FILE,
     MAX_TOUCHPOINT_GAP_DAYS,
 )
-from modules.mta_attribution.src.attribution_contract import (  # noqa: E402
+from modules.mta_attribution.src.attribution_contract import (
     PATH_FIELD_DESCRIPTIONS,
     read_csv,
     write_csv_atomic,
 )
-from modules.mta_attribution.src.path_report_builder import (  # noqa: E402
+from modules.mta_attribution.src.path_report_builder import (
     PATH_REPORT_FIELDS,
     build_aggregated_path_rows,
 )
-from script.validate_data_alignment import (  # noqa: E402
+from modules.mta_attribution.src.validate_data_alignment import (
     infer_ads_report_window,
     validate_data_alignment_rows,
 )

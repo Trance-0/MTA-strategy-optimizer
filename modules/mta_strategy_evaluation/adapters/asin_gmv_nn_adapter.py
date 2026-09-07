@@ -25,7 +25,7 @@ directory beside itself and sets ``MPLCONFIGDIR``. ``.mplconfig/`` is ignored
 by the root ``.gitignore`` so that cannot dirty the contributor's tree.
 
 Data flow: ``CampaignResponseDataset`` -> here -> the contributed trainer ->
-``script/evaluate_strategies.py`` -> ``strategy_evaluation.json``.
+``modules/mta_strategy_evaluation/src/evaluate_strategies.py`` -> ``strategy_evaluation.json``.
 """
 
 from __future__ import annotations
@@ -509,7 +509,7 @@ def contributed_model_report(
 ) -> dict:
     """Pivot, fit, and return one JSON-ready report on the contributed model.
 
-    The single entry point ``script/evaluate_strategies.py`` calls. The
+    The single entry point ``modules/mta_strategy_evaluation/src/evaluate_strategies.py`` calls. The
     contributor's own recorded metrics are read from their results file rather
     than restated here, so this report cannot drift from what they published.
 

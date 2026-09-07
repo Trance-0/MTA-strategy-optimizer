@@ -33,7 +33,7 @@ from modules.mta_attribution.src.attribution_model_comparison import (
     reliability_fields,
     spearman_rho,
 )
-from script.compare_attribution_models import read_model_csv_strict
+from modules.mta_attribution.src.compare_attribution_models import read_model_csv_strict
 
 
 A_IMPRESSION = "PRODUCT_A:FORMAT:PLACEMENT:CREATIVE:IMPRESSION"

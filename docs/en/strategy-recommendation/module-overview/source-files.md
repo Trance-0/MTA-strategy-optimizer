@@ -2,7 +2,7 @@
 title: Initializer Source Files
 compact: "Code-level specification for hierarchy_validator.py, budget_recommender.py, generate_initial_budget.py, and validate_simulated_hierarchy.py: entry points, schemas, ordering, hashing, arithmetic, refusals, output publication, and verification commands."
 lang: en-US
-source_files: modules/mta_strategy_recommendation/src/hierarchy_validator.py, modules/mta_strategy_recommendation/src/budget_recommender.py, script/generate_initial_budget.py, script/validate_simulated_hierarchy.py
+source_files: modules/mta_strategy_recommendation/src/hierarchy_validator.py, modules/mta_strategy_recommendation/src/budget_recommender.py, modules/mta_strategy_recommendation/src/generate_initial_budget.py, modules/mta_strategy_recommendation/src/validate_simulated_hierarchy.py
 test_files: modules/mta_strategy_recommendation/tests/test_hierarchy_validator.py
 ---
 
@@ -207,7 +207,7 @@ recommendation type, and warnings.
 
 ### `generate_initial_budget.py`
 
-Source: `script/generate_initial_budget.py`
+Source: `modules/mta_strategy_recommendation/src/generate_initial_budget.py`
 
 **Responsibility.** Project-level CLI for loading aligned evidence and invoking
 `generate_budget_recommendation()`.
@@ -250,7 +250,7 @@ check behavior.
 
 ### `validate_simulated_hierarchy.py`
 
-Source: `script/validate_simulated_hierarchy.py`
+Source: `modules/mta_strategy_recommendation/src/validate_simulated_hierarchy.py`
 
 **Responsibility.** Read-only end-to-end preflight for the simulated strategy
 hierarchy and committed canonical output.

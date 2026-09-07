@@ -1,6 +1,6 @@
 ---
 title: Navigation Rail and Settings
-compact: "Eight lazy page imports and canonical deep links; Settings loads independently of dashboard data; Knowledge Base operational and review tabs; schema doctor, recovery, protected configuration and queued tasks."
+compact: "Eight lazy page imports and canonical deep links; Settings loads independently of dashboard data; Knowledge Base operational and review tabs; schema doctor, recovery, protected configuration, queued tasks and package-native database import instructions."
 lang: en-US
 source_files: dashboard/src/pages.js, dashboard/src/App.vue, dashboard/src/main.js, dashboard/src/views/Settings.vue, dashboard/src/components/BackendTasks.vue, dashboard/src/components/SchemaRecovery.vue
 ---
@@ -282,6 +282,7 @@ Source: `dashboard/src/views/Settings.vue`,
   none of the decisions about whether they are permitted.
 - Inputs: `GET /api/settings`, `GET /api/schema-operations`, `GET /api/tasks`, and what the
   reader types. A stored password is never among them.
+- Static-host instructions name the runnable import command `uv run --extra dashboard python -m backend.import_to_database`.
 - Outputs: Settings, schema-selection, schema-operation, and task-stop requests,
   and the rendered page. Only the schema-selection confirmation is a modal.
 - Behavior contract: The page defaults to General and each tab navigates to its

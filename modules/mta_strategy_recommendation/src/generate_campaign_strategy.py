@@ -22,29 +22,28 @@ import sys
 from pathlib import Path
 
 
-PROJECT_ROOT = Path(__file__).resolve().parents[1]
+PROJECT_ROOT = Path(__file__).resolve().parents[3]
 MODULE_ROOT = PROJECT_ROOT / "modules" / "mta_strategy_recommendation"
-sys.path.insert(0, str(PROJECT_ROOT))
 
-from modules.mta_common.src.budget import BudgetConstraints  # noqa: E402
-from modules.mta_common.src.enums import (  # noqa: E402
+from modules.mta_common.src.budget import BudgetConstraints
+from modules.mta_common.src.enums import (
     BudgetUsagePolicy,
     StrategyObjective,
 )
-from modules.mta_standard.src.mta_sim_research_adapter import (  # noqa: E402
+from modules.mta_standard.src.mta_sim_research_adapter import (
     load_mta_sim_research_snapshot,
 )
-from modules.mta_strategy_recommendation.src.budget_optimizer import (  # noqa: E402
+from modules.mta_strategy_recommendation.src.budget_optimizer import (
     CampaignBudgetRequest,
     optimize_campaign_budgets,
 )
-from modules.mta_strategy_recommendation.src.episode_bridge import (  # noqa: E402
+from modules.mta_strategy_recommendation.src.episode_bridge import (
     campaign_episodes_from_research_snapshot,
 )
-from modules.mta_strategy_recommendation.src.response_dataset import (  # noqa: E402
+from modules.mta_strategy_recommendation.src.response_dataset import (
     build_campaign_response_dataset,
 )
-from modules.mta_strategy_recommendation.src.response_model import (  # noqa: E402
+from modules.mta_strategy_recommendation.src.response_model import (
     fit_campaign_response_models,
     response_models_to_dict,
 )

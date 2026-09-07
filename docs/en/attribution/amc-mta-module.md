@@ -1,6 +1,6 @@
 ---
 title: AMC MTA Module
-compact: "Six-stage call order of `script/run_pipeline.py` with code walkthroughs of `infer_ads_report_window`, `canonical_amc_touchpoint_key`, `build_aggregated_path_rows`, `compare_attribution_models`, `publish_with_rollback`. Read for pipeline internals and the five-segment key; not for CSV column schemas."
+compact: "Six-stage call order of `modules/mta_attribution/src/run_pipeline.py` with code walkthroughs of `infer_ads_report_window`, `canonical_amc_touchpoint_key`, `build_aggregated_path_rows`, `compare_attribution_models`, `publish_with_rollback`. Read for pipeline internals and the five-segment key; not for CSV column schemas."
 lang: en-US
 source_files: modules/mta_attribution/src/simulated_touchpoints.py, modules/mta_attribution/src/synthetic_event_pipeline.py
 ---
@@ -23,7 +23,7 @@ This module performs attribution analysis only. It is not responsible for budget
 
 ## Current Implementation <span class="status-label status-verified" aria-label="Verified"></span>
 
-The current implementation is a six-stage deterministic pipeline. The table follows the actual call order in `script/run_pipeline.py`, not merely the order in which the output files are presented.
+The current implementation is a six-stage deterministic pipeline. The table follows the actual call order in `modules/mta_attribution/src/run_pipeline.py`, not merely the order in which the output files are presented.
 
 ### 1. Establish the reporting window
 
@@ -321,8 +321,8 @@ Zero-total Outcomes remain empty because a normalized attribution recommendation
 Run from the repository root:
 
 ```bash
-uv run python -X utf8 -B script/run_pipeline.py
-uv run python -X utf8 -B script/validate_data_alignment.py
+uv run python -X utf8 -B -m modules.mta_attribution.src.run_pipeline
+uv run python -X utf8 -B -m modules.mta_attribution.src.validate_data_alignment
 ```
 
 Update the events and Amazon Ads input files, then run directly. The canonical pipeline determines its window automatically from the earliest through latest Ads `reportDate`; it supports any duration, cross-year windows, and leap days without changing configuration dates. Aggregated paths and all five model results are published together only after every artifact passes validation. On failure, the previous six derived artifacts remain in place, and raw inputs are not overwritten. See [running the module](../introduction/environment/amc-mta-usage.md) for custom file locations and complete validation rules.
@@ -330,7 +330,7 @@ Update the events and Amazon Ads input files, then run directly. The canonical p
 To attribute a narrower period, pass a report date range:
 
 ```bash
-uv run python -X utf8 -B script/run_pipeline.py \
+uv run python -X utf8 -B -m modules.mta_attribution.src.run_pipeline \
   --report-start-date 2026-01-05 --report-end-date 2026-01-20
 ```
 

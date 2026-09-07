@@ -20,16 +20,15 @@ from datetime import date, timedelta
 from pathlib import Path
 
 
-PROJECT_ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(PROJECT_ROOT))
+PROJECT_ROOT = Path(__file__).resolve().parents[3]
 
-from modules.mta_attribution.config import AMC_REPORT_FILE, DATA_DIR  # noqa: E402
-from modules.mta_attribution.src.attribution_contract import (  # noqa: E402
+from modules.mta_attribution.config import AMC_REPORT_FILE, DATA_DIR
+from modules.mta_attribution.src.attribution_contract import (
     aggregate_spend_by_touchpoint,
     read_csv,
     validate_amc_aggregated_row,
 )
-from modules.mta_attribution.src.touchpoint_key import (  # noqa: E402
+from modules.mta_attribution.src.touchpoint_key import (
     canonicalize_amc_touchpoint_key,
     touchpoint_key_from_ads_row,
 )
