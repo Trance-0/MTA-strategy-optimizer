@@ -3,7 +3,7 @@ title: 'Complete the Data SIM configuration workflow'
 type: 'feature'
 created: '2026-09-04'
 status: 'done'
-baseline_commit: '4481fbd1d26e2824eabeec56b9b52dc32e7e0729'
+baseline_commit: '263b2d818e714e6b230cf7bb437522b6ba161e70'
 context:
   - '{project-root}/AGENTS.md'
   - '{project-root}/docs/en/dashboard/data-generator.md'
@@ -56,7 +56,7 @@ context:
 - [x] Test and implement valid baseline/regional preflight, structured errors, unavailable behavior, sanitization, zero side effects, and run-start reuse.
 - [x] Test and implement lossless helpers plus Guided sections for basics, global behavior, one marketplace, ordered touchpoints, paths, and conditional regional fields.
 - [x] Wire editor, dirty confirmation, issue mapping, and static capability state into the existing page/client while preserving downstream actions.
-- [x] Finish specification/source ownership, `0.9.45` version records, and the approved Zheyuan Wu work-log entry.
+- [x] Finish specification/source ownership, `0.9.46` version records, and the approved Zheyuan Wu work-log entry.
 - [x] Run full frontend/backend/dashboard/docs verification and inspect final scope and responsive browser behavior.
 
 **Acceptance Criteria:**
@@ -69,12 +69,15 @@ context:
 ## Spec Change Log
 
 - 2026-09-05: Concurrent releases on `main` consumed the frozen planned
-  `0.9.43` number. This work is recorded as `0.9.45`; the approved intent
-  above remains unchanged.
+  `0.9.43` number. A later concurrent `main` update also consumed `0.9.45`, so
+  this work is recorded as `0.9.46`; the approved intent above remains unchanged.
 - 2026-09-06: Acceptance hardening added exact field focus, malformed-structure
   recovery, bounded hostile inputs, request race guards, and selected-loader
   capability checks. Delivery moved to `feat/data-generator-config` on the
   latest `main` baseline, leaving `main` unchanged.
+- 2026-09-07: The final integration preserved the externally published feature
+  commit as a merge parent, assigned version `0.9.46`, and repeated full and
+  browser acceptance without changing `main` or pushing the result.
 
 ## Design Notes
 
@@ -133,4 +136,4 @@ Visible fields project over the complete object; they never rebuild it. Stable p
   [`data-generator.test.js:350`](../../dashboard/tests/data-generator.test.js#L350)
 
 - The patch record summarizes behavior and final verification counts.
-  [`0.9.45.md:12`](../../docs/version/0.9.45.md#L12)
+  [`0.9.46.md:12`](../../docs/version/0.9.46.md#L12)

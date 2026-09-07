@@ -370,7 +370,7 @@ Source: `dashboard/src/generator/lifecycle.js`
 
 ### `data-generator.test.js`
 
-Source: `dashboard/tests/data-generator.test.js`
+Tests: `dashboard/tests/data-generator.test.js`
 
 - Responsibility: Pin lossless Guided/JSON round trips, conditional regional
   fields, card operations, reference protection, dirty preset confirmation,

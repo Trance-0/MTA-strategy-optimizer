@@ -1,7 +1,7 @@
 ---
 title: Version Log
 description: Release history and material changes for the maintained project
-compact: "Routes release history from VERSION to one page per patch, keeping 0.9.42–0.9.45 flat and older patches in minor-version folders; includes dates, material summaries, historical group links, and planned follow-ups."
+compact: "Routes release history from VERSION to one page per patch, keeping 0.9.43–0.9.46 flat and older patches in minor-version folders; includes dates, material summaries, historical group links, and planned follow-ups."
 order: 1
 ---
 
@@ -11,10 +11,15 @@ The project version is recorded in the repository-root `VERSION` file. Each page
 
 This section records **what** changed. See the [work log](../worklog/) for **who** did the work and when.
 
+## [0.9.46](0.9.46.md)
+
+- Date: 2026-09-07
+- Summary: Completed the Data Generator's lossless Guided/JSON configuration workflow, authoritative preflight, stale-response guards, static capability boundary, and bounded generator operations
+
 ## [0.9.45](0.9.45.md)
 
 - Date: 2026-09-06
-- Summary: Integrated routed Settings and bounded history, deferred dashboard rendering, compact specification retrieval and scoped test ownership; and added the full lossless Data Generator configuration workflow, authoritative preflight, stale-response guards, static capability boundary, and bounded generator operations.
+- Summary: Integrated routed Settings and bounded history, deferred dashboard rendering, compact specification retrieval, scoped test ownership, and deployment-input validation
 
 ## [0.9.44](0.9.44.md)
 
@@ -26,7 +31,7 @@ This section records **what** changed. See the [work log](../worklog/) for **who
 - Date: 2026-09-04
 - Summary: Restored the four snapshot-backed Knowledge Base reference tabs beside canonical Ontology Review, and restored clean Dashboard container builds by copying the root importer before prebuild
 
-## [0.9.42](0.9.42.md)
+## [0.9.42](0.9/0.9.42.md)
 
 - Date: 2026-09-04
 - Summary: Added a reproducible Pages release of the display-only canonical R5 Ontology Review with exact-six synthetic fixtures, provenance and public-data validation, fail-closed states, and repeated build-output verification

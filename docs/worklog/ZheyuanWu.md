@@ -1,7 +1,7 @@
 ---
 title: Zheyuan Wu (Trance-0)
 description: Project manager work log covering pipeline development, integration, and algorithm testing
-compact: "Zheyuan Wu's project-management work log: simulator integration, runnable attribution and strategy pipelines, backend task orchestration, model artifact transfer, PostgreSQL schema setup, routed Vue delivery, history performance, compact specification retrieval, scoped verification, GitHub Pages, and deployment automation."
+compact: "Zheyuan Wu's project-management work log: simulator integration, Data Generator configuration and preflight, attribution and strategy pipelines, backend tasks, PostgreSQL setup, routed Vue delivery, history performance, specification retrieval, scoped verification, GitHub Pages, and deployment automation."
 order: 10
 lang: en-US
 ---
@@ -11,19 +11,32 @@ lang: en-US
 > Project: Marketing ROI Analysis
 > Handle: `Trance-0`
 > Role: Project manager — pipeline development, data simulation and integration, algorithm testing
-> Last updated: 2026-09-06
+> Last updated: 2026-09-07
 
 Entries are reconstructed from Git history. They record the change set behind each commit, not a separate narrative.
 
 ---
 
+## 2026-09-07
+
+### Completed
+
+- Reconciled the completed Data Generator workflow with the concurrently advanced `main` and published feature-branch history, assigned version 0.9.46, and verified 151 backend, 141 dashboard, and 31 focused generator tests plus production, static, documentation, scoped-ownership, and responsive browser checks.
+
 ## 2026-09-06
 
 ### Completed
 
-- Integrated saved Settings and history changes with deferred charts and stable sorting; added compact specification retrieval and scoped source/test documentation while preserving contributor-owned contracts.
-- Delivered the Data Generator lossless configuration workflow (Guided/JSON editor, presets, touchpoint/path controls), added an authoritative side-effect-free backend preflight, and implemented stale-response lifecycle guards and static-capability handling.
-- Verified dashboard, backend, and generator test suites and builds (examples: 143 backend tests, 132 dashboard tests, 31 generator integration tests), production/static/documentation builds, and baseline browser checks.
+- Integrated saved Settings and history changes, including recovery access, bounded queries, deferred charts, and stable sorting.
+- Added compact specification retrieval and scoped source/test documentation, preserving contributor-owned contracts.
+- Fixed deployment inputs and verified 606 Python, 106 frontend, and 10 tooling tests, Linux builds, and Pages assembly.
+
+## 2026-09-04
+
+### Completed
+
+- Built the Data Generator's lossless Guided/JSON workflow with complete basics, global behavior, marketplace, touchpoint, path-scenario, and conditional regional controls, including protected references and dirty preset confirmation.
+- Added authoritative side-effect-free preflight reused before generation, bounded JSON Pointer issues, stale-response lifecycle guards, static deployment handling, regression coverage, and the English owning specification.
 
 ## 2026-09-03
 

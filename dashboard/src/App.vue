@@ -239,7 +239,10 @@ const docsHref = computed(() => (IS_STATIC ? "./docs/" : `${DOCS_URL}/`));
           governs. A reader who cannot edit should learn that from the page,
           not by hunting for a button that is not there.
         -->
-<div v-if="routeLoaded && !writable && page !== 'generator'" class="notice deployment-notice">
+        <div
+          v-if="routeLoaded && !writable && page !== 'generator' && page !== 'settings'"
+          class="notice deployment-notice"
+        >
           <b>Read-only deployment.</b> {{ readOnlyReason }}
         </div>
         <div v-if="!routeLoaded && !routeError" class="card empty-card">
