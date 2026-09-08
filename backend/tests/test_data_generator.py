@@ -8,6 +8,7 @@ import time
 import unittest
 from contextlib import contextmanager
 from pathlib import Path
+from types import SimpleNamespace
 from unittest.mock import patch
 
 from backend.app import create_app
@@ -148,9 +149,35 @@ class GeneratorServiceTests(unittest.TestCase):
         )
         self.output_patch.start()
         self.addCleanup(self.output_patch.stop)
+        self.registry_patch = patch(
+            "backend.services.datasets.pipeline_output_directory",
+            return_value=Path(self.temporary.name) / "persistent",
+        )
+        self.registry_patch.start()
+        self.addCleanup(self.registry_patch.stop)
         with data_generator._lock:
             data_generator._runs.clear()
             data_generator._active_operation = None
+
+    def test_registration_failure_preserves_successful_generation(self):
+        """The new analysis handoff must not destroy existing exports."""
+        run = data_generator.GeneratorRun("a" * 32, "baseline", Path(self.temporary.name), Path(self.temporary.name) / "config.json")
+        generated = SimpleNamespace(source_path_report=run.directory / "paths.csv", performance_report=run.directory / "performance.csv")
+        with patch.object(data_generator, "generate_and_load_mta_sim_dataset", return_value=generated), patch.object(data_generator, "_build_previews", return_value=[{"key": "path", "rows": []}]), patch.object(data_generator, "_summary", return_value={}), patch("backend.services.data_generator.register_generated_dataset", side_effect=ValueError("Private path /secret")):
+            data_generator._run_generation(run)
+        self.assertEqual(run.status, "completed")
+        self.assertTrue(run.public_state()["registrationError"])
+        self.assertNotIn("/secret", repr(run.public_state()))
+        self.assertEqual(len(run.files), 2)
+        self.assertTrue(run.previews)
+
+    def test_registration_success_exposes_only_dataset_identity(self):
+        run = data_generator.GeneratorRun("b" * 32, "baseline", Path(self.temporary.name), Path(self.temporary.name) / "config.json")
+        generated = SimpleNamespace(source_path_report=run.directory / "paths.csv", performance_report=run.directory / "performance.csv")
+        with patch.object(data_generator, "generate_and_load_mta_sim_dataset", return_value=generated), patch.object(data_generator, "_build_previews", return_value=[]), patch.object(data_generator, "_summary", return_value={}), patch("backend.services.data_generator.register_generated_dataset", return_value={"id": "ds_" + "a" * 32}):
+            data_generator._run_generation(run)
+        self.assertEqual(run.public_state()["datasetId"], "ds_" + "a" * 32)
+        self.assertEqual(run.status, "completed")
 
     @unittest.skipUnless(
         MTA_SIM_AVAILABLE,
@@ -164,6 +191,11 @@ class GeneratorServiceTests(unittest.TestCase):
         started = data_generator.start_generation("baseline", overview["configuration"])
         state = self._wait(started["runId"])
         self.assertEqual(state["status"], "completed")
+        self.assertRegex(state["datasetId"], r"^ds_[0-9a-f]{32}$")
+        from backend.services import datasets
+        registered = datasets.get_dataset(state["datasetId"])
+        self.assertTrue(registered["isSynthetic"])
+        self.assertTrue(registered["capabilities"]["attribution"]["available"])
         self.assertEqual(
             [item["key"] for item in state["previews"]], ["path", "performance"]
         )

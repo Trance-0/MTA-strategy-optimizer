@@ -26,7 +26,7 @@ import {
 
 const props = defineProps({ section: { type: String, default: "vocabulary" } });
 const emit = defineEmits(["navigate"]);
-const { data, ensureResources } = useDashboard();
+const { data, ensureResources, selectedDatasetId } = useDashboard();
 
 const tabs = Object.freeze([
   { key: "vocabulary", label: "Touchpoint vocabulary" },
@@ -49,7 +49,7 @@ const SEGMENT_NOTES = {
 };
 
 const attribution = computed(() =>
-  Array.isArray(data.value.attributionResults) ? data.value.attributionResults : [],
+  selectedDatasetId.value ? data.value.adsDaily : Array.isArray(data.value.attributionResults) ? data.value.attributionResults : [],
 );
 
 const segments = computed(() =>
@@ -164,6 +164,13 @@ const candidateColumns = computed(() => {
 
 const sourceRows = computed(() => {
   const mode = data.value.mode;
+  if (data.value.dataset) return [
+    { label: "Dataset", value: data.value.dataset.name },
+    { label: "Identifier", value: data.value.dataset.id },
+    { label: "Source", value: data.value.dataset.source },
+    { label: "Input fingerprint", value: data.value.dataset.digest, code: true },
+    { label: "Scope", value: JSON.stringify(data.value.dataset.scope) },
+  ];
   return [
     {
       label: "DATABASE",
@@ -328,6 +335,7 @@ async function moveTabFocus(event, index) {
 
 <template>
   <section class="page-grid">
+    <p v-if="props.section === 'ontology-review'" class="notice">Demonstration · fixed synthetic review examples, independent of the selected dataset and budget plans.</p>
     <p class="caption">
       The first four tabs are operational references derived from the current
       Dashboard snapshot, not a backend-owned ontology. Ontology Review uses a
@@ -469,7 +477,7 @@ async function moveTabFocus(event, index) {
           <KeyValuePanel title="Campaign Group" :rows="groupRows" />
           <DataTable
             :columns="campaignColumns"
-            :rows="request.campaigns ?? []"
+            :rows="selectedDatasetId ? data.simulationResearch.campaigns : request.campaigns ?? []"
             empty="No Campaigns in the strategy request."
           />
           <p class="caption">

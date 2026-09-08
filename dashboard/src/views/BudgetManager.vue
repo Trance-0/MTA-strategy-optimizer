@@ -10,6 +10,7 @@
  */
 import { computed, ref, watch } from "vue";
 
+import BudgetPlans from "../components/BudgetPlans.vue";
 import ConfirmDialog from "../components/ConfirmDialog.vue";
 import DataTable from "../components/DataTable.vue";
 import EntityTable from "../components/EntityTable.vue";
@@ -36,7 +37,7 @@ const { writable, readOnlyReason } = useDeployment();
 const { diagnosticsOn } = useDiagnostics();
 const research = computed(() => data.value.simulationResearch ?? {});
 const ROUTE_TO_SECTION = {
-  overview: "overview", providers: "providers", products: "products",
+  plans: "plans", overview: "overview", providers: "providers", products: "products",
   campaigns: "campaigns", "ad-groups": "adGroups", touchpoints: "touchpoints",
   "product-economics": "productEconomics", "generation-configs": "generationConfigs",
 };
@@ -56,6 +57,7 @@ const navigateSection = (key) => emit("navigate", SECTION_TO_ROUTE[key] ?? "over
  */
 const BASE_SECTIONS = [
   ["overview", "Overview"],
+  ["plans", "Plans"],
   ["providers", "Ad Providers"],
   ["products", "Products"],
   ["campaigns", "Campaigns"],
@@ -699,7 +701,7 @@ const slotColumns = [
 
 <template>
   <section class="page-grid">
-    <p class="caption">
+    <p v-if="section !== 'plans'" class="caption">
       Deterministic initial allocation derived from historical attribution. This
       is a seed, not an optimiser result.
     </p>
@@ -718,6 +720,7 @@ const slotColumns = [
       </button>
     </div>
 
+    <BudgetPlans v-if="section === 'plans'" />
     <div v-show="section === 'overview'" class="page-grid">
       <template v-if="(research.history ?? []).length">
         <MetricRow :items="researchTiles" />
@@ -824,7 +827,7 @@ const slotColumns = [
       the rows, and the identity of a row; the table itself is identical in all
       seven, so a reader learns one list and reads them all.
     -->
-    <template v-if="section !== 'overview'">
+    <template v-if="section !== 'overview' && section !== 'plans'">
       <article class="card">
         <div class="card-head">
           <h2>{{ SECTIONS.find(([key]) => key === section)?.[1] }}</h2>

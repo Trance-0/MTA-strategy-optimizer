@@ -14,6 +14,8 @@
  * it, so the value is never rendered into the page.
  */
 import { computed, onMounted, onUnmounted, ref } from "vue";
+import { useWorkbench } from "../lib/useWorkbench.js";
+const { available: storageAvailable, catalogueError: storageError, reason: storageReason, refreshDatasets, refreshCapabilities, runtime } = useWorkbench();
 
 import BackendTasks from "../components/BackendTasks.vue";
 import {
@@ -388,6 +390,8 @@ async function refresh() {
 onMounted(() => {
   message.value = null;
   refresh();
+  refreshDatasets();
+  refreshCapabilities();
 });
 
 onUnmounted(() => {
@@ -618,6 +622,13 @@ async function copyVisibleLogs() {
         </section>
 
         <template v-else-if="tab === 'source'">
+          <section class="panel"><h3>Analysis storage and model readiness</h3>
+            <p>{{ storageAvailable ? 'Dataset catalogue is readable.' : 'Dataset catalogue is unavailable.' }} {{ storageReason || storageError }}</p>
+            <p>{{ runtime.storageAvailable ? 'Runtime storage is writable.' : 'Runtime storage is not writable.' }} {{ runtime.storageReason }}</p>
+            <p>Model availability depends on the selected dataset and server execution settings. Missing research or paths disables only the affected analysis.</p>
+            <p>{{ runtime.executionAvailable ? 'Server model execution is enabled.' : runtime.executionReason }}</p>
+            <div class="rec-actions"><button class="btn" @click="Promise.all([refreshDatasets(), refreshCapabilities()])">Check analysis storage</button><a class="btn" href="#/generator/import">Import data</a><a class="btn" href="#/optimizer/optimization">Model controls</a></div>
+          </section>
           <div class="doctor-steps" aria-label="Database setup steps">
             <span v-for="step in doctorSteps" :key="step.number" :class="step.state">
               <b>{{ step.number }}</b>

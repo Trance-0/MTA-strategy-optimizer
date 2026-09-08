@@ -1,6 +1,6 @@
 ---
 title: Development Definitions
-compact: "Defines SDD, RAG, JSON, CI, ECS, YAML, HTTPS and URL for specification, verification and deployment configuration; links the maintained advertising, attribution, data, and model terminology glossary."
+compact: "Defines PRD, FR, NFR, UX, UI, CLI, QA, API, CSV, SDD, RAG, JSON, CI, ECS, YAML, HTTPS and URL for specification, verification and deployment configuration; links the maintained advertising, attribution, data, and model terminology glossary."
 ---
 
 # Development Definitions
@@ -59,3 +59,42 @@ convert currencies or fill a missing observed price.
 
 The cost of producing or acquiring a product. `unit_cogs` is its per-unit value;
 a missing value remains null and must never be interpreted as a measured zero.
+
+#### PRD (Product Requirements Document)
+
+The accepted user outcomes, scope and testable requirements for a release.
+
+#### FR (Functional Requirement)
+
+A stable numbered statement of behavior the product must provide; stories map
+back to these identifiers to show coverage.
+
+#### API (Application Programming Interface)
+
+A defined request and response boundary. The Dashboard calls backend routes;
+external callers can push the same documented dataset contract.
+
+#### CSV (Comma-Separated Values)
+
+A text format with a header and rows, using commas between fields and doubled
+quotes inside quoted fields. Dataset templates define exact column names.
+
+#### NFR (Non-Functional Requirement)
+
+A measurable operating constraint such as responsiveness, persistence or accessibility.
+
+#### UX (User Experience)
+
+The observable interaction and recovery behavior through which a person completes an analysis.
+
+#### UI (User Interface)
+
+The visible controls, labels, tables and charts through which a person operates the application.
+
+#### CLI (Command-Line Interface)
+
+A command and arguments executed by the backend or a terminal to run an existing product module.
+
+#### QA (Quality Assurance)
+
+Verification that implemented behavior meets the accepted requirements and preserves evidence of what was tested.

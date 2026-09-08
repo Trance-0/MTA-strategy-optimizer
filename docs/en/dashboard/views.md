@@ -61,6 +61,14 @@ held-out error alongside it; it never feeds this forecast into the project's
 optimizer or presents it as realized uplift.
 
 
+## Registered source references
+
+With a registered dataset selected, vocabulary reads observed performance keys
+rather than requiring an attribution run. Entities read only that dataset's
+research catalogues; missing references remain unavailable. Sources name its
+identifier, source, scope and input fingerprint. The fixed Ontology Review
+fixtures retain a visible Demonstration label in all scenarios.
+
 ## Source Files
 
 ### Knowledge Base view

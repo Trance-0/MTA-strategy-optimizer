@@ -1,7 +1,7 @@
 ---
 title: Running an Evaluation
 description: The evaluation pipeline stage, its command, its output artifact, and how the dashboard reads it
-compact: "Specifies modules/mta_strategy_evaluation/src/evaluate_strategies.py, the strategy_evaluation.json artifact, the dashboard `evaluation` stage with runtime output precedence and phase patterns, and the strategyEvaluation snapshot key. Explains why training runs on demand instead of shipping checkpoints."
+compact: "Specifies evaluate_strategies.py, strategy_evaluation.json, explicit source/currency/advertiser inputs for registered runs, phase patterns, the strategyEvaluation snapshot key and legacy runtime precedence. Explains training on demand."
 lang: en-US
 source_files: modules/mta_strategy_evaluation/src/evaluate_strategies.py, backend/repository/evaluation.py
 ---
@@ -60,6 +60,18 @@ Fit and score the contributed network as well. Off by default, because it requir
 #### `--output`
 
 Destination for the artifact. Defaults to `modules/mta_strategy_evaluation/outputs/strategy_evaluation.json`.
+
+#### Registered-run provenance
+
+`--source-kind synthetic|observed`, `--currency` and `--advertiser-id` provide
+explicit provenance for a selected registered strategy run. When source kind is
+explicit, currency comes only from the supplied value or selected optimizer
+artifact, never from the default initializer request. The backend passes all
+three values from the matching dataset and strategy. With no source kind the
+legacy synthetic default and initializer currency lookup remain compatible.
+The strategy directory contains only the selected optimizer file; a missing
+independent initializer is skipped. Evaluation mathematics and unavailable
+optimal-allocation truth do not change.
 
 The stage writes exactly one file, to a path matched by the root `.gitignore`'s `modules/*/outputs/` rule with no negation, so its output is never committed. It writes nothing into `modules/mta_strategy_evaluation/contrib/`.
 

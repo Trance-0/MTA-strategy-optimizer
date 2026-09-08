@@ -9,6 +9,7 @@
 import { ref } from "vue";
 
 import DataTable from "./DataTable.vue";
+import { downloadCsv } from "../lib/chartData.js";
 
 defineProps({
   label: { type: String, default: "View as table" },
@@ -25,6 +26,7 @@ const open = ref(false);
       {{ open ? "Hide" : label }}
       <span class="chevron" :class="{ open }" aria-hidden="true">›</span>
     </button>
+    <button class="btn link small" :disabled="!rows.length" @click="downloadCsv(columns, rows)">Export values (CSV)</button>
     <DataTable v-if="open" :columns="columns" :rows="rows" />
   </div>
 </template>

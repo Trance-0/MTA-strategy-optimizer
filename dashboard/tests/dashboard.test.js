@@ -198,7 +198,7 @@ test("every subsection declares only allow-listed lazy resources", () => {
     const page = PAGES[key];
     assert.ok(page.sections[page.defaultSection], `${key} has no default route`);
     for (const [section, resources] of Object.entries(page.sections)) {
-      if (key === "settings") assert.deepEqual(resources, [], "Settings must survive a failed data source");
+      if (key === "settings" || key === "generator" || (key === "budget" && section === "plans")) assert.deepEqual(resources, [], "Independent controls must survive a failed data source");
       else assert.equal(resources[0], "shell", `${key}/${section} does not load shell first`);
       assert.equal(new Set(resources).size, resources.length, `${key}/${section} repeats a resource`);
       for (const resource of resources) {
@@ -1082,7 +1082,7 @@ test("a narrower history window is fetched, not filtered in the browser", async 
   // Cached per window as well as per resource, or widening the range would be
   // answered from the narrower slice already loaded under the bare name.
   assert.match(dashboardStore, /function cacheKey\(resource\)/);
-  assert.match(dashboardStore, /\$\{resource\}:\$\{start \?\? ""\}:\$\{end \?\? ""\}/);
+  assert.match(dashboardStore, /\$\{prefix\}:\$\{start \?\? ""\}:\$\{end \?\? ""\}/);
   assert.match(dashboardStore, /completed\.value\.has\(key\)/);
   // Only the windowed resources reload: the entity catalogues beside them do
   // not vary with the date, and refetching them would make changing a date
@@ -1234,9 +1234,9 @@ test("route resources load lazily with immediate backend phase progress", async 
   assert.equal(routeHash("settings", "source"), "#/settings/source");
   assert.deepEqual(routeResources("campaigns", "performance"), ["shell", "performance"]);
   assert.deepEqual(routeResources("campaigns", "paths"), ["shell", "path-report"]);
-  assert.deepEqual(routeResources("knowledge", "vocabulary"), ["shell", "attribution"]);
+  assert.deepEqual(routeResources("knowledge", "vocabulary"), ["shell", "attribution", "performance"]);
   assert.deepEqual(routeResources("knowledge", "rules"), ["shell", "budget"]);
-  assert.deepEqual(routeResources("knowledge", "entities"), ["shell", "budget"]);
+  assert.deepEqual(routeResources("knowledge", "entities"), ["shell", "budget", "research-campaigns"]);
   assert.deepEqual(routeResources("knowledge", "sources"), ["shell"]);
   assert.deepEqual(routeResources("knowledge", "ontology-review"), ["shell"]);
   assert.equal(PAGES.optimizer.defaultSection, "attribution");

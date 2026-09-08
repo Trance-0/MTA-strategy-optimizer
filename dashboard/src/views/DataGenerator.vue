@@ -2,6 +2,9 @@
 /** Configure, run, preview, and export the pinned MTA-SIM generator. */
 import { computed, onMounted, onUnmounted, ref } from "vue";
 
+import DatasetImport from "../components/DatasetImport.vue";
+import { useDashboard } from "../lib/useDashboard.js";
+import { useWorkbench } from "../lib/useWorkbench.js";
 import DataTable from "../components/DataTable.vue";
 import GeneratorConfigEditor from "../components/GeneratorConfigEditor.vue";
 import { createGeneratorLifecycle, replacePresetIfConfirmed } from "../generator/lifecycle.js";
@@ -15,6 +18,14 @@ import {
   validateGeneratorConfiguration,
 } from "../api/client.js";
 
+const props = defineProps({ section: { type: String, default: "configure" } });
+const emit = defineEmits(["navigate"]);
+const { selectDataset } = useDashboard();
+const { refreshDatasets } = useWorkbench();
+async function useGenerated() {
+  try { await refreshDatasets(); await selectDataset(run.value.datasetId); window.location.hash = "#/overview/summary"; }
+  catch (cause) { error.value = cause.message; }
+}
 const overview = ref(null);
 const variant = ref("baseline");
 const preset = ref("toy");
@@ -275,6 +286,14 @@ onUnmounted(() => {
 </script>
 
 <template>
+  <nav class="tabs" aria-label="Data input"><button class="tab" :class="{active: props.section === 'configure'}" @click="emit('navigate', 'configure')">Generate data</button><button class="tab" :class="{active: props.section === 'import'}" @click="emit('navigate', 'import')">Import data</button></nav>
+  <DatasetImport v-if="props.section === 'import'" />
+  <div v-else>
+    <div v-if="completed && (run?.datasetId || run?.registrationError)" class="notice">
+      <p v-if="run.datasetId">Generated observations are saved as an analysis dataset.</p>
+      <p v-else role="alert">Generation completed, but analysis registration failed: {{ run.registrationError }}</p>
+      <button v-if="run.datasetId" class="btn primary" @click="useGenerated">Use for analysis</button>
+    </div>
   <section class="page-grid generator-page">
     <p class="caption">
       Generate a validated synthetic dataset with the pinned MTA-SIM package.
@@ -411,4 +430,5 @@ onUnmounted(() => {
 
     <p v-if="error" class="notice bad">{{ error }}</p>
   </section>
+  </div>
 </template>

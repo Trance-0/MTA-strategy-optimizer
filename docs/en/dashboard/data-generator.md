@@ -303,6 +303,16 @@ Replacement is false by default. When false, MTA-SIM refuses a target already
 holding simulator runs. When true, the page displays a separate destructive
 confirmation and the backend passes the explicit reset flag to the writer.
 
+## Analysis registration and import
+
+A completed run registers original daily reports and available research through
+[registered datasets](./datasets.md) before temporary retention eviction. Public
+status includes `datasetId` or `registrationError`; a registration failure does
+not discard completed generation previews/downloads. Use for analysis explicitly
+selects that identifier and opens Command Center. The new Import subsection
+uses the shared dataset import control and canonical templates. Import and
+configuration remain reachable without legacy-source health.
+
 ## Source Files
 
 ### `DataGenerator.vue` and `GeneratorConfigEditor.vue`

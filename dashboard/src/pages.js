@@ -25,7 +25,7 @@ export const PAGES = {
     title: "Data Generator",
     crumb: "AI-MTA / Data Generator",
     defaultSection: "configure",
-    sections: { configure: ["shell"] },
+    sections: { configure: [], import: [] },
     icon: '<path d="M7 4h10v4H7V4zm-2 7h14v9H5v-9zm4 3h6m-6 3h4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>',
   },
   budget: {
@@ -34,6 +34,7 @@ export const PAGES = {
     defaultSection: "overview",
     sections: {
       overview: ["shell", "budget", "research-overview"],
+      plans: [],
       providers: ["shell", "research-providers"],
       products: ["shell", "research-products"],
       campaigns: ["shell", "research-campaigns"],
@@ -84,9 +85,9 @@ export const PAGES = {
     crumb: "AI-MTA / Insights / Governance",
     defaultSection: "vocabulary",
     sections: {
-      vocabulary: ["shell", "attribution"],
+      vocabulary: ["shell", "attribution", "performance"],
       rules: ["shell", "budget"],
-      entities: ["shell", "budget"],
+      entities: ["shell", "budget", "research-campaigns"],
       sources: ["shell"],
       "ontology-review": ["shell"],
     },

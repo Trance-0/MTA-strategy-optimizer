@@ -499,7 +499,7 @@ test("generator page delegates editing to the complete editor and gates runs on 
 test("application shell leaves Data Generator capability messaging to its own page", () => {
   const source = readFileSync(APP_VIEW, "utf8");
 
-  assert.match(source, /routeLoaded && !writable && page !== 'generator'/);
+  assert.match(source, /routeLoaded && !selectedDatasetId && !writable && page !== 'generator'/);
 });
 
 test("a deferred preflight cannot authorize a newer configuration", () => {
@@ -730,6 +730,9 @@ async function loadGeneratorPage() {
   const compiled = compileScript(descriptor, { id: "data-generator-page-test", inlineTemplate: true });
   const code = compiled.content
     .replaceAll('from "vue"', `from ${vueUrl}`)
+    .replace('from "../components/DatasetImport.vue"', `from ${JSON.stringify(tableUrl)}`)
+    .replace('import { useDashboard } from "../lib/useDashboard.js";', 'const useDashboard = () => ({ selectDataset: async () => {} });')
+    .replace('import { useWorkbench } from "../lib/useWorkbench.js";', 'const useWorkbench = () => ({ refreshDatasets: async () => {} });')
     .replace('from "../components/DataTable.vue"', `from ${JSON.stringify(tableUrl)}`)
     .replace('from "../components/GeneratorConfigEditor.vue"', `from ${JSON.stringify(editorUrl)}`)
     .replace('from "../generator/lifecycle.js"', `from ${JSON.stringify(pathToFileURL(resolve(import.meta.dirname, "..", "src", "generator", "lifecycle.js")).href)}`)

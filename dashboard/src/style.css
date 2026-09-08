@@ -363,6 +363,7 @@ code {
 
 .page-grid {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 14px;
   align-content: start;
 }
@@ -2657,3 +2658,20 @@ tbody tr.selected:hover {
     grid-template-columns: 1fr;
   }
 }
+
+/* Source controls share existing palette and stack without horizontal overflow. */
+.dataset-context { margin-bottom: 20px; }
+.page-grid > * { min-width: 0; }
+.page-grid :where(p, h2, h3) { overflow-wrap: anywhere; }
+.page-grid select { min-width: 0; max-width: 100%; }
+.tabs { flex-wrap: wrap; }
+.workbench-toolbar { display: flex; flex-wrap: wrap; align-items: end; gap: 12px; }
+.workbench-toolbar .field { flex: 1 1 220px; min-width: 0; }
+.workbench-toolbar select { max-width: 100%; }
+.workbench-json { white-space: pre-wrap; overflow-wrap: anywhere; max-height: 420px; overflow: auto; font-size: 12px; }
+.dataset-context p, .dataset-context details { overflow-wrap: anywhere; }
+fieldset { border: 0; padding: 0; min-width: 0; }
+@media (max-width: 760px) { .workbench-toolbar { align-items: stretch; flex-direction: column; } .workbench-toolbar .field { flex-basis: auto; } }
+
+.run-history-row .btn, .workbench-toolbar .btn { max-width: 100%; white-space: normal; overflow-wrap: anywhere; }
+@media (max-width: 760px) { .run-history-row { flex-direction: column; align-items: flex-start; } .run-history-row > span { white-space: normal; overflow-wrap: anywhere; } }

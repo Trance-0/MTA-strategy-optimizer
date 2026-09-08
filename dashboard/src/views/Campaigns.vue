@@ -7,15 +7,16 @@
  * filters sit in a single row above the charts, so every panel on the page
  * shows the same slice.
  */
-import { computed, ref } from "vue";
+import { computed, nextTick, ref, watch } from "vue";
 
+import { aggregatePerformance, safeRatio, downloadCsv } from "../lib/chartData.js";
 import EntityTable from "../components/EntityTable.vue";
 import MetricRow from "../components/MetricRow.vue";
 import PlotlyChart from "../components/PlotlyChart.vue";
 import {
+  currencySymbol,
   densityGrid,
   distinct,
-  groupSum,
   maxOf,
   pretty,
   shortDate,
@@ -29,7 +30,7 @@ import * as theme from "../theme.js";
 
 const props = defineProps({ section: { type: String, default: "history" } });
 const emit = defineEmits(["navigate"]);
-const { data, historyWindow, setHistoryWindow } = useDashboard();
+const { data, setHistoryWindow } = useDashboard();
 const { diagnosticsOn } = useDiagnostics();
 
 const tab = computed(() => props.section);
@@ -39,6 +40,69 @@ const TABS = [
   { key: "bridge", label: "Campaign bridge" },
   { key: "paths", label: "Conversion paths" },
 ];
+
+
+// Aggregate a presentation category in one scan, preserving absent measures.
+function aggregateCategories(rows, field, fields) {
+  const groups = new Map();
+  for (const row of rows) {
+    const key = row[field] ?? "Unavailable";
+    if (!groups.has(key)) groups.set(key, { key, members: [key], rows: 0,
+      ...Object.fromEntries(fields.map(name => [name, null])) });
+    const group = groups.get(key);
+    group.rows += 1;
+    for (const name of fields) if (typeof row[name] === "number" && Number.isFinite(row[name])) {
+      group[name] = (group[name] ?? 0) + row[name];
+    }
+  }
+  return [...groups.values()];
+}
+
+// Seven named categories plus one neutral overflow preserve a fixed mark cap.
+function rankCategories(rows, field) {
+  const ordered = [...rows].sort((a, b) =>
+    (b[field] ?? -Infinity) - (a[field] ?? -Infinity) || String(a.key).localeCompare(String(b.key)));
+  if (ordered.length <= 7) return ordered;
+  const remaining = ordered.slice(7);
+  const fields = Object.keys(rows[0]).filter(key => !["key", "members"].includes(key));
+  const other = { key: "Other", members: remaining.flatMap(row => row.members ?? [row.key]) };
+  for (const name of fields) {
+    const values = remaining.filter(row => typeof row[name] === "number" && Number.isFinite(row[name]));
+    other[name] = values.length ? values.reduce((total, row) => total + row[name], 0) : null;
+  }
+  return [...ordered.slice(0, 7), other];
+}
+const currencyCode = computed(() => data.value.dataset?.scope?.currency ??
+  data.value.dashboardContext?.currency ?? data.value.adsDaily?.[0]?.currency ?? data.value.simulationResearch?.history?.[0]?.currency ?? data.value.strategyRequest?.campaign_group?.currency ?? "USD");
+const currency = computed(() => currencySymbol(currencyCode.value));
+const sourceLabel = computed(() => data.value.dataset?.name ?? data.value.dashboardContext?.source ?? data.value.source ?? "Current source");
+const moneyColumns = columns => columns.map(column => column.format === "money"
+  ? { ...column, label: `${column.label} (${currencyCode.value})`, currency: currency.value } : column);
+const observedSum = (rows, field) => rows.some(row => typeof row[field] === "number" && Number.isFinite(row[field]))
+  ? sum(rows, field) : null;
+const grain = ref("day");
+const rankingSelection = ref(null);
+const detailHeading = ref(null);
+let rankingTrigger = null;
+async function selectRanking(row, event) {
+  rankingTrigger = event?.currentTarget ?? null;
+  rankingSelection.value = row;
+  await nextTick();
+  detailHeading.value?.focus();
+}
+async function backToRanking() {
+  rankingSelection.value = null;
+  await nextTick();
+  rankingTrigger?.focus();
+}
+function resetFilters() {
+  const fields = tab.value === "history"
+    ? [historyProvider, historyProduct, historyCampaign, historyAdProduct, historyMarketplace, historyRun, historyFrom, historyTo]
+    : tab.value === "performance" ? [from, to, product, placement, interaction]
+      : tab.value === "bridge" ? [campaignFilter, adGroupFilter] : [pathSearch];
+  for (const field of fields) field.value = "";
+  rankingSelection.value = null;
+}
 
 // ---------------------------------------------------------------------------
 // Campaign budget and spend history
@@ -172,34 +236,40 @@ const scopedDelivery = computed(() => (research.value.delivery ?? []).filter((ro
 }));
 
 const historyTiles = computed(() => {
-  const spend = sum(scopedHistory.value, "actual_spend");
-  const impressions = sum(scopedDelivery.value, "impressions");
-  const clicks = sum(scopedDelivery.value, "clicks");
-  const deliveryCost = sum(scopedDelivery.value, "cost");
+  const spend = observedSum(scopedHistory.value, "actual_spend");
+  const impressions = observedSum(scopedDelivery.value, "impressions");
+  const clicks = observedSum(scopedDelivery.value, "clicks");
+  const deliveryCost = observedSum(scopedDelivery.value, "cost");
   const economicsComplete = scopedHistory.value.length > 0 && scopedHistory.value.every(
     (row) => row.contribution_profit !== null && row.contribution_profit !== undefined,
   );
   return [
-    { label: "Configured budget", value: theme.compactMoney(sum(scopedHistory.value, "configured_budget")) },
-    { label: "Actual spend", value: theme.compactMoney(spend) },
+    { label: "Configured budget", value: theme.compactMoney(observedSum(scopedHistory.value, "configured_budget"), currency.value) },
+    { label: "Actual spend", value: theme.compactMoney(spend, currency.value) },
     { label: "Impressions", value: theme.count(impressions) },
     { label: "Clicks", value: theme.count(clicks) },
-    { label: "CTR", value: theme.percent(impressions ? clicks / impressions : 0) },
-    { label: "CPC", value: theme.money(clicks ? deliveryCost / clicks : 0) },
-    { label: "CPM", value: theme.money(impressions ? deliveryCost * 1000 / impressions : 0) },
-    { label: "Purchases", value: theme.count(sum(scopedDelivery.value, "reported_purchases")) },
-    { label: "Units", value: theme.count(sum(scopedHistory.value, "total_units")) },
-    { label: "Revenue", value: theme.compactMoney(sum(scopedHistory.value, "total_revenue")) },
+    { label: "CTR", value: theme.percent(safeRatio(clicks, impressions)) },
+    { label: "CPC", value: theme.money(safeRatio(deliveryCost, clicks), currency.value) },
+    { label: "CPM", value: theme.money(safeRatio(deliveryCost == null ? null : deliveryCost * 1000, impressions), currency.value) },
+    { label: "Purchases", value: theme.count(observedSum(scopedDelivery.value, "reported_purchases")) },
+    { label: "Units", value: theme.count(observedSum(scopedHistory.value, "total_units")) },
+    { label: "Revenue", value: theme.compactMoney(observedSum(scopedHistory.value, "total_revenue"), currency.value) },
     { label: "Contribution profit", value: economicsComplete
-      ? theme.compactMoney(sum(scopedHistory.value, "contribution_profit"))
+      ? theme.compactMoney(observedSum(scopedHistory.value, "contribution_profit"), currency.value)
       : "Unavailable" },
   ];
 });
 
+const interactionValues = computed(() => aggregateCategories(scopedDelivery.value, "interaction_type", [
+  "impressions", "clicks", "cost", "reported_purchases", "reported_sales",
+]));
+const interactionColumns = [
+  { key: "key", label: "Interaction" }, { key: "impressions", label: "Impressions", format: "number" },
+  { key: "clicks", label: "Clicks", format: "number" }, { key: "cost", label: "Spend", format: "money" },
+  { key: "reported_purchases", label: "Purchases", format: "number" }, { key: "reported_sales", label: "Sales", format: "money" },
+];
 const interactionHistoryTraces = computed(() => {
-  const rows = groupSum(scopedDelivery.value, "interaction_type", [
-    "impressions", "clicks", "cost", "reported_purchases", "reported_sales",
-  ]);
+  const rows = interactionValues.value;
   return [{
     type: "bar",
     x: rows.map((row) => row.key || "Unavailable"),
@@ -207,7 +277,7 @@ const interactionHistoryTraces = computed(() => {
     text: rows.map((row) => `${theme.count(row.impressions)} imp · ${theme.count(row.clicks)} clicks`),
     textposition: "outside",
     marker: { color: theme.SERIES[2] },
-    hovertemplate: "%{x}<br>Spend %{y:$,.2f}<br>%{text}<extra></extra>",
+    hovertemplate: "%{x}<br>Spend %{y:,.2f}<br>%{text}<extra></extra>",
   }];
 });
 const interactionHistoryLayout = computed(() => theme.layout({
@@ -249,6 +319,21 @@ const historyDensity = computed(() =>
   ),
 );
 
+const densityValues = computed(() => {
+  const grid = historyDensity.value;
+  const values = [];
+  for (let y = 0; y < grid.z.length; y += 1) for (let x = 0; x < grid.z[y].length; x += 1) {
+    if (grid.z[y][x] == null) continue;
+    values.push({ key: `${x}:${y}`, budget_from: x * grid.dx, budget_to: (x + 1) * grid.dx,
+      spend_from: y * grid.dy, spend_to: (y + 1) * grid.dy, observations: grid.z[y][x] });
+  }
+  return values;
+});
+const densityColumns = [
+  { key: "budget_from", label: "Budget from", format: "money" }, { key: "budget_to", label: "Budget to", format: "money" },
+  { key: "spend_from", label: "Spend from", format: "money" }, { key: "spend_to", label: "Spend to", format: "money" },
+  { key: "observations", label: "Observations", format: "number" },
+];
 const budgetHistoryTraces = computed(() => {
   const grid = historyDensity.value;
   if (!grid.total) return [];
@@ -273,7 +358,7 @@ const budgetHistoryTraces = computed(() => {
       tickfont: { size: 10, color: theme.MUTED },
     },
     hovertemplate:
-      "Budget %{x:$,.2f}<br>Spend %{y:$,.2f}<br>" +
+      "Budget %{x:,.2f}<br>Spend %{y:,.2f}<br>" +
       "%{z:,.0f} observations in this cell<extra></extra>",
   }];
 });
@@ -418,55 +503,48 @@ const placements = computed(() => distinct(ads.value, "placement"));
 const interactions = computed(() => distinct(ads.value, "interaction_type"));
 
 const performanceTiles = computed(() => {
-  const spend = sum(scoped.value, "cost");
-  const sales = sum(scoped.value, "sales");
+  const spend = observedSum(scoped.value, "cost");
+  const sales = observedSum(scoped.value, "sales");
   return [
-    { label: "Spend", value: theme.compactMoney(spend) },
-    { label: "Sales", value: theme.compactMoney(sales) },
-    { label: "Impressions", value: theme.count(sum(scoped.value, "impressions")) },
-    { label: "Clicks", value: theme.count(sum(scoped.value, "clicks")) },
-    { label: "ROAS", value: theme.ratio(spend ? sales / spend : 0) },
+    { label: "Spend", value: theme.compactMoney(spend, currency.value) },
+    { label: "Sales", value: theme.compactMoney(sales, currency.value) },
+    { label: "Impressions", value: theme.count(observedSum(scoped.value, "impressions")) },
+    { label: "Clicks", value: theme.count(observedSum(scoped.value, "clicks")) },
+    { label: "ROAS", value: theme.ratio(safeRatio(sales, spend)) },
   ];
 });
 
-/** Daily spend split by ad product. */
-const spendByProduct = computed(() => {
-  const names = distinct(scoped.value, "ad_product");
-  const colors = theme.seriesColors(names);
-  return names.map((name) => {
-    const rows = groupSum(
-      scoped.value.filter((row) => row.ad_product === name),
-      "report_date",
-      ["cost"],
-    ).sort((a, b) => (a.key < b.key ? -1 : 1));
-    return {
-      type: "scatter",
-      mode: "lines",
-      name: pretty(name),
-      x: rows.map((row) => row.key),
-      y: rows.map((row) => row.cost),
-      line: { color: colors[name], width: 2 },
-      hovertemplate:
-        `<b>${pretty(name)}</b><br>%{x}<br>Spend %{y:$,.2f}<extra></extra>`,
-    };
-  });
-});
-
-const spendLayout = computed(() =>
-  theme.layout({ height: 300, yaxis: { title: { text: "Daily spend" } } }),
-);
+/** Calendar grouping bounds long daily histories without averaging ratios. */
+const trendValues = computed(() => aggregatePerformance(scoped.value, grain.value));
+const trendPlotValues = computed(() => trendValues.value.length <= 500 ? trendValues.value
+  : Array.from({ length: 500 }, (_, index) => trendValues.value[Math.floor(index * (trendValues.value.length - 1) / 499)]));
+const spendByProduct = computed(() => [{ type: "scatter", mode: "lines", name: "Spend",
+  x: trendPlotValues.value.map(row => row.key), y: trendPlotValues.value.map(row => row.cost),
+  line: { color: theme.SERIES[0], width: 2 },
+  hovertemplate: `%{x}<br>Spend ${currency.value}%{y:,.2f}<extra></extra>` }]);
+const spendLayout = computed(() => theme.layout({ height: 300,
+  yaxis: { title: { text: `Spend (${currencyCode.value})` } } }));
+const trendColumns = [
+  { key: "key", label: "Period" }, { key: "rows", label: "Observations", format: "number" },
+  { key: "cost", label: "Spend", format: "money" }, { key: "sales", label: "Sales", format: "money" },
+  { key: "roas", label: "Return on ad spend", format: "ratio" },
+];
 
 /** Spend against reported sales per touchpoint. */
-const byTouchpoint = computed(() =>
-  sortBy(
-    groupSum(scoped.value, "touchpoint", ["cost", "sales", "impressions", "clicks"]),
-    "cost",
-    "desc",
-  ),
-);
+const byTouchpoint = computed(() => sortBy(
+  aggregateCategories(scoped.value, "touchpoint", ["cost", "sales", "impressions", "clicks"]), "cost", "desc"));
+const touchpointRanking = computed(() => rankCategories(byTouchpoint.value, "cost"));
+const rankingDetailRows = computed(() => {
+  const members = new Set(rankingSelection.value?.members ?? []);
+  return scoped.value.filter(row => members.has(row.touchpoint ?? "Unavailable"));
+});
+// Resolve colors from the complete source vocabulary, independent of ranking/filter order.
+const touchpointColors = computed(() => theme.seriesColors(distinct(ads.value, "touchpoint").sort().slice(0, 7)));
+const rankingColor = row => row.members.length > 1 ? theme.MUTED : touchpointColors.value[row.key] ?? theme.MUTED;
+watch([from, to, product, placement, interaction], () => { rankingSelection.value = null; }, { flush: "sync" });
 
 const touchpointTraces = computed(() => {
-  const rows = byTouchpoint.value;
+  const rows = touchpointRanking.value;
   const largestVolume = Math.max(1, ...rows.map((row) => Number(row.impressions) + Number(row.clicks)));
   return [{
     type: "scatter",
@@ -477,23 +555,23 @@ const touchpointTraces = computed(() => {
     textposition: "top center",
     textfont: { size: 9, color: theme.MUTED },
     customdata: rows.map((row) => [row.key, row.impressions, row.clicks,
-      row.cost ? row.sales / row.cost : 0]),
+      safeRatio(row.sales, row.cost)]),
     marker: {
-      color: theme.SERIES[0], opacity: 0.74,
+      color: rows.map(rankingColor), opacity: 0.74,
       size: rows.map((row) => 10 + 24 * Math.sqrt(
         (Number(row.impressions) + Number(row.clicks)) / largestVolume,
       )),
       line: { color: theme.SURFACE, width: 1 },
     },
     hovertemplate:
-      "<b>%{customdata[0]}</b><br>Spend %{x:$,.2f}<br>Reported sales %{y:$,.2f}<br>" +
+      "<b>%{customdata[0]}</b><br>Spend %{x:,.2f}<br>Reported sales %{y:,.2f}<br>" +
       "ROAS %{customdata[3]:.2f}x<br>%{customdata[1]:,.0f} impressions · " +
       "%{customdata[2]:,.0f} clicks<extra></extra>",
   }];
 });
 
 const touchpointLayout = computed(() => {
-  const highest = Math.max(1, ...byTouchpoint.value.flatMap((row) => [row.cost, row.sales].map(Number)));
+  const highest = maxOf(touchpointRanking.value, ["cost", "sales"], 1);
   return theme.layout({
     height: 440, legend: false,
     xaxis: { title: { text: "Spend" }, range: [0, highest * 1.08] },
@@ -542,7 +620,7 @@ const campaignIds = computed(() => distinct(data.value.entityBridge, "campaign_i
 const adGroupIds = computed(() => distinct(data.value.entityBridge, "ad_group_id"));
 
 const bridgeTraces = computed(() => {
-  const rows = groupSum(bridge.value, "campaign_id", ["assisted_revenue"]);
+  const rows = rankCategories(aggregateCategories(bridge.value, "campaign_id", ["assisted_revenue"]), "assisted_revenue");
   return [
     {
       type: "bar",
@@ -550,7 +628,7 @@ const bridgeTraces = computed(() => {
       y: rows.map((row) => row.assisted_revenue),
       name: "Assisted revenue",
       marker: { color: theme.SERIES[0], line: { color: theme.SURFACE, width: 2 } },
-      hovertemplate: "<b>%{x}</b><br>Assisted revenue %{y:$,.2f}<extra></extra>",
+      hovertemplate: "<b>%{x}</b><br>Assisted revenue %{y:,.2f}<extra></extra>",
     },
   ];
 });
@@ -566,8 +644,9 @@ const bridgeLayout = computed(() =>
 /** Five-segment interaction vocabulary, nested and sized only by additive cost. */
 const touchpointTreemap = computed(() => {
   const nodes = new Map();
-  for (const row of bridge.value) {
-    const segments = String(row.touchpoint ?? "").split(":");
+  const ranked = rankCategories(aggregateCategories(bridge.value, "touchpoint", ["cost"]), "cost");
+  for (const row of ranked) {
+    const segments = String(row.key === "Other" ? "Other:Other:Other:Other:Other" : row.key ?? "").split(":");
     if (segments.length !== 5) continue;
     for (let depth = 0; depth < segments.length; depth += 1) {
       const id = segments.slice(0, depth + 1).join(":");
@@ -585,7 +664,7 @@ const touchpointTreemap = computed(() => {
     values: rows.map((row) => row.value),
     branchvalues: "total",
     marker: { colorscale: theme.SEQUENTIAL },
-    hovertemplate: "<b>%{label}</b><br>Spend %{value:$,.2f}<br>%{percentParent:.1%} of parent<extra></extra>",
+    hovertemplate: "<b>%{label}</b><br>Spend %{value:,.2f}<br>%{percentParent:.1%} of parent<extra></extra>",
   }] : [];
 });
 const touchpointTreemapLayout = computed(() => theme.layout({
@@ -610,7 +689,9 @@ const bridgeColumns = [
 // Conversion paths
 // ---------------------------------------------------------------------------
 
-const paths = computed(() => data.value.pathReport);
+const pathSearch = ref("");
+const paths = computed(() => data.value.pathReport.filter(row =>
+  String(row.path ?? "").toLowerCase().includes(pathSearch.value.trim().toLowerCase())));
 
 /**
  * Highest revenue first. Filtering used to live here too; `EntityTable` owns it
@@ -620,34 +701,37 @@ const sortedPaths = computed(() => sortBy(paths.value, "revenue", "desc"));
 
 const pathTiles = computed(() => [
   { label: "Distinct paths", value: theme.count(paths.value.length) },
-  { label: "Users", value: theme.count(sum(paths.value, "users")) },
-  { label: "Converted users", value: theme.count(sum(paths.value, "converted_users")) },
-  { label: "Revenue", value: theme.compactMoney(sum(paths.value, "revenue")) },
+  { label: "Users", value: theme.count(observedSum(paths.value, "users")) },
+  { label: "Converted users", value: theme.count(observedSum(paths.value, "converted_users")) },
+  { label: "Revenue", value: theme.compactMoney(observedSum(paths.value, "revenue"), currency.value) },
 ]);
 
 const byLength = computed(() =>
-  groupSum(paths.value, "path_length", ["users", "converted_users", "revenue"])
+  aggregateCategories(paths.value, "path_length", ["users", "converted_users", "revenue"])
     .map((row) => ({
       ...row,
-      conversion_rate: row.users ? row.converted_users / row.users : 0,
+      conversion_rate: safeRatio(row.converted_users, row.users),
     }))
     .sort((a, b) => a.key - b.key),
 );
 
+const lengthPlotValues = computed(() => rankCategories(byLength.value, "users").map(row => ({
+  ...row, conversion_rate: safeRatio(row.converted_users, row.users),
+})));
 const lengthTraces = computed(() => [
   {
     type: "funnel",
     orientation: "h",
-    y: byLength.value.map((row) => `${row.key} touchpoint${row.key === 1 ? "" : "s"}`),
-    x: byLength.value.map((row) => row.users),
-    customdata: byLength.value.map((row) => [row.converted_users, row.conversion_rate]),
-    text: byLength.value.map((row) =>
-      `${theme.count(row.users)} users · ${(row.conversion_rate * 100).toFixed(1)}% converted`,
+    y: lengthPlotValues.value.map((row) => row.key === "Other" ? "Other lengths" : `${row.key} touchpoint${row.key === 1 ? "" : "s"}`),
+    x: lengthPlotValues.value.map((row) => row.users),
+    customdata: lengthPlotValues.value.map((row) => [row.converted_users, row.conversion_rate]),
+    text: lengthPlotValues.value.map((row) =>
+      `${theme.count(row.users)} users · ${theme.percent(row.conversion_rate)} converted`,
     ),
     textinfo: "text",
     textposition: "inside",
     textfont: { size: 11, color: theme.MUTED },
-    marker: { color: theme.SEQUENTIAL.slice(2, 2 + byLength.value.length) },
+    marker: { color: lengthPlotValues.value.map(() => theme.SERIES[0]) },
     hovertemplate:
       "<b>%{y}</b><br>Users %{x:,.0f}<br>Converted %{customdata[0]:,.0f}<br>" +
       "Conversion rate %{customdata[1]:.1%}<extra></extra>",
@@ -665,13 +749,18 @@ const lengthLayout = computed(() =>
 
 /** Position-layered graph avoids the cycles present in raw touchpoint transitions. */
 const journeyTraces = computed(() => {
+  const vocabulary = new Map();
+  for (const row of paths.value) for (const touch of String(row.path ?? "").split(/\s*>\s*/).filter(Boolean)) {
+    vocabulary.set(touch, (vocabulary.get(touch) ?? 0) + (row.converted_users ?? 0));
+  }
+  const retained = new Set([...vocabulary].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).slice(0, 7).map(([key]) => key));
   const links = new Map();
   const nodeIds = new Set();
   for (const row of paths.value) {
-    const path = String(row.path ?? "").split(/\s*>\s*/).filter(Boolean);
+    const path = String(row.path ?? "").split(/\s*>\s*/).filter(Boolean).map(touch => retained.has(touch) ? touch : "Other");
     if (!path.length) continue;
     const first = `First|${path[0]}`;
-    const midLabel = path.length === 3 ? path[1] : path.length === 2 ? "Direct" : "Single touch";
+    const midLabel = path.length === 3 ? path[1] : path.length === 2 ? "Direct" : path.length > 3 ? "Multiple touches" : "Single touch";
     const mid = `Middle|${midLabel}`;
     const last = `Last|${path[path.length - 1]}`;
     nodeIds.add(first); nodeIds.add(mid); nodeIds.add(last);
@@ -757,6 +846,8 @@ const scopedRowKey = (row) =>
 
 <template>
   <section class="page-grid">
+    <p class="caption" role="status">{{ sourceLabel }} · {{ currencyCode }} · {{ tab === 'performance' ? `${windowStart} to ${windowEnd} · ${scoped.length.toLocaleString()} observations` : tab === 'history' ? `${historyFrom || loadedWindow.start || loadedWindow.earliest || 'Start unavailable'} to ${historyTo || loadedWindow.end || loadedWindow.latest || 'End unavailable'} · ${scopedHistory.length.toLocaleString()} observations` : tab === 'paths' ? `${paths.length.toLocaleString()} paths` : `${bridge.length.toLocaleString()} bridge rows` }}</p>
+    <button class="btn small" @click="resetFilters">Reset filters</button>
     <p class="caption">
       Observed performance and the entity bridge that links touchpoints to
       Campaigns and Ad Groups.
@@ -861,8 +952,9 @@ const scopedRowKey = (row) =>
               reads as density rather than as overlapping marks. Per-observation
               values are in the table below.
             </p>
+            <details><summary>View density cell values</summary><EntityTable :columns="moneyColumns(densityColumns)" :rows="densityValues" :row-key="row => row.key" noun="density cell" /></details>
             <EntityTable
-              :columns="historicalColumns"
+              :columns="moneyColumns(historicalColumns)"
               :rows="scopedHistory"
               :row-key="historyRowKey"
               noun="observation"
@@ -874,6 +966,7 @@ const scopedRowKey = (row) =>
           <div class="card-head"><h2>Interaction-aware delivery</h2><span class="sub">IMPRESSION and CLICK remain distinct</span></div>
           <div class="card-body">
             <PlotlyChart :traces="interactionHistoryTraces" :layout="interactionHistoryLayout" label="Spend and event counts split by interaction type" />
+            <EntityTable :columns="moneyColumns(interactionColumns)" :rows="interactionValues" :row-key="row => row.key" noun="interaction" />
             <p class="caption">Ordered path frequencies, path length, and transition evidence remain available in Conversion paths; no Multi-Touch Attribution is recomputed here.</p>
           </div>
         </article>
@@ -881,8 +974,7 @@ const scopedRowKey = (row) =>
       <article v-else class="card empty-card">
         <h2>No Campaign budget history</h2>
         <p>
-          No Campaign has a recorded budget-versus-spend history in the current
-          reporting window. Budget planning is available in Budget Manager.
+          Research observations are unavailable or no observations match these filters. Reset filters or select a dataset with budget history. Daily performance and Conversion paths remain independently available.
         </p>
       </article>
     </template>
@@ -945,6 +1037,7 @@ const scopedRowKey = (row) =>
         </div>
       </article>
 
+      <div class="field"><label for="campaign-grain">Group by</label><select id="campaign-grain" v-model="grain"><option value="day">Day</option><option value="week">Week</option><option value="month">Month</option></select></div>
       <MetricRow :items="performanceTiles" />
 
       <p v-if="scoped.length === 0" class="table-empty">
@@ -953,13 +1046,15 @@ const scopedRowKey = (row) =>
 
       <template v-else>
         <article class="card">
-          <div class="card-head"><h2>Daily spend by ad product</h2></div>
+          <div class="card-head"><h2>Spend by period</h2></div>
           <div class="card-body">
             <PlotlyChart
               :traces="spendByProduct"
               :layout="spendLayout"
-              label="Daily spend, one line per ad product"
+              label="Spend by selected calendar period"
             />
+            <p v-if="trendValues.length > 500" class="caption">500 evenly spaced periods plotted; the table and export retain all {{ trendValues.length }} periods.</p>
+            <EntityTable :columns="moneyColumns(trendColumns)" :rows="trendValues" :row-key="row => row.key" noun="period" />
           </div>
         </article>
 
@@ -974,9 +1069,19 @@ const scopedRowKey = (row) =>
               :layout="touchpointLayout"
               label="Spend against reported sales by touchpoint with a break-even line"
             />
-            <p class="caption">The table below carries every touchpoint.</p>
+            <p class="caption">Seven leading touchpoints by spend plus Other. Select a row for its observations; the full table retains every touchpoint.</p>
+            <div class="table-wrap"><table><caption>Touchpoint ranking · {{ currencyCode }}</caption><thead><tr><th>Touchpoint</th><th>Spend</th><th>Sales</th><th>Observations</th></tr></thead><tbody>
+              <tr v-for="row in touchpointRanking" :key="JSON.stringify(row.members)"><td><button class="btn small" @click="selectRanking(row, $event)">{{ row.key === 'Other' && row.members.length > 1 ? `Other (${row.members.length} touchpoints)` : shortTouchpoint(row.key) }}</button></td><td>{{ theme.money(row.cost, currency) }}</td><td>{{ theme.money(row.sales, currency) }}</td><td>{{ row.rows }}</td></tr>
+            </tbody></table></div>
+            <button class="btn small" @click="downloadCsv(moneyColumns(touchpointColumns), touchpointRanking, 'touchpoint-ranking.csv')">Export ranking CSV</button>
+            <section v-if="rankingSelection" class="card-body">
+              <h3 ref="detailHeading" tabindex="-1">Observations: {{ rankingSelection.key }}</h3>
+              <button class="btn small" @click="backToRanking">Back to ranking</button>
+              <p class="caption">{{ rankingDetailRows.length.toLocaleString() }} observations · outer filters retained · {{ currencyCode }}</p>
+              <EntityTable :columns="moneyColumns(scopedColumns)" :rows="rankingDetailRows" :row-key="scopedRowKey" noun="detail row" />
+            </section>
             <EntityTable
-              :columns="touchpointColumns"
+              :columns="moneyColumns(touchpointColumns)"
               :rows="byTouchpoint"
               :row-key="touchpointRowKey"
               noun="touchpoint"
@@ -992,7 +1097,7 @@ const scopedRowKey = (row) =>
           </div>
           <div class="card-body">
             <EntityTable
-              :columns="scopedColumns"
+              :columns="moneyColumns(scopedColumns)"
               :rows="scoped"
               :row-key="scopedRowKey"
               noun="row"
@@ -1047,7 +1152,7 @@ const scopedRowKey = (row) =>
               add.
             </p>
             <EntityTable
-              :columns="bridgeColumns"
+              :columns="moneyColumns(bridgeColumns)"
               :rows="bridge"
               :row-key="bridgeRowKey"
               noun="bridge row"
@@ -1060,6 +1165,7 @@ const scopedRowKey = (row) =>
 
     <!-- Conversion paths -->
     <template v-else>
+      <div class="field"><label for="path-search">Filter paths</label><input id="path-search" v-model="pathSearch" type="search" /></div>
       <MetricRow :items="pathTiles" />
 
       <article class="card">
@@ -1083,6 +1189,8 @@ const scopedRowKey = (row) =>
             for a larger addressable audience.
           </p>
 
+          <EntityTable :row-key="row => row.key" noun="path length" :columns="moneyColumns([{ key: 'key', label: 'Length' }, { key: 'users', label: 'Users', format: 'number' }, { key: 'converted_users', label: 'Converted users', format: 'number' }, { key: 'conversion_rate', label: 'Conversion rate', format: 'percent' }, { key: 'revenue', label: 'Revenue', format: 'money' }])" :rows="byLength" />
+          <p class="caption">Each position retains seven leading touchpoints and Other. Longer paths label intervening steps Multiple touches. Filtered path rows below retain the full sequence.</p>
           <!--
             The table's own search replaces the separate field this panel used
             to carry: `EntityTable` filters across the rendered text of every
@@ -1090,7 +1198,7 @@ const scopedRowKey = (row) =>
             string alone matched.
           -->
           <EntityTable
-            :columns="pathColumns"
+            :columns="moneyColumns(pathColumns)"
             :rows="sortedPaths"
             :row-key="pathRowKey"
             noun="path"
@@ -1120,7 +1228,7 @@ const scopedRowKey = (row) =>
             a plain table can afford inside a dialog.
           -->
           <EntityTable
-            :columns="similarityColumns"
+            :columns="moneyColumns(similarityColumns)"
             :rows="similarityMatches"
             :row-key="similarityRowKey"
             noun="reference"

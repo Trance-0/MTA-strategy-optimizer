@@ -36,6 +36,9 @@ from werkzeug.middleware.proxy_fix import ProxyFix  # noqa: E402
 
 from backend.api import dashboard as dashboard_api  # noqa: E402
 from backend.api import data_generator as data_generator_api  # noqa: E402
+from backend.api import workbench as workbench_api  # noqa: E402
+from backend.services.workbench import recover_runs  # noqa: E402
+from backend.api import datasets as datasets_api  # noqa: E402
 from backend.api import jobs as jobs_api  # noqa: E402
 from backend.api import models as models_api  # noqa: E402
 from backend.api import schema_operations as schema_operations_api  # noqa: E402
@@ -69,6 +72,9 @@ def create_app() -> Flask:
 
     app.register_blueprint(dashboard_api.blueprint)
     app.register_blueprint(data_generator_api.blueprint)
+    app.register_blueprint(datasets_api.blueprint)
+    app.register_blueprint(workbench_api.blueprint)
+    recover_runs()
     app.register_blueprint(jobs_api.blueprint)
     app.register_blueprint(settings_api.blueprint)
     app.register_blueprint(tasks_api.blueprint)

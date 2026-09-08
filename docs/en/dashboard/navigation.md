@@ -256,6 +256,18 @@ Settings declares no dashboard resources: even a failing database-backed shell
 must leave the database doctor reachable at `#/settings/source`. Async component
 loading shows an accessible status and a failed chunk shows a reload remedy.
 
+## Analysis context
+
+A persistent dataset selector sits inside the content area before route loading
+and error branches. It names source, scope, counts and supported stages and
+provides an explicit legacy-source option. It remains usable when a data page
+fails; Settings still requires no global resource. Data Generator adds Import,
+Budget Manager adds Plans, and Optimization Log exposes retained runs. New
+controls retain keyboard labels and stack at narrow widths. Settings Data source
+also shows runtime dataset storage/catalogue readiness separately from database
+status, and states that stage availability is dataset-specific and enforced by
+the server. It links to Import and Campaign Optimizer.
+
 ## Source Files <span class="status-label status-verified" aria-label="Verified"></span>
 
 The code-level specification for the files this page describes. Each entry states responsibility, inputs, outputs, dependencies, and the test that verifies it.

@@ -18,6 +18,7 @@ defineProps({
   /** How this deployment names itself, e.g. "Published build". */
   deploymentLabel: { type: String, default: "" },
   /** Whether data operations are available here. */
+  registered: { type: Boolean, default: false },
   writable: { type: Boolean, default: false },
 });
 </script>
@@ -33,7 +34,7 @@ defineProps({
         v-if="deploymentLabel"
         class="tag"
         :class="writable ? 'blue' : 'green'"
-        :title="writable
+        :title="registered ? 'Immutable registered observations; plan and run actions depend on backend capabilities.' : writable
           ? 'Connected to a database; data operations are available.'
           : 'Reading committed files; data operations are unavailable.'"
       >

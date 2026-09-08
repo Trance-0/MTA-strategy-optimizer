@@ -26,10 +26,12 @@
  */
 import { computed, onMounted, ref } from "vue";
 
-import DataTable from "../components/DataTable.vue";
+import EntityTable from "../components/EntityTable.vue";
 import MetricRow from "../components/MetricRow.vue";
 import PlotlyChart from "../components/PlotlyChart.vue";
 import ReliabilityBanner from "../components/ReliabilityBanner.vue";
+import WorkbenchRunner from "../components/WorkbenchRunner.vue";
+import EvaluationReport from "../components/EvaluationReport.vue";
 import StageRunner from "../components/StageRunner.vue";
 import TableView from "../components/TableView.vue";
 import WillowGmvForecast from "../components/WillowGmvForecast.vue";
@@ -46,7 +48,7 @@ import { useDashboard } from "../lib/useDashboard.js";
 import { useJobs } from "../lib/useJobs.js";
 import * as theme from "../theme.js";
 
-const { data } = useDashboard();
+const { data, selectedDatasetId } = useDashboard();
 const props = defineProps({ section: { type: String, default: "attribution" } });
 const emit = defineEmits(["navigate"]);
 const {
@@ -61,7 +63,7 @@ const {
   reloadAfterRun,
 } = useJobs();
 
-onMounted(ensureJobsLoaded);
+onMounted(() => { if (!selectedDatasetId.value) ensureJobsLoaded(); });
 
 /** One tab per model, in the order the pipeline runs them. */
 const MODEL_TABS = [
@@ -142,7 +144,7 @@ const comparisonLayout = computed(() =>
 
 /** The touchpoint the two models disagree about most, named in the caption. */
 const largestGap = computed(() => {
-  const ordered = [...comparison.value].sort(
+  const ordered = comparison.value.filter(row => Number.isFinite(row.gap_pp)).sort(
     (a, b) => Math.abs(b.gap_pp ?? 0) - Math.abs(a.gap_pp ?? 0),
   );
   return ordered[0] ?? null;
@@ -155,10 +157,10 @@ const comparisonColumns = [
     format: (value) => shortTouchpoint(value),
     width: "30%",
   },
-  { key: "markov_share", label: "Markov", format: "share" },
-  { key: "shapley_share", label: "Shapley", format: "share" },
-  { key: "gap_pp", label: "Gap (pp)", format: "share", digits: 2 },
-  { key: "relative_gap", label: "Relative gap", format: "share" },
+  { key: "markov_share", label: "Markov", format: "percent" },
+  { key: "shapley_share", label: "Shapley", format: "percent" },
+  { key: "gap_pp", label: "Gap (pp)", format: "number", digits: 2 },
+  { key: "relative_gap", label: "Relative gap", format: "percent" },
   { key: "raw_converted_users", label: "Raw converted", format: "number" },
   { key: "reliability_status", label: "Reliability", tone: (value) => statusTone(value) },
 ];
@@ -189,11 +191,11 @@ const recommendedColumns = [
     width: "26%",
   },
   { key: "official_model", label: "Official" },
-  { key: "official_share", label: "Official share", format: "share" },
+  { key: "official_share", label: "Official share", format: "percent" },
   { key: "recommended_value", label: "Recommended" },
   { key: "benchmark_model", label: "Benchmark" },
-  { key: "benchmark_share", label: "Benchmark share", format: "share" },
-  { key: "gap_pp", label: "Gap (pp)", format: "share", digits: 2 },
+  { key: "benchmark_share", label: "Benchmark share", format: "percent" },
+  { key: "gap_pp", label: "Gap (pp)", format: "number", digits: 2 },
   { key: "reliability_status", label: "Reliability", tone: (value) => statusTone(value) },
 ];
 
@@ -224,9 +226,11 @@ const shift = computed(() => {
     .filter((row) => spend.has(row.touchpoint))
     .map((row) => ({
       touchpoint: row.touchpoint,
-      official_share: row.official_share ?? 0,
-      cost: spend.get(row.touchpoint) ?? 0,
+      official_share: row.official_share,
+      cost: spend.get(row.touchpoint),
     }));
+
+  if (merged.some(row => !Number.isFinite(row.official_share) || !Number.isFinite(row.cost))) return [];
 
   const totalSpend = merged.reduce((total, row) => total + row.cost, 0);
   const shareTotal = merged.reduce((total, row) => total + row.official_share, 0);
@@ -268,9 +272,9 @@ const shiftTraces = computed(() => {
       customdata: ordered.map((row) => [row.cost, row.implied_budget, row.delta_budget]),
       hovertemplate:
         "<b>%{y}</b><br>Shift %{x:+.2f} pp<br>" +
-        "Current spend %{customdata[0]:$,.2f}<br>" +
-        "Implied spend %{customdata[1]:$,.2f}<br>" +
-        "Change %{customdata[2]:+$,.2f}<extra></extra>",
+        "Current spend %{customdata[0]:,.2f}<br>" +
+        "Implied spend %{customdata[1]:,.2f}<br>" +
+        "Change %{customdata[2]:+,.2f}<extra></extra>",
     },
   ];
 });
@@ -305,7 +309,7 @@ const shiftTiles = computed(() => {
     0,
   );
   return [
-    { label: "Spend re-allocated", value: theme.compactMoney(reallocated) },
+    { label: "Spend re-allocated", value: theme.compactMoney(reallocated, symbol.value) },
     { label: "Touchpoints gaining", value: theme.count(gaining.length) },
     { label: "Touchpoints reduced", value: theme.count(rows.length - gaining.length) },
     { label: "Largest single shift", value: `${largest.toFixed(2)} pp` },
@@ -324,7 +328,7 @@ const shiftColumns = [
   { key: "target_share", label: "Target share", format: "percent" },
   { key: "implied_budget", label: "Implied spend", format: "money" },
   { key: "delta_budget", label: "Change", format: "money" },
-  { key: "delta_pp", label: "Shift (pp)", format: "share", digits: 2 },
+  { key: "delta_pp", label: "Shift (pp)", format: "number", digits: 2 },
 ];
 
 const shiftRows = computed(() => sortBy(shift.value, "delta_pp", "desc"));
@@ -338,28 +342,42 @@ const plan = computed(() => strategy.value.optimized_strategy ?? {});
 const hasPlan = computed(() => Boolean(plan.value.recommendation_type));
 const isOptimized = computed(() => Boolean(plan.value.is_optimized));
 const allocations = computed(() => plan.value.allocations ?? []);
-const symbol = computed(() => currencySymbol(strategy.value.currency));
+const symbol = computed(() => currencySymbol(strategy.value.currency ?? data.value.dataset?.scope?.currency ?? data.value.dashboardContext?.currency ?? data.value.strategyRequest?.campaign_group?.currency));
+const evidenceColumns = columns => columns.map(column => column.format === "money"
+  ? { ...column, currency: symbol.value } : column);
+/** Read only dates carried by the displayed result, never the historical filter. */
+const evidenceWindow = computed(() => {
+  const rows = model.value === "optimization" ? strategy.value.response_observations ?? [] : data.value.attributionResults;
+  let start = null, end = null;
+  for (const row of rows) {
+    const first = row.report_start_date ?? row.report_date;
+    const last = row.report_end_date ?? row.report_date;
+    if (first && (!start || first < start)) start = first;
+    if (last && (!end || last > end)) end = last;
+  }
+  return start && end ? `${start} to ${end}` : "Reporting window unavailable in this result";
+});
 
 const planMetrics = computed(() => [
   {
     label: "Authorized",
-    value: theme.money(plan.value.authorized_budget ?? 0, symbol.value),
+    value: theme.money(plan.value.authorized_budget, symbol.value),
     note: pretty(plan.value.budget_usage_policy),
   },
   {
     label: "Allocated",
-    value: theme.money(plan.value.allocated_budget ?? 0, symbol.value),
+    value: theme.money(plan.value.allocated_budget, symbol.value),
     note: `${allocations.value.length} Campaigns`,
   },
   {
     label: "Expected revenue",
-    value: theme.money(plan.value.expected_optimized_revenue ?? 0, symbol.value),
-    note: `Initial ${theme.money(plan.value.expected_initial_revenue ?? 0, symbol.value)}`,
+    value: theme.money(plan.value.expected_optimized_revenue, symbol.value),
+    note: `Initial ${theme.money(plan.value.expected_initial_revenue, symbol.value)}`,
     help: "Estimated by the fitted response model, not a realized result.",
   },
   {
     label: "Expected change",
-    value: theme.money(plan.value.expected_revenue_increase ?? 0, symbol.value),
+    value: theme.money(plan.value.expected_revenue_increase, symbol.value),
     note: "Model estimate",
     help: "The difference between the two estimates above. It is not a guaranteed uplift.",
   },
@@ -371,7 +389,7 @@ const allocationColumns = computed(() => [
   { key: "optimized_budget", label: "Optimized", format: "money", currency: symbol.value },
   {
     key: "expected_revenue_at_optimized",
-    label: "Expected revenue",
+    label: "Expected optimized revenue",
     format: "money",
     currency: symbol.value,
   },
@@ -387,6 +405,8 @@ const allocationColumns = computed(() => [
     format: (value) => pretty(value),
     tone: (value) => (value === "TARGET_HISTORY" ? "green" : "amber"),
   },
+  { key: "expected_revenue_at_initial", label: "Expected initial revenue", format: "money", currency: symbol.value },
+  { key: "observed_budget_range", label: "Observed budget range" },
   { key: "is_extrapolated", label: "Extrapolated", format: "flag" },
 ]);
 
@@ -402,9 +422,9 @@ const pooled = computed(() =>
 
 const responseCampaign = ref("");
 const responseModels = computed(() => strategy.value.response_models?.campaign_models ?? {});
-const responseCampaigns = computed(() => Object.keys(responseModels.value));
+const responseCampaigns = computed(() => [...new Set([...Object.keys(responseModels.value), ...allocations.value.map(row => row.campaign_id)])].sort());
 const activeResponseCampaign = computed(() =>
-  responseCampaign.value && responseModels.value[responseCampaign.value]
+  responseCampaign.value && responseCampaigns.value.includes(responseCampaign.value)
     ? responseCampaign.value : responseCampaigns.value[0] ?? "",
 );
 const activeResponseModel = computed(() => responseModels.value[activeResponseCampaign.value] ?? {});
@@ -417,68 +437,96 @@ const responseObservations = computed(() =>
   ),
 );
 
+/** Project the serialized fitted model only when every required parameter exists. */
 function expectedRevenue(model, budget) {
   const spendModel = model.spend_response ?? {};
   const revenueModel = model.revenue_response ?? {};
-  const spend = Number(spendModel.capacity ?? 0) *
-    (1 - Math.exp(-Math.max(0, budget) / Math.max(Number(spendModel.scale ?? 1), 1e-9)));
-  return Number(revenueModel.baseline ?? 0) + Number(revenueModel.alpha ?? 0) *
-    (1 - Math.exp(-spend / Math.max(Number(revenueModel.kappa ?? 1), 1e-9)));
+  const params = [budget, spendModel.capacity, spendModel.scale, revenueModel.baseline, revenueModel.alpha, revenueModel.kappa];
+  if (!params.every(value => typeof value === "number" && Number.isFinite(value)) ||
+      spendModel.scale <= 0 || revenueModel.kappa <= 0) return null;
+  const spend = spendModel.capacity * (1 - Math.exp(-Math.max(0, budget) / spendModel.scale));
+  return revenueModel.baseline + revenueModel.alpha * (1 - Math.exp(-spend / revenueModel.kappa));
 }
+// Sampling changes plotted density only; the complete observation table stays available.
+const responsePlotObservations = computed(() => {
+  const rows = responseObservations.value.filter(row => Number.isFinite(row.configured_budget) && Number.isFinite(row.total_revenue));
+  if (rows.length <= 500) return rows;
+  return Array.from({ length: 500 }, (_, index) => rows[Math.floor(index * (rows.length - 1) / 499)]);
+});
+const responseMaximum = computed(() => {
+  const range = activeResponseModel.value.diagnostics?.observed_budget_range;
+  return Math.max(Number.isFinite(range?.[1]) ? range[1] : 0,
+    Number.isFinite(activeAllocation.value.optimized_budget) ? activeAllocation.value.optimized_budget : 0, 1) * 1.25;
+});
+const responseCurveValues = computed(() => {
+  const model = activeResponseModel.value;
+  if (expectedRevenue(model, 0) == null) return [];
+  return Array.from({ length: 81 }, (_, index) => {
+    const budget = responseMaximum.value * index / 80;
+    return { budget, expected_revenue: expectedRevenue(model, budget) };
+  });
+});
+const responseValueColumns = computed(() => [
+  { key: "budget", label: "Budget", format: "money", currency: symbol.value },
+  { key: "expected_revenue", label: "Expected revenue", format: "money", currency: symbol.value },
+]);
+const responseObservationColumns = computed(() => [
+  { key: "report_date", label: "Date" }, { key: "intervention_id", label: "Intervention" },
+  { key: "configured_budget", label: "Budget", format: "money", currency: symbol.value },
+  { key: "actual_spend", label: "Spend", format: "money", currency: symbol.value },
+  { key: "total_revenue", label: "Revenue", format: "money", currency: symbol.value },
+]);
+const responseRowKey = row => JSON.stringify([row.campaign_id, row.report_date, row.intervention_id, row.configured_budget, row.marketplace]);
 
 const responseCurveTraces = computed(() => {
-  const model = activeResponseModel.value;
-  if (!model.campaign_id) return [];
   const allocation = activeAllocation.value;
-  const observed = model.diagnostics?.observed_budget_range ?? [0, 0];
-  const maximum = Math.max(Number(observed[1] ?? 0), Number(allocation.optimized_budget ?? 0), 1) * 1.25;
-  const budgets = Array.from({ length: 81 }, (_, index) => maximum * index / 80);
-  return [
-    {
-      type: "scatter", mode: "lines", name: "Fitted response",
-      x: budgets, y: budgets.map((budget) => expectedRevenue(model, budget)),
-      line: { color: theme.SERIES[0], width: 3 },
-      hovertemplate: "Budget %{x:$,.2f}<br>Expected revenue %{y:$,.2f}<extra></extra>",
-    },
-    {
-      type: "scatter", mode: "markers", name: "Observed",
-      x: responseObservations.value.map((row) => row.configured_budget),
-      y: responseObservations.value.map((row) => row.total_revenue),
-      customdata: responseObservations.value.map((row) => row.report_date),
-      marker: { color: theme.SERIES[2], size: 7, opacity: 0.72 },
-      hovertemplate: "%{customdata}<br>Budget %{x:$,.2f}<br>Observed revenue %{y:$,.2f}<extra></extra>",
-    },
-    {
-      type: "scatter", mode: "markers+text", name: "Decision",
-      x: [allocation.initial_budget, allocation.optimized_budget],
-      y: [allocation.expected_revenue_at_initial, allocation.expected_revenue_at_optimized],
-      text: ["Initial", "Optimized"], textposition: ["bottom right", "top left"],
-      marker: { color: [theme.MUTED, theme.MODEL_COLORS.recommended], size: 12,
-        symbol: ["circle", "diamond"] },
-      hovertemplate: "%{text}<br>Budget %{x:$,.2f}<br>Expected revenue %{y:$,.2f}<extra></extra>",
-    },
-  ];
+  const traces = [];
+  if (responseCurveValues.value.length) traces.push({
+    type: "scatter", mode: "lines", name: "Fitted response",
+    x: responseCurveValues.value.map(row => row.budget),
+    y: responseCurveValues.value.map(row => row.expected_revenue),
+    line: { color: theme.SERIES[0], width: 3 },
+    hovertemplate: `Budget ${symbol.value}%{x:,.2f}<br>Expected revenue ${symbol.value}%{y:,.2f}<extra></extra>`,
+  });
+  if (responsePlotObservations.value.length) traces.push({
+    type: "scatter", mode: "markers", name: "Observed",
+    x: responsePlotObservations.value.map(row => row.configured_budget),
+    y: responsePlotObservations.value.map(row => row.total_revenue),
+    customdata: responsePlotObservations.value.map(row => row.report_date),
+    marker: { color: theme.SERIES[2], size: 7, opacity: 0.72 },
+    hovertemplate: `%{customdata}<br>Budget ${symbol.value}%{x:,.2f}<br>Observed revenue ${symbol.value}%{y:,.2f}<extra></extra>`,
+  });
+  const decisions = [
+    { label: "Initial", budget: allocation.initial_budget, revenue: allocation.expected_revenue_at_initial },
+    { label: "Optimized", budget: allocation.optimized_budget, revenue: allocation.expected_revenue_at_optimized },
+  ].filter(row => Number.isFinite(row.budget) && Number.isFinite(row.revenue));
+  if (decisions.length) traces.push({
+    type: "scatter", mode: "markers+text", name: "Decision",
+    x: decisions.map(row => row.budget), y: decisions.map(row => row.revenue),
+    text: decisions.map(row => row.label), textposition: "top center",
+    marker: { color: decisions.map(row => row.label === "Initial" ? theme.MUTED : theme.MODEL_COLORS.recommended), size: 12 },
+    hovertemplate: `%{text}<br>Budget ${symbol.value}%{x:,.2f}<br>Expected revenue ${symbol.value}%{y:,.2f}<extra></extra>`,
+  });
+  return traces;
 });
 const responseCurveLayout = computed(() => {
-  const model = activeResponseModel.value;
-  const observed = model.diagnostics?.observed_budget_range ?? [0, 0];
-  const allocation = activeAllocation.value;
-  const maximum = Math.max(Number(observed[1] ?? 0), Number(allocation.optimized_budget ?? 0), 1) * 1.25;
+  const observed = activeResponseModel.value.diagnostics?.observed_budget_range;
+  const validRange = Array.isArray(observed) && observed.length === 2 && observed.every(Number.isFinite);
   return theme.layout({
     height: 430,
-    xaxis: { title: { text: `Configured budget (${symbol.value.trim()})` }, range: [0, maximum] },
-    yaxis: { title: { text: "Revenue" } },
-    shapes: [
-      { type: "rect", x0: 0, x1: Number(observed[0] ?? 0), y0: 0, y1: 1, yref: "paper",
+    xaxis: { title: { text: `Configured budget (${symbol.value.trim()})` }, range: [0, responseMaximum.value] },
+    yaxis: { title: { text: `Revenue (${symbol.value.trim()})` } },
+    shapes: validRange ? [
+      { type: "rect", x0: 0, x1: observed[0], y0: 0, y1: 1, yref: "paper",
         fillcolor: "rgba(148,98,0,0.08)", line: { width: 0 }, layer: "below" },
-      { type: "rect", x0: Number(observed[1] ?? 0), x1: maximum, y0: 0, y1: 1, yref: "paper",
+      { type: "rect", x0: observed[1], x1: responseMaximum.value, y0: 0, y1: 1, yref: "paper",
         fillcolor: "rgba(148,98,0,0.08)", line: { width: 0 }, layer: "below" },
-    ],
+    ] : [],
   });
 });
 
 const allocationWaterfall = computed(() => {
-  if (!allocations.value.length) return [];
+  if (!allocations.value.length || allocations.value.some(row => !Number.isFinite(row.initial_budget) || !Number.isFinite(row.optimized_budget))) return [];
   const initial = allocations.value.reduce((total, row) => total + Number(row.initial_budget ?? 0), 0);
   return [{
     type: "waterfall", orientation: "v",
@@ -521,8 +569,8 @@ const evaluationAvailable = computed(
 <template>
   <section class="page-grid">
     <p class="caption">
-      The three models in pipeline order. Each tab carries that model's own
-      results and, where a database is connected, the controls to run it.
+      Each stage uses the selected dataset and its available evidence. A live
+      backend with writable runtime storage provides execution controls.
     </p>
 
     <div class="tabs" role="tablist" aria-label="Models">
@@ -539,7 +587,8 @@ const evaluationAvailable = computed(
       </button>
     </div>
 
-    <article v-if="stages[model]" class="card">
+    <WorkbenchRunner v-if="selectedDatasetId" :key="`${selectedDatasetId}:${model}`" :stage="model" />
+    <article v-else-if="stages[model]" class="card">
       <div class="card-head">
         <h2>Run {{ stages[model].label }}</h2>
         <span class="sub">{{ stages[model].script || "No runnable script" }}</span>
@@ -558,6 +607,20 @@ const evaluationAvailable = computed(
         />
       </div>
     </article>
+
+    <section v-if="selectedDatasetId" class="panel" aria-label="Displayed result provenance">
+      <template v-if="data.runProvenance?.[model]">
+        <h2>Displayed {{ model }} result</h2>
+        <p>Run {{ data.runProvenance[model].id }} · Completed {{ data.runProvenance[model].finishedAt }} · Plan revision {{ data.runProvenance[model].revision ?? 'No saved plan' }}</p>
+        <p class="caption">Dataset {{ data.runProvenance[model].datasetId }} · Input fingerprint {{ data.runProvenance[model].datasetDigest }}</p>
+        <a href="#/log/provenance">Inspect retained run records and artifacts</a>
+      </template>
+      <p v-else>Not run for this dataset. No stored {{ model }} result is displayed.</p>
+    </section>
+    <p v-if="model !== 'evaluation'" class="caption">
+      Stored result evidence · {{ evidenceWindow }} · {{ symbol.trim() }}.
+      Historical date filters do not refit these models or change their stored predictions.
+    </p>
 
     <!-- 1. MTA attribution -->
     <template v-if="model === 'attribution' && hasData">
@@ -611,7 +674,9 @@ const evaluationAvailable = computed(
           <span class="sub">The governed value</span>
         </div>
         <div class="card-body">
-          <DataTable
+          <EntityTable
+            :row-key="row => `${row.outcome}:${row.touchpoint}`"
+            noun="attribution recommendation"
             :columns="recommendedColumns"
             :rows="recommended"
             :empty="`No recommended rows for ${OUTCOME_LABELS[outcome]}.`"
@@ -668,7 +733,7 @@ const evaluationAvailable = computed(
             </p>
             <TableView
               label="View the implied shift as a table"
-              :columns="shiftColumns"
+              :columns="evidenceColumns(shiftColumns)"
               :rows="shiftRows"
             />
           </template>
@@ -679,8 +744,7 @@ const evaluationAvailable = computed(
     <article v-else-if="model === 'attribution'" class="card empty-card">
       <h2>No attribution output</h2>
       <p>
-        No attribution output is available from the current data source. Run the
-        stage above, or switch <code>DATABASE</code> in <code>.env</code>.
+        Not run. No attribution output is selected for this source. Use the available stage controls above to run or open a matching result.
       </p>
     </article>
 
@@ -716,6 +780,16 @@ const evaluationAvailable = computed(
               label="Fitted campaign budget response with observations and initial and optimized budgets"
             />
             <p v-else class="table-empty">No fitted response model is available.</p>
+            <p v-if="!responseCurveValues.length" class="notice">Insufficient evidence: complete fitted response parameters are unavailable. No response prediction is drawn.</p>
+            <p class="caption">
+              {{ responseObservations.length.toLocaleString() }} stored observations;
+              {{ responsePlotObservations.length.toLocaleString() }} plotted{{ responseObservations.length > 500 ? ' (deterministic sample)' : '' }}.
+              Support: {{ pretty(activeResponseModel.diagnostics?.support ?? activeAllocation.response_support ?? 'UNAVAILABLE') }}.
+              Fit observations: {{ activeResponseModel.diagnostics?.observation_count ?? 'Unavailable' }}.
+              Observed budget range: {{ theme.money(activeResponseModel.diagnostics?.observed_budget_range?.[0], symbol) }} to {{ theme.money(activeResponseModel.diagnostics?.observed_budget_range?.[1], symbol) }}.
+            </p>
+            <TableView label="View fitted response values" :columns="responseValueColumns" :rows="responseCurveValues" />
+            <EntityTable :columns="responseObservationColumns" :rows="responseObservations" :row-key="responseRowKey" noun="response observation" />
             <p class="caption">
               Amber shading is outside the observed budget range. A decision in
               that area is extrapolated visibly rather than reduced to a flag.
@@ -743,7 +817,9 @@ const evaluationAvailable = computed(
             <span class="sub">{{ allocations.length }} Campaigns</span>
           </div>
           <div class="card-body">
-            <DataTable
+            <EntityTable
+              :row-key="row => row.campaign_id"
+              noun="Campaign allocation"
               :columns="allocationColumns"
               :rows="allocations"
               empty="No Campaign received an optimized budget."
@@ -763,8 +839,8 @@ const evaluationAvailable = computed(
                 <li v-for="row in extrapolated" :key="row.campaign_id">
                   {{ row.campaign_id }} is optimized to
                   {{ theme.money(row.optimized_budget, symbol) }}, outside the
-                  {{ theme.money(row.observed_budget_range[0], symbol) }} to
-                  {{ theme.money(row.observed_budget_range[1], symbol) }} range
+                  {{ theme.money(row.observed_budget_range?.[0], symbol) }} to
+                  {{ theme.money(row.observed_budget_range?.[1], symbol) }} range
                   its fit observed.
                 </li>
               </ul>
@@ -813,7 +889,7 @@ const evaluationAvailable = computed(
       <article v-else class="card empty-card">
         <h2>No optimized strategy</h2>
         <p>
-          The budget response models have not been fitted against the current
+          Not run. The budget response models have not been fitted against the current
           data. Run the stage above to fit them and optimize.
         </p>
       </article>
@@ -842,7 +918,7 @@ const evaluationAvailable = computed(
             interactive neural-network forecast is rendered below as native
             dashboard widgets, separate from production recommendations.
           </p>
-          <div v-if="!evaluationAvailable" class="notice">
+          <div v-if="!selectedDatasetId && !evaluationAvailable" class="notice">
             This deployment cannot start the evaluation command. Run the
             dashboard in a writable deployment, or execute
             <code>uv run --extra strategy-evaluation python -m modules.mta_strategy_evaluation.src.evaluate_strategies</code> from a terminal.
@@ -850,6 +926,8 @@ const evaluationAvailable = computed(
         </div>
       </article>
 
+      <EvaluationReport :report="data.strategyEvaluation" :run="data.runProvenance?.evaluation ?? {}" />
+      <p class="notice">Demonstration · Willow forecast is independent from the selected dataset and production evaluation.</p>
       <WillowGmvForecast />
     </template>
   </section>

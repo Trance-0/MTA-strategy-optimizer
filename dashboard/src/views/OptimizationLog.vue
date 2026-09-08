@@ -18,6 +18,7 @@
  */
 import { computed, ref, watch } from "vue";
 
+import RunHistory from "../components/RunHistory.vue";
 import DataTable from "../components/DataTable.vue";
 import KeyValuePanel from "../components/KeyValuePanel.vue";
 import MetricRow from "../components/MetricRow.vue";
@@ -34,7 +35,7 @@ import { useJobs } from "../lib/useJobs.js";
 import { money } from "../theme.js";
 import * as theme from "../theme.js";
 
-const { data } = useDashboard();
+const { data, selectedDatasetId } = useDashboard();
 const props = defineProps({ section: { type: String, default: "provenance" } });
 const emit = defineEmits(["navigate"]);
 // Renamed on import: `stages` below is the pipeline's five artifact-producing
@@ -51,7 +52,7 @@ const LOG_TABS = [
 const tab = computed(() => props.section);
 
 watch(tab, (value) => {
-  if (value !== "provenance") ensureJobsLoaded();
+  if (!selectedDatasetId.value && value !== "provenance") ensureJobsLoaded();
 }, { immediate: true });
 
 /** The stage descriptor behind a model tab, or null on the provenance tab. */
@@ -332,6 +333,8 @@ const reliabilityMatrixLayout = computed(() => theme.layout({
 </script>
 
 <template>
+  <RunHistory v-if="selectedDatasetId" :stage="props.section === 'provenance' ? '' : props.section" />
+  <template v-else>
   <section class="page-grid">
     <p class="caption">
       Where the current numbers came from, and what happened the last time each
@@ -586,4 +589,5 @@ const reliabilityMatrixLayout = computed(() => theme.layout({
     </article>
     </template>
   </section>
+</template>
 </template>
