@@ -17,6 +17,8 @@ defineProps({
   marketplace: { type: String, default: "" },
   /** How this deployment names itself, e.g. "Published build". */
   deploymentLabel: { type: String, default: "" },
+  /** Display identity is available before database data grants editing. */
+  deploymentMode: { type: String, default: "" },
   /** Whether data operations are available here. */
   writable: { type: Boolean, default: false },
 });
@@ -32,10 +34,14 @@ defineProps({
       <span
         v-if="deploymentLabel"
         class="tag"
-        :class="writable ? 'blue' : 'green'"
+        :class="deploymentMode === 'database' ? 'blue' : deploymentMode === 'local files' ? 'green' : 'gray'"
         :title="writable
           ? 'Connected to a database; data operations are available.'
-          : 'Reading committed files; data operations are unavailable.'"
+          : deploymentMode === 'database'
+            ? 'Database configured; load dashboard data before editing.'
+            : deploymentMode === 'local files'
+              ? 'Reading committed files; data operations are unavailable.'
+              : 'Checking the data source; data operations are unavailable.'"
       >
         {{ deploymentLabel }}
       </span>

@@ -1,6 +1,6 @@
 ---
 title: "Visual Contract"
-compact: "Theme palettes, fixed entity colors, chart axes and paired readable values."
+compact: "Theme palettes, fixed entity colors, chart axes, paired readable values and shared LogViewer styling."
 source_files: dashboard/src/theme.js, dashboard/src/style.css, dashboard/src/lib/common.js
 ---
 
@@ -15,6 +15,13 @@ Three rules the views depend on:
 - **One axis per chart.** Where two measures differ by orders of magnitude, as spend and sales do, both are indexed to their own window average and share one scale. A second y-axis would invent a correlation the data does not contain.
 
 Every chart is paired with the values behind it — a table view, direct labels, or both — so no number is reachable only by hovering.
+
+All operational log surfaces use `LogViewer.vue` and the shared `.log-viewer`,
+`.log-stream`, `.log-row` and metadata classes. Log controls form a left-aligned
+`.rec-actions` row directly above output. Messages preserve whitespace, wrap
+long lines and remain selectable; one light log surface replaces separate run,
+task and schema themes. Metadata remains subordinate and stderr is distinguished
+without claiming every stderr message is a failure.
 
 ## Source Files
 

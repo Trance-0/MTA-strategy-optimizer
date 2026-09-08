@@ -15,6 +15,7 @@
  */
 import { computed, onMounted, onUnmounted, ref } from "vue";
 
+import LogViewer from "../components/LogViewer.vue";
 import BackendTasks from "../components/BackendTasks.vue";
 import {
   fetchSchemaOperation,
@@ -504,32 +505,6 @@ function setLevel(level) {
   });
 }
 
-async function copyVisibleLogs() {
-  const content = visibleRecords.value
-    .map((record) =>
-      `${record.when} ${record.level} ${record.source} ${record.message}` +
-      (record.durationMs == null ? "" : ` duration_ms=${record.durationMs}`),
-    )
-    .join("\n");
-  try {
-    if (navigator.clipboard?.writeText) {
-      await navigator.clipboard.writeText(content);
-    } else {
-      const field = document.createElement("textarea");
-      field.value = content;
-      field.setAttribute("readonly", "");
-      field.style.position = "fixed";
-      field.style.opacity = "0";
-      document.body.appendChild(field);
-      field.select();
-      if (!document.execCommand("copy")) throw new Error("Browser copy was refused.");
-      field.remove();
-    }
-    message.value = { ok: true, text: `${visibleRecords.value.length} log record(s) copied.` };
-  } catch (error) {
-    message.value = { ok: false, text: `Could not copy logs: ${error.message}` };
-  }
-}
 </script>
 
 <template>
@@ -1007,43 +982,20 @@ cp sample.env .env      # set DATABASE=true and the PG_* values
                   </option>
                 </select>
               </div>
-              <button class="btn small" :disabled="!visibleRecords.length" @click="copyVisibleLogs">
-                Copy visible logs
-              </button>
               <button class="btn small" :disabled="readOnly" @click="send('clearLog')">
                 Clear captured records
               </button>
             </div>
 
-            <p v-if="state.logging.records.length === 0" class="notice">
-              No records captured yet. Enable logging, then switch views or press
-              Reload to generate activity.
+            <p class="caption">
+              {{ visibleRecords.length }} of {{ state.logging.records.length }} record(s), newest last.
+              Capacity {{ state.logging.capacity }}.
             </p>
-            <template v-else>
-              <p class="caption">
-                {{ visibleRecords.length }} of {{ state.logging.records.length }} record(s), newest last.
-                Capacity {{ state.logging.capacity }}.
-              </p>
-              <div class="log-stream">
-                <div
-                  v-for="(record, index) in visibleRecords"
-                  :key="index"
-                  class="log-row"
-                >
-                  <span class="log-when">{{ record.when.slice(11, 19) }}</span>
-                  <span class="log-level" :class="record.level.toLowerCase()">
-                    {{ record.level }}
-                  </span>
-                  <span class="log-source">{{ record.source }}</span>
-                  <span class="log-message">
-                    {{ record.message }}
-                    <template v-if="record.durationMs != null">
-                      · {{ record.durationMs }} ms
-                    </template>
-                  </span>
-                </div>
-              </div>
-            </template>
+            <LogViewer
+              :records="visibleRecords"
+              copy-label="Copy visible logs"
+              empty-text="No records match these filters. Enable logging or adjust the filters to see activity."
+            />
           </template>
         </template>
 

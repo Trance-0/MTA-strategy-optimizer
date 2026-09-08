@@ -1,6 +1,6 @@
 ---
 title: "Canonical Entities Are Lists, Not Prose"
-compact: "EntityTable paging, identity-keyed selection, draft editing and named archive confirmation."
+compact: "EntityTable paging, identity-keyed selection, draft editing and named archive confirmation; shared navigation and display components, including TopBar deployment identity badges independent of editing permission."
 source_files: dashboard/src/components/SidebarNav.vue, dashboard/src/components/TopBar.vue, dashboard/src/components/DataTable.vue, dashboard/src/components/EntityTable.vue, dashboard/src/components/ConfirmDialog.vue, dashboard/src/components/TableView.vue, dashboard/src/components/MetricRow.vue, dashboard/src/components/KeyValuePanel.vue, dashboard/src/components/ReliabilityBanner.vue
 ---
 
@@ -52,6 +52,7 @@ Source: `dashboard/src/components/SidebarNav.vue`, `dashboard/src/components/Top
 
 - Responsibility: Hold the chrome and the repeated display shapes, so two views cannot render the same thing differently.
 - Inputs: Props from the view that mounts them.
+- `TopBar.vue` accepts `deploymentMode` independently of `writable`: `database` uses a blue deployment badge, `local files` uses green, and an unknown mode uses gray. Its tooltip states whether database data is loaded, still required before editing, or the source is unconfirmed; only confirmed file mode claims to read committed files. The label comes from `useDeployment()` through the shell.
 - Outputs: The rendered fragment, plus events for the rail's navigation, reload, and settings actions.
 - Behavior contract: `SidebarNav.vue` draws the flat eight-page rail from `src/pages.js`, including Settings as its final destination, and keeps source status and external links in the foot. It renders no section label, group container, disclosure, reload button, or separate Settings foot button. Below `1024px` the same order becomes a horizontally scrollable bar. `Settings.vue` owns reload and confirmed runtime schema switching; it never renders a stored password or sends one back. In the published build it replaces backend operations with local-run instructions, while a protected team-server deployment keeps credential mutation unavailable. `SchemaRecovery.vue` replaces terminal-only advice on a database load error with backend-declared select, derive, or initialize buttons; it never offers replacement and polls the existing bounded operation log. `TermHelp.vue` and `src/lib/terms.js` provide keyboard-accessible definitions and precise English documentation links without hiding the original labels. `PlotlyChart.vue` is the only component that touches Plotly, so chart defaults in `src/theme.js` cannot be bypassed, and it disposes the plot on unmount. `TableView.vue` keeps every chart paired with readable values. `ReliabilityBanner.vue` always renders the status word beside its colour. `TopBar.vue` leads its tag row with the deployment.
 

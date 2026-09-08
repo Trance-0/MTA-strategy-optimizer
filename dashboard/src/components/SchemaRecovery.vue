@@ -15,6 +15,7 @@
  * Data flow:
  *     GET /api/schema-recovery -> here -> schema-selection or schema-operations
  */
+import LogViewer from "./LogViewer.vue";
 import { computed, onMounted, onUnmounted, ref } from "vue";
 
 import {
@@ -163,16 +164,14 @@ async function choose(option) {
           </template>
         </p>
         <p v-if="operation.error" class="notice bad">{{ operation.error }}</p>
-        <div class="log-stream schema-log">
-          <div
-            v-for="(line, index) in operation.lines"
-            :key="`${line.at}-${index}`"
-            class="log-row"
-          >
-            <span class="log-when">{{ line.at }}</span>
-            <span class="log-message">{{ line.text }}</span>
-          </div>
-        </div>
+        <LogViewer
+          :key="operation.id"
+          :records="operation.lines ?? []"
+          :context="[operation.action + ' ' + operation.schema + ' — ' + operation.state, 'Exit ' + (operation.exitCode ?? 'pending')]"
+          :command="operation.command ?? ''"
+          :dropped-lines="operation.droppedLines ?? 0"
+          :running="running"
+        />
       </section>
     </template>
   </section>

@@ -16,6 +16,7 @@
  *     src/lib/useJobs.js -> here -> POST /api/jobs/:stage
  */
 import { computed, ref, watch } from "vue";
+import LogViewer from "./LogViewer.vue";
 
 const props = defineProps({
   /** The stage descriptor from `GET /api/jobs`. */
@@ -28,7 +29,6 @@ const props = defineProps({
 const emit = defineEmits(["start", "stop", "reload", "upload", "import"]);
 
 const options = ref({});
-const logEnd = ref(null);
 const selectedFiles = ref([]);
 
 watch(
@@ -54,28 +54,11 @@ const blocked = computed(() => {
   return "";
 });
 
-const lines = computed(() => job.value?.lines ?? []);
 const artifacts = computed(() => props.stage.artifacts ?? { files: [] });
 
 function selectArtifacts(event) {
   selectedFiles.value = Array.from(event.target.files ?? []);
 }
-
-/**
- * Follow the tail while a run is going.
- *
- * Only while running: scrolling a finished log to the bottom would fight a
- * reader who scrolled up to read why it failed.
- */
-watch(
-  () => lines.value.length,
-  () => {
-    if (!running.value) return;
-    requestAnimationFrame(() => {
-      logEnd.value?.scrollIntoView({ block: "end" });
-    });
-  },
-);
 
 function elapsed(record) {
   if (!record?.startedAt) return "";
@@ -191,28 +174,13 @@ function elapsed(record) {
           <b>Load the new results</b> to read them into the dashboard.
         </div>
 
-        <p v-if="job.droppedLines" class="caption">
-          {{ job.droppedLines.toLocaleString() }} earlier line(s) dropped; this
-          is the tail of the output.
-        </p>
-
-        <div class="log-stream run-log">
-          <div
-            v-for="(record, index) in lines"
-            :key="index"
-            class="log-row"
-            :class="`log-${record.stream}`"
-          >
-            <span class="log-when">{{ record.at.slice(11, 19) }}</span>
-            <span class="log-message">{{ record.text }}</span>
-          </div>
-          <div ref="logEnd"></div>
-        </div>
-
-        <p class="caption">
-          The dashboard runs the project's own command, unchanged:
-          <code>{{ job.command }}</code>
-        </p>
+        <LogViewer
+          :records="job.lines ?? []"
+          :context="[stage.label + ' — ' + job.state, 'Started ' + (job.startedAt ?? 'not started'), 'Finished ' + (job.finishedAt ?? 'not finished'), 'Exit ' + (job.exitCode ?? 'pending')]"
+          :command="job.command ?? ''"
+          :dropped-lines="job.droppedLines ?? 0"
+          :running="running"
+        />
       </template>
 
       <p v-else class="table-empty">

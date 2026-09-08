@@ -1,6 +1,6 @@
 ---
 title: Page Behavior
-compact: "CommandCenter, BudgetManager, Campaigns, CampaignOptimizer, and OptimizationLog display contracts; bounded date windows, density grids, stable ordering, route-owned data loading and package-native terminal commands for unavailable model stages."
+compact: "Shared LogViewer for copyable model history; CommandCenter, BudgetManager, Campaigns, CampaignOptimizer, and OptimizationLog display contracts; bounded date windows, density grids, stable ordering, route-owned data loading and package-native terminal commands for unavailable model stages."
 source_files: dashboard/src/views/CommandCenter.vue, dashboard/src/views/BudgetManager.vue, dashboard/src/views/Campaigns.vue, dashboard/src/views/CampaignOptimizer.vue, dashboard/src/views/OptimizationLog.vue
 ---
 
@@ -182,6 +182,10 @@ server, so the offered controls and the accepted arguments cannot diverge
 silently.
 
 #### `OptimizationLog.vue`
+
+Model history uses `LogViewer.vue` for the same timestamps, copy control,
+command context and truncation notice as StageRunner. Copy includes the stage
+label, state, timestamps, exit code and retained output, including failed runs.
 
 Run identifiers, the report window, the input digests, the pipeline stage trail, the optimized Campaign budget plan, and the per-touchpoint reliability flags, plus one log tab per model beside them.
 

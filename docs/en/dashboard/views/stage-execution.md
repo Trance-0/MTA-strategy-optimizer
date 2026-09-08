@@ -1,12 +1,12 @@
 ---
 title: "Running a Stage from the Dashboard"
-compact: "StageRunner model options, server phases, dataset selection, queued execution, and artifact transfer."
-source_files: dashboard/src/lib/useJobs.js, dashboard/src/components/StageRunner.vue, dashboard/src/components/LoadingProgress.vue
+compact: "StageRunner options, dataset selection and artifacts; shared LogViewer rendering, copy with clipboard fallback, task context, filtered Settings records, bounded logs, timestamps and active-run tail following across five dashboard surfaces."
+source_files: dashboard/src/lib/useJobs.js, dashboard/src/components/StageRunner.vue, dashboard/src/components/LoadingProgress.vue, dashboard/src/components/LogViewer.vue
 ---
 
 # Running a Stage from the Dashboard
 
-Campaign Optimizer carries one tab per model — MTA attribution, MTA strategy optimization, MTA strategy evaluation — and Optimization Log carries the same three beside the provenance it already showed. Each model tab has its own runner, and each log tab its own output.
+Campaign Optimizer carries one tab per model — Multi-Touch Attribution (MTA), MTA strategy optimization, MTA strategy evaluation — and Optimization Log carries the same three beside the provenance it already showed. Each model tab has its own runner, and each log tab its own output.
 
 Every runner begins with a **Data** selector populated by its stage descriptor
 from `GET /api/jobs`. Attribution choices name an available dashboard report
@@ -59,9 +59,8 @@ observed, and publishes `strategyEvaluation`. The current view explains those
 layers and exposes the run; it does not yet render the report fields.
 
 `StageRunner.vue` is one stage's controls, dataset selector, progress bar, log,
-and artifact transfer surface, and is mounted once per model tab in both
-Campaign Optimizer and Optimization Log — so the two views cannot show a run
-differently. It takes the stage descriptor whole rather than a set of flags, so
+and artifact transfer surface in Campaign Optimizer. Optimization Log presents
+run history; both delegate output rendering to `LogViewer.vue`. It takes the stage descriptor whole rather than a set of flags, so
 available datasets, artifact filenames, and capabilities come from the server
 without a view edit. The selected dataset identifier is emitted as `datasetId`
 beside declared extra options. **The bar reads `job.percent` for both
@@ -103,3 +102,35 @@ Source: `dashboard/src/components/StageRunner.vue`, `dashboard/src/components/Lo
 - Inputs and outputs: Stage descriptors and form values produce backend job requests and progress displays.
 - Dependencies: Vue and the shared client.
 - Verification: `npm --prefix dashboard test`; production build and browser navigation.
+
+### `LogViewer.vue`
+
+Source: `dashboard/src/components/LogViewer.vue`
+
+- Responsibility: One log renderer and copy implementation shared by StageRunner,
+  BackendTasks, OptimizationLog, SchemaRecovery, and Settings captured records.
+- Inputs: `records=[]` accepts task lines (`at`, `text`, `stream`, optional
+  `level`) and request records (`when`, `message`, `source`, `level`, optional
+  `durationMs`); `context=[]` contains caller-owned header lines; `command=""`,
+  `droppedLines=0`, `running=false`, `copyLabel="Copy log"`, and `emptyText`.
+- Outputs: Timestamped, selectable plain-text records and a left-aligned Copy
+  button immediately above the log. Copy contains context, exact command,
+  dropped-line count, and every supplied record in order, with full timestamps,
+  stream/severity/source, text and duration (including zero). It never copies
+  hidden Settings records or claims dropped lines are present.
+- Behavior: Empty logs show a message; Copy is enabled when any context, command,
+  truncation notice or record exists. Copy works for queued, active, successful
+  and failed tasks. Clipboard success and failure are announced through a status
+  message. If the browser clipboard interface is absent or rejects (including insecure
+  deployments), use a temporary read-only textarea and `execCommand("copy")`,
+  remove it even on failure, and restore focus. Report failure if both methods
+  fail. Logs render text, never markup. Only the log container follows appended
+  output, only while `running` and the reader is already near its bottom;
+  completed logs and readers inspecting earlier lines are never scrolled away.
+  Tail detection uses record changes, not only length, so a full bounded buffer
+  continues updating. A single shared visual treatment preserves whitespace and
+  wraps long lines. The caller owns polling, filtering, task selection and stop.
+- Dependencies: Vue reactivity and browser clipboard/document interfaces.
+- Verification: `dashboard/tests/dashboard.test.js` covers copy payloads,
+  fallback cleanup, failed copy feedback, tail behavior and shared consumers;
+  `npm --prefix dashboard test` and the production build verify integration.

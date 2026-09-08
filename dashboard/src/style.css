@@ -1581,7 +1581,22 @@ tbody tr.selected:hover {
   grid-column: span 2;
 }
 
+.log-viewer {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.log-viewer .schema-command {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.log-viewer .copy-failed { color: var(--red); }
+
 .log-stream {
+  background: #fbfcfe;
   max-height: 320px;
   overflow: auto;
   border: 1px solid var(--line);
@@ -1593,6 +1608,7 @@ tbody tr.selected:hover {
 
 .log-row {
   display: flex;
+  flex-wrap: wrap;
   gap: 8px;
   padding: 3px 0;
   border-bottom: 1px solid #f1f3f7;
@@ -1637,7 +1653,10 @@ tbody tr.selected:hover {
 
 .log-message {
   color: var(--text);
-  word-break: break-word;
+  flex: 1 1 220px;
+  min-width: 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
 }
 
 .schema-operation {
@@ -1664,12 +1683,6 @@ tbody tr.selected:hover {
 .schema-operation .schema-command {
   white-space: pre-wrap;
   overflow-wrap: anywhere;
-}
-
-.schema-log .log-when {
-  max-width: 185px;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 .doctor-steps {
@@ -1806,16 +1819,6 @@ tbody tr.selected:hover {
   color: var(--muted);
   font-size: 10.5px;
 }
-
-.task-log {
-  max-height: 330px;
-  background: #0d1830;
-  color: #dbe6ff;
-}
-
-.task-log .log-row { border-color: rgba(255, 255, 255, 0.08); }
-.task-log .log-when,
-.task-log .log-source { color: #91a8cc; }
 
 /* The remedies under the error card. Left-aligned inside `.empty-card`, which
    centres its text: a list of choices is read as a list, not as a caption. */
@@ -1962,20 +1965,13 @@ tbody tr.selected:hover {
   font-variant-numeric: tabular-nums;
 }
 
-.run-log {
-  max-height: 340px;
-  /* A terminal's own reading order: the newest line is at the bottom, and the
-     stream scrolls up as it grows. */
-  background: #fbfcfe;
-}
-
 /* stderr is not necessarily failure -- many tools log progress there -- so it
    is distinguished rather than coloured as an error. */
-.run-log .log-stderr .log-message {
+.log-stream .log-stderr .log-message {
   color: var(--amber);
 }
 
-.run-log .log-meta .log-message {
+.log-stream .log-meta .log-message {
   color: var(--muted);
   font-style: italic;
 }

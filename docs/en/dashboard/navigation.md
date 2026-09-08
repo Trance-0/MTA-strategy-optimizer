@@ -1,6 +1,6 @@
 ---
 title: Navigation Rail and Settings
-compact: "Eight lazy page imports and canonical deep links; Settings loads independently of dashboard data; Knowledge Base operational and review tabs; schema doctor, recovery, protected configuration, queued tasks and package-native database import instructions."
+compact: "Eight lazy page imports and canonical deep links; Settings loads independently of dashboard data and restores deployment identity on refresh; Knowledge Base tabs, schema doctor, recovery, protected configuration, queued tasks, shared copyable LogViewer and package-native database imports."
 lang: en-US
 source_files: dashboard/src/pages.js, dashboard/src/App.vue, dashboard/src/main.js, dashboard/src/views/Settings.vue, dashboard/src/components/BackendTasks.vue, dashboard/src/components/SchemaRecovery.vue
 ---
@@ -247,6 +247,12 @@ schema, and replacement choice.
 
 The rail closes with **Docs** and **Repo**. A reader who arrives at the published dashboard has no other route to the specification or the source, so the app carries them. The documentation link is relative in the published build, where the documentation is a sibling directory, and absolute in a local run, where there is no sibling to point at.
 
+Settings captured records, BackendTasks, and SchemaRecovery use the shared
+[LogViewer](./views/stage-execution.md#logviewer-vue). Copy sits beside each
+log, includes task context and command where available, and copies only the
+filtered records on Settings. BackendTasks retains task timestamps and safe
+summary in the copy payload; SchemaRecovery includes operation and exit state.
+
 ## Deferred view loading
 
 The shell loads the seven Trance-0 page components with dynamic imports.
@@ -255,6 +261,14 @@ Trance-0 pages and their chart dependencies load only when selected. The shell a
 Settings declares no dashboard resources: even a failing database-backed shell
 must leave the database doctor reachable at `#/settings/source`. Async component
 loading shows an accessible status and a failed chunk shows a reload remedy.
+The shell retains each successful Settings response separately from dashboard
+resources and passes it to `useDeployment(settings)`, restoring the database
+accent on a direct Settings refresh. Its existing status refresh runs at mount
+and after Reload or a saved change. Failed status requests preserve the last
+successful response. Display identity follows the
+[deployment capability contract](./views/deployment-capability.md#the-two-accents);
+write permission still requires a loaded database snapshot. The header receives
+the display mode separately from that permission.
 
 ## Source Files <span class="status-label status-verified" aria-label="Verified"></span>
 

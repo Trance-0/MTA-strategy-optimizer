@@ -19,7 +19,8 @@
  * `writable` and never branches on the build.
  *
  * Data flow:
- *     the snapshot's `mode` -> here -> the views and the shell's theme
+ *     snapshot mode -> editing permission
+ *     snapshot mode or shell Settings response -> deployment identity/theme
  */
 
 import { computed } from "vue";
@@ -41,8 +42,8 @@ export const THEMES = DEPLOYMENT_THEMES;
  * Read through a function rather than imported from `src/api/client.js`,
  * because `import.meta.env` exists only under Vite: importing the client
  * module makes this file unloadable in the Node test runner, which is where
- * the deployment contract is asserted. The flag affects only how a read-only
- * deployment names itself and which remedy it offers -- never whether it may
+ * the deployment contract is asserted. The flag identifies a static file
+ * deployment before data arrives and selects its label and remedy, never whether it may
  * write, which the snapshot's own mode decides.
  */
 function isStaticBuild() {
@@ -53,16 +54,27 @@ function isStaticBuild() {
  * Describe the active deployment.
  *
  * Returns computed refs rather than plain values, because the mode is not known
- * until the first snapshot resolves: a component that read a plain boolean at
+ * until Settings or the first snapshot resolves: a component that read a plain boolean at
  * setup time would fix itself to the pre-load default and never correct.
  */
-export function useDeployment() {
+export function useDeployment(settings = null) {
   const { data } = useDashboard();
 
   /** True once the server has reported a database it can actually write to. */
   const writable = computed(() => data.value.mode === "database");
 
-  const theme = computed(() => (writable.value ? THEMES.writable : THEMES.read_only));
+  // Settings has no data resources. Use its confirmed configuration for display
+  // while data is absent, including after reload clears the shared snapshot.
+  // This fallback must never grant the write capability above.
+  const mode = computed(() => {
+    if (data.value.mode) return data.value.mode;
+    if (settings?.value?.useDatabase === true) return "database";
+    if (settings?.value?.useDatabase === false || isStaticBuild()) return "local files";
+    return "";
+  });
+  const theme = computed(() =>
+    mode.value === "local files" ? THEMES.read_only : THEMES.writable,
+  );
 
   /**
    * What to call this deployment in the interface.
@@ -73,12 +85,16 @@ export function useDeployment() {
    */
   const label = computed(() => {
     if (writable.value) return "Database connected";
+    if (mode.value === "database") return "Database configured";
+    if (!mode.value) return "Checking data source";
     return isStaticBuild() ? "Published build" : "Local files";
   });
 
   /** Why data operations are unavailable, phrased as the remedy. */
   const readOnlyReason = computed(() => {
     if (writable.value) return "";
+    if (!mode.value) return "The data source has not been confirmed. Open Settings to check the connection or reload before editing.";
+    if (mode.value === "database") return "Database data has not loaded. Open Settings to check the connection or reload before editing.";
     return isStaticBuild()
       ? "The published build reads a snapshot exported from the repository's " +
           "committed files. It has no server behind it, so adding, editing, and " +
@@ -89,5 +105,5 @@ export function useDeployment() {
           "PostgreSQL mirror and enable adding, editing, and removing data.";
   });
 
-  return { writable, theme, label, readOnlyReason, isStatic: isStaticBuild() };
+  return { mode, writable, theme, label, readOnlyReason, isStatic: isStaticBuild() };
 }

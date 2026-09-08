@@ -33,6 +33,38 @@ def _schema(name: str, kind: str, initialize: bool, derive: bool) -> dict:
     }
 
 
+class AttributionWindowTests(unittest.TestCase):
+    """Derivation uses observed dates and refuses out-of-window source paths."""
+
+    def test_aggregate_preserves_metrics_and_checks_daily_boundaries(self) -> None:
+        from backend import derive_scenario_schemas as derive
+
+        row = {"path": "touchpoint", "users": 10, "converted_users": 5,
+               "purchase_count": 6, "revenue": 120, "first_start": "2025-01-01",
+               "last_start": "2025-12-31", "last_end": "2026-01-01"}
+        with patch.object(derive, "read_source", return_value=[row]):
+            result = derive.aggregate_paths(None, "source", "US", "adv", ("2025-01-01", "2025-12-31"))
+        self.assertEqual(result[0]["report_end_date"], "2025-12-31")
+        for key in ("users", "converted_users", "purchase_count", "revenue"):
+            self.assertEqual(result[0][key], row[key])
+        with patch.object(derive, "read_source", return_value=[row]):
+            with self.assertRaisesRegex(derive.DerivationError, "outside the Ads window"):
+                derive.aggregate_paths(None, "source", "US", "adv", ("2025-01-01", "2025-12-30"))
+
+    def test_derivation_uses_performance_window_before_import(self) -> None:
+        from datetime import date
+        from backend import derive_scenario_schemas as derive
+
+        class StopAfterValidation(Exception):
+            pass
+
+        listing = {"marketplace": "US", "advertiser_id": "adv", "report_start_date": "2025-01-01", "report_end_date": "2026-01-01"}
+        with patch.object(derive, "simulator_entities", return_value={"run_id": "run-1"}), patch.object(derive, "ads_rows", return_value=[{"currencyCode": "USD"}]), patch.object(derive, "infer_ads_report_window", return_value=(date(2025, 1, 1), date(2025, 12, 31))), patch.object(derive, "aggregate_paths", return_value=[]) as aggregate, patch.object(derive, "validate_data_alignment_rows"), patch.object(derive, "derive_attribution", side_effect=StopAfterValidation):
+            with self.assertRaises(StopAfterValidation):
+                derive.derive_scenario(None, None, "source", listing)
+        self.assertEqual(aggregate.call_args.args[-1], ("2025-01-01", "2025-12-31"))
+
+
 class ArgumentTests(unittest.TestCase):
     """Check every command is a fixed vector with explicit replacement."""
 

@@ -19,6 +19,7 @@
 import { computed, ref, watch } from "vue";
 
 import DataTable from "../components/DataTable.vue";
+import LogViewer from "../components/LogViewer.vue";
 import KeyValuePanel from "../components/KeyValuePanel.vue";
 import MetricRow from "../components/MetricRow.vue";
 import PlotlyChart from "../components/PlotlyChart.vue";
@@ -369,7 +370,7 @@ const reliabilityMatrixLayout = computed(() => theme.layout({
               title="Last run"
               :rows="[
                 { label: 'State', value: activeRun.state },
-                { label: 'Started', value: activeRun.startedAt.replace('T', ' ').slice(0, 19) },
+                { label: 'Started', value: activeRun.startedAt ? activeRun.startedAt.replace('T', ' ').slice(0, 19) : 'Not started' },
                 { label: 'Duration', value: elapsed(activeRun) },
                 {
                   label: 'Exit code',
@@ -381,26 +382,14 @@ const reliabilityMatrixLayout = computed(() => theme.layout({
 
             <div v-if="activeRun.error" class="notice bad">{{ activeRun.error }}</div>
 
-            <p v-if="activeRun.droppedLines" class="caption">
-              {{ activeRun.droppedLines.toLocaleString() }} earlier line(s)
-              dropped; this is the tail of the output.
-            </p>
-
-            <div class="log-stream run-log">
-              <div
-                v-for="(record, index) in activeRun.lines"
-                :key="index"
-                class="log-row"
-                :class="`log-${record.stream}`"
-              >
-                <span class="log-when">{{ record.at.slice(11, 19) }}</span>
-                <span class="log-message">{{ record.text }}</span>
-              </div>
-            </div>
-            <p class="caption">
-              The dashboard runs the project's own command unchanged, so this is
-              the same output the documented terminal command prints.
-            </p>
+            <LogViewer
+              :key="activeRun.id"
+              :records="activeRun.lines ?? []"
+              :context="[activeStage.label + ' — ' + activeRun.state, 'Started ' + (activeRun.startedAt ?? 'not started'), 'Finished ' + (activeRun.finishedAt ?? 'not finished'), 'Exit ' + (activeRun.exitCode ?? 'pending')]"
+              :command="activeRun.command ?? ''"
+              :dropped-lines="activeRun.droppedLines ?? 0"
+              :running="['queued', 'running', 'stopping'].includes(activeRun.state)"
+            />
           </template>
 
           <p v-else-if="activeStage.available" class="table-empty">

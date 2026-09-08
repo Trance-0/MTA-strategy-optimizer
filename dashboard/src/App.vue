@@ -61,12 +61,14 @@ const VIEWS = {
 };
 
 const { data, loadingProgress, ensureResources, errorFor, isLoaded, reload } = useDashboard();
+const deploymentSettings = ref(null);
 const {
+  mode: deploymentMode,
   writable,
   theme: deploymentTheme,
   label: deploymentLabel,
   readOnlyReason,
-} = useDeployment();
+} = useDeployment(deploymentSettings);
 const { diagnosticsOn } = useDiagnostics();
 
 const page = ref(DEFAULT_PAGE);
@@ -137,6 +139,9 @@ function readLocation() {
 async function refreshStatus() {
   const settings = await fetchSettings().catch(() => null);
   if (!settings) return;
+  // Keep deployment identity outside the data cache: Settings never loads that
+  // cache, and Reload temporarily clears it even on a database deployment.
+  deploymentSettings.value = settings;
   status.value = settings.status ?? {};
   loggingOn.value = settings.logging?.enabled ?? false;
 }
@@ -230,6 +235,7 @@ const docsHref = computed(() => (IS_STATIC ? "./docs/" : `${DOCS_URL}/`));
         :window="reportWindow"
         :marketplace="marketplace"
         :deployment-label="deploymentLabel"
+        :deployment-mode="deploymentMode"
         :writable="writable"
       />
 

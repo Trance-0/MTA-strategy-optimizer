@@ -17,6 +17,12 @@ Entries are reconstructed from Git history. They record the change set behind ea
 
 ---
 
+## 2026-09-09
+
+### Completed
+
+- Fixed simulator attribution date boundaries with provenance checks, preserved database identity on Settings refresh, and unified five log surfaces with copy and clipboard fallback. Verified 154 backend tests, 147 isolated dashboard tests, and production/documentation builds.
+
 ## 2026-09-07
 
 ### Completed

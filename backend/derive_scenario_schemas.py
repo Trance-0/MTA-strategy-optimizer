@@ -45,7 +45,7 @@ import json
 import sys
 from collections import defaultdict
 from dataclasses import replace as dataclass_replace
-from datetime import datetime
+from datetime import date, datetime, timedelta
 from pathlib import Path
 from typing import Any, Mapping, Sequence
 
@@ -79,6 +79,10 @@ from modules.mta_attribution.src.markov_attribution_model import (
 )
 from modules.mta_attribution.src.shapley_attribution_model import (
     run_shapley_attribution,
+)
+from modules.mta_attribution.src.validate_data_alignment import (
+    infer_ads_report_window,
+    validate_data_alignment_rows,
 )
 from modules.mta_strategy_recommendation.src.budget_recommender import (
     SEARCH_AD_PRODUCTS,
@@ -288,6 +292,9 @@ def aggregate_paths(
         schema,
         """
         select path,
+               min(report_start_date) as first_start,
+               max(report_start_date) as last_start,
+               max(report_end_date) as last_end,
                sum(users) as users,
                sum(converted_users) as converted_users,
                sum(purchase_count) as purchase_count,
@@ -301,6 +308,16 @@ def aggregate_paths(
         advertiser=advertiser,
     )
     start, end = window
+    # Source daily paths use the following day as their end boundary. They may
+    # not contain observations beyond the performance window we are stamping.
+    next_day = (date.fromisoformat(end) + timedelta(days=1)).isoformat()
+    if any(
+        str(row["first_start"]) < start
+        or str(row["last_start"]) > end
+        or str(row["last_end"]) > next_day
+        for row in rows
+    ):
+        raise DerivationError(f"{marketplace}: path observations fall outside the Ads window")
     return [
         {
             "path": row["path"],
@@ -1160,15 +1177,18 @@ def derive_scenario(
     """
     marketplace = str(listing["marketplace"])
     advertiser = str(listing["advertiser_id"])
-    window = (str(listing["report_start_date"]), str(listing["report_end_date"]))
-
     entities = simulator_entities(connection, source, marketplace)
-    paths = aggregate_paths(connection, source, marketplace, advertiser, window)
     ads = ads_rows(connection, source, marketplace, advertiser)
-    if not paths:
-        raise DerivationError(f"{marketplace}: the source schema holds no path rows")
     if not ads:
         raise DerivationError(f"{marketplace}: the source schema holds no Ads rows")
+    # Native path ends are next-day boundaries; model windows describe actual
+    # daily observations inclusively. Use validated Ads dates for every output.
+    try:
+        window = tuple(day.isoformat() for day in infer_ads_report_window(ads))
+        paths = aggregate_paths(connection, source, marketplace, advertiser, window)
+        validate_data_alignment_rows(paths, ads)
+    except ValueError as error:
+        raise DerivationError(f"{marketplace}: input alignment failed: {error}") from error
 
     scenario = {
         "marketplace": marketplace,

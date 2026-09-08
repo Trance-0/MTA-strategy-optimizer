@@ -16,7 +16,7 @@ from __future__ import annotations
 import csv
 import json
 from dataclasses import dataclass
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from decimal import Decimal
 from pathlib import Path
 from typing import Any
@@ -25,6 +25,10 @@ from backend.config import pipeline_output_directory, research_snapshot_path
 from backend.database import sql, table_exists
 from modules.mta_attribution.config import AMAZON_ADS_REPORT_FILE, AMC_REPORT_FILE
 from modules.mta_attribution.src.synthetic_event_pipeline import ADS_FIELDS
+from modules.mta_attribution.src.validate_data_alignment import (
+    infer_ads_report_window,
+    validate_data_alignment_rows,
+)
 from modules.mta_standard.src.dataloader import MTA_SIM_PATH_REPORT_FIELDS
 
 
@@ -309,6 +313,37 @@ def _write_attribution_inputs(
     )
     if not paths or not performance:
         raise DatasetError("The selected attribution dataset became empty.")
+    # Validate coverage before interpreting the legacy simulator's next-day
+    # path boundary. Configuration provenance prevents a missing final Ads day
+    # from being silently mistaken for that known representation difference.
+    start, end = infer_ads_report_window(performance)
+    if (
+        dataset["reportStartDate"] == start.isoformat()
+        and dataset["reportEndDate"] == (end + timedelta(days=1)).isoformat()
+        and table_exists("mta_simulation_run")
+        and table_exists("mta_sim_delivery_observation")
+    ):
+        runs = sql(
+            """
+            select distinct r.run_id, r.effective_configuration
+              from mta_simulation_run r
+              join mta_sim_delivery_observation d on d.run_id = r.run_id
+             where d.marketplace = :marketplace and d.advertiser_id = :advertiser
+            """,
+            parameters,
+        )
+        configuration = runs[0]["effective_configuration"] if len(runs) == 1 else {}
+        if isinstance(configuration, str):
+            configuration = json.loads(configuration)
+        if isinstance(configuration, dict) and (
+            configuration.get("advertiser_id") == dataset["advertiserId"]
+            and configuration.get("report_start_date") == start.isoformat()
+            and configuration.get("report_end_date") == end.isoformat()
+        ):
+            paths = [{**row, "report_end_date": end.isoformat()} for row in paths]
+    # The CLI's strict contract remains the final gate, before either input is
+    # published. Do not alter database rows or relax missing-date/key checks.
+    validate_data_alignment_rows(paths, performance)
     _write_csv(path_report, list(MTA_SIM_PATH_REPORT_FIELDS), paths)
     _write_csv(performance_report, list(ADS_FIELDS), performance)
 
