@@ -1,22 +1,25 @@
 ---
 title: GitHub to Gitea Publication
-compact: "mirror-to-gitea.yml prepares complete main/master snapshots before one atomic mirror push. Specifies frozen refs, pinned files, deterministic provenance, pruning, validation and the manual GitHub Actions Run workflow procedure; no separate helper script. Submodule bytes are excluded from end-of-line conversion because the snapshot import applies no filter, and publication retries a transient gateway fault but never a refusal."
+compact: "mirror-to-gitea.yml prepares a main/master snapshot before one atomic mirror push. Gitea receives the default branch and its master alias only; every other branch and tag is deleted before publication and pruned from the destination. Specifies pinned files, deterministic provenance, validation and the manual Run workflow procedure. Submodule bytes are excluded from end-of-line conversion because the snapshot import applies no filter, and publication retries a transient gateway fault but never a refusal."
 source_files: .github/workflows/mirror-to-gitea.yml, .gitattributes
 ---
 
 # GitHub to Gitea Publication
 
-GitHub owns authored code and submodule pins. Gitea is a generated full mirror;
-its default branch (`main`) contains one child of the GitHub commit with the
-pins expanded into ordinary files. Yunxiao clones this `main`. There is no
-separate snapshot branch and no development on Gitea.
+GitHub owns authored code and submodule pins. Gitea is a generated deployment
+mirror of one branch: its default branch (`main`) contains one child of the
+GitHub commit with the pins expanded into ordinary files, and `master` is an
+alias for the same commit. Yunxiao clones this `main`. Gitea carries no other
+branch and no tag. There is no separate snapshot branch and no development on
+Gitea.
 
 ## Publication contract
 
 The existing workflow contains the complete operation inline:
 
-1. Clone every GitHub branch and tag into a temporary bare repository. Freeze
-   the default branch and its exact commit from this clone.
+1. Clone GitHub into a temporary bare repository. Freeze the default branch and
+   its exact commit from this clone. The clone is a working copy only; which
+   references reach Gitea is decided at step 6, not here.
 2. Check out that commit on the GitHub runner. Restore its original GitHub
    origin so relative submodule addresses resolve correctly. Initialize the
    top-level pinned submodules with recursion disabled. The integration
@@ -39,11 +42,18 @@ The existing workflow contains the complete operation inline:
    and unmodified; parse the configuration as a
    [JavaScript Object Notation (JSON)](/en/definitions#json-javascript-object-notation)
    object before publication.
-6. Substitute the snapshot for the default branch and, if GitHub has `main`
-   but no `master`, for its Gitea `master` alias. Other branches and tags remain
-   exact GitHub references. Prune destination-only references.
-7. Publish all final references with one atomic force push. Compare the entire
-   destination branch/tag set with the prepared references; a mismatch fails.
+6. Publish the snapshot as the default branch and, when that branch is `main`,
+   as the Gitea `master` alias pointing at the same commit. Publish nothing
+   else: delete every other local branch and tag before pushing, so the mirror
+   carries exactly these references. Development branches belong to GitHub.
+   Mirroring one would expose unreviewed work and let a webhook deploy from a
+   branch that was never validated, so Gitea must never carry a feature,
+   `codex/`, or any other non-default branch, nor a tag. Pruning is what removes
+   the ones an earlier all-branch mirror already published.
+7. Publish those references with one atomic force push that prunes. Compare the
+   entire destination branch/tag set with the prepared references; a mismatch
+   fails, so a destination branch that is not the default branch or its `master`
+   alias fails the job rather than surviving unnoticed.
    The destination answers through a reverse proxy that intermittently returns
    its own 502 before the request reaches Gitea, which aborts reference discovery
    and publishes nothing. The push and this comparison therefore retry a
@@ -109,8 +119,10 @@ Source: `.github/workflows/mirror-to-gitea.yml`
 ## Verification
 
 Local disposable repositories must cover ignored tracked files, nested Git
-links, complete snapshots, deterministic repetition, exact branches/tags and
-pruning. Replaying the preparation steps against a submodule file committed
+links, complete snapshots, deterministic repetition, and pruning. A source
+carrying several development branches and a tag must publish exactly `main` and
+`master`; starting from a destination that already holds those branches, as an
+earlier all-branch mirror left it, the same run must delete them. Replaying the preparation steps against a submodule file committed
 with carriage returns must leave the snapshot tree unmodified; running the same
 replay without the `external/**` rule must fail, so the check cannot pass
 vacuously. A push whose first attempts fail with a gateway status must still

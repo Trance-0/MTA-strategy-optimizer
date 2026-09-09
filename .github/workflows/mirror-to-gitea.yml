@@ -167,11 +167,21 @@ jobs:
           PY
           snapshot=$(git rev-parse HEAD)
           git -C "$work/source.git" -c submodule.recurse=false fetch --no-tags "$PWD" HEAD
-          git -C "$work/source.git" update-ref "refs/heads/$default_branch" "$snapshot"
           cd "$work/source.git"
-          if git show-ref --verify --quiet refs/heads/main &&
-             ! git show-ref --verify --quiet refs/heads/master; then
-            git update-ref refs/heads/master "$(git rev-parse refs/heads/main)"
+          # Gitea receives the default branch and nothing else. Development
+          # branches are GitHub's; publishing them would expose unreviewed work
+          # and let a webhook deploy from a branch that was never validated.
+          # Delete every other local reference so the mirror cannot carry one,
+          # and so --prune removes any that an earlier run already published.
+          # Read the reference list fully before deleting, and delete in one
+          # transaction, rather than editing the store while walking it.
+          git for-each-ref --format='delete %(refname)' refs/heads refs/tags > "$work/prune-local"
+          git update-ref --stdin < "$work/prune-local"
+          git update-ref "refs/heads/$default_branch" "$snapshot"
+          # Gitea's default branch is main; keep the master alias pointing at the
+          # same snapshot when GitHub has no master of its own.
+          if test "$default_branch" = main; then
+            git update-ref refs/heads/master "$snapshot"
           fi
           git remote add gitea "$GITEA_BASE_URL/$GITEA_REPOSITORY_PATH.git"
           # The Gitea host answers through a reverse proxy that intermittently
@@ -205,10 +215,14 @@ jobs:
           }
           # --atomic makes each attempt apply every reference or none, so a retry
           # resumes from the old state and can never publish a partial mirror.
+          # --prune deletes destination branches and tags absent here, which is
+          # what removes any development branch a previous run published.
           gateway_retry git push --atomic --force --prune gitea \
             'refs/heads/*:refs/heads/*' 'refs/tags/*:refs/tags/*'
           git for-each-ref --format='%(objectname) %(refname)' refs/heads refs/tags | sort > "$work/expected"
           gateway_retry git ls-remote --refs gitea 'refs/heads/*' 'refs/tags/*' \
             | awk '{print $1 " " $2}' | sort > "$work/actual"
+          # The comparison is exact in both directions, so a destination branch
+          # that is not the default branch or its master alias fails the job.
           diff -u "$work/expected" "$work/actual"
-          printf 'Complete Gitea mirror verified: %s snapshot %s\n' "$default_branch" "$snapshot"
+          printf 'Gitea mirror verified: %s snapshot %s, no other reference\n' "$default_branch" "$snapshot"

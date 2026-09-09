@@ -1,7 +1,7 @@
 ---
 title: Version Log
 description: Release history and material changes for the maintained project
-compact: "Routes release history from VERSION to one page per patch, keeping 0.9.50–0.9.53 flat and older patches in minor-version folders; includes dates, material summaries, historical group links, and planned follow-ups."
+compact: "Routes release history from VERSION to one page per patch, keeping 0.9.51–0.9.54 flat and older patches in minor-version folders; includes dates, material summaries, historical group links, and planned follow-ups."
 order: 1
 ---
 
@@ -10,6 +10,11 @@ order: 1
 The project version is recorded in the repository-root `VERSION` file. Each page here is one small patch description covering a coherent change set, rather than a reproduction of every commit message. Every patch keeps its own permanent page; older minor versions are grouped into a collapsed folder per minor version instead of being compacted away.
 
 This section records **what** changed. See the [work log](../worklog/) for **who** did the work and when.
+
+## [0.9.54](0.9.54.md)
+
+- Date: 2026-09-09
+- Summary: Restricted the Gitea mirror to the default branch and its master alias, so the pruning push now removes the development branches and tag an earlier all-branch mirror published to the deployment remote
 
 ## [0.9.53](0.9.53.md)
 
@@ -26,7 +31,7 @@ This section records **what** changed. See the [work log](../worklog/) for **who
 - Date: 2026-09-09
 - Summary: Reconcile the remote analysis workbench with local option layouts, deployment identity and log fixes; preserve contributor history and resolve the 0.9.48 collision
 
-## [0.9.50](0.9.50.md)
+## [0.9.50](0.9/0.9.50.md)
 
 - Date: 2026-09-09
 - Summary: Repair simulator attribution boundaries, preserve Settings deployment identity during refresh, and share copyable operational logs across five dashboard surfaces
