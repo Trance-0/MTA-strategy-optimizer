@@ -174,8 +174,41 @@ jobs:
             git update-ref refs/heads/master "$(git rev-parse refs/heads/main)"
           fi
           git remote add gitea "$GITEA_BASE_URL/$GITEA_REPOSITORY_PATH.git"
-          git push --atomic --force --prune gitea 'refs/heads/*:refs/heads/*' 'refs/tags/*:refs/tags/*'
+          # The Gitea host answers through a reverse proxy that intermittently
+          # returns 502 before the request reaches Gitea. That aborts reference
+          # discovery with exit 128 and publishes nothing, so the whole mirror
+          # fails on a fault that has nothing to do with this repository. Retry
+          # only a transport fault, and only a bounded number of times. Gitea's
+          # own answers, including a rejected reference, must still fail at once.
+          gateway_retry() {
+            local attempt=1
+            while true; do
+              if "$@" > "$work/attempt-out" 2> "$work/attempt-err"; then
+                cat "$work/attempt-out"
+                cat "$work/attempt-err" >&2
+                return 0
+              fi
+              if ! grep -qE 'The requested URL returned error: (429|50[0-9])|Could not resolve host|Connection (timed out|reset)|Empty reply from server|unexpected disconnect' "$work/attempt-err"; then
+                cat "$work/attempt-out"
+                cat "$work/attempt-err" >&2
+                return 1
+              fi
+              if test "$attempt" -ge 5; then
+                cat "$work/attempt-err" >&2
+                echo 'Gitea gateway still failing after 5 attempts' >&2
+                return 1
+              fi
+              echo "Gitea gateway fault on attempt $attempt; retrying" >&2
+              sleep $((attempt * 15))
+              attempt=$((attempt + 1))
+            done
+          }
+          # --atomic makes each attempt apply every reference or none, so a retry
+          # resumes from the old state and can never publish a partial mirror.
+          gateway_retry git push --atomic --force --prune gitea \
+            'refs/heads/*:refs/heads/*' 'refs/tags/*:refs/tags/*'
           git for-each-ref --format='%(objectname) %(refname)' refs/heads refs/tags | sort > "$work/expected"
-          git ls-remote --refs gitea 'refs/heads/*' 'refs/tags/*' | awk '{print $1 " " $2}' | sort > "$work/actual"
+          gateway_retry git ls-remote --refs gitea 'refs/heads/*' 'refs/tags/*' \
+            | awk '{print $1 " " $2}' | sort > "$work/actual"
           diff -u "$work/expected" "$work/actual"
           printf 'Complete Gitea mirror verified: %s snapshot %s\n' "$default_branch" "$snapshot"

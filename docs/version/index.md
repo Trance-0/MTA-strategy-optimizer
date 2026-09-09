@@ -1,7 +1,7 @@
 ---
 title: Version Log
 description: Release history and material changes for the maintained project
-compact: "Routes release history from VERSION to one page per patch, keeping 0.9.49–0.9.52 flat and older patches in minor-version folders; includes dates, material summaries, historical group links, and planned follow-ups."
+compact: "Routes release history from VERSION to one page per patch, keeping 0.9.50–0.9.53 flat and older patches in minor-version folders; includes dates, material summaries, historical group links, and planned follow-ups."
 order: 1
 ---
 
@@ -10,6 +10,11 @@ order: 1
 The project version is recorded in the repository-root `VERSION` file. Each page here is one small patch description covering a coherent change set, rather than a reproduction of every commit message. Every patch keeps its own permanent page; older minor versions are grouped into a collapsed folder per minor version instead of being compacted away.
 
 This section records **what** changed. See the [work log](../worklog/) for **who** did the work and when.
+
+## [0.9.53](0.9.53.md)
+
+- Date: 2026-09-09
+- Summary: Made the Gitea mirror survive the intermittent 502 its reverse proxy returns during reference discovery, retrying only transport faults while leaving rejections and authentication failures immediate
 
 ## [0.9.52](0.9.52.md)
 
@@ -26,7 +31,7 @@ This section records **what** changed. See the [work log](../worklog/) for **who
 - Date: 2026-09-09
 - Summary: Repair simulator attribution boundaries, preserve Settings deployment identity during refresh, and share copyable operational logs across five dashboard surfaces
 
-## [0.9.49](0.9.49.md)
+## [0.9.49](0.9/0.9.49.md)
 
 - Date: 2026-09-08
 - Summary: Unified every dashboard option onto one labelled row with a helper sentence, converted the four views that laid out their own, removed the duplicate row primitives and the last component stylesheet, and recorded the layout rule with two enforcing tests

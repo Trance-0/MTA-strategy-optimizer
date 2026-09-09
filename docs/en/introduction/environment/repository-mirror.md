@@ -1,6 +1,6 @@
 ---
 title: GitHub to Gitea Publication
-compact: "mirror-to-gitea.yml prepares complete main/master snapshots before one atomic mirror push. Specifies frozen refs, pinned files, deterministic provenance, pruning, validation and the manual GitHub Actions Run workflow procedure; no separate helper script. Submodule bytes are excluded from end-of-line conversion because the snapshot import applies no filter."
+compact: "mirror-to-gitea.yml prepares complete main/master snapshots before one atomic mirror push. Specifies frozen refs, pinned files, deterministic provenance, pruning, validation and the manual GitHub Actions Run workflow procedure; no separate helper script. Submodule bytes are excluded from end-of-line conversion because the snapshot import applies no filter, and publication retries a transient gateway fault but never a refusal."
 source_files: .github/workflows/mirror-to-gitea.yml, .gitattributes
 ---
 
@@ -44,6 +44,16 @@ The existing workflow contains the complete operation inline:
    exact GitHub references. Prune destination-only references.
 7. Publish all final references with one atomic force push. Compare the entire
    destination branch/tag set with the prepared references; a mismatch fails.
+   The destination answers through a reverse proxy that intermittently returns
+   its own 502 before the request reaches Gitea, which aborts reference discovery
+   and publishes nothing. The push and this comparison therefore retry a
+   transport fault — a 429 or 5xx status, an unresolvable host, a reset, timed
+   out or unexpectedly dropped connection, or an empty reply — at most five times
+   with a growing pause. Retrying is safe precisely because the push is atomic:
+   an attempt applies every reference or none, so a later attempt resumes from
+   the unchanged previous state. Every answer Gitea itself produces, including a
+   rejected reference and a failed authentication, must fail immediately; never
+   retry one, and never widen the retry to cover a refusal.
 
 No destination reference changes before preparation succeeds. A failed pin,
 invalid configuration, unsupported atomic push or rejected reference leaves
@@ -103,7 +113,10 @@ links, complete snapshots, deterministic repetition, exact branches/tags and
 pruning. Replaying the preparation steps against a submodule file committed
 with carriage returns must leave the snapshot tree unmodified; running the same
 replay without the `external/**` rule must fail, so the check cannot pass
-vacuously. Rejecting one reference or failing preparation must preserve every
+vacuously. A push whose first attempts fail with a gateway status must still
+publish the exact prepared references, and a rejected reference, declined hook,
+non-fast-forward or authentication failure must fail on its first attempt, so
+the retry cannot mask a real refusal. Rejecting one reference or failing preparation must preserve every
 destination reference. One-off verification helpers stay in ignored
 `/.agent-scratch/` and are deleted after use. Only the production Action proves
 Gitea authentication, permissions and actual webhook behavior.
