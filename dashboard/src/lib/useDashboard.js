@@ -39,11 +39,25 @@ const loadingProgress = ref({ ...IDLE_PROGRESS });
 const inFlight = new Map();
 const progressByResource = new Map();
 let currentResources = [];
+let contextGeneration = 0;
+function readSelection() {
+  try { return globalThis.localStorage?.getItem("mta.selectedDatasetId") || ""; } catch { return ""; }
+}
+const selectedDatasetId = ref(readSelection());
+function invalidateContext() {
+  contextGeneration += 1;
+  completed.value = new Set();
+  failures.value = new Map();
+  snapshot.value = freshSnapshot();
+  progressByResource.clear();
+  publishProgress();
+}
 
 function mergePayload(payload) {
   snapshot.value = {
     ...snapshot.value,
     ...payload,
+    runProvenance: { ...snapshot.value.runProvenance, ...payload.runProvenance },
     simulationResearch: payload.simulationResearch
       ? { ...snapshot.value.simulationResearch, ...payload.simulationResearch }
       : snapshot.value.simulationResearch,
@@ -81,6 +95,7 @@ async function withProgress(resource, action, key = resource) {
   });
   publishProgress();
   const timer = setInterval(() => {
+    if (key !== cacheKey(resource)) return;
     progressByResource.set(key, {
       ...progressByResource.get(key),
       elapsedMs: Date.now() - started,
@@ -89,6 +104,7 @@ async function withProgress(resource, action, key = resource) {
   }, 250);
   try {
     return await action((value) => {
+      if (key !== cacheKey(resource)) return;
       const current = progressByResource.get(key) ?? {};
       const nextPercent = Number.isFinite(value.percent)
         ? Math.max(current.percent ?? 0, value.percent)
@@ -126,9 +142,10 @@ let historyGeneration = 0;
  * narrower slice already loaded under the bare name.
  */
 function cacheKey(resource) {
-  if (!WINDOWED_RESOURCES.has(resource)) return resource;
+  const prefix = `${resource}:${selectedDatasetId.value}:${contextGeneration}`;
+  if (!WINDOWED_RESOURCES.has(resource)) return prefix;
   const { start, end } = historyWindow.value;
-  return `${resource}:${start ?? ""}:${end ?? ""}:${historyGeneration}`;
+  return `${prefix}:${start ?? ""}:${end ?? ""}:${historyGeneration}`;
 }
 
 function loadResource(resource) {
@@ -138,7 +155,7 @@ function loadResource(resource) {
   const window = WINDOWED_RESOURCES.has(resource) ? historyWindow.value : null;
   activeRequests.value += 1;
   const request = withProgress(resource, (progress) =>
-    fetchDashboardResource(resource, progress, window),
+    fetchDashboardResource(resource, progress, window, selectedDatasetId.value),
     key,
   )
     .then((payload) => {
@@ -165,7 +182,16 @@ function loadResource(resource) {
 export function useDashboard() {
   return {
     data: computed(() => snapshot.value),
-    loading: computed(() => activeRequests.value > 0),
+    selectedDatasetId: readonly(selectedDatasetId),
+    selectDataset(id) {
+      if (id === selectedDatasetId.value) return Promise.resolve(snapshot.value);
+      selectedDatasetId.value = id || "";
+      try { globalThis.localStorage?.setItem("mta.selectedDatasetId", selectedDatasetId.value); } catch { /* Storage may be blocked; in-memory selection still works. */ }
+      historyWindow.value = { start: null, end: null };
+      invalidateContext();
+      return Promise.all(currentResources.map(loadResource));
+    },
+    loading: computed(() => loadingProgress.value.visible),
     loaded: computed(() => completed.value.size > 0),
     loadingProgress: readonly(loadingProgress),
     historyWindow: readonly(historyWindow),
@@ -209,11 +235,10 @@ export function useDashboard() {
       return Promise.all(affected.map(loadResource));
     },
     async reload(resources = currentResources) {
-      await Promise.allSettled([...inFlight.values()]);
+      invalidateContext();
+      const generation = contextGeneration;
       await reloadData();
-      completed.value = new Set();
-      failures.value = new Map();
-      snapshot.value = freshSnapshot();
+      if (generation !== contextGeneration) return snapshot.value;
       return Promise.all(resources.map(loadResource));
     },
   };

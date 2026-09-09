@@ -98,6 +98,11 @@ Source: `dashboard/src/components/MasterObjectForm.vue`
 - Responsibility: Render one typed input per declared field.
 - Inputs: Required `sectionKey: string` and `modelValue: object` props.
 - Outputs: `update:modelValue` with a new full record; never mutates the prop.
+- Behavior contract: Each field is an option row as specified in
+  [Visual Contract](/en/dashboard/views/visual-contract#option-rows) — the field
+  name and its required marker on the left, the input on the right — rather than
+  a form layout private to this component. A section taller than the dialog
+  scrolls inside the group.
 - Dependencies: Vue and `SECTION_FIELDS`; no request or storage access.
 - Verification: Production build and browser form interaction; template tests
   verify defaults and vocabulary selection separately.

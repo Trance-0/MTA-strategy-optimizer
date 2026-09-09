@@ -117,6 +117,15 @@ basic deployment identity only. **Data source** owns a four-step database doctor
 service history, detail logs, queue state, copy, and stop controls. Deployment
 identity appears nowhere in the latter three tabs.
 
+Every tab is built from titled option groups, and every setting is one row: its
+name and the sentence saying what it changes on the left, the control on the
+right, as specified in
+[Visual Contract](/en/dashboard/views/visual-contract#option-rows). The helper
+sentence is held back for the standard connection parameters — host, port,
+database, user — whose labels already say everything. The schema remedies under
+a failed load use the same row: the schema and what choosing it does on the
+left, the button that does it on the right.
+
 When `DASHBOARD_CONFIG_READ_ONLY=true`, the server continues to report its configured source but rejects every settings mutation. The page replaces its connection form with the server-configuration instruction and disables logging controls, so a team-server visitor cannot rewrite protected credentials or process state through the browser.
 
 That flag governs credentials, not data. Which schema is loaded, and setting one
@@ -269,6 +278,18 @@ successful response. Display identity follows the
 [deployment capability contract](./views/deployment-capability.md#the-two-accents);
 write permission still requires a loaded database snapshot. The header receives
 the display mode separately from that permission.
+
+## Analysis context
+
+A persistent dataset selector sits inside the content area before route loading
+and error branches. It names source, scope, counts and supported stages and
+provides an explicit legacy-source option. It remains usable when a data page
+fails; Settings still requires no global resource. Data Generator adds Import,
+Budget Manager adds Plans, and Optimization Log exposes retained runs. New
+controls retain keyboard labels and stack at narrow widths. Settings Data source
+also shows runtime dataset storage/catalogue readiness separately from database
+status, and states that stage availability is dataset-specific and enforced by
+the server. It links to Import and Campaign Optimizer.
 
 ## Source Files <span class="status-label status-verified" aria-label="Verified"></span>
 

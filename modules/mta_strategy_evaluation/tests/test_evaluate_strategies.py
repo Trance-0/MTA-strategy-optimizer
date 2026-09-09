@@ -93,6 +93,17 @@ class EvaluateStrategiesCommandTests(unittest.TestCase):
         )
         self.assertFalse(artifact["strategies"][1]["ground_truth"]["was_run"])
 
+    def test_registered_provenance_does_not_read_default_initializer(self) -> None:
+        (self.strategies / "initial_budget_recommendation.json").unlink()
+        with patch.object(evaluate_strategies, "_strategy_currency", side_effect=AssertionError("default metadata was read")):
+            status, _ = self._run("--source-kind", "observed", "--currency", "USD", "--advertiser-id", "external-account")
+        self.assertEqual(0, status)
+        artifact = json.loads(self.output.read_text())
+        self.assertEqual(1, artifact["summary"]["projected"])
+        self.assertEqual(1, len(artifact["summary"]["skipped"]))
+        self.assertIn('"is_synthetic": false', json.dumps(artifact))
+        self.assertIn("external-account", json.dumps(artifact))
+
     def test_returns_one_only_when_no_strategy_projects(self) -> None:
         for path in self.strategies.iterdir():
             path.unlink()

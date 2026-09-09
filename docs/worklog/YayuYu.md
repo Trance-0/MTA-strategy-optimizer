@@ -9,6 +9,7 @@ lang: en-US
 # Work Log — Yayu Yu
 
 > Project: Marketing ROI Analysis
+> Git author: `Yayu Yu <yyy688997@gmail.com>`
 > Role: Knowledge base building, ontology evaluation, and research
 
 ## Scope

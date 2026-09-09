@@ -14,6 +14,8 @@
  * it, so the value is never rendered into the page.
  */
 import { computed, onMounted, onUnmounted, ref } from "vue";
+import { useWorkbench } from "../lib/useWorkbench.js";
+const { available: storageAvailable, catalogueError: storageError, reason: storageReason, refreshDatasets, refreshCapabilities, runtime } = useWorkbench();
 
 import LogViewer from "../components/LogViewer.vue";
 import BackendTasks from "../components/BackendTasks.vue";
@@ -389,6 +391,8 @@ async function refresh() {
 onMounted(() => {
   message.value = null;
   refresh();
+  refreshDatasets();
+  refreshCapabilities();
 });
 
 onUnmounted(() => {
@@ -549,12 +553,19 @@ function setLevel(level) {
       </div>
 
       <div class="settings-body modal-body">
+        <!--
+          Six read-only values rather than six options, but the same row: the
+          name on the left, the value on the right. A reader who has learned
+          where to look on the tabs that do offer controls finds the same
+          arrangement here, and the group header carries the one sentence that
+          explains all six, so no individual row needs helper text of its own.
+        -->
         <section
           v-if="tab === 'general'"
-          class="deployment-identity"
+          class="setting-group"
           aria-label="Deployment identity"
         >
-          <div class="identity-head">
+          <header>
             <div>
               <h3>Deployment identity</h3>
               <p class="caption">Compare independently built frontend and backend artifacts.</p>
@@ -562,73 +573,104 @@ function setLevel(level) {
             <span class="identity-status" :class="identityStatus.tone">
               {{ identityStatus.label }}
             </span>
+          </header>
+          <div class="setting-row">
+            <span class="setting-label">Dashboard version</span>
+            <span class="setting-control"><code>{{ frontendIdentity.version }}</code></span>
           </div>
-          <div class="identity-grid">
-            <div>
-              <span>Dashboard version</span>
-              <code>{{ frontendIdentity.version }}</code>
-            </div>
-            <div>
-              <span>Dashboard commit SHA</span>
-              <code>{{ frontendIdentity.commit }}</code>
-            </div>
-            <div>
-              <span>Backend version</span>
+          <div class="setting-row">
+            <span class="setting-label">Dashboard commit SHA</span>
+            <span class="setting-control"><code>{{ frontendIdentity.commit }}</code></span>
+          </div>
+          <div class="setting-row">
+            <span class="setting-label">Backend version</span>
+            <span class="setting-control">
               <code>{{ backendIdentity?.version ?? "not connected" }}</code>
-            </div>
-            <div>
-              <span>Backend commit SHA</span>
-              <code>{{ backendIdentity?.commit ?? "not connected" }}</code>
-            </div>
-            <div>
-              <span>Backend Python</span>
-              <code>{{ backendIdentity?.runtime?.python ?? "not connected" }}</code>
-            </div>
-            <div>
-              <span>Backend Flask</span>
-              <code>{{ backendIdentity?.runtime?.flask ?? "not connected" }}</code>
-            </div>
+            </span>
           </div>
-          <p class="caption">{{ identityStatus.detail }}</p>
+          <div class="setting-row">
+            <span class="setting-label">Backend commit SHA</span>
+            <span class="setting-control">
+              <code>{{ backendIdentity?.commit ?? "not connected" }}</code>
+            </span>
+          </div>
+          <div class="setting-row">
+            <span class="setting-label">Backend Python</span>
+            <span class="setting-control">
+              <code>{{ backendIdentity?.runtime?.python ?? "not connected" }}</code>
+            </span>
+          </div>
+          <div class="setting-row">
+            <span class="setting-label">Backend Flask</span>
+            <span class="setting-control">
+              <code>{{ backendIdentity?.runtime?.flask ?? "not connected" }}</code>
+            </span>
+          </div>
+          <p class="setting-block caption">{{ identityStatus.detail }}</p>
         </section>
 
         <template v-else-if="tab === 'source'">
+          <section class="panel"><h3>Analysis storage and model readiness</h3>
+            <p>{{ storageAvailable ? 'Dataset catalogue is readable.' : 'Dataset catalogue is unavailable.' }} {{ storageReason || storageError }}</p>
+            <p>{{ runtime.storageAvailable ? 'Runtime storage is writable.' : 'Runtime storage is not writable.' }} {{ runtime.storageReason }}</p>
+            <p>Model availability depends on the selected dataset and server execution settings. Missing research or paths disables only the affected analysis.</p>
+            <p>{{ runtime.executionAvailable ? 'Server model execution is enabled.' : runtime.executionReason }}</p>
+            <div class="rec-actions"><button class="btn" @click="Promise.all([refreshDatasets(), refreshCapabilities()])">Check analysis storage</button><a class="btn" href="#/generator/import">Import data</a><a class="btn" href="#/optimizer/optimization">Model controls</a></div>
+          </section>
           <div class="doctor-steps" aria-label="Database setup steps">
             <span v-for="step in doctorSteps" :key="step.number" :class="step.state">
               <b>{{ step.number }}</b>
               <span>{{ step.label }}<small>{{ step.state }}</small></span>
             </span>
           </div>
-          <div v-if="state" class="source-banner">
-            <b>{{ state.status.label }}</b>
-            <span>{{ state.status.detail }}</span>
-          </div>
-          <div v-if="!hosted" class="rec-actions settings-reload">
-            <button class="btn" :disabled="busy" @click="requestReload">Reload data</button>
-          </div>
-
           <!--
-            A view preference rather than a deployment setting, so it is
-            offered in every deployment including the published build, where
-            nothing else on this tab can be changed.
+            The active source and the two options that apply to every
+            deployment, including the published build where nothing else on
+            this tab can be changed. Diagnostics is a view preference rather
+            than a deployment setting, which is why it is offered here and not
+            beside the connection fields.
           -->
-          <label class="toggle">
-            <input
-              type="checkbox"
-              :checked="diagnosticsOn"
-              @change="setDiagnostics($event.target.checked)"
-            />
-            <span>
-              Show data run diagnostics
-              <small>
-                Adds a Budget Manager section describing how the current data
-                run was produced — its run identifier, seed, and configuration
-                checksum. Off by default: it answers an engineering question
-                about the pipeline, not a question about the advertising
-                account.
-              </small>
-            </span>
-          </label>
+          <section class="setting-group" aria-label="Active source">
+            <header v-if="state">
+              <div>
+                <h3>{{ state.status.label }}</h3>
+                <p class="caption">{{ state.status.detail }}</p>
+              </div>
+            </header>
+            <div v-if="!hosted" class="setting-row">
+              <span class="setting-label">
+                Reload data
+                <small>
+                  Clears the backend and browser caches and reads the selected
+                  schema again. Use it after an import, or when a view is
+                  showing data older than the source.
+                </small>
+              </span>
+              <span class="setting-control">
+                <button class="btn" :disabled="busy" @click="requestReload">Reload data</button>
+              </span>
+            </div>
+            <label class="setting-row toggle">
+              <span class="setting-label">
+                Show data run diagnostics
+                <small>
+                  Adds a Budget Manager section describing how the current data
+                  run was produced — its run identifier, seed, and configuration
+                  checksum. Off by default: it answers an engineering question
+                  about the pipeline, not a question about the advertising
+                  account.
+                </small>
+              </span>
+              <span class="setting-control">
+                <input
+                  class="switch"
+                  type="checkbox"
+                  :checked="diagnosticsOn"
+                  @change="setDiagnostics($event.target.checked)"
+                />
+              </span>
+            </label>
+          </section>
 
           <template v-if="hosted">
             <div class="notice">
@@ -659,178 +701,246 @@ cp sample.env .env      # set DATABASE=true and the PG_* values
               loaded, and setting one up, remain available below: neither
               rewrites a credential.
             </div>
-            <h3>Step 2 — Inspect database schemas</h3>
-            <p class="caption">
-              Select a dashboard-ready schema to open a confirmation window and
-              load its actual data. Source and incomplete schemas remain
-              inspectable but cannot be activated.
-            </p>
-            <div class="field">
-              <label for="protected-schema">Schema inventory</label>
-              <select id="protected-schema" v-model="inspectedSchema" @change="inspectSchema">
-                <option
-                  v-for="option in schemaOptions"
-                  :key="option.name"
-                  :value="option.name"
-                >
-                  {{ option.name }}{{ option.selected ? " — active" : "" }}
-                  — database {{ option.databaseRevision ?? "not tracked" }}
-                </option>
-              </select>
-            </div>
-            <p v-if="inspectedOption" class="caption schema-help">
-              <b>{{ inspectedOption.name }}</b> — {{ schemaKind(inspectedOption) }};
-              database structure <b>{{ inspectedOption.databaseRevision ?? "not tracked" }}</b>.
-              {{ inspectedOption.detail }}
-            </p>
-            <p v-if="state.configuredSchema !== schemas.selected" class="caption">
-              Runtime selection only. A server restart returns to configured
-              schema <code>{{ state.configuredSchema }}</code>.
-            </p>
-            <div v-if="message" class="notice" :class="message.ok ? 'good' : 'bad'">
-              {{ message.text }}
-            </div>
-            <p v-else class="caption schema-help">
-              <template v-if="schemas.error">
-                The schema list is unavailable — {{ schemas.error }}
-              </template>
-              <template v-else>No readable schemas were returned.</template>
-            </p>
+
+            <section class="setting-group" aria-label="Step 2 — Inspect database schemas">
+              <header>
+                <div>
+                  <h3>Step 2 — Inspect database schemas</h3>
+                  <p class="caption">
+                    Source and incomplete schemas stay inspectable but cannot be
+                    activated.
+                  </p>
+                </div>
+              </header>
+              <div class="setting-row">
+                <label class="setting-label" for="protected-schema">
+                  Schema inventory
+                  <small>
+                    Selecting a dashboard-ready schema opens a confirmation
+                    window and loads its actual data.
+                  </small>
+                </label>
+                <span class="setting-control">
+                  <select id="protected-schema" v-model="inspectedSchema" @change="inspectSchema">
+                    <option
+                      v-for="option in schemaOptions"
+                      :key="option.name"
+                      :value="option.name"
+                    >
+                      {{ option.name }}{{ option.selected ? " — active" : "" }}
+                      — database {{ option.databaseRevision ?? "not tracked" }}
+                    </option>
+                  </select>
+                </span>
+              </div>
+              <div class="setting-block">
+                <p v-if="inspectedOption" class="caption schema-help">
+                  <b>{{ inspectedOption.name }}</b> — {{ schemaKind(inspectedOption) }};
+                  database structure <b>{{ inspectedOption.databaseRevision ?? "not tracked" }}</b>.
+                  {{ inspectedOption.detail }}
+                </p>
+                <p v-if="state.configuredSchema !== schemas.selected" class="caption">
+                  Runtime selection only. A server restart returns to configured
+                  schema <code>{{ state.configuredSchema }}</code>.
+                </p>
+                <div v-if="message" class="notice" :class="message.ok ? 'good' : 'bad'">
+                  {{ message.text }}
+                </div>
+                <p v-else class="caption schema-help">
+                  <template v-if="schemas.error">
+                    The schema list is unavailable — {{ schemas.error }}
+                  </template>
+                  <template v-else>No readable schemas were returned.</template>
+                </p>
+              </div>
+            </section>
           </template>
 
           <template v-else-if="state">
-            <label class="toggle">
-              <input v-model="form.useDatabase" type="checkbox" />
-              <span>
-                Read from the database
-                <small>
-                  Off reads the committed CSV and JSON artifacts, which needs no
-                  database at all. On reads the imported PostgreSQL mirror.
-                </small>
-              </span>
-            </label>
+            <section class="setting-group" aria-label="Step 1 — Connect PostgreSQL">
+              <header>
+                <div>
+                  <h3>Step 1 — Connect PostgreSQL</h3>
+                  <p class="caption">
+                    Where this server reads the advertising account from.
+                  </p>
+                </div>
+              </header>
 
-            <h3>Step 1 — Connect PostgreSQL</h3>
-            <div class="form-grid">
-              <div class="field span-2">
-                <label for="pg-host">Host</label>
-                <input id="pg-host" v-model="form.PG_HOST" type="text" />
+              <label class="setting-row toggle">
+                <span class="setting-label">
+                  Read from the database
+                  <small>
+                    Off reads the committed CSV and JSON artifacts, which needs
+                    no database at all. On reads the imported PostgreSQL mirror.
+                  </small>
+                </span>
+                <span class="setting-control">
+                  <input v-model="form.useDatabase" class="switch" type="checkbox" />
+                </span>
+              </label>
+
+              <!--
+                Host through SSL mode carry no helper text. Each names a
+                standard PostgreSQL connection parameter whose meaning the
+                field label already gives in full, and a sentence under every
+                one of them would bury the two rows that do say something a
+                reader cannot infer -- the write-only password and the schema
+                selection.
+              -->
+              <div class="setting-row">
+                <label class="setting-label" for="pg-host">Host</label>
+                <span class="setting-control">
+                  <input id="pg-host" v-model="form.PG_HOST" type="text" />
+                </span>
               </div>
-              <div class="field">
-                <label for="pg-port">Port</label>
-                <input id="pg-port" v-model="form.PG_PORT" type="text" />
+              <div class="setting-row">
+                <label class="setting-label" for="pg-port">Port</label>
+                <span class="setting-control">
+                  <input id="pg-port" v-model="form.PG_PORT" type="text" />
+                </span>
               </div>
-              <div class="field">
-                <label for="pg-database">Database</label>
-                <input id="pg-database" v-model="form.PG_DATABASE" type="text" />
+              <div class="setting-row">
+                <label class="setting-label" for="pg-database">Database</label>
+                <span class="setting-control">
+                  <input id="pg-database" v-model="form.PG_DATABASE" type="text" />
+                </span>
               </div>
-              <div class="field">
-                <label for="pg-user">User</label>
-                <input id="pg-user" v-model="form.PG_USER" type="text" />
+              <div class="setting-row">
+                <label class="setting-label" for="pg-user">User</label>
+                <span class="setting-control">
+                  <input id="pg-user" v-model="form.PG_USER" type="text" />
+                </span>
               </div>
-              <div class="field span-2">
-                <label for="pg-password">Password</label>
-                <input
-                  id="pg-password"
-                  v-model="form.PG_PASSWORD"
-                  type="password"
-                  autocomplete="new-password"
-                  :placeholder="
-                    state.connection?.passwordStored
-                      ? 'Stored — leave blank to keep it'
-                      : 'Not set'
-                  "
-                />
+              <div class="setting-row">
+                <label class="setting-label" for="pg-password">
+                  Password
+                  <small>
+                    Write-only. The stored password is never sent back to this
+                    page, so leaving the field blank keeps it rather than
+                    clearing it.
+                  </small>
+                </label>
+                <span class="setting-control">
+                  <input
+                    id="pg-password"
+                    v-model="form.PG_PASSWORD"
+                    type="password"
+                    autocomplete="new-password"
+                    :placeholder="
+                      state.connection?.passwordStored
+                        ? 'Stored — leave blank to keep it'
+                        : 'Not set'
+                    "
+                  />
+                </span>
               </div>
-              <div class="field">
-                <label for="pg-sslmode">SSL mode</label>
-                <select id="pg-sslmode" v-model="form.PG_SSLMODE">
-                  <option v-for="mode in SSL_MODES" :key="mode" :value="mode">
-                    {{ mode }}
-                  </option>
-                </select>
+              <div class="setting-row">
+                <label class="setting-label" for="pg-sslmode">SSL mode</label>
+                <span class="setting-control">
+                  <select id="pg-sslmode" v-model="form.PG_SSLMODE">
+                    <option v-for="mode in SSL_MODES" :key="mode" :value="mode">
+                      {{ mode }}
+                    </option>
+                  </select>
+                </span>
               </div>
-              <div class="field span-2">
-                <b>Step 2 — Inspect and select schema</b>
-                <label for="pg-schema">Dashboard schema</label>
+
+              <div class="setting-block rec-actions">
+                <button class="btn" :disabled="busy" @click="send('test')">
+                  Test connection
+                </button>
+                <button class="btn primary" :disabled="busy" @click="send('save')">
+                  Save to .env
+                </button>
+              </div>
+
+              <div class="setting-block">
+                <div v-if="message" class="notice" :class="message.ok ? 'good' : 'bad'">
+                  {{ message.text }}
+                </div>
+                <p class="caption">
+                  Credentials are written to <code>.env</code> at the repository
+                  root, which is git-ignored. <code>sample.env</code> is the
+                  tracked template and must never hold a real credential.
+                </p>
+              </div>
+            </section>
+
+            <section class="setting-group" aria-label="Step 2 — Inspect and select schema">
+              <header>
+                <div>
+                  <h3>Step 2 — Inspect and select schema</h3>
+                  <p class="caption">
+                    Which schema on the connected database every view reads.
+                  </p>
+                </div>
+              </header>
+              <div class="setting-row">
+                <label class="setting-label" for="pg-schema">
+                  Dashboard schema
+                  <small>
+                    A schema that cannot serve the dashboard is listed and
+                    disabled rather than omitted, so its absence is accounted
+                    for where it would have been chosen.
+                  </small>
+                </label>
                 <!--
-                  A schema that cannot serve the dashboard is listed and
-                  disabled rather than omitted. Omitting it would leave a reader
-                  who knows the schema exists with no account of its absence;
-                  disabling it puts the reason where they would have chosen it.
-
                   The option tooltip is the browser's own and some do not show
                   it over an open dropdown, so the caption below carries the
                   same explanation unconditionally rather than depending on a
                   hover that may never arrive.
                 -->
-                <select
-                  id="pg-schema"
-                  v-model="form.PG_SCHEMA"
-                  aria-describedby="pg-schema-help"
-                  @change="chooseDashboardSchema"
-                  @mouseleave="hoveredSchema = null"
-                >
-                  <option
-                    v-for="option in schemaOptions"
-                    :key="option.name"
-                    :value="option.name"
-                    :disabled="!option.selectable"
-                    :title="schemaTitle(option)"
-                    @mouseenter="hoveredSchema = option.name"
+                <span class="setting-control">
+                  <select
+                    id="pg-schema"
+                    v-model="form.PG_SCHEMA"
+                    aria-describedby="pg-schema-help"
+                    @change="chooseDashboardSchema"
+                    @mouseleave="hoveredSchema = null"
                   >
-                    {{ option.name }} — database
-                    {{ option.databaseRevision ?? "not tracked" }}{{
-                      option.selectable ? "" : " — unavailable"
-                    }}
-                  </option>
-                </select>
+                    <option
+                      v-for="option in schemaOptions"
+                      :key="option.name"
+                      :value="option.name"
+                      :disabled="!option.selectable"
+                      :title="schemaTitle(option)"
+                      @mouseenter="hoveredSchema = option.name"
+                    >
+                      {{ option.name }} — database
+                      {{ option.databaseRevision ?? "not tracked" }}{{
+                        option.selectable ? "" : " — unavailable"
+                      }}
+                    </option>
+                  </select>
+                </span>
               </div>
-            </div>
-
-            <p v-if="describedSchema" id="pg-schema-help" class="caption schema-help">
-              <b>{{ describedSchema.name }}</b> — {{ describedSchema.detail }}
-              <template v-if="describedSchema.missingTables.length">
-                <br />
-                Missing:
-                <code>{{ describedSchema.missingTables.join(", ") }}</code
-                ><template
-                  v-if="describedSchema.missingCount > describedSchema.missingTables.length"
-                >
-                  and
-                  {{ describedSchema.missingCount - describedSchema.missingTables.length }}
-                  more</template
-                >.
-              </template>
-            </p>
-            <p v-else id="pg-schema-help" class="caption schema-help">
-              <template v-if="schemas.error">
-                The schema list is unavailable — {{ schemas.error }}
-              </template>
-              <template v-else>
-                Test the connection to list the schemas this server offers.
-              </template>
-            </p>
-
-            <div class="rec-actions">
-              <button class="btn" :disabled="busy" @click="send('test')">
-                Test connection
-              </button>
-              <button class="btn primary" :disabled="busy" @click="send('save')">
-                Save to .env
-              </button>
-            </div>
-
-            <div v-if="message" class="notice" :class="message.ok ? 'good' : 'bad'">
-              {{ message.text }}
-            </div>
-
-            <p class="caption">
-              Credentials are written to <code>.env</code> at the repository
-              root, which is git-ignored. <code>sample.env</code> is the tracked
-              template and must never hold a real credential. The password is
-              never rendered back to this page.
-            </p>
+              <div class="setting-block">
+                <p v-if="describedSchema" id="pg-schema-help" class="caption schema-help">
+                  <b>{{ describedSchema.name }}</b> — {{ describedSchema.detail }}
+                  <template v-if="describedSchema.missingTables.length">
+                    <br />
+                    Missing:
+                    <code>{{ describedSchema.missingTables.join(", ") }}</code
+                    ><template
+                      v-if="describedSchema.missingCount > describedSchema.missingTables.length"
+                    >
+                      and
+                      {{ describedSchema.missingCount - describedSchema.missingTables.length }}
+                      more</template
+                    >.
+                  </template>
+                </p>
+                <p v-else id="pg-schema-help" class="caption schema-help">
+                  <template v-if="schemas.error">
+                    The schema list is unavailable — {{ schemas.error }}
+                  </template>
+                  <template v-else>
+                    Test the connection to list the schemas this server offers.
+                  </template>
+                </p>
+              </div>
+            </section>
           </template>
 
           <!--
@@ -844,94 +954,135 @@ cp sample.env .env      # set DATABASE=true and the PG_* values
             buttons and the route cannot disagree.
           -->
           <template v-if="!hosted && state">
-            <h3>Schema setup</h3>
-            <p class="caption">
-              <b>Step 3 — Import data.</b> Build or populate a schema on the connected database. A source
-              schema stays unchanged and produces one dashboard schema per
-              scenario; an empty schema can receive the committed sample
-              account.
-            </p>
-            <p v-if="!state.useDatabase" class="notice">
-              Setup needs database mode. Turn on <b>Read from the database</b>
-              above, save the connection, then return here.
-            </p>
-            <p v-else-if="!setupAvailable" class="notice">
-              {{ setupReason || "This server does not offer schema setup." }}
-            </p>
-            <p v-else-if="!connectionSaved" class="notice">
-              Save the database connection and active schema before running
-              setup. Operations always use the saved connection.
-            </p>
-
-            <template v-if="state.useDatabase">
-              <div class="form-grid">
-                <div class="field span-2">
-                  <label for="setup-schema">Existing schema</label>
-                  <select id="setup-schema" v-model="setupSchema">
-                    <option
-                      v-for="option in schemas.schemas"
-                      :key="option.name"
-                      :value="option.name"
-                    >
-                      {{ option.name }} — {{ schemaKind(option) }}
-                    </option>
-                  </select>
+            <section class="setting-group" aria-label="Schema setup">
+              <header>
+                <div>
+                  <h3>Schema setup</h3>
+                  <p class="caption">
+                    <b>Step 3 — Import data.</b> Build or populate a schema on
+                    the connected database. A source schema stays unchanged and
+                    produces one dashboard schema per scenario; an empty schema
+                    can receive the committed sample account.
+                  </p>
                 </div>
-                <div class="field span-2">
-                  <label for="new-schema">New schema name</label>
-                  <input
-                    id="new-schema"
-                    v-model="newSchema"
-                    type="text"
-                    placeholder="Optional target for sample initialization"
-                  />
-                </div>
-              </div>
+              </header>
 
-              <p v-if="setupOption" class="caption schema-help">
-                <b>{{ setupOption.name }}</b> — {{ setupOption.remedy?.summary }}
-              </p>
-
-              <label class="toggle">
-                <input v-model="replaceSchemas" type="checkbox" />
-                <span>
-                  Replace existing target tables
-                  <small>
-                    Off is safe for first runs. On requires confirmation and is
-                    needed only to rebuild an existing dashboard target.
-                  </small>
-                </span>
-              </label>
-
-              <div class="rec-actions">
-                <button
-                  class="btn"
-                  :disabled="busy || operationRunning || !setupReady || (!newSchema.trim() && !setupOption?.canInitialize)"
-                  @click="runSchemaOperation('initialize')"
-                >
-                  Initialize sample model
-                </button>
-                <button
-                  class="btn primary"
-                  :disabled="busy || operationRunning || !setupReady || !setupOption?.canDerive"
-                  @click="runSchemaOperation('derive')"
-                >
-                  Parse all scenarios
-                </button>
-              </div>
-
-              <section class="schema-operation">
-                <h4>Step 4 — Verify the imported schema</h4>
-                <p class="caption">
-                  Start an import to open its complete build log in Tasks. When it
-                  succeeds, return here, select the new dashboard-ready schema,
-                  and reload the actual data.
+              <div
+                v-if="!state.useDatabase || !setupAvailable || !connectionSaved"
+                class="setting-block"
+              >
+                <p v-if="!state.useDatabase" class="notice">
+                  Setup needs database mode. Turn on <b>Read from the database</b>
+                  above, save the connection, then return here.
                 </p>
-                <button v-if="operation" class="btn small" @click="tab = 'tasks'">
-                  View {{ operation.state }} task
-                </button>
-              </section>
-            </template>
+                <p v-else-if="!setupAvailable" class="notice">
+                  {{ setupReason || "This server does not offer schema setup." }}
+                </p>
+                <p v-else class="notice">
+                  Save the database connection and active schema before running
+                  setup. Operations always use the saved connection.
+                </p>
+              </div>
+
+              <template v-if="state.useDatabase">
+                <div class="setting-row">
+                  <label class="setting-label" for="setup-schema">
+                    Existing schema
+                    <small>The schema the operation reads or writes.</small>
+                  </label>
+                  <span class="setting-control">
+                    <select id="setup-schema" v-model="setupSchema">
+                      <option
+                        v-for="option in schemas.schemas"
+                        :key="option.name"
+                        :value="option.name"
+                      >
+                        {{ option.name }} — {{ schemaKind(option) }}
+                      </option>
+                    </select>
+                  </span>
+                </div>
+                <div class="setting-row">
+                  <label class="setting-label" for="new-schema">
+                    New schema name
+                    <small>
+                      Optional. Set it to initialize the committed sample
+                      account into a schema that does not exist yet.
+                    </small>
+                  </label>
+                  <span class="setting-control">
+                    <input
+                      id="new-schema"
+                      v-model="newSchema"
+                      type="text"
+                      placeholder="Optional target"
+                    />
+                  </span>
+                </div>
+
+                <label class="setting-row toggle">
+                  <span class="setting-label">
+                    Replace existing target tables
+                    <small>
+                      Off is safe for first runs. On requires confirmation and
+                      is needed only to rebuild an existing dashboard target.
+                    </small>
+                  </span>
+                  <span class="setting-control">
+                    <input v-model="replaceSchemas" class="switch" type="checkbox" />
+                  </span>
+                </label>
+
+                <p v-if="setupOption" class="setting-block caption schema-help">
+                  <b>{{ setupOption.name }}</b> — {{ setupOption.remedy?.summary }}
+                </p>
+
+                <div class="setting-block rec-actions">
+                  <button
+                    class="btn"
+                    :disabled="busy || operationRunning || !setupReady || (!newSchema.trim() && !setupOption?.canInitialize)"
+                    @click="runSchemaOperation('initialize')"
+                  >
+                    Initialize sample model
+                  </button>
+                  <button
+                    class="btn primary"
+                    :disabled="busy || operationRunning || !setupReady || !setupOption?.canDerive"
+                    @click="runSchemaOperation('derive')"
+                  >
+                    Parse all scenarios
+                  </button>
+                </div>
+              </template>
+            </section>
+
+            <section
+              v-if="state.useDatabase"
+              class="setting-group"
+              aria-label="Step 4 — Verify the imported schema"
+            >
+              <header>
+                <div>
+                  <h3>Step 4 — Verify the imported schema</h3>
+                  <p class="caption">
+                    Start an import to open its complete build log in Tasks.
+                    When it succeeds, return here, select the new
+                    dashboard-ready schema, and reload the actual data.
+                  </p>
+                </div>
+              </header>
+              <div v-if="operation" class="setting-row">
+                <span class="setting-label">
+                  Import task
+                  <small>The most recent operation this server started.</small>
+                </span>
+                <span class="setting-control">
+                  <button class="btn small" @click="navigate('tasks')">
+                    View {{ operation.state }} task
+                  </button>
+                </span>
+              </div>
+            </section>
           </template>
         </template>
 
@@ -943,59 +1094,112 @@ cp sample.env .env      # set DATABASE=true and the PG_* values
           </p>
 
           <template v-if="state">
-            <div class="filter-row">
-              <label class="toggle">
-                <input
-                  type="checkbox"
-                  :checked="state.logging.enabled"
-                  :disabled="readOnly"
-                  @change="toggleLogging($event.target.checked)"
-                />
-                <span>Enable logging</span>
+            <!--
+              What the server captures is separated from what this page shows,
+              because the two are not the same decision: capture is a server
+              setting that a protected deployment refuses, and the filters
+              below only narrow records this browser already holds.
+            -->
+            <section class="setting-group" aria-label="Capture">
+              <header>
+                <div>
+                  <h3>Capture</h3>
+                  <p class="caption">What the server records, for every reader.</p>
+                </div>
+              </header>
+              <label class="setting-row toggle">
+                <span class="setting-label">
+                  Enable logging
+                  <small>
+                    Off stops recording entirely; the records already captured
+                    stay readable below.
+                  </small>
+                </span>
+                <span class="setting-control">
+                  <input
+                    class="switch"
+                    type="checkbox"
+                    :checked="state.logging.enabled"
+                    :disabled="readOnly"
+                    @change="toggleLogging($event.target.checked)"
+                  />
+                </span>
               </label>
-              <div class="field">
-                <label for="log-level">Capture level</label>
-                <select
-                  id="log-level"
-                  :value="state.logging.level"
-                  :disabled="readOnly"
-                  @change="setLevel($event.target.value)"
-                >
-                  <option v-for="level in LOG_LEVELS" :key="level" :value="level">
-                    {{ level }}
-                  </option>
-                </select>
+              <div class="setting-row">
+                <label class="setting-label" for="log-level">
+                  Capture level
+                  <small>
+                    The lowest severity worth recording. Anything below it is
+                    never captured and cannot be shown later.
+                  </small>
+                </label>
+                <span class="setting-control">
+                  <select
+                    id="log-level"
+                    :value="state.logging.level"
+                    :disabled="readOnly"
+                    @change="setLevel($event.target.value)"
+                  >
+                    <option v-for="level in LOG_LEVELS" :key="level" :value="level">
+                      {{ level }}
+                    </option>
+                  </select>
+                </span>
               </div>
-              <div class="field">
-                <label for="log-display-level">Show severity</label>
-                <select id="log-display-level" v-model="displayLevel">
-                  <option v-for="level in LOG_LEVELS" :key="level" :value="level">
-                    {{ level }}+
-                  </option>
-                </select>
+              <div class="setting-row">
+                <span class="setting-label">
+                  Clear captured records
+                  <small>Discards the server's buffer. Capture continues.</small>
+                </span>
+                <span class="setting-control">
+                  <button class="btn" :disabled="readOnly" @click="send('clearLog')">
+                    Clear captured records
+                  </button>
+                </span>
               </div>
-              <div class="field">
-                <label for="log-source">Source</label>
-                <select id="log-source" v-model="displaySource">
-                  <option v-for="source in logSources" :key="source" :value="source">
-                    {{ source === "all" ? "All sources" : source }}
-                  </option>
-                </select>
-              </div>
-              <button class="btn small" :disabled="readOnly" @click="send('clearLog')">
-                Clear captured records
-              </button>
-            </div>
+            </section>
 
-            <p class="caption">
-              {{ visibleRecords.length }} of {{ state.logging.records.length }} record(s), newest last.
-              Capacity {{ state.logging.capacity }}.
-            </p>
-            <LogViewer
-              :records="visibleRecords"
-              copy-label="Copy visible logs"
-              empty-text="No records match these filters. Enable logging or adjust the filters to see activity."
-            />
+            <section class="setting-group" aria-label="Captured records">
+              <header>
+                <div>
+                  <h3>Captured records</h3>
+                  <p class="caption">
+                    <template v-if="state.logging.records.length">
+                      {{ visibleRecords.length }} of {{ state.logging.records.length }}
+                      record(s), newest last. Capacity {{ state.logging.capacity }}.
+                    </template>
+                    <template v-else>Nothing captured yet.</template>
+                  </p>
+                </div>
+              </header>
+              <div class="setting-row">
+                <label class="setting-label" for="log-display-level">Show severity</label>
+                <span class="setting-control">
+                  <select id="log-display-level" v-model="displayLevel">
+                    <option v-for="level in LOG_LEVELS" :key="level" :value="level">
+                      {{ level }}+
+                    </option>
+                  </select>
+                </span>
+              </div>
+              <div class="setting-row">
+                <label class="setting-label" for="log-source">Source</label>
+                <span class="setting-control">
+                  <select id="log-source" v-model="displaySource">
+                    <option v-for="source in logSources" :key="source" :value="source">
+                      {{ source === "all" ? "All sources" : source }}
+                    </option>
+                  </select>
+                </span>
+              </div>
+              <div class="setting-block">
+                <LogViewer
+                  :records="visibleRecords"
+                  copy-label="Copy visible logs"
+                  empty-text="No records match these filters. Enable logging or adjust the filters to see activity."
+                />
+              </div>
+            </section>
           </template>
         </template>
 

@@ -1,7 +1,7 @@
 ---
 title: Version Log
 description: Release history and material changes for the maintained project
-compact: "Routes release history from VERSION to one page per patch, keeping 0.9.45–0.9.47 and 0.9.50 flat and older patches in minor-version folders; includes dates, material summaries, historical group links, and planned follow-ups."
+compact: "Routes release history from VERSION to one page per patch, keeping 0.9.48–0.9.51 flat and older patches in minor-version folders; includes dates, material summaries, historical group links, and planned follow-ups."
 order: 1
 ---
 
@@ -11,22 +11,37 @@ The project version is recorded in the repository-root `VERSION` file. Each page
 
 This section records **what** changed. See the [work log](../worklog/) for **who** did the work and when.
 
+## [0.9.51](0.9.51.md)
+
+- Date: 2026-09-09
+- Summary: Reconcile the remote analysis workbench with local option layouts, deployment identity and log fixes; preserve contributor history and resolve the 0.9.48 collision
+
 ## [0.9.50](0.9.50.md)
 
 - Date: 2026-09-09
 - Summary: Repair simulator attribution boundaries, preserve Settings deployment identity during refresh, and share copyable operational logs across five dashboard surfaces
 
-## [0.9.47](0.9.47.md)
+## [0.9.49](0.9.49.md)
+
+- Date: 2026-09-08
+- Summary: Unified every dashboard option onto one labelled row with a helper sentence, converted the four views that laid out their own, removed the duplicate row primitives and the last component stylesheet, and recorded the layout rule with two enforcing tests
+
+## [0.9.48](0.9.48.md)
+
+- Date: 2026-09-08
+- Summary: Connected registered generator, file and interface datasets to analysis charts, versioned budget plans, isolated model runs, exact-result evaluation, retained history and restart recovery
+
+## [0.9.47](0.9/0.9.47.md)
 
 - Date: 2026-09-07
 - Summary: Removed root script/ through native product commands and build integrations; published complete Gitea main snapshots atomically and added the copyable deploy/yunxiao pipeline YAML with inline host commands and owner-run setup
 
-## [0.9.46](0.9.46.md)
+## [0.9.46](0.9/0.9.46.md)
 
 - Date: 2026-09-07
 - Summary: Completed the Data Generator's lossless Guided/JSON configuration workflow, authoritative preflight, stale-response guards, static capability boundary, and bounded generator operations
 
-## [0.9.45](0.9.45.md)
+## [0.9.45](0.9/0.9.45.md)
 
 - Date: 2026-09-06
 - Summary: Integrated routed Settings and bounded history, deferred dashboard rendering, compact specification retrieval, scoped test ownership, and deployment-input validation

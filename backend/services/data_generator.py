@@ -19,6 +19,7 @@ from pathlib import Path
 from typing import Any
 
 from backend.config import REPO_ROOT, pipeline_runs_enabled, valid_schema_name
+from backend.services.datasets import register_generated_dataset
 from modules.mta_standard.src.mta_sim_generator_adapter import (
     GeneratedMtaSimRun,
     export_mta_sim_dataset_to_postgresql,
@@ -79,6 +80,8 @@ class GeneratorRun:
     files: dict[str, Path] = field(default_factory=dict)
     export_status: str = "idle"
     export_message: str = ""
+    dataset_id: str | None = None
+    registration_error: str = ""
 
     def public_state(self) -> dict[str, Any]:
         """Return state with no path, configuration, or credential."""
@@ -90,6 +93,8 @@ class GeneratorRun:
             "phase": self.phase,
             "message": self.message,
             "summary": dict(self.summary),
+            "datasetId": self.dataset_id,
+            "registrationError": self.registration_error,
             "previews": list(self.previews),
             "downloads": [
                 {"key": key, "name": DOWNLOADS[key][0]}
@@ -307,6 +312,19 @@ def _run_generation(run: GeneratorRun) -> None:
             variant=run.variant,
         )
         previews = _build_previews(generated)
+        # Persist the analysis input before publishing completion, so generator
+        # retention cannot remove data a reader has selected for later analysis.
+        # A registry failure must not invalidate already generated downloads.
+        try:
+            descriptor = register_generated_dataset(
+                generated, f"{run.variant.title()} simulation {run.run_id[:8]}"
+            )
+            run.dataset_id = descriptor["id"]
+        except Exception:  # noqa: BLE001 - generator exports remain independent
+            run.registration_error = (
+                "Generation completed, but analysis registration failed. "
+                "Download the reports and validate them in Import Data, or check runtime storage."
+            )
         with _lock:
             run.files = {
                 "path": generated.source_path_report,

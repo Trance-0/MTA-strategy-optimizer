@@ -41,3 +41,30 @@ test("window changes discard stale responses and revisit fetches the correct row
   await revisit;
   assert.equal(store.data.value.simulationResearch.history[0].tag, "January refreshed");
 });
+
+test("dataset changes discard late non-windowed results, errors and reloads", async () => {
+  const clientUrl = moduleUrl(`export const pending = [];
+    export function fetchDashboardResource(resource, progress, window, datasetId) {
+      return new Promise((resolve, reject) => pending.push({resource, datasetId, progress, resolve, reject}));
+    }
+    export async function reloadData() {}`);
+  const client = await import(clientUrl);
+  const source = readFileSync(new URL("../src/lib/useDashboard.js", import.meta.url), "utf8")
+    .replace('"vue"', JSON.stringify(import.meta.resolve("vue")))
+    .replace('"../api/client.js"', JSON.stringify(clientUrl))
+    .replace('"../pages.js"', JSON.stringify(new URL("../src/pages.js", import.meta.url).href));
+  const store = (await import(moduleUrl(source))).useDashboard();
+  const initial = store.ensureResources(["performance"]).catch(() => null);
+  const first = store.selectDataset("ds_a");
+  const second = store.selectDataset("ds_b");
+  assert.equal(store.data.value.adsDaily.length, 0);
+  client.pending[2].resolve({ adsDaily: [{ cost: 27 }] });
+  await second;
+  client.pending[1].resolve({ adsDaily: [{ cost: 999 }] });
+  client.pending[0].reject(new Error("old database failed"));
+  await Promise.all([first, initial]);
+  assert.equal(store.data.value.adsDaily[0].cost, 27);
+  assert.equal(store.errorFor(["performance"]), null);
+  assert.equal(store.loadingProgress.value.visible, false);
+  assert.equal(client.pending[2].datasetId, "ds_b");
+});

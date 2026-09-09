@@ -228,6 +228,7 @@ export const PLOT_CONFIG = {
 // ---------------------------------------------------------------------------
 
 export function money(value, currency = "$") {
+  if (value == null || value === "") return "--";
   const number = Number(value);
   if (!Number.isFinite(number)) return "--";
   return `${currency}${number.toLocaleString("en-US", {
@@ -238,6 +239,7 @@ export function money(value, currency = "$") {
 
 /** A compact currency amount, for a headline tile where precision is noise. */
 export function compactMoney(value, currency = "$") {
+  if (value == null || value === "") return "--";
   const number = Number(value);
   if (!Number.isFinite(number)) return "--";
   const magnitude = Math.abs(number);
@@ -247,6 +249,7 @@ export function compactMoney(value, currency = "$") {
 }
 
 export function count(value, digits = 0) {
+  if (value == null || value === "") return "--";
   const number = Number(value);
   if (!Number.isFinite(number)) return "--";
   return number.toLocaleString("en-US", {
@@ -257,12 +260,14 @@ export function count(value, digits = 0) {
 
 /** Format a 0-1 share as a percentage. */
 export function percent(value, digits = 1) {
+  if (value == null || value === "") return "--";
   const number = Number(value);
   if (!Number.isFinite(number)) return "--";
   return `${(number * 100).toFixed(digits)}%`;
 }
 
 export function ratio(value, digits = 2) {
+  if (value == null || value === "") return "--";
   const number = Number(value);
   if (!Number.isFinite(number)) return "--";
   return `${number.toFixed(digits)}x`;

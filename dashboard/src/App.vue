@@ -17,6 +17,7 @@ import SidebarNav from "./components/SidebarNav.vue";
 import TopBar from "./components/TopBar.vue";
 import KnowledgeBase from "./views/KnowledgeBase.vue";
 import SchemaRecovery from "./components/SchemaRecovery.vue";
+import DatasetContext from "./components/DatasetContext.vue";
 import { IS_STATIC, fetchSettings } from "./api/client.js";
 import { useDashboard } from "./lib/useDashboard.js";
 import { useDeployment } from "./lib/deployment.js";
@@ -60,7 +61,7 @@ const VIEWS = {
   settings: Settings,
 };
 
-const { data, loadingProgress, ensureResources, errorFor, isLoaded, reload } = useDashboard();
+const { data, loadingProgress, ensureResources, errorFor, isLoaded, reload, selectDataset, selectedDatasetId } = useDashboard();
 const deploymentSettings = ref(null);
 const {
   mode: deploymentMode,
@@ -147,6 +148,7 @@ async function refreshStatus() {
 }
 
 onMounted(() => {
+  if (IS_STATIC) selectDataset("").catch(() => null);
   readLocation();
   window.addEventListener("hashchange", readLocation);
   window.addEventListener("popstate", readLocation);
@@ -234,19 +236,21 @@ const docsHref = computed(() => (IS_STATIC ? "./docs/" : `${DOCS_URL}/`));
         :crumb="meta.crumb"
         :window="reportWindow"
         :marketplace="marketplace"
-        :deployment-label="deploymentLabel"
+        :deployment-label="selectedDatasetId ? 'Registered dataset' : deploymentLabel"
         :deployment-mode="deploymentMode"
         :writable="writable"
+        :registered="Boolean(selectedDatasetId)"
       />
 
       <div class="content">
+        <DatasetContext />
         <!--
           Stated once, at the top of every view, rather than at each control it
           governs. A reader who cannot edit should learn that from the page,
           not by hunting for a button that is not there.
         -->
         <div
-          v-if="routeLoaded && !writable && page !== 'generator' && page !== 'settings'"
+          v-if="routeLoaded && !selectedDatasetId && !writable && page !== 'generator' && page !== 'settings'"
           class="notice deployment-notice"
         >
           <b>Read-only deployment.</b> {{ readOnlyReason }}

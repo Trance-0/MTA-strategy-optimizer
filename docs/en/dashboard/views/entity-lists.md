@@ -1,6 +1,6 @@
 ---
 title: "Canonical Entities Are Lists, Not Prose"
-compact: "EntityTable paging, identity-keyed selection, draft editing and named archive confirmation; shared navigation and display components, including TopBar deployment identity badges independent of editing permission."
+compact: "EntityTable paging, filtered exports, identity-keyed editing and archive confirmation; shared chrome with deployment identity independent of editing permission and registered-dataset status."
 source_files: dashboard/src/components/SidebarNav.vue, dashboard/src/components/TopBar.vue, dashboard/src/components/DataTable.vue, dashboard/src/components/EntityTable.vue, dashboard/src/components/ConfirmDialog.vue, dashboard/src/components/TableView.vue, dashboard/src/components/MetricRow.vue, dashboard/src/components/KeyValuePanel.vue, dashboard/src/components/ReliabilityBanner.vue
 ---
 
@@ -15,6 +15,13 @@ This replaces a detail list that rendered every field of every record as stacked
 ### Paging and page size
 
 Ten rows per page by default, with 10, 15, 30, 50, and 100 offered. A section therefore opens at one screen rather than at a hundred rows. A free-text filter narrows across the rendered text of the declared columns, so what a reader searches is what a reader sees, and the page is clamped rather than reset when the filter narrows.
+
+### Filtered export
+
+Export Comma-Separated Values (CSV) downloads all filtered rows in the current
+sort order with the declared columns, before paging. Raw values retain precision;
+missing values stay blank and formula-like text is escaped by `chartData.js`.
+The search input has an accessible name. Empty selection disables export.
 
 ### Selection survives paging
 
@@ -54,7 +61,7 @@ Source: `dashboard/src/components/SidebarNav.vue`, `dashboard/src/components/Top
 - Inputs: Props from the view that mounts them.
 - `TopBar.vue` accepts `deploymentMode` independently of `writable`: `database` uses a blue deployment badge, `local files` uses green, and an unknown mode uses gray. Its tooltip states whether database data is loaded, still required before editing, or the source is unconfirmed; only confirmed file mode claims to read committed files. The label comes from `useDeployment()` through the shell.
 - Outputs: The rendered fragment, plus events for the rail's navigation, reload, and settings actions.
-- Behavior contract: `SidebarNav.vue` draws the flat eight-page rail from `src/pages.js`, including Settings as its final destination, and keeps source status and external links in the foot. It renders no section label, group container, disclosure, reload button, or separate Settings foot button. Below `1024px` the same order becomes a horizontally scrollable bar. `Settings.vue` owns reload and confirmed runtime schema switching; it never renders a stored password or sends one back. In the published build it replaces backend operations with local-run instructions, while a protected team-server deployment keeps credential mutation unavailable. `SchemaRecovery.vue` replaces terminal-only advice on a database load error with backend-declared select, derive, or initialize buttons; it never offers replacement and polls the existing bounded operation log. `TermHelp.vue` and `src/lib/terms.js` provide keyboard-accessible definitions and precise English documentation links without hiding the original labels. `PlotlyChart.vue` is the only component that touches Plotly, so chart defaults in `src/theme.js` cannot be bypassed, and it disposes the plot on unmount. `TableView.vue` keeps every chart paired with readable values. `ReliabilityBanner.vue` always renders the status word beside its colour. `TopBar.vue` leads its tag row with the deployment.
+- Behavior contract: `SidebarNav.vue` draws the flat eight-page rail from `src/pages.js`, including Settings as its final destination, and keeps source status and external links in the foot. It renders no section label, group container, disclosure, reload button, or separate Settings foot button. Below `1024px` the same order becomes a horizontally scrollable bar. `Settings.vue` owns reload and confirmed runtime schema switching; it never renders a stored password or sends one back. In the published build it replaces backend operations with local-run instructions, while a protected team-server deployment keeps credential mutation unavailable. `SchemaRecovery.vue` replaces terminal-only advice on a database load error with backend-declared select, derive, or initialize buttons; it never offers replacement and polls the existing bounded operation log. `TermHelp.vue` and `src/lib/terms.js` provide keyboard-accessible definitions and precise English documentation links without hiding the original labels. `PlotlyChart.vue` is the only component that touches Plotly, so chart defaults in `src/theme.js` cannot be bypassed, and it disposes the plot on unmount. `TableView.vue` keeps every chart paired with readable values and offers an export of exactly its current rows and declared columns through the shared chart-data serializer; unavailable values export blank. `ReliabilityBanner.vue` always renders the status word beside its colour. `TopBar.vue` leads its tag row with the deployment. A registered selection uses a source-specific tooltip explaining immutable observations and separate runtime capabilities.
 
 `EntityTable.vue` owns paging, page size, free-text filtering, selection, and the two row controls, and owns nothing about what a row means: columns are declared by the mounting view exactly as `DataTable`'s are. Its default page size is 10, offering 10, 15, 30, 50, and 100. **Selection is keyed by a caller-supplied row identity rather than by page index**, so a batch action cannot act on whatever record happens to occupy that index after the page turns; the selection Set is reassigned rather than mutated, because a Set mutated in place is the same object and Vue's reactivity would not repaint the checkboxes. The header checkbox acts on the current page, which is what it can show. Both components read `renderCell` from `src/lib/common.js`, so one column declaration cannot mean two things in two tables.
 

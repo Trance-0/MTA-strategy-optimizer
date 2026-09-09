@@ -90,3 +90,8 @@ Tests: `backend/tests/test_models.py`
 - Outputs: `unittest` assertions only; temporary data is removed automatically.
 - Dependencies: Flask test client and the public backend service loader.
 - Verification: The backend discovery command above.
+
+The application also registers the dataset and workbench blueprints described
+in [registered datasets](/en/dashboard/datasets) and
+[retained runs](/en/dashboard/budget-plans). Their runtime storage is independent
+from legacy database health; server model-execution switches still apply.

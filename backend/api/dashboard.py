@@ -115,6 +115,21 @@ def dashboard_resource(resource: str):
             ),
             404,
         )
+    # Explicit registered identity bypasses legacy health and source fallback.
+    # Return ordinary JSON even when legacy streaming was requested: the client
+    # supports both transports and registered reads carry their own provenance.
+    if "datasetId" in request.args:
+        from backend.api.datasets import dataset_errors
+        from backend.repository.datasets import load_dataset_resource
+
+        @dataset_errors
+        def registered_resource():
+            return jsonify(load_dataset_resource(
+                request.args.get("datasetId"), resource,
+                request.args.get("start"), request.args.get("end"),
+            ))
+
+        return registered_resource()
     # Resolved only for the resources that carry observations. Asking for a
     # date range is what makes the recent quarter the default, and a resource
     # holding no observations would only fragment its cache entry by it.

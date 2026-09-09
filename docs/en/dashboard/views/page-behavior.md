@@ -1,6 +1,6 @@
 ---
 title: Page Behavior
-compact: "Shared LogViewer for copyable model history; CommandCenter, BudgetManager, Campaigns, CampaignOptimizer, and OptimizationLog display contracts; bounded date windows, density grids, stable ordering, route-owned data loading and package-native terminal commands for unavailable model stages."
+compact: "Source-aware Campaign rankings, distributions, filtered exports, model evidence, executable plans, formal evaluation and retained run history; shared LogViewer and bounded history windows."
 source_files: dashboard/src/views/CommandCenter.vue, dashboard/src/views/BudgetManager.vue, dashboard/src/views/Campaigns.vue, dashboard/src/views/CampaignOptimizer.vue, dashboard/src/views/OptimizationLog.vue
 ---
 
@@ -9,6 +9,16 @@ source_files: dashboard/src/views/CommandCenter.vue, dashboard/src/views/BudgetM
 Each view presents one question using backend-owned artifacts. These contracts
 define the evidence and controls that appear when the reader selects a route.
 
+
+Registered model sections show the loaded result run identifier, dataset
+fingerprint, completion date and saved plan revision from `runProvenance`.
+The header describes the displayed result, independently of any running job.
+
+An empty performance window displays unavailable spend and sales, preserving
+numeric zero only when at least one observation supplies it.
+
+Command Center amount charts, hover labels and readable tables use the selected
+source currency consistently.
 
 ## Source Files
 
@@ -22,7 +32,13 @@ The five share one contract and are specified together. Terminal fallback instru
 
 #### `CommandCenter.vue`
 
-Five headline tiles, spend against return over time, the per-Outcome reliability verdict, and attributed revenue by ad product for both models.
+Observed spend, sales, purchases, impressions and clicks plus Return on Ad
+Spend (ROAS) use the selected dataset currency and scope. Missing results show
+Not run; a zero-spend ratio is unavailable. Daily, Monday-based weekly and
+monthly grouping sum additive measures and recompute ratios. Amount trends and
+return trends use separate charts, paired value tables and filtered exports.
+Counts state the number of source rows and observation dates. Reliability and
+attributed revenue remain backend model evidence with visible run identity.
 
 #### `BudgetManager.vue`
 
@@ -174,8 +190,8 @@ evaluation — each carrying its own `StageRunner` above that model's evidence.
 The attribution tab shows Markov against Shapley per touchpoint, the governed
 recommendation, and the budget shift the recommendation implies; the
 optimization tab shows the allocation, its evidence, and its extrapolation and
-pooled-transfer warnings; the evaluation tab states why the stage cannot run
-yet. Each tab declares the run options its stage accepts — a report window for
+pooled-transfer warnings; the evaluation tab renders the formal evaluation report, its strategy-run
+identity, checks, comparisons and skipped reasons. Each tab declares the run options its stage accepts — a report window for
 attribution, a budget usage policy and total budget for optimization — and
 those option values are the same names `normalizeOptions()` validates on the
 server, so the offered controls and the accepted arguments cannot diverge
@@ -190,3 +206,48 @@ label, state, timestamps, exit code and retained output, including failed runs.
 Run identifiers, the report window, the input digests, the pipeline stage trail, the optimized Campaign budget plan, and the per-touchpoint reliability flags, plus one log tab per model beside them.
 
 Reads `campaignStrategy.optimized_strategy` from the snapshot. The optimized-budget card renders only when the artifact carries a `recommendation_type`, so an absent artifact produces no empty card. A plan with `is_optimized=true` shows the authorized, allocated, and expected-revenue tiles, one row per Campaign with its initial and optimized budget, expected revenue and delta, marginal return, evidence label, and extrapolation flag, followed by named warnings for extrapolated and pooled Campaigns and the two Ad Group disclosure fields. A plan with `is_optimized=false` shows its `recommendation_type` and every `infeasibility_reasons` entry in place of an allocation. Expected revenue is labelled a model estimate, never a realized or guaranteed uplift.
+
+## Registered analysis workflow
+
+The shared dataset selector is available above page loading/error states.
+Generator import preview and Use for analysis never silently switch selection.
+Budget Manager adds Plans beside existing entity lists, with independent runtime
+write capability. Registered optimizer tabs use retained workbench runs; legacy
+StageRunner is used only for the explicitly selected legacy source. Evaluation
+chooses a completed same-dataset optimization. A history filter never implies a
+model refit. Optimization Log lists retained runs by dataset and stage and opens
+older records without replacing the current selection. Knowledge Base references
+follow the same resource context; fixed review fixtures remain labeled demos.
+
+Campaign rankings derive their entities from current rows, allow selecting an
+entity through an accessible control, and retain clear reset/return controls.
+Trend and distribution charts show source-row count, units, window and export
+of their matching values. Missing research hides unsupported history plots with
+an actionable explanation while performance and path views remain usable.
+
+
+Campaign performance groups trends by day, Monday-start week or month. Rankings
+show seven leading touchpoints by spend plus Other; Other retains every omitted
+touchpoint in its detail. The ranking uses native row buttons, preserves all
+outer filters on selection, moves focus to the detail heading, and Back restores
+the invoking button. Reset clears the current tab's filters and detail. Every
+amount uses the source currency; missing measures and zero-denominator ratios
+remain unavailable. Density values, interaction totals, grouped trends, path
+lengths and rankings have matching value exports. Tables export the complete
+filtered/sorted selection, not merely the current page. Path search filters all
+path panels together. Common-path graphs fold touchpoints beyond seven into
+Other at each position and name the middle of longer paths as multiple touches.
+
+Model evidence states its stored reporting window and warns that historical date
+filters do not refit it. Attribution share remains a fraction formatted as a
+percentage; an already-scaled percentage-point difference stays unscaled.
+Trends exceeding 500 periods explicitly sample evenly spaced plotted periods;
+full grouped values remain in the paged table/export. Path-length plots fold
+lengths beyond seven into Other and recompute its conversion rate from totals.
+Response curves evaluate only complete existing fitted-model parameters;
+unavailable parameters produce no prediction. At most 500 observed points are
+plotted with deterministic sampling explicitly labeled, while the paged table
+and export retain all observations. Response support, observed budget range,
+source-row count and missing evidence remain readable without hover. Backend
+initial/recommended allocations and expected revenues retain exact values.
+Verification: `dashboard/tests/analysis_views.test.js` and the dashboard suite.

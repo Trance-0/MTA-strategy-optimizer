@@ -21,6 +21,7 @@
  *     a view's rows and column declarations -> here -> edit/delete events
  */
 import { computed, ref, watch } from "vue";
+import { downloadCsv } from "../lib/chartData.js";
 
 import {
   NUMERIC_FORMATS,
@@ -164,9 +165,11 @@ defineExpose({ clearSelection });
   <div class="entity-table">
     <div class="entity-toolbar">
       <slot name="toolbar-start" />
+      <button class="btn small" :disabled="!sorted.length"
+        @click="downloadCsv(columns, sorted, `${noun}-values.csv`)">Export CSV</button>
 
       <div class="field entity-search">
-        <input v-model="search" type="search" :placeholder="`Search ${noun}s`" />
+        <input v-model="search" :aria-label="`Search ${noun}s`" type="search" :placeholder="`Search ${noun}s`" />
       </div>
 
       <span class="entity-count">

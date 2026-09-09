@@ -93,13 +93,24 @@ def main() -> int:
     """Run the evaluation command, returning one only for no projections."""
 
     arguments = _parser().parse_args()
-    currency = _strategy_currency(STRATEGY_REQUEST_PATH)
+    # Registered runs carry their own provenance; only the compatibility
+    # invocation may consult the legacy initializer request.
+    currency = arguments.currency
+    if currency is None and arguments.source_kind is None:
+        currency = _strategy_currency(STRATEGY_REQUEST_PATH)
+    elif currency is None:
+        try:
+            document = json.loads((arguments.strategy_directory / CAMPAIGN_STRATEGY_ARTIFACT).read_text(encoding="utf-8"))
+            currency = document.get("currency")
+        except (OSError, ValueError):
+            currency = None
 
     print("Projecting strategies")
     attempts = load_strategy_outputs(
         arguments.strategy_directory,
         currency=currency,
-        is_synthetic=True,
+        is_synthetic=arguments.source_kind != "observed",
+        advertiser_id=arguments.advertiser_id,
     )
 
     episodes = _load_observed_episodes(
@@ -193,6 +204,11 @@ def _parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Fit and report the contributed budget-to-revenue model.",
     )
+    parser.add_argument("--source-kind", choices=("synthetic", "observed"), default=None,
+                        help="Explicit registered input provenance; disables default initializer metadata.")
+    parser.add_argument("--currency", default=None, help="Currency of the selected strategy inputs.")
+    parser.add_argument("--advertiser-id", default=UNRECORDED_ADVERTISER,
+                        help="Advertiser associated with the selected strategy run.")
     parser.add_argument(
         "--output",
         type=Path,

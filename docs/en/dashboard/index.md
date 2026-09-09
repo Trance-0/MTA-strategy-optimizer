@@ -1,7 +1,7 @@
 ---
 title: Dashboard
 description: The Vue dashboard's architecture, its dual data source contract, and where each topic is documented
-compact: "Vue/Flask client boundary: route-owned lazy resources, caching, byte progress, artifact transfer, and Data Generator overview, preflight, run, preview, download, and export routes in `client.js`; Python owns parsing, storage, database access, and static-build capability refusals. Owns client.js, useDashboard.js and client contract tests."
+compact: "Vue/Flask client boundary for registered datasets, plans, runs and generator transport; useDashboard.js preserves source identity through cache generations, progress, history windows, reloads and late responses; static builds refuse mutations."
 lang: en-US
 source_files: dashboard/src/api/client.js, dashboard/src/lib/useDashboard.js
 test_files: dashboard/tests/dashboard_store.test.js, dashboard/tests/dashboard.test.js
@@ -233,6 +233,25 @@ prepared, what requests were logged, and which backend tasks are running? The
 four deep-linked tabs render as a normal page rather than a modal.
 
 Continue with [Views and visual contract](./views/index.md) for the reliability rule every view honors, the colour and chart system, and the per-component specification. The rail that switches between them, and its settings module, are specified on [Navigation rail and settings](./navigation.md).
+
+## Registered dataset context
+
+The [dataset contract](./datasets.md) extends the network boundary with dataset
+list/detail/templates, validation and registration operations. Plan and run
+operations follow [retained runs](./budget-plans.md). `client.js` alone issues
+these requests and preserves bounded server error details. Plan/run list requests
+omit `datasetId` when querying runtime capabilities without a selection. Static builds clear any retained registered selection and refuse
+mutations before fetching. File requests use multipart bodies without manually
+setting their content type.
+
+`useDashboard()` exposes `selectedDatasetId` and `selectDataset(id)`; only the
+identifier is stored in browser storage. Every cache key includes dataset and
+context generation, also for non-windowed resources. Selection immediately
+clears old observations, errors and progress; late payloads, failures and timers
+cannot repopulate them. Reload invalidates before waiting on the server and
+must not clear a newer selection. Selecting the legacy empty identifier is
+explicit. Selected resources carry `datasetId`; unavailable identities fail
+without retrying a legacy source.
 
 ## Source Files <span class="status-label status-verified" aria-label="Verified"></span>
 

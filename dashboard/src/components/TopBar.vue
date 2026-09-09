@@ -20,6 +20,7 @@ defineProps({
   /** Display identity is available before database data grants editing. */
   deploymentMode: { type: String, default: "" },
   /** Whether data operations are available here. */
+  registered: { type: Boolean, default: false },
   writable: { type: Boolean, default: false },
 });
 </script>
@@ -35,7 +36,7 @@ defineProps({
         v-if="deploymentLabel"
         class="tag"
         :class="deploymentMode === 'database' ? 'blue' : deploymentMode === 'local files' ? 'green' : 'gray'"
-        :title="writable
+        :title="registered ? 'Immutable registered observations; plan and run actions depend on backend capabilities.' : writable
           ? 'Connected to a database; data operations are available.'
           : deploymentMode === 'database'
             ? 'Database configured; load dashboard data before editing.'

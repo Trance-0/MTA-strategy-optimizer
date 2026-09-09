@@ -208,7 +208,7 @@ test("every subsection declares only allow-listed lazy resources", () => {
     const page = PAGES[key];
     assert.ok(page.sections[page.defaultSection], `${key} has no default route`);
     for (const [section, resources] of Object.entries(page.sections)) {
-      if (key === "settings") assert.deepEqual(resources, [], "Settings must survive a failed data source");
+      if (key === "settings" || key === "generator" || (key === "budget" && section === "plans")) assert.deepEqual(resources, [], "Independent controls must survive a failed data source");
       else assert.equal(resources[0], "shell", `${key}/${section} does not load shell first`);
       assert.equal(new Set(resources).size, resources.length, `${key}/${section} repeats a resource`);
       for (const resource of resources) {
@@ -957,6 +957,67 @@ test("data-run diagnostics are a preference, off by default", () => {
   assert.match(SETTINGS_DIALOG, /setDiagnostics\(\$event\.target\.checked\)/);
 });
 
+test("every option is a row: name on the left, control on the right", () => {
+  // A reader who has learned where the name is and where the control is on one
+  // page must find both in the same place on the next. That is only true if
+  // there is one row primitive, so this checks the primitive exists, that the
+  // views carrying options use it, and that no second one has grown beside it.
+  const OPTION_VIEWS = [
+    ["Settings.vue", SETTINGS_DIALOG],
+    ["DataGenerator.vue", DATA_GENERATOR],
+    ["SchemaRecovery.vue", SCHEMA_RECOVERY],
+    ["MasterObjectForm.vue", MASTER_OBJECT_FORM],
+    ["GeneratorConfigEditor.vue", GENERATOR_CONFIG_EDITOR],
+    ["WillowGmvForecast.vue", WILLOW_FORECAST],
+  ];
+  for (const [name, source] of OPTION_VIEWS) {
+    assert.match(source, /class="[^"]*\bsetting-row\b/, `${name} uses setting-row`);
+    assert.match(source, /class="[^"]*\bsetting-label\b/, `${name} names the option`);
+    assert.match(source, /class="[^"]*\bsetting-control\b/, `${name} places the control`);
+  }
+
+  // The row is what puts the control on the right, so nothing else may.
+  assert.match(STYLE_CSS, /\.setting-control \{[^}]*justify-content: flex-end/);
+  // Toolbars stack their label above the control; option rows never do.
+  assert.doesNotMatch(
+    STYLE_CSS,
+    /\.setting-label \{[^}]*display: (grid|block)/,
+    "the option name sits beside its control, not above it",
+  );
+
+  // One row primitive, not several. `.form-row` and the generator's private
+  // grid were both this shape under another name, and both are gone.
+  for (const dead of ["form-row", "generator-config-editor__grid", "willow-field-grid"]) {
+    assert.doesNotMatch(STYLE_CSS, new RegExp(`\\.${dead}[\\s,{]`), `${dead} is not a second row`);
+  }
+
+  // The editor's private stylesheet invented tokens the theme never defines,
+  // so a deployment's colours could not reach it. Every component now reads
+  // the one sheet `theme.js` writes into.
+  assert.doesNotMatch(GENERATOR_CONFIG_EDITOR, /<style/, "no component-private stylesheet");
+  assert.doesNotMatch(STYLE_CSS, /var\(--(ink|panel|accent)[,)]/, "no invented theme tokens");
+});
+
+test("actions sit on one side, never opposite each other", () => {
+  // Buttons split to the far side of the thing they act on move with the
+  // length of the text beside them, so no two cards agree on where a button
+  // is. Action bars align left, everywhere, with the primary action last.
+  assert.match(STYLE_CSS, /\.rec-actions \{\s*display: flex;\s*gap: 8px;/);
+  assert.doesNotMatch(STYLE_CSS, /\.rec-actions \{[^}]*justify-content/);
+  // A card's actions are their own bar under the title, not opposite it.
+  assert.match(GENERATOR_CONFIG_EDITOR, /<header><h4>Touchpoint \{\{ index \+ 1 \}\}<\/h4><\/header>/);
+  assert.match(GENERATOR_CONFIG_EDITOR, /class="setting-block rec-actions"/);
+  // A spacer that pushes a control to the far edge is the same split by
+  // another means, so option rows carry no non-breaking-space filler labels.
+  for (const [name, source] of [
+    ["Campaigns.vue", CAMPAIGNS],
+    ["Settings.vue", SETTINGS_DIALOG],
+    ["WillowGmvForecast.vue", WILLOW_FORECAST],
+  ]) {
+    assert.doesNotMatch(source, /&nbsp;/, `${name} aligns with a bar, not a spacer`);
+  }
+});
+
 test("one cell renderer serves every table", () => {
   const dataTable = readFileSync(
     resolve(HERE, "..", "src", "components", "DataTable.vue"),
@@ -1175,7 +1236,7 @@ test("a narrower history window is fetched, not filtered in the browser", async 
   // Cached per window as well as per resource, or widening the range would be
   // answered from the narrower slice already loaded under the bare name.
   assert.match(dashboardStore, /function cacheKey\(resource\)/);
-  assert.match(dashboardStore, /\$\{resource\}:\$\{start \?\? ""\}:\$\{end \?\? ""\}/);
+  assert.match(dashboardStore, /\$\{prefix\}:\$\{start \?\? ""\}:\$\{end \?\? ""\}/);
   assert.match(dashboardStore, /completed\.value\.has\(key\)/);
   // Only the windowed resources reload: the entity catalogues beside them do
   // not vary with the date, and refetching them would make changing a date
@@ -1327,9 +1388,9 @@ test("route resources load lazily with immediate backend phase progress", async 
   assert.equal(routeHash("settings", "source"), "#/settings/source");
   assert.deepEqual(routeResources("campaigns", "performance"), ["shell", "performance"]);
   assert.deepEqual(routeResources("campaigns", "paths"), ["shell", "path-report"]);
-  assert.deepEqual(routeResources("knowledge", "vocabulary"), ["shell", "attribution"]);
+  assert.deepEqual(routeResources("knowledge", "vocabulary"), ["shell", "attribution", "performance"]);
   assert.deepEqual(routeResources("knowledge", "rules"), ["shell", "budget"]);
-  assert.deepEqual(routeResources("knowledge", "entities"), ["shell", "budget"]);
+  assert.deepEqual(routeResources("knowledge", "entities"), ["shell", "budget", "research-campaigns"]);
   assert.deepEqual(routeResources("knowledge", "sources"), ["shell"]);
   assert.deepEqual(routeResources("knowledge", "ontology-review"), ["shell"]);
   assert.equal(PAGES.optimizer.defaultSection, "attribution");

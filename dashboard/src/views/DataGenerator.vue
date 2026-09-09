@@ -2,6 +2,9 @@
 /** Configure, run, preview, and export the pinned MTA-SIM generator. */
 import { computed, onMounted, onUnmounted, ref } from "vue";
 
+import DatasetImport from "../components/DatasetImport.vue";
+import { useDashboard } from "../lib/useDashboard.js";
+import { useWorkbench } from "../lib/useWorkbench.js";
 import DataTable from "../components/DataTable.vue";
 import GeneratorConfigEditor from "../components/GeneratorConfigEditor.vue";
 import { createGeneratorLifecycle, replacePresetIfConfirmed } from "../generator/lifecycle.js";
@@ -15,6 +18,14 @@ import {
   validateGeneratorConfiguration,
 } from "../api/client.js";
 
+const props = defineProps({ section: { type: String, default: "configure" } });
+const emit = defineEmits(["navigate"]);
+const { selectDataset } = useDashboard();
+const { refreshDatasets } = useWorkbench();
+async function useGenerated() {
+  try { await refreshDatasets(); await selectDataset(run.value.datasetId); window.location.hash = "#/overview/summary"; }
+  catch (cause) { error.value = cause.message; }
+}
 const overview = ref(null);
 const variant = ref("baseline");
 const preset = ref("toy");
@@ -275,6 +286,14 @@ onUnmounted(() => {
 </script>
 
 <template>
+  <nav class="tabs" aria-label="Data input"><button class="tab" :class="{active: props.section === 'configure'}" @click="emit('navigate', 'configure')">Generate data</button><button class="tab" :class="{active: props.section === 'import'}" @click="emit('navigate', 'import')">Import data</button></nav>
+  <DatasetImport v-if="props.section === 'import'" />
+  <div v-else>
+    <div v-if="completed && (run?.datasetId || run?.registrationError)" class="notice">
+      <p v-if="run.datasetId">Generated observations are saved as an analysis dataset.</p>
+      <p v-else role="alert">Generation completed, but analysis registration failed: {{ run.registrationError }}</p>
+      <button v-if="run.datasetId" class="btn primary" @click="useGenerated">Use for analysis</button>
+    </div>
   <section class="page-grid generator-page">
     <p class="caption">
       Generate a validated synthetic dataset with the pinned MTA-SIM package.
@@ -293,24 +312,40 @@ onUnmounted(() => {
           <span class="sub">Self-contained JSON only</span>
         </div>
         <div class="card-body">
-          <div class="form-grid">
-            <div class="field">
-              <label for="generator-variant">Generator variant</label>
-              <select id="generator-variant" :value="variant" :disabled="busy || operationActive" @change="chooseVariant">
-                <option v-for="item in overview.variants" :key="item.key" :value="item.key">
-                  {{ item.key }}
-                </option>
-              </select>
+          <!--
+            These two choose what is generated, so they are option rows rather
+            than a filter strip: each is named on the left with what it decides,
+            and the control that decides it sits on the right. Changing either
+            reloads the editor below, which is why the consequence is stated.
+          -->
+          <section class="setting-group" aria-label="Generation source">
+            <div class="setting-row">
+              <label class="setting-label" for="generator-variant">
+                Generator variant
+                <small>Which simulator produces the dataset. Changing it loads that variant's own configuration shape.</small>
+              </label>
+              <span class="setting-control">
+                <select id="generator-variant" :value="variant" :disabled="busy || operationActive" @change="chooseVariant">
+                  <option v-for="item in overview.variants" :key="item.key" :value="item.key">
+                    {{ item.key }}
+                  </option>
+                </select>
+              </span>
             </div>
-            <div class="field">
-              <label for="generator-preset">Reviewed preset</label>
-              <select id="generator-preset" :value="preset" :disabled="busy || operationActive" @change="choosePreset">
-                <option v-for="item in availablePresets" :key="item.key" :value="item.key">
-                  {{ item.label }}
-                </option>
-              </select>
+            <div class="setting-row">
+              <label class="setting-label" for="generator-preset">
+                Reviewed preset
+                <small>A starting configuration the team has already checked. Selecting one replaces unsaved edits below.</small>
+              </label>
+              <span class="setting-control">
+                <select id="generator-preset" :value="preset" :disabled="busy || operationActive" @change="choosePreset">
+                  <option v-for="item in availablePresets" :key="item.key" :value="item.key">
+                    {{ item.label }}
+                  </option>
+                </select>
+              </span>
             </div>
-          </div>
+          </section>
 
           <GeneratorConfigEditor
             :key="editorKey"
@@ -390,17 +425,54 @@ onUnmounted(() => {
             <button class="btn" @click="exportOpen = !exportOpen">
               {{ exportOpen ? "Hide PostgreSQL form" : "Enter PostgreSQL credentials" }}
             </button>
-            <div v-if="exportOpen" class="form-grid generator-export-form">
-              <div class="field span-2"><label for="export-host">Host</label><input id="export-host" v-model="exportForm.host" type="text" /></div>
-              <div class="field"><label for="export-port">Port</label><input id="export-port" v-model="exportForm.port" type="text" /></div>
-              <div class="field"><label for="export-database">Database</label><input id="export-database" v-model="exportForm.database" type="text" /></div>
-              <div class="field"><label for="export-user">User</label><input id="export-user" v-model="exportForm.user" type="text" /></div>
-              <div class="field span-2"><label for="export-password">Password</label><input id="export-password" v-model="exportForm.password" type="password" autocomplete="new-password" /></div>
-              <div class="field"><label for="export-ssl">SSL mode</label><select id="export-ssl" v-model="exportForm.sslmode"><option>require</option><option>verify-ca</option><option>verify-full</option></select></div>
-              <div class="field"><label for="export-schema">Existing schema</label><input id="export-schema" v-model="exportForm.schema" type="text" /></div>
-              <label class="toggle span-2"><input v-model="exportForm.replace" type="checkbox" /><span>Replace existing simulator tables<small>Requires a separate confirmation.</small></span></label>
-              <div class="rec-actions span-2"><button class="btn primary" :disabled="busy || run.export.status === 'running'" @click="exportPostgresql">Export from backend</button></div>
-            </div>
+            <!--
+              The same connection parameters Settings writes, so they are the
+              same option rows: name on the left, control on the right. The
+              standard PostgreSQL parameters carry no helper text; the two that
+              say something the label cannot -- what happens to the password
+              and what Replace destroys -- do.
+            -->
+            <section v-if="exportOpen" class="setting-group" aria-label="PostgreSQL export target">
+              <div class="setting-row">
+                <label class="setting-label" for="export-host">Host</label>
+                <span class="setting-control"><input id="export-host" v-model="exportForm.host" type="text" /></span>
+              </div>
+              <div class="setting-row">
+                <label class="setting-label" for="export-port">Port</label>
+                <span class="setting-control"><input id="export-port" v-model="exportForm.port" type="text" /></span>
+              </div>
+              <div class="setting-row">
+                <label class="setting-label" for="export-database">Database</label>
+                <span class="setting-control"><input id="export-database" v-model="exportForm.database" type="text" /></span>
+              </div>
+              <div class="setting-row">
+                <label class="setting-label" for="export-user">User</label>
+                <span class="setting-control"><input id="export-user" v-model="exportForm.user" type="text" /></span>
+              </div>
+              <div class="setting-row">
+                <label class="setting-label" for="export-password">
+                  Password
+                  <small>Sent to the backend for this export only and never stored.</small>
+                </label>
+                <span class="setting-control"><input id="export-password" v-model="exportForm.password" type="password" autocomplete="new-password" /></span>
+              </div>
+              <div class="setting-row">
+                <label class="setting-label" for="export-ssl">SSL mode</label>
+                <span class="setting-control"><select id="export-ssl" v-model="exportForm.sslmode"><option>require</option><option>verify-ca</option><option>verify-full</option></select></span>
+              </div>
+              <div class="setting-row">
+                <label class="setting-label" for="export-schema">Existing schema</label>
+                <span class="setting-control"><input id="export-schema" v-model="exportForm.schema" type="text" /></span>
+              </div>
+              <label class="setting-row toggle">
+                <span class="setting-label">
+                  Replace existing simulator tables
+                  <small>Requires a separate confirmation.</small>
+                </span>
+                <span class="setting-control"><input v-model="exportForm.replace" class="switch" type="checkbox" /></span>
+              </label>
+              <div class="setting-block rec-actions"><button class="btn primary" :disabled="busy || run.export.status === 'running'" @click="exportPostgresql">Export from backend</button></div>
+            </section>
           </template>
           <p v-if="run.export.status !== 'idle'" class="notice" :class="run.export.status === 'failed' ? 'bad' : run.export.status === 'completed' ? 'good' : ''">
             {{ run.export.status }} — {{ run.export.message }}
@@ -411,4 +483,5 @@ onUnmounted(() => {
 
     <p v-if="error" class="notice bad">{{ error }}</p>
   </section>
+  </div>
 </template>

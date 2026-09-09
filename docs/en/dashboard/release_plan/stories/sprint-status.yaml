@@ -1,0 +1,48 @@
+# generated: 2026-09-08
+# last_updated: 2026-09-08
+# project: MTA-strategy-optimizer
+# project_key: NOKEY
+# tracking_system: file-system
+# story_location: docs/en/dashboard/release_plan/stories
+# Status definitions: epic backlog/in-progress/done;
+# story backlog/ready-for-dev/in-progress/review/done; retrospective optional/done.
+# Epic starts when its first story context exists; done requires accepted evidence.
+# Stories may run in parallel only after declared predecessors and shared-file ownership agree.
+# Context existence does not prove implementation. Review precedes done.
+# 0.1 is the completed baseline/intent review; all product work remains tracked separately.
+generated: 2026-09-08
+last_updated: 2026-09-08
+project: MTA-strategy-optimizer
+project_key: NOKEY
+tracking_system: file-system
+story_location: docs/en/dashboard/release_plan/stories
+
+development_status:
+  epic-0: done
+  0-1-confirm-release-baseline: done
+  epic-0-retrospective: optional
+  epic-1: done
+  1-1-register-validated-datasets: done
+  1-2-select-source-consistent-observations: done
+  1-3-analyze-a-generated-dataset: done
+  1-4-import-standard-files: done
+  epic-1-retrospective: optional
+  epic-2: done
+  2-1-explain-overview-trends: done
+  2-2-explore-filtered-historical-detail: done
+  2-3-clarify-model-evidence-displays: done
+  epic-2-retrospective: optional
+  epic-3: done
+  3-1-execute-isolated-model-runs: done
+  3-2-save-immutable-budget-revisions: done
+  3-3-operate-registered-model-stages: done
+  epic-3-retrospective: optional
+  epic-4: done
+  4-1-evaluate-a-selected-strategy-run: done
+  4-2-display-formal-evaluation-evidence: done
+  epic-4-retrospective: optional
+  epic-5: done
+  5-1-retrieve-run-history-and-recover: done
+  5-2-explain-references-and-deployment-capabilities: done
+  5-3-validate-the-complete-analysis-session: done
+  epic-5-retrospective: optional

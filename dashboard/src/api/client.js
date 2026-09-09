@@ -21,6 +21,48 @@ import { DASHBOARD_RESOURCES } from "../pages.js";
 
 export const IS_STATIC = import.meta.env.VITE_STATIC_BUILD === "true";
 
+/** Registered workbench transport; all browser views use this boundary. */
+async function workbenchRequest(path, method = "GET", payload) {
+  if (IS_STATIC) throw new Error("This operation requires a live backend. The published site is a read-only demonstration.");
+  const form = payload instanceof FormData;
+  const response = await fetch(path, {
+    method,
+    ...(payload === undefined ? {} : {
+      headers: form ? undefined : { "Content-Type": "application/json" },
+      body: form ? payload : JSON.stringify(payload),
+    }),
+  });
+  const result = await readJson(response);
+  if (!response.ok) {
+    const error = new Error(result.message ?? "The operation could not be completed.");
+    error.code = result.error;
+    error.status = response.status;
+    error.issues = result.issues ?? [];
+    throw error;
+  }
+  return result;
+}
+
+export const fetchDatasets = () => IS_STATIC
+  ? Promise.resolve({ datasets: [], available: false, reason: "Published read-only demonstration. Import and generation require a live backend." })
+  : workbenchRequest("/api/datasets");
+export const fetchDataset = id => workbenchRequest(`/api/datasets/${encodeURIComponent(id)}`);
+export const fetchDatasetTemplates = () => workbenchRequest("/api/datasets/templates");
+export const validateDataset = payload => workbenchRequest("/api/datasets/validate", "POST", payload);
+export const registerDataset = payload => workbenchRequest("/api/datasets", "POST", payload);
+export const fetchBudgetPlans = datasetId => IS_STATIC ? Promise.resolve({ plans: [] })
+  : workbenchRequest(`/api/workbench/plans${datasetId ? `?datasetId=${encodeURIComponent(datasetId)}` : ""}`);
+export const saveBudgetPlan = (payload, id = "") => workbenchRequest(`/api/workbench/plans${id ? `/${encodeURIComponent(id)}` : ""}`, id ? "PUT" : "POST", payload);
+export const fetchWorkbenchRuns = datasetId => IS_STATIC ? Promise.resolve({ runs: [] })
+  : workbenchRequest(`/api/workbench/runs${datasetId ? `?datasetId=${encodeURIComponent(datasetId)}` : ""}`);
+export const fetchWorkbenchRun = id => workbenchRequest(`/api/workbench/runs/${encodeURIComponent(id)}`);
+export const startWorkbenchRun = payload => workbenchRequest("/api/workbench/runs", "POST", payload);
+export const stopWorkbenchRun = id => workbenchRequest(`/api/workbench/runs/${encodeURIComponent(id)}/stop`, "POST");
+export function workbenchDownloadUrl(id, filename) {
+  if (IS_STATIC) throw new Error("Run downloads require a live backend.");
+  return `/api/workbench/runs/${encodeURIComponent(id)}/files/${encodeURIComponent(filename)}`;
+}
+
 /**
  * How static resource paths resolve.
  *
@@ -201,11 +243,13 @@ export async function fetchDashboardResource(
   resource,
   onProgress = null,
   window = null,
+  datasetId = "",
 ) {
   if (!DASHBOARD_RESOURCES.includes(resource)) {
     throw new Error(`Unknown dashboard resource: ${resource}`);
   }
   const query = new URLSearchParams({ stream: "1" });
+  if (datasetId && !IS_STATIC) query.set("datasetId", datasetId);
   if (window?.start) query.set("start", window.start);
   if (window?.end) query.set("end", window.end);
   const url = IS_STATIC

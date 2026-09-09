@@ -212,7 +212,7 @@ function elapsed(record) {
         </a>
       </div>
       <div v-if="artifacts.canUpload" class="filter-row">
-        <div class="field span-2">
+        <div class="field">
           <label :for="`stage-${stage.key}-artifacts`">Upload output files</label>
           <input
             :id="`stage-${stage.key}-artifacts`"

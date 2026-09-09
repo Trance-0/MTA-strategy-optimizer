@@ -1,13 +1,21 @@
 ---
 title: Dashboard Data Endpoints
 description: Snapshot, reload, master-object, and repository behavior
-compact: "Dashboard resource routes, streamed progress and inclusive valid-date history windows with a 90-day default; parameterized database queries, window caches, typed coercion, runtime artifact precedence, immutable observations and editable drafts."
+compact: "Explicit dataset resource routing without database fallback, streamed progress and inclusive valid-date history windows with a 90-day default; parameterized database queries, window caches, typed coercion, runtime artifact precedence, immutable observations and editable drafts."
 lang: en-US
 source_files: backend/api/dashboard.py, backend/repository/attribution.py, backend/repository/coercion.py, backend/repository/history.py, backend/repository/master_data.py, backend/repository/research.py, backend/repository/snapshot.py, backend/repository/strategy.py
 test_files: backend/tests/test_coercion.py, backend/tests/test_snapshot.py
 ---
 
 # Dashboard Data Endpoints
+
+## Registered dataset selection
+
+An explicit nonempty `datasetId` selects the [registered dataset projection](../../dashboard/datasets.md)
+before checking the legacy database or resolving its history window. Unknown
+identities fail and never fall back to database, runtime or sample artifacts.
+The selected descriptor accompanies each resource. Complete model results
+carry their exact `runProvenance`; no matching success yields empty model output.
 
 ## Resource Contract
 

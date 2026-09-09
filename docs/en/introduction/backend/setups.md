@@ -1,7 +1,7 @@
 ---
 title: Backend Setup and Deployment
 description: Local Flask startup and Yunxiao AppStack deployment configuration
-compact: "Flask and AppStack setup: local commands, writable pipeline runtime, protected Settings, build identity, PostgreSQL schema census, Docker inputs, ingress and connectivity; links the separate Yunxiao ECS host deployment contract."
+compact: "Flask and AppStack setup: dataset/workbench registration, interrupted-run recovery, local commands, writable pipeline runtime, protected Settings, build identity, PostgreSQL schema census, Docker inputs, ingress and connectivity; links the separate Yunxiao ECS host deployment contract."
 lang: en-US
 source_files: backend/app.py, backend/config.py, backend/database.py, backend/services/schemas.py, backend/wsgi.py, deploy/appstack/Dockerfile, deploy/appstack/orchestration.yaml, deploy/appstack/values.example.yaml
 test_files: backend/tests/test_app.py, backend/tests/test_schemas.py
@@ -12,6 +12,14 @@ test_files: backend/tests/test_app.py, backend/tests/test_schemas.py
 The existing Yunxiao pipeline uses the separate
 [Elastic Compute Service (ECS) host deployment](./yunxiao-ecs.md) contract.
 The container build and Kubernetes sections below describe the AppStack option.
+
+## Registered analysis startup
+
+`create_app()` registers dataset and workbench routes before serving the client
+and calls retained-run recovery. A prior unfinished run becomes interrupted,
+never automatically requeued. If persistence fails, the server still exposes
+Settings and read-only records, reports the recovery failure and disables new
+execution until recovery succeeds. See [budget plans and runs](../../dashboard/budget-plans.md).
 
 ## Local Setup
 

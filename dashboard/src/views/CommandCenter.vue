@@ -7,7 +7,7 @@
  * reliability verdict sits beside the attribution figures rather than in a
  * footnote, because an unreliable share must not be read as a fact.
  */
-import { computed } from "vue";
+import { computed, ref } from "vue";
 
 import MetricRow from "../components/MetricRow.vue";
 import PlotlyChart from "../components/PlotlyChart.vue";
@@ -24,12 +24,13 @@ import {
   sum,
 } from "../lib/common.js";
 import { useDashboard } from "../lib/useDashboard.js";
+import { aggregatePerformance, safeRatio } from "../lib/chartData.js";
 import * as theme from "../theme.js";
 
 const { data } = useDashboard();
 
 const currency = computed(() =>
-  currencySymbol(data.value.strategyRequest?.campaign_group?.currency ?? "USD"),
+  currencySymbol(data.value.dataset?.scope?.currency ?? data.value.dashboardContext?.currency ?? data.value.strategyRequest?.campaign_group?.currency ?? "USD"),
 );
 
 const totals = computed(() => {
@@ -37,11 +38,11 @@ const totals = computed(() => {
   const spend = sum(ads, "cost");
   const sales = sum(ads, "sales");
   return {
-    spend,
-    sales,
-    roas: spend ? sales / spend : 0,
+    spend: ads.length ? spend : null,
+    sales: ads.length ? sales : null,
+    roas: ads.length ? safeRatio(sales, spend) : null,
     days: distinct(ads, "report_date").length,
-    touchpoints: distinct(data.value.attributionResults, "touchpoint").length,
+    touchpoints: distinct(ads, "touchpoint").length,
   };
 });
 
@@ -51,84 +52,45 @@ const tiles = computed(() => {
     { label: "Total spend", value: theme.compactMoney(totals.value.spend, currency.value) },
     { label: "Reported sales", value: theme.compactMoney(totals.value.sales, currency.value) },
     { label: "Blended ROAS", value: theme.ratio(totals.value.roas) },
+    ...["purchases", "impressions", "clicks"].map(key => ({ label: pretty(key), value: data.value.adsDaily.length ? theme.count(sum(data.value.adsDaily, key)) : "--" })),
     {
       label: "Touchpoints",
       value: theme.count(totals.value.touchpoints),
-      help: "Distinct five-segment interaction keys the models scored.",
+      help: "Distinct interaction keys observed in this dataset.",
     },
     {
       label: "Recommended budget",
-      value: theme.compactMoney(budget.budget_seed_total ?? 0, currency.value),
-      note: `Daily total across ${(budget.campaigns ?? []).length} Campaigns`,
+      value: theme.compactMoney(budget.budget_seed_total, currency.value),
+      note: budget.budget_seed_total == null ? "Not run for this dataset" : `Daily total across ${(budget.campaigns ?? []).length} Campaigns`,
     },
   ];
 });
 
-/** Daily return on ad spend, with spend retained as low-contrast context. */
-const daily = computed(() =>
-  groupSum(data.value.adsDaily, "report_date", ["cost", "sales"])
-    .map((row) => ({ ...row, roas: row.cost ? row.sales / row.cost : 0 }))
-    .sort((a, b) => a.key < b.key ? -1 : 1),
-);
-
-const spendTraces = computed(() => {
-  const rows = daily.value;
-  if (rows.length === 0) return [];
-  const meanSpend = rows.reduce((total, row) => total + row.cost, 0) / rows.length;
-  return [
-    {
-      type: "scatter", mode: "lines", name: "Spend context",
-      x: rows.map((row) => row.key),
-      y: rows.map((row) => meanSpend ? row.cost / meanSpend * totals.value.roas : 0),
-      fill: "tozeroy", fillcolor: "rgba(42,120,214,0.10)",
-      line: { color: "rgba(42,120,214,0.20)", width: 1 },
-      customdata: rows.map((row) => row.cost),
-      hovertemplate: "%{x}<br>Spend %{customdata:$,.2f}<extra></extra>",
-    },
-    {
-      type: "scatter", mode: "lines+markers", name: "Daily ROAS",
-      x: rows.map((row) => row.key), y: rows.map((row) => row.roas),
-      line: { color: theme.SERIES[1], width: 2.5 }, marker: { size: 5 },
-      customdata: rows.map((row) => [row.cost, row.sales]),
-      hovertemplate: "<b>%{x}</b><br>ROAS %{y:.2f}x<br>Spend %{customdata[0]:$,.2f}<br>Sales %{customdata[1]:$,.2f}<extra></extra>",
-    },
-  ];
-});
-
-const spendLayout = computed(() =>
-  theme.layout({
-    height: 300,
-    yaxis: { title: { text: "Return on ad spend" }, ticksuffix: "x" },
-    shapes: [
-      {
-        type: "line",
-        xref: "paper",
-        x0: 0,
-        x1: 1,
-        y0: totals.value.roas,
-        y1: totals.value.roas,
-        line: { color: theme.AXIS, width: 1 },
-      },
-    ],
-    annotations: [
-      {
-        xref: "paper",
-        x: 1,
-        y: totals.value.roas,
-        yanchor: "bottom",
-        xanchor: "right",
-        text: `window average ${totals.value.roas.toFixed(2)}x`,
-        showarrow: false,
-        font: { size: 10, color: theme.MUTED },
-      },
-    ],
-  }),
-);
+const grain = ref("day");
+const daily = computed(() => aggregatePerformance(data.value.adsDaily, grain.value));
+const spendTraces = computed(() => daily.value.length ? [{
+  type: "scatter", mode: "lines+markers", name: "Return on ad spend",
+  x: daily.value.map(row => row.key), y: daily.value.map(row => row.roas),
+  connectgaps: false, line: { color: theme.SERIES[1], width: 2.5 },
+  hovertemplate: "%{x}<br>ROAS %{y:.2f}x<extra></extra>",
+}] : []);
+const amountTraces = computed(() => daily.value.length ? ["cost", "sales"].map((field, index) => ({
+  type: "scatter", mode: "lines+markers", name: field === "cost" ? "Spend" : "Reported sales",
+  x: daily.value.map(row => row.key), y: daily.value.map(row => row[field]),
+  connectgaps: false, line: { color: theme.SERIES[index], width: 2 },
+  hovertemplate: "%{x}<br>%{y:,.2f}<extra>%{fullData.name}</extra>",
+})) : []);
+const spendLayout = computed(() => theme.layout({ height: 300,
+  yaxis: { title: { text: "Return on ad spend" }, ticksuffix: "x" },
+}));
+const amountLayout = computed(() => theme.layout({ height: 300,
+  yaxis: { title: { text: `Amount (${data.value.dataset?.scope?.currency ?? data.value.dashboardContext?.currency ?? currency.value})` } },
+}));
 
 const dailyColumns = [
-  { key: "key", label: "Date", format: (value) => shortDate(value) },
-  { key: "cost", label: "Spend", format: "money" },
-  { key: "sales", label: "Reported sales", format: "money" },
+  { key: "key", label: "Period starting" },
+  { key: "cost", label: "Spend", format: value => theme.money(value, currency.value) },
+  { key: "sales", label: "Reported sales", format: value => theme.money(value, currency.value) },
   { key: "roas", label: "ROAS", format: (value) => theme.ratio(value) },
 ];
 
@@ -175,7 +137,7 @@ const byProduct = computed(() => {
       },
       hovertemplate:
         `<b>${pretty(model)}</b><br>%{y}<br>` +
-        "Attributed revenue %{x:$,.2f}<extra></extra>",
+        `Attributed revenue (${data.value.dataset?.scope?.currency ?? data.value.dashboardContext?.currency ?? "USD"}) %{x:,.2f}<extra></extra>`,
     };
   });
 });
@@ -207,8 +169,8 @@ const productRows = computed(() =>
 const productColumns = [
   { key: "product", label: "Ad product" },
   { key: "model", label: "Model" },
-  { key: "attributed_revenue", label: "Attributed revenue", format: "money" },
-  { key: "cost", label: "Cost", format: "money" },
+  { key: "attributed_revenue", label: "Attributed revenue", format: value => theme.money(value, currency.value) },
+  { key: "cost", label: "Cost", format: value => theme.money(value, currency.value) },
 ];
 </script>
 
@@ -218,30 +180,49 @@ const productColumns = [
       Attribution evidence and budget readiness for the current report window.
     </p>
 
+    <div class="field">
+      <label for="overview-group">Group observations</label>
+      <select id="overview-group" v-model="grain"><option value="day">Daily</option><option value="week">Weekly (Monday)</option><option value="month">Monthly</option></select>
+    </div>
     <MetricRow :items="tiles" />
+    <p v-if="data.runProvenance?.attribution" class="caption">Attribution result {{ data.runProvenance.attribution.id }} · Completed {{ data.runProvenance.attribution.finishedAt }} · Dataset {{ data.runProvenance.attribution.datasetId }}. <a href="#/optimizer/attribution">Inspect attribution evidence</a></p>
+    <div v-if="data.dataset" class="rec-actions">
+      <a v-if="data.dataset.capabilities?.attribution?.available" class="btn" href="#/optimizer/attribution">Run attribution</a>
+      <a v-if="data.dataset.capabilities?.history?.available" class="btn" href="#/campaigns/history">Explore Campaign history</a>
+      <a v-if="data.dataset.capabilities?.optimization?.available" class="btn primary" href="#/budget/plans">Create a budget plan</a>
+      <a class="btn" href="#/campaigns/performance">Explore performance</a>
+    </div>
     <p class="caption">
-      Window covers {{ totals.days }} days of platform-reported performance. Spend
+      {{ data.adsDaily.length.toLocaleString() }} source rows · {{ data.source }}. Window covers {{ totals.days }} days of platform-reported performance. Spend
       and sales are what the platform reported; attributed values below are what
       the models assigned.
     </p>
 
+    <article class="card">
+      <div class="card-head"><h2>Spend and reported sales</h2><span class="sub">Observed amounts · {{ currency }}</span></div>
+      <div class="card-body">
+        <PlotlyChart v-if="amountTraces.length" :traces="amountTraces" :layout="amountLayout" label="Observed spend and sales by selected calendar period" />
+        <p v-else class="table-empty">No performance observations. Generate or import a dataset to begin.</p>
+        <TableView :columns="dailyColumns" :rows="daily" label="View grouped performance values" />
+      </div>
+    </article>
     <div class="page-grid two-up">
       <article class="card">
         <div class="card-head">
-          <h2>Daily return on ad spend</h2>
-          <span class="sub">Spend remains as a light context band</span>
+          <h2>Return on ad spend</h2>
+          <span class="sub">Sales ÷ spend in each period</span>
         </div>
         <div class="card-body">
           <PlotlyChart
             v-if="spendTraces.length"
             :traces="spendTraces"
             :layout="spendLayout"
-            label="Daily return on ad spend against its window average with spend context"
+            label="Return on ad spend by selected calendar period"
           />
           <p v-else class="table-empty">No daily performance rows in this window.</p>
           <p class="caption">
-            The line answers whether spend earned its return. The shaded band
-            shows relative spend pressure without adding a second axis.
+            Ratios are recomputed from period totals. A period with no spend is
+            unavailable, not a zero return. Amounts appear in the separate chart.
           </p>
           <TableView
             label="View daily values as a table"

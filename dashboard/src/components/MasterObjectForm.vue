@@ -69,78 +69,87 @@ function removeFromList(field, value) {
 </script>
 
 <template>
-  <div class="master-object-form">
-    <div v-for="field in fields" :key="field.key" class="form-row">
-      <label :for="`master-object-field-${field.key}`">
+  <!--
+    The dashboard's option row, not a private one: the field name on the left,
+    the control that sets it on the right. A reader editing a master object is
+    reading the same shape they read in Settings.
+  -->
+  <div class="master-object-form setting-group">
+    <div v-for="field in fields" :key="field.key" class="setting-row">
+      <label class="setting-label" :for="`master-object-field-${field.key}`">
         {{ field.label }}<span v-if="field.required" class="required-mark">*</span>
+        <small v-if="field.help">{{ field.help }}</small>
       </label>
 
-      <input
-        v-if="field.kind === 'text'"
-        :id="`master-object-field-${field.key}`"
-        type="text"
-        :value="modelValue[field.key] ?? ''"
-        @input="onTextInput(field, $event)"
-      />
-
-      <input
-        v-else-if="field.kind === 'number'"
-        :id="`master-object-field-${field.key}`"
-        type="number"
-        step="any"
-        :value="modelValue[field.key] ?? ''"
-        @input="onNumberInput(field, $event)"
-      />
-
-      <select
-        v-else-if="field.kind === 'boolean'"
-        :id="`master-object-field-${field.key}`"
-        :value="boolToOption(modelValue[field.key])"
-        @change="onBooleanChange(field, $event)"
-      >
-        <option value="">Unknown</option>
-        <option value="true">{{ field.trueLabel }}</option>
-        <option value="false">{{ field.falseLabel }}</option>
-      </select>
-
-      <input
-        v-else-if="field.kind === 'select'"
-        :id="`master-object-field-${field.key}`"
-        type="text"
-        :list="listId(field)"
-        :value="modelValue[field.key] ?? ''"
-        placeholder="Type to search…"
-        @input="onTextInput(field, $event)"
-      />
-      <datalist v-if="field.kind === 'select'" :id="listId(field)">
-        <option v-for="option in optionsFor(field)" :key="option" :value="option" />
-      </datalist>
-
-      <div v-else-if="field.kind === 'multiselect'" class="form-multiselect">
-        <div v-if="(modelValue[field.key] ?? []).length" class="chip-list">
-          <span v-for="value in modelValue[field.key]" :key="value" class="chip">
-            {{ value }}
-            <button
-              type="button"
-              class="chip-remove"
-              :aria-label="`Remove ${value}`"
-              @click="removeFromList(field, value)"
-            >
-              ×
-            </button>
-          </span>
-        </div>
+      <span class="setting-control">
         <input
+          v-if="field.kind === 'text'"
           :id="`master-object-field-${field.key}`"
           type="text"
-          :list="listId(field)"
-          :placeholder="`Add ${field.label.toLowerCase()}…`"
-          @change="addToList(field, $event)"
+          :value="modelValue[field.key] ?? ''"
+          @input="onTextInput(field, $event)"
         />
-        <datalist :id="listId(field)">
-          <option v-for="option in optionsFor(field)" :key="option" :value="option" />
-        </datalist>
-      </div>
+
+        <input
+          v-else-if="field.kind === 'number'"
+          :id="`master-object-field-${field.key}`"
+          type="number"
+          step="any"
+          :value="modelValue[field.key] ?? ''"
+          @input="onNumberInput(field, $event)"
+        />
+
+        <select
+          v-else-if="field.kind === 'boolean'"
+          :id="`master-object-field-${field.key}`"
+          :value="boolToOption(modelValue[field.key])"
+          @change="onBooleanChange(field, $event)"
+        >
+          <option value="">Unknown</option>
+          <option value="true">{{ field.trueLabel }}</option>
+          <option value="false">{{ field.falseLabel }}</option>
+        </select>
+
+        <template v-else-if="field.kind === 'select'">
+          <input
+            :id="`master-object-field-${field.key}`"
+            type="text"
+            :list="listId(field)"
+            :value="modelValue[field.key] ?? ''"
+            placeholder="Type to search…"
+            @input="onTextInput(field, $event)"
+          />
+          <datalist :id="listId(field)">
+            <option v-for="option in optionsFor(field)" :key="option" :value="option" />
+          </datalist>
+        </template>
+
+        <div v-else-if="field.kind === 'multiselect'" class="form-multiselect">
+          <div v-if="(modelValue[field.key] ?? []).length" class="chip-list">
+            <span v-for="value in modelValue[field.key]" :key="value" class="chip">
+              {{ value }}
+              <button
+                type="button"
+                class="chip-remove"
+                :aria-label="`Remove ${value}`"
+                @click="removeFromList(field, value)"
+              >
+                ×
+              </button>
+            </span>
+          </div>
+          <input
+            :id="`master-object-field-${field.key}`"
+            type="text"
+            :list="listId(field)"
+            :placeholder="`Add ${field.label.toLowerCase()}…`"
+            @change="addToList(field, $event)"
+          />
+          <datalist :id="listId(field)">
+            <option v-for="option in optionsFor(field)" :key="option" :value="option" />
+          </datalist>
+        </div>
+      </span>
     </div>
   </div>
 </template>
