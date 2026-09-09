@@ -13,7 +13,7 @@ lang: en-US
 > Git author: `Zheyuan Wu <60459821+Trance-0@users.noreply.github.com>`
 > Role: Project manager — pipeline, dashboard, deployment, and the documentation set
 > Active period: Since 2026-08-03; development ownership handed over from [Jiahao Yao](./JiahaoYao.md) on 2026-08-08
-> Last updated: 2026-09-09
+> Last updated: 2026-09-10
 
 Entries are reconstructed from Git history. They record the change set behind each commit, not a separate narrative.
 
@@ -30,6 +30,12 @@ Took over development ownership on 2026-08-08 and has authored the majority of t
 Areas owned by others are recorded on their own pages: the [Data Generator configuration workflow](./ChenghaoJin.md), the [SQL database](./TianleChen.md), the [evaluation models](./YiLiu.md), and the [knowledge base and research](./YayuYu.md).
 
 ---
+
+## 2026-09-10
+
+### Completed
+
+- Fixed the two faults the host deployment reported in 0.9.55, both from the machine keeping state between runs. A snapshot test read the host's own pipeline artifacts instead of its fixture, because the strategy reader reaches one file by two routes and the test redirected only one; on a clean checkout the other route finds nothing, so the test had been passing for a reason unrelated to what it patched. Anchored each synchronization exclusion to the one location its state occupies, after finding an unanchored `__pycache__` rule kept a deleted recursive submodule checkout alive under `external/` — rsync refuses to remove a directory holding a protected file. Verified by reproducing both faults, confirming an unfixed control still fails, and running the deployment's six suites — 768 tests — on a clean tree and against a host full of leftover artifacts.
 
 ## 2026-09-09
 

@@ -18,6 +18,7 @@ from backend.app import create_app
 from backend.repository import snapshot
 from backend.repository import attribution, evaluation, strategy
 from backend.repository.master_data import derive_master_data
+from backend.services import model_outputs
 
 
 EXPECTED_KEYS = {
@@ -66,12 +67,30 @@ class SnapshotContractTests(unittest.TestCase):
     def setUpClass(cls) -> None:
         cls.environment = patch.dict(os.environ, {"DATABASE": "false"})
         cls.environment.start()
+        # These tests assert the counts the committed baseline files produce, so
+        # they must not see a runtime directory. A deployment machine keeps its
+        # generated artifacts between runs, and a complete runtime set legitimately
+        # takes precedence over the baseline, so an unpatched suite reads the
+        # host's own pipeline output and reports counts that never match. Point
+        # every reader of that directory at an empty tree, which is what a clean
+        # checkout has, so the suite tests this repository rather than the machine.
+        cls._runtime = tempfile.TemporaryDirectory()
+        empty = Path(cls._runtime.name)
+        cls._runtime_patches = [
+            patch.object(attribution, "pipeline_output_directory", return_value=empty),
+            patch.object(model_outputs, "pipeline_output_directory", return_value=empty),
+        ]
+        for started in cls._runtime_patches:
+            started.start()
         snapshot.clear_caches()
         cls.client = create_app().test_client()
 
     @classmethod
     def tearDownClass(cls) -> None:
         snapshot.clear_caches()
+        for started in reversed(cls._runtime_patches):
+            started.stop()
+        cls._runtime.cleanup()
         cls.environment.stop()
 
     def test_dashboard_has_the_complete_client_contract(self) -> None:
@@ -346,6 +365,16 @@ class SnapshotContractTests(unittest.TestCase):
             evaluation_runtime.write_text(
                 json.dumps({"source": "runtime evaluation"}), encoding="utf-8"
             )
+            # Both readers resolve through two routes that reach the same file
+            # in production: the fallback path built here, and the artifact
+            # directory that `restored_artifact_path` derives from
+            # `pipeline_output_directory`. Redirect the second route at this
+            # temporary tree as well. Patching only the fallback leaves the
+            # artifact route reading the real runtime directory, so a host that
+            # still holds artifacts from an earlier pipeline run returns those
+            # instead of the fixture and the assertion fails on the deployment
+            # machine while passing on a clean checkout. The stage directory
+            # names below are the ones `model_outputs.DIRECTORIES` maps.
             with (
                 patch.object(
                     strategy,
@@ -356,6 +385,9 @@ class SnapshotContractTests(unittest.TestCase):
                     evaluation,
                     "pipeline_artifact_path",
                     return_value=evaluation_runtime,
+                ),
+                patch.object(
+                    model_outputs, "pipeline_output_directory", return_value=runtime
                 ),
             ):
                 self.assertEqual(

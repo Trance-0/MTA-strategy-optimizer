@@ -65,9 +65,15 @@ prerequisites; the command does not provision the machine.
    `examples/baseline.toy.json`. The mirror Action has already validated the
    pins and configuration before publication.
 3. Synchronize into `/opt/mta-app/backend` with deletion of stale source.
-   Preserve `.env`, `.venv`, `node_modules`, `dashboard/dist`, Python caches,
-   logs, `.mplconfig` and `generated/`. Never exclude the entire `external/`
-   directory: the generator source must follow the published snapshot.
+   Preserve `.env`, `.venv`, the `dashboard/` and `docs/` dependency trees,
+   `dashboard/dist` and `generated/`. Anchor every exclusion to the single
+   location its state occupies: rsync will not delete a directory containing an
+   excluded file, so an unanchored name keeps whole stale trees alive. Do not
+   preserve regenerable state such as Python caches; the steps below rebuild it,
+   and a compiled module outliving its deleted source is a correctness hazard.
+   Never exclude the entire `external/` directory: the generator source must
+   follow the published snapshot. Fail the deployment if the synchronization
+   reports a directory it could not delete, because rsync still exits zero.
 4. Run `uv sync --frozen --extra backend --extra strategy-evaluation`.
    Run common, attribution, standard, recommendation, evaluation and backend
    tests through `/opt/mta-app/backend/.venv/bin/python`. Set `DATABASE=false`

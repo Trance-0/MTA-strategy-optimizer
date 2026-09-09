@@ -115,22 +115,40 @@ stages:
             done
 
             echo "==> [2/6] sync source into $REPO (preserve runtime files)"
-            # --delete removes files dropped from main, so every exclusion below
-            # names host state that must survive: the service's own .env and
-            # virtualenv, installed dependency trees, build output rebuilt in
-            # step 5, caches, logs, and generated data that exists only here.
+            # --delete makes the live tree match the snapshot, so every rule
+            # below names host state that must survive it. Each one carries a
+            # leading slash, which anchors it to the single location that state
+            # actually occupies. An unanchored name matches at every depth, and
+            # rsync protects an excluded file from deletion, so it also refuses
+            # to remove any directory containing one: an unanchored rule keeps
+            # whole stale trees alive. That is what left an earlier recursive
+            # submodule checkout under external/ live in the deployment after
+            # the snapshot stopped carrying it -- a cache directory inside it
+            # pinned every parent. Regenerable state is deliberately not
+            # protected here, because the steps below rebuild it and a stale
+            # compiled module beside a deleted source file is a real hazard.
             mkdir -p "$REPO"
-            rsync -a --delete \
-              --exclude='.git' \
-              --exclude='.env' \
-              --exclude='.venv' \
-              --exclude='node_modules' \
-              --exclude='dashboard/dist' \
-              --exclude='__pycache__' \
-              --exclude='*.log' \
-              --exclude='.mplconfig' \
-              --exclude='generated/' \
-              "$TMP/repo/" "$REPO/"
+            if ! rsync -a --delete \
+                --exclude='/.git' \
+                --exclude='/.env' \
+                --exclude='/.venv' \
+                --exclude='/dashboard/node_modules' \
+                --exclude='/dashboard/dist' \
+                --exclude='/docs/node_modules' \
+                --exclude='/generated/' \
+                "$TMP/repo/" "$REPO/" > "$TMP/sync.log" 2>&1; then
+              cat "$TMP/sync.log" >&2
+              exit 1
+            fi
+            cat "$TMP/sync.log"
+            # rsync reports a directory it kept but exits 0, so a surviving
+            # stale tree is silent. The rules above are anchored precisely so
+            # this cannot happen; treat it as a fault rather than as log noise,
+            # because the alternative is deploying source that main deleted.
+            if grep -q 'cannot delete non-empty directory' "$TMP/sync.log"; then
+              echo 'Stale directories survived the sync; an exclusion is too broad' >&2
+              exit 1
+            fi
 
             echo "==> [3/6] backend and evaluation dependencies"
             cd "$REPO"
