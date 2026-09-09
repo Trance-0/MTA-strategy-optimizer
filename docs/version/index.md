@@ -1,7 +1,7 @@
 ---
 title: Version Log
 description: Release history and material changes for the maintained project
-compact: "Routes release history from VERSION to one page per patch, keeping 0.9.48–0.9.51 flat and older patches in minor-version folders; includes dates, material summaries, historical group links, and planned follow-ups."
+compact: "Routes release history from VERSION to one page per patch, keeping 0.9.49–0.9.52 flat and older patches in minor-version folders; includes dates, material summaries, historical group links, and planned follow-ups."
 order: 1
 ---
 
@@ -10,6 +10,11 @@ order: 1
 The project version is recorded in the repository-root `VERSION` file. Each page here is one small patch description covering a coherent change set, rather than a reproduction of every commit message. Every patch keeps its own permanent page; older minor versions are grouped into a collapsed folder per minor version instead of being compacted away.
 
 This section records **what** changed. See the [work log](../worklog/) for **who** did the work and when.
+
+## [0.9.52](0.9.52.md)
+
+- Date: 2026-09-09
+- Summary: Stopped this repository renormalizing submodule line endings, which made the Gitea mirror's unfiltered `read-tree` snapshot fail its own unmodified-tree gate and would have invalidated the generator's recorded checksums
 
 ## [0.9.51](0.9.51.md)
 
@@ -26,7 +31,7 @@ This section records **what** changed. See the [work log](../worklog/) for **who
 - Date: 2026-09-08
 - Summary: Unified every dashboard option onto one labelled row with a helper sentence, converted the four views that laid out their own, removed the duplicate row primitives and the last component stylesheet, and recorded the layout rule with two enforcing tests
 
-## [0.9.48](0.9.48.md)
+## [0.9.48](0.9/0.9.48.md)
 
 - Date: 2026-09-08
 - Summary: Connected registered generator, file and interface datasets to analysis charts, versioned budget plans, isolated model runs, exact-result evaluation, retained history and restart recovery

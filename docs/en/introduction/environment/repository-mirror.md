@@ -1,7 +1,7 @@
 ---
 title: GitHub to Gitea Publication
-compact: "mirror-to-gitea.yml prepares complete main/master snapshots before one atomic mirror push. Specifies frozen refs, pinned files, deterministic provenance, pruning, validation and the manual GitHub Actions Run workflow procedure; no separate helper script."
-source_files: .github/workflows/mirror-to-gitea.yml
+compact: "mirror-to-gitea.yml prepares complete main/master snapshots before one atomic mirror push. Specifies frozen refs, pinned files, deterministic provenance, pruning, validation and the manual GitHub Actions Run workflow procedure; no separate helper script. Submodule bytes are excluded from end-of-line conversion because the snapshot import applies no filter."
+source_files: .github/workflows/mirror-to-gitea.yml, .gitattributes
 ---
 
 # GitHub to Gitea Publication
@@ -24,6 +24,13 @@ The existing workflow contains the complete operation inline:
 3. Import each pinned tree directly into the snapshot index, including tracked
    files matched by ignore or export rules. Remove root `.gitmodules` and
    uninitialized nested Git links. Verify each downloaded revision against its pin.
+   This import copies blobs by object identifier and applies no filter, so this
+   repository must not convert submodule bytes. `external/** -text` in
+   `.gitattributes` keeps that true: without it, a submodule file committed with
+   carriage returns enters the index as written and is then rewritten on
+   checkout, so step 5 finds a tree that differs from the index it was built
+   from and fails. It would also break the digests the generator records over
+   its own bytes.
 4. Create one snapshot with the frozen default-branch commit as its sole parent.
    Record all top-level pins in its message. Fixed author, committer and source
    timestamp make unchanged inputs produce the same commit.
@@ -93,7 +100,10 @@ Source: `.github/workflows/mirror-to-gitea.yml`
 
 Local disposable repositories must cover ignored tracked files, nested Git
 links, complete snapshots, deterministic repetition, exact branches/tags and
-pruning. Rejecting one reference or failing preparation must preserve every
+pruning. Replaying the preparation steps against a submodule file committed
+with carriage returns must leave the snapshot tree unmodified; running the same
+replay without the `external/**` rule must fail, so the check cannot pass
+vacuously. Rejecting one reference or failing preparation must preserve every
 destination reference. One-off verification helpers stay in ignored
 `/.agent-scratch/` and are deleted after use. Only the production Action proves
 Gitea authentication, permissions and actual webhook behavior.

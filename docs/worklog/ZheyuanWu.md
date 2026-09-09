@@ -39,6 +39,8 @@ Areas owned by others are recorded on their own pages: the [Data Generator confi
 
 - Fixed simulator attribution date boundaries with provenance checks, preserved database identity on Settings refresh, and unified five log surfaces with copy and clipboard fallback. Verified 154 backend tests, 147 isolated dashboard tests, and production/documentation builds.
 
+- Fixed the failing Gitea mirror in 0.9.52 by excluding `external/` from this repository's end-of-line rules: the snapshot's `read-tree` import copies submodule blobs unfiltered, so two CRLF files were rewritten on checkout and failed the workflow's own unmodified-tree gate. Verified by replaying the workflow's preparation steps and its Python gate, with an unfixed control run that still fails.
+
 ## 2026-09-08
 
 ### Completed

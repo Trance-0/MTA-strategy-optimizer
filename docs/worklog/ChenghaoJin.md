@@ -26,7 +26,7 @@ lang: en-US
 
 ### Completed
 
-- Delivered the dataset-driven analysis workbench in [0.9.48](../version/0.9.48.md): registered generator, standard file and interface inputs, explicit source selection, clearer trends and rankings, filtered details and exports.
+- Delivered the dataset-driven analysis workbench in [0.9.48](../version/0.9/0.9.48.md): registered generator, standard file and interface inputs, explicit source selection, clearer trends and rankings, filtered details and exports.
 - Connected immutable budget revisions to isolated model runs, exact-strategy evaluation, retained history and restart recovery; preserved drafts and made unavailable evidence and execution capabilities explicit.
 - Completed the approved BMad specifications, implementation stories and code review; passed 765 Python and 168 frontend tests, production builds, and actual Safari, 375-pixel and 100,000-observation acceptance checks.
 
