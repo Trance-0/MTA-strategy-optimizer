@@ -1,6 +1,6 @@
 ---
 title: "Visual Contract"
-compact: "Theme palettes, fixed entity colors, chart axes, safe ratios, calendar aggregation, exported values and responsive long-identifier layouts."
+compact: "Theme palettes, fixed entity colors, chart axes and paired readable values, shared LogViewer styling, option-row primitives, safe ratios, calendar aggregation and exported chart values."
 source_files: dashboard/src/theme.js, dashboard/src/style.css, dashboard/src/lib/common.js, dashboard/src/lib/chartData.js
 ---
 
@@ -22,6 +22,52 @@ Three rules the views depend on:
 
 Every chart is paired with the values behind it — a table view, direct labels, or both — so no number is reachable only by hovering.
 
+## Option Rows
+
+The dashboard has exactly two form shapes, and which one a control takes is decided by what the control is for.
+
+**An option is one row: its name on the left, the control that changes it on the right.** This holds for every control type — a select, a text field, a toggle, a button that carries out the option's action, or a read-only value. A reader who has learned where the name is and where the control is on one page finds both in the same place on the next, so the shape is a single set of primitives rather than a per-view layout:
+
+#### `.setting-group`
+
+A titled section. Its `> header` carries the heading and the sentence that qualifies the rows below it.
+
+#### `.setting-row`
+
+One option. A `<label>` when it wraps its own control, so the whole row is the hit target.
+
+#### `.setting-label`
+
+The option's name, with its helper sentence in a nested `<small>`.
+
+#### `.setting-control`
+
+The control, held to `min(300px, 46%)` and aligned to the row's right edge.
+
+#### `.setting-block`
+
+Content in a group that is not an option: a notice, an action bar, a command block.
+
+Each option carries a helper sentence under its name saying what the setting changes and what the alternative does. It is held back only where the label already says everything — a standard connection parameter, a field whose name is its own definition — because a sentence under every row buries the rows that carry a real consequence.
+
+`.field` inside `.filter-row` is the other shape, and it is not a settings shape. It is a toolbar: a strip of compact controls that narrow or parameterise the content directly below them, read left to right, each label stacked above its control. A filter strip is scanned; an option row is filled in. The same field is never rendered as a stacked `.field` in one view and a `.setting-row` in another — the PostgreSQL connection parameters appear on both Settings and the Data Generator export, and both are option rows.
+
+Two consequences the views depend on:
+
+- **A control is never aligned to the opposite side of the one beside it.** A row puts its control on the right; a standalone action bar (`.rec-actions`) aligns left, everywhere, with the primary action last. A button split to the far edge of the title it belongs to moves with the length of that title, so no two cards agree on where their buttons are. An empty or `&nbsp;` `<label>` is never used to align a button with the fields beside it: a label wrapping no control is a defect a screen reader reports.
+- **A replaced native control keeps the native input.** `.switch` restyles a checkbox through `appearance: none` and an `::after` knob while the `<input type="checkbox">` stays in the markup, so focus, keyboard operation, and assistive-technology behaviour are the browser's rather than reimplemented.
+
+Below 760px a row stacks and its control takes the full width. The reading order does not change: the name is still first.
+
+`tests/dashboard.test.js` asserts that every view carrying options uses these classes, that no second row primitive exists beside them, and that no component ships a private stylesheet — a scoped block cannot read the custom properties `theme.js` writes, so a deployment's accent would not reach it.
+
+All operational log surfaces use `LogViewer.vue` and the shared `.log-viewer`,
+`.log-stream`, `.log-row` and metadata classes. Log controls form a left-aligned
+`.rec-actions` row directly above output. Messages preserve whitespace, wrap
+long lines and remain selectable; one light log surface replaces separate run,
+task and schema themes. Metadata remains subordinate and stderr is distinguished
+without claiming every stderr message is a failure.
+
 ## Source Files
 
 ### `src/theme.js` and `src/style.css`
@@ -30,8 +76,8 @@ Source: `dashboard/src/theme.js`, `dashboard/src/style.css`
 
 - Responsibility: Hold every colour, chart default, and value format the dashboard uses, so a change lands everywhere at once and no view invents its own styling.
 - Inputs: None. Constants and pure display helpers.
-- Outputs: The brand constants, the reserved status colours and their tone classes, the `SERIES`, `SEQUENTIAL`, and `DIVERGING` palettes, the fixed `MODEL_COLORS` and `OUTCOME_COLORS` maps, `seriesColors()`, `layout()`, `PLOT_CONFIG`, and the `money()`, `compactMoney()`, `count()`, `percent()`, and `ratio()` formatters. `style.css` exposes the same brand values as custom properties for the markup.
-- Behavior contract: `SERIES` is a fixed order assigned by slot and **never cycled**; a ninth series folds into "Other" rather than receiving a generated hue, which under colourblind simulation would be indistinguishable from an existing slot. `MODEL_COLORS` and `OUTCOME_COLORS` bind a colour to an entity rather than to a rank, so filtering a chart never repaints the rows that survive. The status colours are reserved for reliability state, are never reused as a series colour, and are always rendered with the status word beside them. `layout()` sets a hairline grid, solid axes, and a height that includes the axis band, so a chart card never grows an inner scrollbar; every chart is titled by the heading above it, so no figure carries a title of its own. Each formatter returns `--` for a value that is not finite, so a missing number is visibly missing rather than rendered as `NaN`. The series palette is not the prototype's: that design contains no real charts, so its three brand colours could not supply one.
+- Outputs: The brand constants, the reserved status colours and their tone classes, the `SERIES`, `SEQUENTIAL`, and `DIVERGING` palettes, the fixed `MODEL_COLORS` and `OUTCOME_COLORS` maps, `seriesColors()`, `layout()`, `PLOT_CONFIG`, and the `money()`, `compactMoney()`, `count()`, `percent()`, and `ratio()` formatters. `style.css` exposes the same brand values as custom properties for the markup, and holds the option-row primitives above.
+- Behavior contract: `style.css` is the **only** stylesheet in the client — no component carries a `<style>` block, because a scoped block cannot read the custom properties `theme.js` sets and would silently keep its own colours when a deployment changes accent. There is one row primitive for options and one for toolbars, and a view uses the shared class rather than restating the shape. `SERIES` is a fixed order assigned by slot and **never cycled**; a ninth series folds into "Other" rather than receiving a generated hue, which under colourblind simulation would be indistinguishable from an existing slot. `MODEL_COLORS` and `OUTCOME_COLORS` bind a colour to an entity rather than to a rank, so filtering a chart never repaints the rows that survive. The status colours are reserved for reliability state, are never reused as a series colour, and are always rendered with the status word beside them. `layout()` sets a hairline grid, solid axes, and a height that includes the axis band, so a chart card never grows an inner scrollbar; every chart is titled by the heading above it, so no figure carries a title of its own. Each formatter returns `--` for a value that is not finite, so a missing number is visibly missing rather than rendered as `NaN`. The series palette is not the prototype's: that design contains no real charts, so its three brand colours could not supply one.
 - Dependencies: None.
 - Verification: Rendered visually. The palette is checked with the data-visualisation validator against the white chart surface; three light-mode hues fall below 3:1 contrast, which is why every chart also ships direct labels or a table view.
 

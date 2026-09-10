@@ -778,6 +778,136 @@ code {
   color: var(--muted);
 }
 
+/* ---------------------------------------------------------------------------
+   Option rows
+   ---------------------------------------------------------------------------
+
+   The two form shapes in this dashboard are deliberately different, and the
+   difference is what the controls are for.
+
+   `.field` above is the toolbar shape: a strip of compact controls that narrow
+   or parameterise the content directly below them, read left to right, each
+   with its label stacked above it. A filter strip is scanned, not filled in.
+
+   `.setting-row` below is the option shape: one thing the reader sets, named on
+   the left with the sentence that says what setting it changes, and the control
+   that changes it on the right. Every option in the dashboard uses it, so a
+   reader who has learned where the label is and where the control is on one
+   page finds both in the same place on the next. The same fields must never be
+   rendered one way here and another way there -- the PostgreSQL connection
+   fields appear on Settings and in the Data Generator export, and both are
+   option rows.
+
+   A control is never aligned to the opposite side of the one beside it. A row
+   puts its controls on the right; an action bar that is not part of a row
+   (`.rec-actions`) aligns left, everywhere, with the primary action last. */
+
+.setting-group {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #fff;
+  overflow: hidden;
+}
+
+/* One hairline between every pair of children, and none above the first. */
+.setting-group > * + * {
+  border-top: 1px solid var(--line);
+}
+
+.setting-group > header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 11px 14px;
+  background: var(--bg);
+}
+
+.setting-group > header h3,
+.setting-group > header h4 {
+  margin: 0;
+  font-size: 12.5px;
+  font-weight: 700;
+}
+
+/*
+ * Restated rather than left to `.caption`, because `.modal-body p` is the more
+ * specific selector and would otherwise win inside Settings while losing
+ * everywhere else -- the same group would read two ways in two places.
+ */
+.setting-group .caption {
+  margin: 3px 0 0;
+  color: var(--sub);
+  font-size: 11.5px;
+  line-height: 1.55;
+}
+
+.setting-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 11px 14px;
+}
+
+/* The name of the option and the helper sentence under it. */
+.setting-label {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.setting-label small {
+  display: block;
+  margin-top: 3px;
+  font-size: 11px;
+  font-weight: 400;
+  line-height: 1.5;
+  color: var(--muted);
+}
+
+.setting-control {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  width: min(300px, 46%);
+}
+
+.setting-control > select,
+.setting-control > textarea,
+.setting-control > input:not([type="checkbox"]) {
+  width: 100%;
+}
+
+.setting-control code {
+  overflow-wrap: anywhere;
+  text-align: right;
+  user-select: text;
+}
+
+/*
+ * Content a group carries that is not an option: a notice, an action bar, a
+ * command block, the sentence that qualifies the rows above it.
+ */
+.setting-block {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  padding: 11px 14px;
+}
+
+/* An action bar inside a group keeps the row direction its own rule gives it. */
+.setting-block.rec-actions {
+  flex-direction: row;
+  gap: 8px;
+}
+
 select,
 input[type="text"],
 input[type="search"],
@@ -847,8 +977,7 @@ textarea {
 }
 
 .generator-page .card-body,
-.generator-json-editor,
-.generator-export-form {
+.generator-json-editor {
   display: flex;
   flex-direction: column;
   gap: 13px;
@@ -861,16 +990,152 @@ textarea {
   tab-size: 2;
 }
 
+/* ---------------------------------------------------------------------------
+   Generator configuration editor
+   ---------------------------------------------------------------------------
+
+   The guided editor is a stack of `.setting-group` sections, so almost all of
+   its appearance comes from the option rows above and from `.btn`, `.tag`, and
+   `.notice`. What remains here is only the part that is genuinely its own: a
+   `<details>` used as a group, and the two shapes that are read as a unit
+   rather than as separate options -- the seven weekdays and the ordered
+   reference list. */
+
+.generator-editor,
+.generator-guided {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/*
+ * A `<details>` that is a `.setting-group`. The summary is the group header, so
+ * it takes that padding and background, and the disclosure triangle is what
+ * says the rows below can be folded away.
+ */
+.generator-section > summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 11px 14px;
+  background: var(--bg);
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+/*
+ * The hairline under an open summary is the one `.setting-group` already draws
+ * above the body, so it is not restated here. A card carries its own border, so
+ * it is separated from what surrounds it by space rather than by a hairline
+ * that would sit directly on the border it already has.
+ */
+.generator-section-body > *:not(.generator-card) + *:not(.generator-card) {
+  border-top: 1px solid var(--line);
+}
+
+.generator-card {
+  margin: 11px 14px;
+}
+
+.generator-card > header h4 {
+  margin: 0;
+}
+
+.generator-fieldset {
+  border: none;
+  margin: 0;
+}
+
+.generator-fieldset legend {
+  padding: 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+/*
+ * Seven days read across as one week-shaped curve, so they stay a compact row
+ * with the day above its number -- the one place in the editor where a label
+ * sits above its control, because the label is a two-letter axis tick.
+ */
+.generator-week {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.generator-week label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--muted);
+}
+
+.generator-week input {
+  padding: 6px 5px;
+}
+
+.generator-references {
+  display: grid;
+  gap: 7px;
+  margin: 9px 0 0;
+  padding-left: 20px;
+  font-size: 12px;
+}
+
+/*
+ * A referenced touchpoint and the buttons that reorder it. The buttons follow
+ * the name rather than sitting against the far edge, so a short identifier does
+ * not leave its own controls stranded across the row from it.
+ */
+.generator-references li {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.generator-reference-add select {
+  width: min(300px, 100%);
+}
+
+/*
+ * The issue list is content inside a group rather than an option, so it takes
+ * the group's own padding. `.setting-block` is not used on it: that rule makes
+ * a column flex container, which would drop the list markers.
+ */
+.generator-issues {
+  margin: 0;
+  padding: 11px 14px 11px 32px;
+  font-size: 11.5px;
+  color: var(--red);
+}
+
+.generator-issue-link {
+  color: var(--red);
+  text-align: left;
+}
+
+.generator-issue-link code {
+  margin-right: 5px;
+}
+
+@media (max-width: 760px) {
+  .generator-week {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
 .generator-page .table-wrap {
   max-height: 520px;
 }
 
 .schema-select-backdrop {
   z-index: 90;
-}
-
-.settings-reload {
-  justify-content: flex-end;
 }
 
 select {
@@ -896,29 +1161,65 @@ input[type="range"] {
   accent-color: var(--blue);
 }
 
+/*
+ * A boolean option. It is a `.setting-row` that happens to be a `<label>`, so
+ * the whole row is the hit target while the name still reads on the left and
+ * the control still sits on the right, exactly as a select or a text field
+ * does one row above it.
+ *
+ * The switch replaces the native checkbox because a checkbox is 15px of ink
+ * against a sentence of helper text, and at the right edge of a wide row that
+ * is the one control a reader has to hunt for. It keeps the native input --
+ * only its rendering is replaced -- so it stays focusable, keyboard-operable,
+ * and announced as a checkbox.
+ */
 .toggle {
-  display: flex;
-  align-items: flex-start;
-  gap: 9px;
   cursor: pointer;
-  font-size: 12px;
-  font-weight: 600;
 }
 
-.toggle input {
-  margin-top: 2px;
-  accent-color: var(--blue);
-  width: 15px;
-  height: 15px;
+.switch {
+  appearance: none;
+  -webkit-appearance: none;
+  flex: none;
+  width: 38px;
+  height: 22px;
+  margin: 0;
+  border: 1px solid var(--line2);
+  border-radius: 999px;
+  background: var(--gray);
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
 }
 
-.toggle small {
+.switch::after {
+  content: "";
   display: block;
-  font-weight: 400;
-  color: var(--muted);
-  font-size: 11px;
-  line-height: 1.5;
-  margin-top: 3px;
+  width: 16px;
+  height: 16px;
+  margin: 2px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 2px #0b142a3d;
+  transition: transform 0.15s ease;
+}
+
+.switch:checked {
+  background: var(--blue);
+  border-color: var(--blue);
+}
+
+.switch:checked::after {
+  transform: translateX(16px);
+}
+
+.switch:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.switch:focus-visible {
+  outline: 2px solid var(--blue2);
+  outline-offset: 2px;
 }
 
 .tabs {
@@ -1155,14 +1456,12 @@ tbody tr.selected:hover {
 }
 
 .row-actions-head {
-  text-align: right;
   width: 1%;
 }
 
 .row-actions {
   display: flex;
   gap: 6px;
-  justify-content: flex-end;
   white-space: nowrap;
 }
 
@@ -1244,31 +1543,9 @@ tbody tr.selected:hover {
   gap: 14px;
 }
 
-.willow-section-head {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 12px;
-}
-
-.willow-section-head h3,
+.willow-inputs .setting-group > header h3,
 .willow-prediction h3 {
   margin: 0 0 2px;
-}
-
-.willow-field-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px 14px;
-}
-
-.willow-field-grid .field {
-  margin: 0;
-}
-
-.structure-head {
-  padding-top: 4px;
-  border-top: 1px solid var(--line);
 }
 
 .willow-prediction {
@@ -1397,26 +1674,6 @@ tbody tr.selected:hover {
   color: var(--text);
 }
 
-.deployment-identity {
-  display: grid;
-  gap: 9px;
-  padding: 11px 13px;
-  border: 1px solid var(--line);
-  border-radius: 9px;
-  background: var(--bg);
-}
-
-.identity-head {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 12px;
-}
-
-.identity-head h3 {
-  margin: 0 0 2px;
-}
-
 .identity-status {
   flex: none;
   border-radius: 999px;
@@ -1445,31 +1702,6 @@ tbody tr.selected:hover {
   background: var(--line);
 }
 
-.identity-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 7px 16px;
-}
-
-.identity-grid > div {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 10px;
-  min-width: 0;
-}
-
-.identity-grid span {
-  color: var(--muted);
-  font-size: 11px;
-}
-
-.identity-grid code {
-  overflow-wrap: anywhere;
-  text-align: right;
-  user-select: text;
-}
-
 .modal-body pre {
   margin: 0;
   background: var(--navy);
@@ -1492,25 +1724,14 @@ tbody tr.selected:hover {
   margin-bottom: 2px;
 }
 
+/*
+ * A `.setting-group` that scrolls, because a section can carry more fields than
+ * the dialog is tall. The group's own `overflow: hidden` is what keeps the
+ * scrolled rows inside the rounded border.
+ */
 .master-object-form {
-  display: grid;
-  gap: 11px;
   max-height: 52vh;
   overflow-y: auto;
-  padding-right: 2px;
-}
-
-.form-row {
-  display: grid;
-  grid-template-columns: minmax(150px, 210px) 1fr;
-  align-items: center;
-  gap: 12px;
-}
-
-.form-row label {
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--text);
 }
 
 .required-mark {
@@ -1518,10 +1739,13 @@ tbody tr.selected:hover {
   margin-left: 2px;
 }
 
+/* Chips wrap under their input, so this control is a column inside its cell. */
 .form-multiselect {
   display: flex;
   flex-direction: column;
+  align-items: stretch;
   gap: 7px;
+  width: 100%;
 }
 
 .chip-list {
@@ -1552,37 +1776,22 @@ tbody tr.selected:hover {
   padding: 0;
 }
 
-.source-banner {
-  border: 1px solid var(--line);
-  border-radius: 9px;
-  padding: 10px 13px;
-  background: var(--bg);
+.log-viewer {
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: column;
   gap: 8px;
-  align-items: baseline;
+  min-width: 0;
 }
 
-.source-banner b {
-  font-size: 12.5px;
+.log-viewer .schema-command {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
 }
 
-.source-banner span {
-  color: var(--muted);
-  font-size: 11.5px;
-}
-
-.form-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 11px;
-}
-
-.form-grid .span-2 {
-  grid-column: span 2;
-}
+.log-viewer .copy-failed { color: var(--red); }
 
 .log-stream {
+  background: #fbfcfe;
   max-height: 320px;
   overflow: auto;
   border: 1px solid var(--line);
@@ -1594,6 +1803,7 @@ tbody tr.selected:hover {
 
 .log-row {
   display: flex;
+  flex-wrap: wrap;
   gap: 8px;
   padding: 3px 0;
   border-bottom: 1px solid #f1f3f7;
@@ -1638,7 +1848,10 @@ tbody tr.selected:hover {
 
 .log-message {
   color: var(--text);
-  word-break: break-word;
+  flex: 1 1 220px;
+  min-width: 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
 }
 
 .schema-operation {
@@ -1665,12 +1878,6 @@ tbody tr.selected:hover {
 .schema-operation .schema-command {
   white-space: pre-wrap;
   overflow-wrap: anywhere;
-}
-
-.schema-log .log-when {
-  max-width: 185px;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 .doctor-steps {
@@ -1808,16 +2015,6 @@ tbody tr.selected:hover {
   font-size: 10.5px;
 }
 
-.task-log {
-  max-height: 330px;
-  background: #0d1830;
-  color: #dbe6ff;
-}
-
-.task-log .log-row { border-color: rgba(255, 255, 255, 0.08); }
-.task-log .log-when,
-.task-log .log-source { color: #91a8cc; }
-
 /* The remedies under the error card. Left-aligned inside `.empty-card`, which
    centres its text: a list of choices is read as a list, not as a caption. */
 .schema-recovery {
@@ -1830,47 +2027,12 @@ tbody tr.selected:hover {
   width: 100%;
 }
 
-.recovery-group h3 {
-  margin: 0 0 7px;
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--muted);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
-
-.recovery-option {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  padding: 10px 12px;
-}
-
-.recovery-option + .recovery-option {
-  margin-top: 7px;
-}
-
-.recovery-text {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-  min-width: 0;
-}
-
-.recovery-text b {
+/* The one thing a recovery row adds to the shared option row: the schema name
+   is an identifier the reader will type or compare, so it is set in the same
+   monospace the tables and code spans use for one. */
+.recovery-schema {
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: 12px;
-  color: var(--text);
-}
-
-@media (max-width: 700px) {
-  .recovery-option {
-    flex-direction: column;
-    align-items: stretch;
-  }
 }
 
 /* ---------------------------------------------------------------------------
@@ -1963,20 +2125,13 @@ tbody tr.selected:hover {
   font-variant-numeric: tabular-nums;
 }
 
-.run-log {
-  max-height: 340px;
-  /* A terminal's own reading order: the newest line is at the bottom, and the
-     stream scrolls up as it grows. */
-  background: #fbfcfe;
-}
-
 /* stderr is not necessarily failure -- many tools log progress there -- so it
    is distinguished rather than coloured as an error. */
-.run-log .log-stderr .log-message {
+.log-stream .log-stderr .log-message {
   color: var(--amber);
 }
 
-.run-log .log-meta .log-message {
+.log-stream .log-meta .log-message {
   color: var(--muted);
   font-style: italic;
 }
@@ -2272,25 +2427,28 @@ tbody tr.selected:hover {
     padding: 15px;
   }
 
-  .form-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .form-grid .span-2 {
-    grid-column: span 1;
-  }
-
-  .identity-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .willow-forecast-body,
-  .willow-field-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .willow-section-head {
+  /*
+   * A narrow viewport cannot hold a name and its control side by side without
+   * squeezing both, so the row stacks and the control takes the full width.
+   * The reading order is unchanged: the name is still first.
+   */
+  .setting-row {
     flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  .setting-control {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .setting-control code {
+    text-align: left;
+  }
+
+  .willow-forecast-body {
+    grid-template-columns: 1fr;
   }
 }
 

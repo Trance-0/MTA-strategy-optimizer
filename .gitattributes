@@ -23,3 +23,14 @@
 
 # Canonical cross-repository fixture bytes are checksum-pinned release inputs.
 dashboard/fixtures/ontology_review/canonical_r5_v3/*.json -text
+
+# Submodule content belongs to the submodule, so this repository must not
+# renormalize its bytes. The Gitea mirror materializes each pinned submodule
+# with `git read-tree`, which copies blobs by object identifier and applies no
+# filter, so a submodule blob committed with CRLF enters the snapshot as CRLF.
+# The rules above would then convert the same file to LF on checkout, which
+# made `git diff --exit-code HEAD` report the whole tree as modified and failed
+# the mirror. It would also break the SHA-256 values recorded in the
+# generator's own `dataset_manifest.json`, since those digests are over the
+# submodule's bytes. Leave every path under `external/` unconverted.
+external/** -text

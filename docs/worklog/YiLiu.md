@@ -10,6 +10,7 @@ lang: en-US
 
 > Project: Marketing ROI Analysis
 > Handle: `Willow-sakura`
+> Git author: `Willow-sakura <2934356936@qq.com>`
 > Role: Evaluation module, with [Tianle Chen](./TianleChen.md)
 
 ## Scope

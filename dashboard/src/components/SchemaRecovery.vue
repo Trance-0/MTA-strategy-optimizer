@@ -15,6 +15,7 @@
  * Data flow:
  *     GET /api/schema-recovery -> here -> schema-selection or schema-operations
  */
+import LogViewer from "./LogViewer.vue";
 import { computed, onMounted, onUnmounted, ref } from "vue";
 
 import {
@@ -126,27 +127,40 @@ async function choose(option) {
         </template>
       </p>
 
-      <div v-for="group in grouped" :key="group.action" class="recovery-group">
-        <h3>{{ group.heading }}</h3>
+      <!--
+        The same option row the rest of the dashboard uses: the schema and what
+        choosing it does on the left, the button that does it on the right.
+      -->
+      <section
+        v-for="group in grouped"
+        :key="group.action"
+        class="setting-group"
+        :aria-label="group.heading"
+      >
+        <header>
+          <h3>{{ group.heading }}</h3>
+        </header>
         <div
           v-for="item in group.items"
           :key="`${item.action}-${item.schema}`"
-          class="recovery-option"
+          class="setting-row"
         >
-          <div class="recovery-text">
-            <b>{{ item.schema }}</b>
-            <span class="caption">{{ item.summary }}</span>
-          </div>
-          <button
-            class="btn"
-            :class="{ primary: group.action === 'select' }"
-            :disabled="busy || running"
-            @click="choose(item)"
-          >
-            {{ item.label }}
-          </button>
+          <span class="setting-label">
+            <b class="recovery-schema">{{ item.schema }}</b>
+            <small>{{ item.summary }}</small>
+          </span>
+          <span class="setting-control">
+            <button
+              class="btn"
+              :class="{ primary: group.action === 'select' }"
+              :disabled="busy || running"
+              @click="choose(item)"
+            >
+              {{ item.label }}
+            </button>
+          </span>
         </div>
-      </div>
+      </section>
 
       <p v-if="failure" class="notice bad">{{ failure }}</p>
 
@@ -163,16 +177,14 @@ async function choose(option) {
           </template>
         </p>
         <p v-if="operation.error" class="notice bad">{{ operation.error }}</p>
-        <div class="log-stream schema-log">
-          <div
-            v-for="(line, index) in operation.lines"
-            :key="`${line.at}-${index}`"
-            class="log-row"
-          >
-            <span class="log-when">{{ line.at }}</span>
-            <span class="log-message">{{ line.text }}</span>
-          </div>
-        </div>
+        <LogViewer
+          :key="operation.id"
+          :records="operation.lines ?? []"
+          :context="[operation.action + ' ' + operation.schema + ' — ' + operation.state, 'Exit ' + (operation.exitCode ?? 'pending')]"
+          :command="operation.command ?? ''"
+          :dropped-lines="operation.droppedLines ?? 0"
+          :running="running"
+        />
       </section>
     </template>
   </section>

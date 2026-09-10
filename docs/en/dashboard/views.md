@@ -91,10 +91,16 @@ Four snapshot-backed operational references and the separately sourced canonical
 Source: `dashboard/src/components/WillowGmvForecast.vue`
 
 `WillowGmvForecast.vue` renders the contributed forecast inside the evaluation
-tab using the dashboard's cards, fields, and metric treatments. It contains no
-`iframe`, `srcdoc`, global event handler, or copied navigation shell. Every
+tab using the dashboard's cards, option rows, and metric treatments. It contains
+no `iframe`, `srcdoc`, global event handler, or copied navigation shell. Every
 control has a stable label and every output updates through Vue state while
 remaining independent from the production strategy artifacts.
+
+Its inputs are model values a reader sets rather than filters over a table, so
+they are option rows as specified in
+[Visual Contract](/en/dashboard/views/visual-contract#option-rows) and **Run
+prediction** sits in a left-aligned action bar below the rows it applies to,
+not opposite the heading above them.
 
 ### `src/lib/willowGmvModel.js`
 

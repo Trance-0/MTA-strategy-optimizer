@@ -2,6 +2,8 @@
 /** Build-style inspector for queued and completed backend operator tasks. */
 import { computed, onUnmounted, ref, watch } from "vue";
 
+import LogViewer from "./LogViewer.vue";
+
 import { fetchTasks, stopTask } from "../api/client.js";
 
 const props = defineProps({
@@ -70,40 +72,16 @@ function summary(task) {
     .join(" · ");
 }
 
-async function copyTask() {
-  if (!selected.value) return;
+const logContext = computed(() => {
   const task = selected.value;
-  const content = [
-    `${task.label} — ${task.state}`,
-    `Task ${task.id}`,
-    `Created ${task.createdAt}`,
-    `Started ${task.startedAt ?? "not started"}`,
-    `Finished ${task.finishedAt ?? "not finished"}`,
+  if (!task) return [];
+  return [
+    `${task.label} — ${task.state}`, `Task ${task.id}`,
+    `Created ${task.createdAt}`, `Started ${task.startedAt ?? "not started"}`,
+    `Finished ${task.finishedAt ?? "not finished"}`, `Exit ${task.exitCode ?? "pending"}`,
     summary(task),
-    task.command ? `$ ${task.command}` : "",
-    ...(task.lines ?? []).map(
-      (line) => `${line.at} ${line.level ?? "INFO"} ${line.stream} ${line.text}`,
-    ),
-  ].filter(Boolean).join("\n");
-  try {
-    if (navigator.clipboard?.writeText) {
-      await navigator.clipboard.writeText(content);
-    } else {
-      const field = document.createElement("textarea");
-      field.value = content;
-      field.setAttribute("readonly", "");
-      field.style.position = "fixed";
-      field.style.opacity = "0";
-      document.body.appendChild(field);
-      field.select();
-      if (!document.execCommand("copy")) throw new Error("Browser copy was refused.");
-      field.remove();
-    }
-    message.value = "Task log copied.";
-  } catch (error) {
-    message.value = `Could not copy task log: ${error.message}`;
-  }
-}
+  ];
+});
 
 async function requestStop() {
   if (!selected.value) return;
@@ -166,7 +144,6 @@ async function requestStop() {
             <p class="caption">{{ selected.id }} · {{ selected.phase }}</p>
           </div>
           <div class="rec-actions">
-            <button class="btn small" @click="copyTask">Copy log</button>
             <button
               v-if="canStop"
               class="btn small danger"
@@ -188,21 +165,14 @@ async function requestStop() {
           <div class="load-progress-fill" :style="{ width: `${selected.percent ?? 0}%` }"></div>
         </div>
         <p v-if="selected.error" class="notice bad">{{ selected.error }}</p>
-        <p v-if="selected.droppedLines" class="caption">
-          {{ selected.droppedLines }} earlier log line(s) dropped.
-        </p>
-        <pre v-if="selected.command" class="schema-command"><code>{{ selected.command }}</code></pre>
-        <div class="log-stream task-log" aria-live="polite">
-          <div
-            v-for="(line, index) in selected.lines"
-            :key="`${line.at}-${index}`"
-            class="log-row"
-          >
-            <span class="log-when">{{ line.at }}</span>
-            <span class="log-source">{{ line.level ?? line.stream }}</span>
-            <span class="log-message">{{ line.text }}</span>
-          </div>
-        </div>
+        <LogViewer
+          :key="selected.id"
+          :records="selected.lines ?? []"
+          :context="logContext"
+          :command="selected.command ?? ''"
+          :dropped-lines="selected.droppedLines ?? 0"
+          :running="['queued', 'running', 'stopping'].includes(selected.state)"
+        />
       </article>
     </div>
   </section>

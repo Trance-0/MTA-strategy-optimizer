@@ -63,6 +63,16 @@ error state. It exposes the complete configuration contract used by the
 reviewed baseline and regional toy presets. Keyboard users can expand every
 section and operate every list command without dragging.
 
+Each section is an option group and each field is an option row, as specified in
+[Visual Contract](/en/dashboard/views/visual-contract#option-rows): the field
+name and the sentence saying what it changes in the generated data on the left,
+the input on the right. Two shapes are read as a unit rather than as separate
+options and keep their own layout — the seven weekly traffic multipliers, which
+are scanned across as a week-shaped curve, and the ordered touchpoint reference
+list, whose order is itself the value. The generator variant and reviewed preset
+above the editor are option rows for the same reason: they decide what is
+generated rather than filtering what is shown.
+
 Every field-level issue displays its JSON Pointer. Activating an issue opens
 the owning accordion and focuses the exact input or ordered reference when that
 control exists; the control also exposes `aria-invalid` and its error

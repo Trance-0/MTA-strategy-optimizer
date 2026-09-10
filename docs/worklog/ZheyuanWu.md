@@ -1,7 +1,7 @@
 ---
 title: Zheyuan Wu (Trance-0)
-description: Project manager work log covering pipeline development, integration, and algorithm testing
-compact: "Zheyuan Wu's project-management work log: simulator integration, Data Generator configuration and preflight, attribution and strategy pipelines, backend tasks, PostgreSQL setup, routed Vue delivery, history performance, specification retrieval, scoped verification, GitHub Pages, and deployment automation."
+description: Project manager work log covering the pipeline, dashboard, deployment, and documentation set
+compact: "Zheyuan Wu's project-management work log: MTA-SIM integration, the mta_common canonical data model, the DNN attribution model, the Vue dashboard and Flask backend, PostgreSQL schemas, container and Yunxiao deployment, the GitHub/Gitea mirrors, GitHub Pages, and the documentation set with its repository rules."
 order: 10
 lang: en-US
 ---
@@ -10,12 +10,44 @@ lang: en-US
 
 > Project: Marketing ROI Analysis
 > Handle: `Trance-0`
-> Role: Project manager — pipeline development, data simulation and integration, algorithm testing
-> Last updated: 2026-09-07
+> Git author: `Zheyuan Wu <60459821+Trance-0@users.noreply.github.com>`
+> Role: Project manager — pipeline, dashboard, deployment, and the documentation set
+> Active period: Since 2026-08-03; development ownership handed over from [Jiahao Yao](./JiahaoYao.md) on 2026-08-08
+> Last updated: 2026-09-09
 
 Entries are reconstructed from Git history. They record the change set behind each commit, not a separate narrative.
 
+## Scope
+
+Took over development ownership on 2026-08-08 and has authored the majority of the repository since. The areas below are where the work has actually landed, not a division of labor planned in advance.
+
+- **Pipeline and canonical data model.** Integrated the pinned Multi-Touch Attribution Simulator (MTA-SIM) generator as the `external/mta_sim_dataset` submodule, and built the `modules/mta_common` canonical data model that the attribution, recommendation, and evaluation stages share. Owns framework-only loading and adaptation in `modules/mta_standard/`.
+- **Attribution and strategy.** Wrote the Deep Neural Network (DNN) attribution model in `modules/mta_attribution/src/dnn_attribution_model.py` and separated the concrete models from the shared interface. Reviews the strategy model in `modules/mta_strategy_recommendation/` inherited from the previous developer, and built the evaluation module's project-owned structure in `modules/mta_strategy_evaluation/` around the contributed models.
+- **Dashboard and backend.** Replaced the original Streamlit application with the routed Vue client in `dashboard/src/`, and owns the Flask backend in `backend/`: its API, repositories, queued task service, and the PostgreSQL schema derivation and import.
+- **Deployment and mirrors.** Owns the container images under `deploy/`, the Yunxiao host pipeline, the GitHub Actions workflows, the GitHub Pages publication, and the one-way Gitea and Gitee mirrors.
+- **Documentation and repository rules.** Maintains the English documentation set under `docs/en/` as the project's ground truth, the version log, and the repository instructions in `AGENTS.md` — including the specification-oriented workflow, the abbreviation, table, and file-length rules, and the work-log scheme itself.
+
+Areas owned by others are recorded on their own pages: the [Data Generator configuration workflow](./ChenghaoJin.md), the [SQL database](./TianleChen.md), the [evaluation models](./YiLiu.md), and the [knowledge base and research](./YayuYu.md).
+
 ---
+
+## 2026-09-09
+
+### Completed
+
+- Reconciled origin/main’s dataset workbench with local dashboard layouts, attribution and deployment fixes, and shared logs; preserved pending contributor-history changes and resolved the release collision in 0.9.51. Verified 176 dashboard, 190 backend and 100 strategy-evaluation tests plus production and documentation builds.
+
+- Fixed simulator attribution date boundaries with provenance checks, preserved database identity on Settings refresh, and unified five log surfaces with copy and clipboard fallback. Verified 154 backend tests, 147 isolated dashboard tests, and production/documentation builds.
+
+- Fixed the failing Gitea mirror across 0.9.52 to 0.9.54. Excluding `external/` from this repository's end-of-line rules cleared the validation gate, since the snapshot's `read-tree` import copies submodule blobs unfiltered and two CRLF files were rewritten on checkout. The job then reached publication for the first time and hit a 502 from the reverse proxy in front of Gitea, so the atomic push and its reference comparison now retry a transport fault five times while still failing immediately on any refusal. Restricted the mirror to the default branch and its `master` alias after finding it published all twelve GitHub branches, including other people's feature branches, to the deployment remote; the pruning push now deletes them. Verified with an unfixed control that still fails, 17 retry behavior checks, and a destination that goes from seven references to two.
+
+## 2026-09-08
+
+### Completed
+
+- Replaced this page's one-line role description with a `## Scope` section derived from the 79 commits authored under this identity since 2026-08-03, and corrected the `compact` and `description` that credited Chenghao Jin's Data Generator work here.
+- Recorded each contributor's Git author identity as `Name <email>` from `git log` on all six work-log pages and in the roster, gave Chenghao Jin's page the `Name (handle)` title and active-period line, and wrote both as work-log conventions.
+- Unified every dashboard option onto one labelled row with a helper sentence, converting the Data Generator, master editor, generator configuration and Willow forecast off their private grids, deleting the duplicate row primitives and the last component stylesheet, moving opposed action buttons to one side, and recording the layout rule in `AGENTS.md` with two enforcing tests; 146 dashboard tests and the production build pass.
 
 ## 2026-09-07
 

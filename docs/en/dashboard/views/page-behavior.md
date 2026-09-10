@@ -1,6 +1,6 @@
 ---
 title: Page Behavior
-compact: "Source-aware Campaign rankings, bounded distributions, filter-preserving detail and exports; unavailable model evidence, currency and response scope; executable plans, formal evaluation and retained run history."
+compact: "Source-aware Campaign rankings, distributions, filtered exports, model evidence, executable plans, formal evaluation and retained run history; shared LogViewer and bounded history windows."
 source_files: dashboard/src/views/CommandCenter.vue, dashboard/src/views/BudgetManager.vue, dashboard/src/views/Campaigns.vue, dashboard/src/views/CampaignOptimizer.vue, dashboard/src/views/OptimizationLog.vue
 ---
 
@@ -198,6 +198,10 @@ server, so the offered controls and the accepted arguments cannot diverge
 silently.
 
 #### `OptimizationLog.vue`
+
+Model history uses `LogViewer.vue` for the same timestamps, copy control,
+command context and truncation notice as StageRunner. Copy includes the stage
+label, state, timestamps, exit code and retained output, including failed runs.
 
 Run identifiers, the report window, the input digests, the pipeline stage trail, the optimized Campaign budget plan, and the per-touchpoint reliability flags, plus one log tab per model beside them.
 

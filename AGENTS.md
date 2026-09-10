@@ -24,6 +24,17 @@
 - Comment the reasoning a command cannot state on its own: why a check must run before a destructive step, why a path is excluded, why a variable is unset after use, why a version is pinned. Do not restate what the command already says.
 - Keep the file-level docstring or header comment required below, and let the inline comments carry the stage-by-stage detail underneath it.
 
+## Dashboard interface layout
+
+- **An option is one row: its name on the left, the control that changes it on the right.** This holds for every control type — a select, a text field, a toggle, a button that performs the option's action, or a read-only value. Never stack a label above its control in an option row, and never put the control first. A reader who has learned where the name is and where the control is on one page must find both in the same place on every other page.
+- Use the shared primitives in `dashboard/src/style.css` rather than a per-view layout: `.setting-group` for a titled section, `.setting-row` for one option inside it, `.setting-label` for the name, `.setting-control` for the control, and `.setting-block` for content in a group that is not an option. A boolean option is a `.setting-row` that is also a `.toggle`, with an `input.switch` in its control.
+- **Give each option a helper sentence under its name**, in the `<small>` inside `.setting-label`, stating what the setting changes and what the alternative value does. Hold it back only for a trivial option — one whose label already says everything, such as a standard connection parameter or a filter naming the column it filters. A sentence under every row buries the rows that carry a real consequence.
+- **Never align one control or button row to the opposite side of another.** A `.setting-row` puts its control on the right; a standalone action bar (`.rec-actions`) aligns left, everywhere, with the primary action last. Do not add a rule that flips one instance of either.
+- `.field` remains the separate toolbar shape: a strip of compact controls that narrow the content directly below them, each labelled above it, inside `.filter-row`. It is for filters and view parameters, never for settings. Do not render the same field as a stacked `.field` in one view and a `.setting-row` in another — the PostgreSQL connection parameters appear on Settings and in the Data Generator export, and both are option rows.
+- Never use an empty or `&nbsp;` `<label>` as a spacer to align a button with the fields beside it. A `<label>` wrapping no control is a defect a screen reader reports; use an action bar instead.
+- Replacing a native control's appearance is allowed only where the native input remains in the markup and keeps its focus, keyboard, and accessibility behavior, as `.switch` does for a checkbox.
+- Changing a shared primitive changes every view that uses it. Grep the class across `dashboard/src/` before editing it, and update the views that no longer conform in the same change set.
+
 ## Documentation frontmatter
 
 - Every markdown file under `docs/en/`, `docs/version/`, and `docs/worklog/` must carry a `compact` frontmatter field.

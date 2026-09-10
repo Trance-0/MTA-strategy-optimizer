@@ -7,7 +7,9 @@ server reports unavailable stages before a disabled run is attempted.
 
 from __future__ import annotations
 
+import copy
 import csv
+from datetime import date, timedelta
 import json
 import sys
 import tempfile
@@ -240,6 +242,72 @@ class JobServiceTests(unittest.TestCase):
 
         self.assertEqual(parsed[0]["interaction_type"], "CLICK")
         self.assertEqual(parsed[0]["cost_type"], "CPC")
+
+    def test_database_attribution_normalizes_only_proven_simulator_boundary(self) -> None:
+        """Exercise prepared CSVs through the real attribution entry point."""
+        from modules.mta_attribution.src.run_attribution_models import run_attribution_models
+
+        key = "SPONSORED_PRODUCTS:PRODUCT_AD:TOP_OF_SEARCH:IMAGE:CLICK"
+        for start, end in [("2025-01-01", "2025-12-31"), ("2024-02-29", "2024-02-29")]:
+            with self.subTest(start=start):
+                first, last = date.fromisoformat(start), date.fromisoformat(end)
+                boundary = (last + timedelta(days=1)).isoformat()
+                dataset = {"id": "scope", "reportStartDate": start, "reportEndDate": boundary,
+                           "marketplace": "US", "advertiserId": "synthetic_kfc_us_experiment"}
+                paths = [{"report_start_date": first, "report_end_date": date.fromisoformat(boundary),
+                          "marketplace": "US", "advertiser_id": dataset["advertiserId"], "path": key,
+                          "users": 10, "converted_users": 5, "purchase_count": 5, "revenue": 100}]
+                performance = [{"reportDate": first + timedelta(days=offset), "marketplace": "US",
+                                "accountId": dataset["advertiserId"], "adProduct": "SPONSORED_PRODUCTS",
+                                "adType": "PRODUCT_AD", "creativeType": "IMAGE", "inventoryType": "",
+                                "placement": "TOP_OF_SEARCH", "interaction_type": "CLICK", "cost_type": "CPC",
+                                "normalizedTouchpoint": key, "currencyCode": "USD", "impressions": 0,
+                                "clicks": 10, "cost": 2, "purchases": 5, "sales": 100}
+                               for offset in range((last - first).days + 1)]
+                run = {"run_id": "run-1", "effective_configuration": {
+                    "advertiser_id": dataset["advertiserId"], "report_start_date": start, "report_end_date": end}}
+                original = copy.deepcopy(paths)
+                with tempfile.TemporaryDirectory() as directory:
+                    target = Path(directory)
+                    path_file, ads_file = target / "paths.csv", target / "ads.csv"
+                    with patch.object(model_datasets, "sql", side_effect=[paths, performance, [run]]), patch.object(model_datasets, "table_exists", return_value=True):
+                        model_datasets._write_attribution_inputs(dataset, path_file, ads_file)
+                    with path_file.open(encoding="utf-8") as handle:
+                        prepared = list(csv.DictReader(handle))
+                    self.assertEqual(prepared[0]["report_end_date"], end)
+                    self.assertEqual(paths, original, "source records must not be rewritten")
+                    outputs = run_attribution_models(path_file, target / "outputs", ads_file)
+                    self.assertEqual(len(outputs), 5)
+                    self.assertTrue(all(Path(value).is_file() for value in outputs))
+
+                    # A known next-day difference without matching provenance is
+                    # still an error, not permission to discard a missing day.
+                    invalid_cases = [
+                        (paths, performance, [], "report date mismatch"),
+                        (paths, performance, [run, run], "report date mismatch"),
+                        (paths, performance, [{**run, "effective_configuration": {**run["effective_configuration"], "report_end_date": boundary}}], "report date mismatch"),
+                        (paths, performance + [performance[0]], [run], "duplicate"),
+                    ]
+                    if len(performance) > 2:
+                        invalid_cases.extend([
+                            (paths, performance[:-1], [run], "report date mismatch"),
+                            (paths, performance[:1] + performance[2:], [run], "continuous"),
+                            (paths, performance[1:], [run], "report date mismatch"),
+                        ])
+                    for bad_paths, bad_ads, runs, reason in invalid_cases:
+                        before = (path_file.read_bytes(), ads_file.read_bytes())
+                        with patch.object(model_datasets, "sql", side_effect=[bad_paths, bad_ads, runs]), patch.object(model_datasets, "table_exists", return_value=True):
+                            with self.assertRaisesRegex(ValueError, reason):
+                                model_datasets._write_attribution_inputs(dataset, path_file, ads_file)
+                        self.assertEqual((path_file.read_bytes(), ads_file.read_bytes()), before)
+
+                    # Inclusive datasets retain their exact bounds without needing
+                    # simulator metadata, including a single leap day.
+                    inclusive = {**dataset, "reportEndDate": end}
+                    inclusive_paths = [{**paths[0], "report_end_date": last}]
+                    with patch.object(model_datasets, "sql", side_effect=[inclusive_paths, performance]), patch.object(model_datasets, "table_exists") as tables:
+                        model_datasets._write_attribution_inputs(inclusive, path_file, ads_file)
+                        tables.assert_not_called()
 
     def test_research_materialization_excludes_evaluation_only_outcomes(self) -> None:
         statements = []

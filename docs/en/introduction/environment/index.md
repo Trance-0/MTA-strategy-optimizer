@@ -1,7 +1,7 @@
 ---
 title: Environment Setup
 description: Local execution, documentation development, and directory responsibilities
-compact: "Python module and Node package commands; documentation build modules in docs/.vitepress; inline GitHub-to-Gitea materialized main publication; deploy/yunxiao host command and operator settings, plus the separate AppStack deployment."
+compact: "Python module and Node package commands; documentation build modules in docs/.vitepress; inline GitHub-to-Gitea materialized main publication; deploy/yunxiao/pipeline.yaml with inline commands and operator settings, plus the separate AppStack deployment."
 lang: en-US
 ---
 

@@ -18,8 +18,10 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import test from "node:test";
+import { createRenderer, h, nextTick, shallowRef } from "vue";
+import { compileScript, parse } from "@vue/compiler-sfc";
 
-const { PAGES, PAGE_KEYS, DEFAULT_PAGE, DASHBOARD_RESOURCES } = await import(
+const { PAGES, PAGE_KEYS, DEFAULT_PAGE, DASHBOARD_RESOURCES, routeResources } = await import(
   "../src/pages.js"
 );
 const { TERM_HELP: TERM_REGISTRY } = await import("../src/lib/terms.js");
@@ -120,6 +122,14 @@ const STAGE_RUNNER = readFileSync(
 );
 const WILLOW_FORECAST = readFileSync(
   resolve(HERE, "..", "src", "components", "WillowGmvForecast.vue"),
+  "utf8",
+);
+const MASTER_OBJECT_FORM = readFileSync(
+  resolve(HERE, "..", "src", "components", "MasterObjectForm.vue"),
+  "utf8",
+);
+const GENERATOR_CONFIG_EDITOR = readFileSync(
+  resolve(HERE, "..", "src", "components", "GeneratorConfigEditor.vue"),
   "utf8",
 );
 const RUN_PIPELINE_PY = readFileSync(
@@ -290,6 +300,89 @@ test("Budget Manager exposes progressive canonical entity sections", () => {
 // `useDashboard.js`, and that module reads `import.meta.env`, which exists only
 // under Vite. `theme.js` imports nothing, so it loads in the Node runner.
 const { DEPLOYMENT_THEMES: THEMES } = await import("../src/theme.js");
+
+/** Load the real deployment logic with a reactive, initially empty data store. */
+async function loadDeploymentModule(staticBuild = false) {
+  const moduleUrl = (source) => `data:text/javascript;base64,${Buffer.from(source).toString("base64")}`;
+  const storeUrl = moduleUrl(`
+    import { shallowRef } from ${JSON.stringify(import.meta.resolve("vue"))};
+    export const data = shallowRef({ mode: "" });
+    export function useDashboard() { return { data }; }
+  `);
+  const { data } = await import(storeUrl);
+  data.value = { mode: "" };
+  const source = DEPLOYMENT
+    .replace('"vue"', JSON.stringify(import.meta.resolve("vue")))
+    .replace('"../theme.js"', JSON.stringify(new URL("../src/theme.js", import.meta.url).href))
+    .replace('"./useDashboard.js"', JSON.stringify(storeUrl))
+    .replaceAll("import.meta.env", `{ VITE_STATIC_BUILD: "${staticBuild}" }`);
+  return { data, ...await import(moduleUrl(source)) };
+}
+
+test("Settings refresh identifies the database without loading data or enabling writes", async () => {
+  const { data, useDeployment } = await loadDeploymentModule();
+  const settings = shallowRef(null);
+  const deployment = useDeployment(settings);
+
+  // A cold Settings route declares no resources, so identity must resolve with
+  // only Settings, including an unreachable or empty configured database.
+  assert.deepEqual(routeResources("settings", "general"), []);
+  assert.deepEqual(routeResources("settings", "source"), []);
+  assert.equal(deployment.theme.value.key, "writable");
+  assert.equal(deployment.label.value, "Checking data source");
+  assert.equal(deployment.writable.value, false);
+  settings.value = { useDatabase: true, status: { detail: "Unavailable" } };
+  assert.equal(deployment.mode.value, "database");
+  assert.equal(deployment.theme.value.accent, "#2456a6");
+  assert.equal(deployment.label.value, "Database configured");
+  assert.equal(deployment.writable.value, false);
+  assert.doesNotMatch(deployment.readOnlyReason.value, /reads the committed/);
+
+  // A successful resource grants editing; invalidating it for Reload keeps
+  // database identity while withdrawing editing until data returns.
+  data.value = { mode: "database" };
+  assert.equal(deployment.writable.value, true);
+  assert.equal(deployment.label.value, "Database connected");
+  data.value = { mode: "" };
+  assert.equal(deployment.theme.value.accent, "#2456a6");
+  assert.equal(deployment.label.value, "Database configured");
+  assert.equal(deployment.writable.value, false);
+
+  // Loaded data takes precedence over older Settings, in either direction.
+  data.value = { mode: "local files" };
+  assert.equal(deployment.theme.value.accent, "#217346");
+  assert.equal(deployment.label.value, "Local files");
+  settings.value = { useDatabase: false };
+  data.value = { mode: "database" };
+  assert.equal(deployment.theme.value.accent, "#2456a6");
+  data.value = { mode: "" };
+  assert.equal(deployment.theme.value.accent, "#217346");
+  assert.equal(deployment.writable.value, false);
+
+  // Missing or malformed metadata must not masquerade as confirmed file mode.
+  for (const value of [null, {}, { useDatabase: "false" }]) {
+    settings.value = value;
+    assert.equal(deployment.label.value, "Checking data source");
+    assert.equal(deployment.theme.value.accent, "#2456a6");
+    assert.equal(deployment.writable.value, false);
+  }
+});
+
+test("static Settings starts green and read-only without a dashboard snapshot", async () => {
+  const { useDeployment } = await loadDeploymentModule(true);
+  const deployment = useDeployment();
+  assert.equal(deployment.theme.value.accent, "#217346");
+  assert.equal(deployment.label.value, "Published build");
+  assert.equal(deployment.writable.value, false);
+});
+
+test("the shell supplies Settings identity and the header separates it from editing", () => {
+  assert.match(APP_VUE, /useDeployment\(deploymentSettings\)/);
+  assert.match(APP_VUE, /if \(!settings\) return;[\s\S]*deploymentSettings.value = settings/);
+  assert.match(APP_VUE, /:deployment-mode="deploymentMode"/);
+  assert.match(TOP_BAR, /deploymentMode === 'database' \? 'blue'/);
+  assert.match(TOP_BAR, /deploymentMode === 'local files' \? 'green' : 'gray'/);
+});
 
 test("write capability follows the snapshot's mode, not the build flag", async () => {
   const source = readFileSync(
@@ -495,7 +588,7 @@ test("schema doctor queues imports and sends build logs to Tasks", () => {
   assert.match(SETTINGS_DIALOG, />\s*Tasks\s*<\/button>/);
   assert.match(BACKEND_TASKS, /selected\.lines/);
   assert.match(BACKEND_TASKS, /selected\.command/);
-  assert.match(BACKEND_TASKS, /Copy log/);
+  assert.match(BACKEND_TASKS, /LogViewer/);
   assert.match(BACKEND_TASKS, /stopTask/);
 
   const client = readFileSync(resolve(HERE, "..", "src", "api", "client.js"), "utf8");
@@ -862,6 +955,67 @@ test("data-run diagnostics are a preference, off by default", () => {
   assert.match(BUDGET_MANAGER, /diagnosticsOn\.value\s*\?\s*\[\.\.\.BASE_SECTIONS/);
   assert.match(BUDGET_MANAGER, /watch\(SECTIONS/);
   assert.match(SETTINGS_DIALOG, /setDiagnostics\(\$event\.target\.checked\)/);
+});
+
+test("every option is a row: name on the left, control on the right", () => {
+  // A reader who has learned where the name is and where the control is on one
+  // page must find both in the same place on the next. That is only true if
+  // there is one row primitive, so this checks the primitive exists, that the
+  // views carrying options use it, and that no second one has grown beside it.
+  const OPTION_VIEWS = [
+    ["Settings.vue", SETTINGS_DIALOG],
+    ["DataGenerator.vue", DATA_GENERATOR],
+    ["SchemaRecovery.vue", SCHEMA_RECOVERY],
+    ["MasterObjectForm.vue", MASTER_OBJECT_FORM],
+    ["GeneratorConfigEditor.vue", GENERATOR_CONFIG_EDITOR],
+    ["WillowGmvForecast.vue", WILLOW_FORECAST],
+  ];
+  for (const [name, source] of OPTION_VIEWS) {
+    assert.match(source, /class="[^"]*\bsetting-row\b/, `${name} uses setting-row`);
+    assert.match(source, /class="[^"]*\bsetting-label\b/, `${name} names the option`);
+    assert.match(source, /class="[^"]*\bsetting-control\b/, `${name} places the control`);
+  }
+
+  // The row is what puts the control on the right, so nothing else may.
+  assert.match(STYLE_CSS, /\.setting-control \{[^}]*justify-content: flex-end/);
+  // Toolbars stack their label above the control; option rows never do.
+  assert.doesNotMatch(
+    STYLE_CSS,
+    /\.setting-label \{[^}]*display: (grid|block)/,
+    "the option name sits beside its control, not above it",
+  );
+
+  // One row primitive, not several. `.form-row` and the generator's private
+  // grid were both this shape under another name, and both are gone.
+  for (const dead of ["form-row", "generator-config-editor__grid", "willow-field-grid"]) {
+    assert.doesNotMatch(STYLE_CSS, new RegExp(`\\.${dead}[\\s,{]`), `${dead} is not a second row`);
+  }
+
+  // The editor's private stylesheet invented tokens the theme never defines,
+  // so a deployment's colours could not reach it. Every component now reads
+  // the one sheet `theme.js` writes into.
+  assert.doesNotMatch(GENERATOR_CONFIG_EDITOR, /<style/, "no component-private stylesheet");
+  assert.doesNotMatch(STYLE_CSS, /var\(--(ink|panel|accent)[,)]/, "no invented theme tokens");
+});
+
+test("actions sit on one side, never opposite each other", () => {
+  // Buttons split to the far side of the thing they act on move with the
+  // length of the text beside them, so no two cards agree on where a button
+  // is. Action bars align left, everywhere, with the primary action last.
+  assert.match(STYLE_CSS, /\.rec-actions \{\s*display: flex;\s*gap: 8px;/);
+  assert.doesNotMatch(STYLE_CSS, /\.rec-actions \{[^}]*justify-content/);
+  // A card's actions are their own bar under the title, not opposite it.
+  assert.match(GENERATOR_CONFIG_EDITOR, /<header><h4>Touchpoint \{\{ index \+ 1 \}\}<\/h4><\/header>/);
+  assert.match(GENERATOR_CONFIG_EDITOR, /class="setting-block rec-actions"/);
+  // A spacer that pushes a control to the far edge is the same split by
+  // another means, so option rows carry no non-breaking-space filler labels.
+  for (const [name, source] of [
+    ["Campaigns.vue", CAMPAIGNS],
+    ["Settings.vue", SETTINGS_DIALOG],
+    ["WillowGmvForecast.vue", WILLOW_FORECAST],
+  ]) {
+    assert.doesNotMatch(source, /&nbsp;/, `${name} aligns with a bar, not a spacer`);
+  }
 });
 
 test("one cell renderer serves every table", () => {
@@ -1353,4 +1507,137 @@ test("each model run uses a server-issued dataset selection", () => {
   assert.match(jobs, /sys\.executable/);
   assert.match(jobs, /prepare_dataset\(stage, selected\)/);
   assert.doesNotMatch(CAMPAIGN_OPTIMIZER, /startDate|endDate/);
+});
+
+
+/** Compile the shared component so tests exercise its real render and handlers. */
+async function loadLogViewer() {
+  const filename = resolve(HERE, "..", "src", "components", "LogViewer.vue");
+  const source = readFileSync(filename, "utf8");
+  const descriptor = parse(source, { filename }).descriptor;
+  const compiled = compileScript(descriptor, { id: "shared-log-test", inlineTemplate: true });
+  const code = compiled.content.replaceAll('from "vue"', `from ${JSON.stringify(import.meta.resolve("vue"))}`);
+  return import(`data:text/javascript;base64,${Buffer.from(code).toString("base64")}`);
+}
+
+function logTestRenderer() {
+  const node = (type, text = "") => ({ type, text, props: {}, children: [], parent: null, scrollTop: 0, scrollHeight: 1000, clientHeight: 100 });
+  const detach = (child) => {
+    if (child.parent) child.parent.children.splice(child.parent.children.indexOf(child), 1);
+  };
+  const renderer = createRenderer({
+    createElement: node, createText: (text) => node("text", text), createComment: (text) => node("comment", text),
+    setText: (item, text) => { item.text = text; },
+    setElementText: (item, text) => { item.text = text; item.children = []; },
+    parentNode: (item) => item.parent,
+    nextSibling: (item) => item.parent?.children[item.parent.children.indexOf(item) + 1] ?? null,
+    patchProp: (item, key, _previous, value) => { item.props[key] = value; },
+    insert: (child, parent, anchor = null) => {
+      detach(child); child.parent = parent;
+      parent.children.splice(anchor ? parent.children.indexOf(anchor) : parent.children.length, 0, child);
+    },
+    remove: detach,
+  });
+  return { renderer, root: node("root") };
+}
+
+function findLogNode(root, predicate) {
+  if (predicate(root)) return root;
+  for (const child of root.children) {
+    const match = findLogNode(child, predicate);
+    if (match) return match;
+  }
+  return null;
+}
+
+test("all five operational surfaces reuse the shared log and copy renderer", () => {
+  for (const source of [STAGE_RUNNER, BACKEND_TASKS, SCHEMA_RECOVERY, SETTINGS_DIALOG, OPTIMIZATION_LOG]) {
+    assert.match(source, /<LogViewer/);
+    assert.doesNotMatch(source, /class="log-stream|navigator\.clipboard|execCommand\("copy"\)/);
+  }
+  assert.match(SETTINGS_DIALOG, /:records="visibleRecords"/);
+  assert.match(STAGE_RUNNER, /:command="job.command/);
+});
+
+test("log copy retains context, command, dropped count, timestamps and zero duration", async () => {
+  const { logCopyText } = await loadLogViewer();
+  const text = logCopyText([
+    { at: "2026-09-09T07:37:31Z", level: "ERROR", stream: "stderr", text: "  ValueError: date mismatch" },
+    { when: "2026-09-09T07:37:32Z", level: "INFO", source: "database", message: "查询 complete", durationMs: 0 },
+  ], ["MTA attribution — failed", "Exit 1"], "python -m modules.mta_attribution.src.run_attribution_models", 4);
+  assert.equal(text, [
+    "MTA attribution — failed", "Exit 1",
+    "$ python -m modules.mta_attribution.src.run_attribution_models",
+    "4 earlier log line(s) dropped; retained output follows.",
+    "2026-09-09T07:37:31Z ERROR stderr   ValueError: date mismatch",
+    "2026-09-09T07:37:32Z INFO database 查询 complete duration_ms=0",
+  ].join("\n"));
+});
+
+test("shared log copies with fallback cleanup and reports failure without losing output", async () => {
+  const { default: component } = await loadLogViewer();
+  const navigatorDescriptor = Object.getOwnPropertyDescriptor(globalThis, "navigator");
+  const previousDocument = globalThis.document;
+  const props = shallowRef({ records: [{ at: "now", stream: "stderr", text: "<script>do not execute</script>" }], context: ["Failed run"], running: true });
+  const { renderer, root } = logTestRenderer();
+  const copied = [];
+  let fallbackSuccess = true;
+  let removed = 0;
+  let restored = 0;
+  const field = { style: {}, setAttribute() {}, select() {}, remove() { removed++; } };
+  globalThis.document = {
+    activeElement: { focus() { restored++; } },
+    createElement: () => field, body: { appendChild() {} },
+    execCommand: () => { copied.push(field.value); return fallbackSuccess; },
+  };
+  const setClipboard = (clipboard) => Object.defineProperty(globalThis, "navigator", { configurable: true, value: { clipboard } });
+  const app = renderer.createApp({ render: () => h(component, props.value) });
+  try {
+    app.mount(root);
+    const button = findLogNode(root, (item) => item.type === "button");
+    const status = () => findLogNode(root, (item) => item.props.role === "status").text;
+    setClipboard({ writeText: async (text) => copied.push(text) });
+    await button.props.onClick(); await nextTick();
+    assert.equal(status(), "Log copied.");
+    assert.match(copied[0], /Failed run\nnow stderr <script>do not execute<\/script>/);
+    assert.equal(findLogNode(root, (item) => item.type === "script"), null);
+    assert.equal(removed, 0);
+
+    setClipboard({ writeText: async () => { throw new Error("denied"); } });
+    await button.props.onClick(); await nextTick();
+    assert.equal(status(), "Log copied.");
+    assert.equal(removed, 1);
+    assert.equal(restored, 1);
+
+    setClipboard(undefined);
+    fallbackSuccess = false;
+    await button.props.onClick(); await nextTick();
+    assert.match(status(), /Could not copy log/);
+    assert.equal(removed, 2);
+    assert.equal(restored, 2);
+    assert.equal(button.props.disabled, false);
+
+    // A full bounded log may change without growing. Follow only its own tail,
+    // and leave the reader's scroll position alone while inspecting older lines.
+    const viewport = findLogNode(root, (item) => item.props.role === "log");
+    props.value = { ...props.value, records: [{ at: "later", text: "replacement" }] };
+    await nextTick(); await nextTick();
+    assert.equal(viewport.scrollTop, 1000);
+    viewport.scrollTop = 0; viewport.props.onScroll();
+    props.value = { ...props.value, records: [{ at: "later again", text: "new replacement" }] };
+    await nextTick(); await nextTick();
+    assert.equal(viewport.scrollTop, 0);
+    viewport.scrollTop = 900; viewport.props.onScroll();
+    props.value = { records: [{ at: "finished", text: "done" }], running: false };
+    await nextTick(); await nextTick();
+    assert.equal(viewport.scrollTop, 900);
+    props.value = { records: [] };
+    await nextTick();
+    assert.equal(button.props.disabled, true);
+  } finally {
+    app.unmount();
+    globalThis.document = previousDocument;
+    if (navigatorDescriptor) Object.defineProperty(globalThis, "navigator", navigatorDescriptor);
+    else delete globalThis.navigator;
+  }
 });

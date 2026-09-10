@@ -10,6 +10,7 @@ lang: en-US
 
 > Project: Marketing ROI Analysis
 > Handle: `tianlc6-design`
+> Git author: none in this repository; the database work lives in external service schemas
 > Role: SQL database creation; evaluation module, with [Yi Liu](./YiLiu.md)
 
 ## Scope

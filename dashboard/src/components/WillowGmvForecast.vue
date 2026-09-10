@@ -82,72 +82,104 @@ watch(form, refreshPrediction, { deep: true, immediate: true });
     </div>
 
     <div class="card-body willow-forecast-body">
+      <!--
+        These are model inputs a reader sets, not filters over a table, so they
+        are option rows: the input named on the left, the number on the right.
+        The action bar is below the rows it belongs to rather than opposite the
+        heading, so the button starts on the same edge as everything else.
+      -->
       <section class="willow-inputs" aria-label="Willow Sakura forecast inputs">
-        <div class="willow-section-head">
-          <div>
-            <h3>Budget and calendar</h3>
-            <p class="caption">Every edit reruns the browser model.</p>
+        <div class="setting-group">
+          <header>
+            <div>
+              <h3>Budget and calendar</h3>
+              <p class="caption">Every edit reruns the browser model.</p>
+            </div>
+          </header>
+
+          <label v-for="([key, label]) in BUDGET_FIELDS" :key="key" class="setting-row">
+            <span class="setting-label">
+              {{ label }}
+              <small>Daily spend on this ad product, in dollars.</small>
+            </span>
+            <span class="setting-control">
+              <input
+                :id="`willow-${key}`"
+                v-model.number="form[key]"
+                type="number"
+                min="0"
+                step="10"
+              />
+            </span>
+          </label>
+
+          <label class="setting-row">
+            <span class="setting-label">
+              Marketplace
+              <small>The country the model predicts for.</small>
+            </span>
+            <span class="setting-control">
+              <select id="willow-country" v-model="form.country">
+                <option v-for="country in willowModel.country_classes" :key="country">
+                  {{ country }}
+                </option>
+              </select>
+            </span>
+          </label>
+          <label class="setting-row">
+            <span class="setting-label">Day of week</span>
+            <span class="setting-control">
+              <select id="willow-day" v-model.number="form.dow">
+                <option v-for="(day, index) in DAY_NAMES" :key="day" :value="index">
+                  {{ day }}
+                </option>
+              </select>
+            </span>
+          </label>
+          <label class="setting-row">
+            <span class="setting-label">
+              Weekend
+              <small>Set separately from the day, because the model reads both.</small>
+            </span>
+            <span class="setting-control">
+              <select id="willow-weekend" v-model="form.is_weekend">
+                <option :value="false">No</option>
+                <option :value="true">Yes</option>
+              </select>
+            </span>
+          </label>
+
+          <div class="setting-block rec-actions">
+            <button class="btn primary" type="button" @click="refreshPrediction">
+              Run prediction
+            </button>
           </div>
-          <button class="btn primary" type="button" @click="refreshPrediction">
-            Run prediction
-          </button>
         </div>
 
-        <div class="willow-field-grid">
-          <div v-for="([key, label]) in BUDGET_FIELDS" :key="key" class="field">
-            <label :for="`willow-${key}`">{{ label }}</label>
-            <input
-              :id="`willow-${key}`"
-              v-model.number="form[key]"
-              type="number"
-              min="0"
-              step="10"
-            />
-          </div>
-
-          <div class="field">
-            <label for="willow-country">Marketplace</label>
-            <select id="willow-country" v-model="form.country">
-              <option v-for="country in willowModel.country_classes" :key="country">
-                {{ country }}
-              </option>
-            </select>
-          </div>
-          <div class="field">
-            <label for="willow-day">Day of week</label>
-            <select id="willow-day" v-model.number="form.dow">
-              <option v-for="(day, index) in DAY_NAMES" :key="day" :value="index">
-                {{ day }}
-              </option>
-            </select>
-          </div>
-          <div class="field">
-            <label for="willow-weekend">Weekend</label>
-            <select id="willow-weekend" v-model="form.is_weekend">
-              <option :value="false">No</option>
-              <option :value="true">Yes</option>
-            </select>
-          </div>
-        </div>
-
-        <div class="willow-section-head structure-head">
-          <div>
-            <h3>Placement and creative structure</h3>
-            <p class="caption">Editable cost mix used by the contributed model.</p>
-          </div>
-        </div>
-        <div class="willow-field-grid">
-          <div v-for="key in STRUCTURE_KEYS" :key="key" class="field">
-            <label :for="`willow-${key}`">{{ STRUCTURE_LABELS[key] }}</label>
-            <input
-              :id="`willow-${key}`"
-              v-model.number="form.struct[key]"
-              type="number"
-              min="0"
-              :max="key === 'n_placement_types' ? 10 : 1"
-              :step="key === 'n_placement_types' ? 0.1 : 0.01"
-            />
-          </div>
+        <div class="setting-group">
+          <header>
+            <div>
+              <h3>Placement and creative structure</h3>
+              <p class="caption">Editable cost mix used by the contributed model.</p>
+            </div>
+          </header>
+          <label v-for="key in STRUCTURE_KEYS" :key="key" class="setting-row">
+            <span class="setting-label">
+              {{ STRUCTURE_LABELS[key] }}
+              <small v-if="key !== 'n_placement_types'">Share of total cost, from 0 to 1.</small>
+              <small v-else>How many distinct placement types the spend covers.</small>
+            </span>
+            <span class="setting-control">
+              <input
+                :id="`willow-${key}`"
+                v-model.number="form.struct[key]"
+                type="number"
+                min="0"
+                :max="key === 'n_placement_types' ? 10 : 1"
+                :step="key === 'n_placement_types' ? 0.1 : 0.01"
+              />
+            </span>
+          </label>
         </div>
       </section>
 

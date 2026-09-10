@@ -1,6 +1,6 @@
 ---
 title: Populating PostgreSQL
-compact: "PostgreSQL schema initialization and simulator parsing through `backend.import_to_database`, `backend.derive_scenario_schemas`, `PG_SCHEMA`, routed Settings setup, plus optional `ModelArtifact` storage created only by explicit validated artifact import."
+compact: "Inclusive performance-derived attribution windows and strict path coverage; PostgreSQL schema initialization and simulator parsing through `backend.import_to_database`, `backend.derive_scenario_schemas`, `PG_SCHEMA`, routed Settings setup, plus optional `ModelArtifact` storage created only by explicit validated artifact import."
 lang: en-US
 source_files: dashboard/config.py, dashboard/models.py, backend/import_to_database.py, backend/derive_scenario_schemas.py
 ---
@@ -93,6 +93,18 @@ The dashboard model holds one advertiser, one marketplace, and one report
 window, and reads `attribution_run` as a single row, so splitting on the way
 out keeps that contract intact and makes the schema dropdown the scenario
 picker.
+
+The model window comes from validated earliest and latest daily performance
+dates, inclusive, rather than the simulator path rows' next-day end boundary.
+`derive_scenario()` reads performance before aggregating paths, applies
+`infer_ads_report_window()`, and stamps all aggregated paths, bridge rows and
+attribution-run metadata with those bounds. `aggregate_paths()` checks source
+path start dates lie inside that window and their end boundaries do not exceed
+the following day; out-of-window observations fail rather than being cropped.
+Full path/performance alignment is validated before deriving or importing model
+outputs. Every source row contributes once and the source remains read-only.
+Already-derived schemas are handled by the provenance-checked preparation
+rule in [Backend Jobs and Settings](/en/introduction/backend/operations#pipeline-jobs).
 
 The derivation runs the same attribution and comparison code the file pipeline
 runs, imported from the modules that own it, so a derived schema and a

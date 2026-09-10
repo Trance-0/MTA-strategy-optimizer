@@ -10,6 +10,7 @@ lang: zh-CN
 
 > 项目：Marketing ROI Analysis
 > 作者：Jiahao Yao (`yao-LLL`)
+> Git 提交者：`yao-LLL <ericsonyao@outlook.com>`，早期提交亦见 `YAO JIAHAO <yao@YAO-JIAHAOdeMacBook-Air-3.local>`
 > 最后更新：2026-08-07
 >
 > 本页为原始工作日志，保留作者原文，不作翻译。

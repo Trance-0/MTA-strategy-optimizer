@@ -903,13 +903,19 @@ const scopedRowKey = (row) =>
               <label for="window-end">Load to</label>
               <input id="window-end" v-model="windowEndRequest" type="date" :min="loadedWindow.earliest" :max="loadedWindow.latest" />
             </div>
-            <div class="field">
-              <label>&nbsp;</label>
+            <!--
+              An action bar rather than two more `.field` cells. The empty
+              labels this replaces were spacers standing in for a name the
+              buttons do not need, and a `<label>` wrapping no control is a
+              defect a screen reader reports rather than a layout device.
+              `.filter-row` aligns its children to the bottom, so the buttons
+              still line up with the fields beside them.
+            -->
+            <div class="rec-actions">
               <button class="btn" @click="applyWindow">Load this window</button>
-            </div>
-            <div v-if="windowIsPartial" class="field">
-              <label>&nbsp;</label>
-              <button class="btn small" @click="loadEverything">Load everything</button>
+              <button v-if="windowIsPartial" class="btn" @click="loadEverything">
+                Load everything
+              </button>
             </div>
           </div>
           <p class="caption">

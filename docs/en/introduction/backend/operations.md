@@ -1,7 +1,7 @@
 ---
 title: Backend Jobs and Settings
 description: Pipeline job polling and protected runtime settings contracts
-compact: "Contracts for the single-worker task queue, package-native model and schema commands, safe logs and termination, routed Settings APIs, INFO request logging, schema selection/recovery, artifacts, runtime storage, cache invalidation, and capability flags."
+compact: "Backend task queue, package-native jobs, protected Settings, schema recovery and artifacts; model_datasets prepares inclusive attribution windows with simulator provenance checks, strict daily coverage and runtime cache handling."
 lang: en-US
 source_files: backend/api/jobs.py, backend/api/tasks.py, backend/api/settings.py, backend/api/schema_operations.py, backend/api/schema_recovery.py, backend/services/jobs.py, backend/services/tasks.py, backend/services/model_datasets.py, backend/services/model_outputs.py, backend/services/settings.py, backend/services/schema_operations.py, backend/services/schema_recovery.py
 test_files: backend/tests/test_jobs.py, backend/tests/test_model_outputs.py, backend/tests/test_schema_operations.py, backend/tests/test_schema_recovery.py, backend/tests/test_settings.py, backend/tests/test_tasks.py
@@ -33,7 +33,24 @@ Run disabled.
 `POST` requires `datasetId`. The service resolves it again against current
 database state immediately before starting, then writes the selected rows to
 an isolated input directory below `PIPELINE_OUTPUT_DIR`. Attribution receives
-one aggregated path report and matching daily performance dataset. Research
+one aggregated path report and matching daily performance dataset.
+Before writing either file, `model_datasets._write_attribution_inputs()` validates
+continuous performance dates, unique date/touchpoint keys, complete daily
+coverage, and full path/performance alignment. Dates are inclusive model bounds.
+A legacy simulator-derived path scope may end exactly one day after the last
+performance date. It is normalized only when the starts match and exactly one
+simulation run, joined through delivery observations for this advertiser and
+marketplace, has `effective_configuration.report_start_date` and
+`report_end_date` matching the actual performance bounds and the same
+`advertiser_id`. Only the prepared path copies receive the inclusive end;
+stored rows, dataset identifiers, counts, revenue, and source files stay intact.
+Missing provenance, other boundary mismatches, gaps, duplicates, or missing
+terminal performance days still fail preparation before files are written or a
+model is spawned. A native simulator daily path end is the next-day boundary;
+it is not another observed performance day. For example, legacy paths ending
+2026-01-01 and complete performance/configuration ending 2025-12-31 produce
+model inputs ending 2025-12-31. The raw selection label retains its stored scope;
+the resulting model artifacts carry the normalized inclusive scope. Research
 selections contain observed budget, delivery, and outcome records;
 evaluation-only simulator outcomes are excluded from model input. No arbitrary
 schema, query, or filesystem path reaches the command line from the client.
