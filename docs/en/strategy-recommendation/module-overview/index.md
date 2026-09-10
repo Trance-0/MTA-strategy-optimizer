@@ -3,6 +3,7 @@ title: MTA-Driven Ad Group Budget Initializer
 description: Deterministic Campaign and Ad Group budget seed derived from governed MTA evidence and capacity constraints
 compact: "Implemented strategy contract: canonical touchpoint parsing, evidence pinning, MTA-to-Campaign bridge, weighted Campaign scores, capacity-derived Ad Group counts, equal budget split, validation invariants, and source-file API reference."
 lang: en-US
+order: 10
 provenance:
   original_author: Jiahao Yao
   original_handle: yao-LLL

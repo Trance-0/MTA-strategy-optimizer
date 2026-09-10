@@ -2,63 +2,68 @@
 title: Initializer Current Implementation
 compact: "Algorithm and validation details for the implemented MTA-to-budget initializer: strict inputs, evidence selection, Campaign bridging and scoring, capacity ceilings, equal Ad Group split, invariants, errors, output fields, and worked formulas."
 lang: en-US
+order: 10
 ---
 
 # Initializer Current Implementation
 
-## Current Implementation <span class="status-label status-verified" aria-label="Verified"></span>
+## Execution Order <span class="status-label status-verified" aria-label="Verified"></span>
 
-The implementation is a deterministic initializer, not a learned optimizer. Its main function, `generate_budget_recommendation()` in `modules/mta_strategy_recommendation/src/budget_recommender.py`, follows this execution order:
+The implementation is a deterministic initializer, not a learned optimizer. Its main function, `generate_budget_recommendation()` in `modules/mta_strategy_recommendation/src/budget_recommender.py`, runs the stages below in this order. Each is decomposed under [Stage Detail](#stage-detail).
 
-### 1. Load aligned evidence
+### Load aligned evidence
 
 - **Code:** `load_aligned_strategy_inputs()`
 - **Algorithm responsibility:** Read request, candidate counts, MTA recommendations, and entity bridge; verify files, hashes, counts, and scope
 - **Why it is separate:** A valid allocation must be reproducible from the exact referenced AMC evidence
 
-### 2. Validate the strategy contract
+### Validate the strategy contract
 
 - **Code:** `_campaign_inputs()`
 - **Algorithm responsibility:** Require exact schemas, four enabled product Campaigns, normalized Outcome weights, and capacity rules
 - **Why it is separate:** Unexpected fields or missing products must not silently alter the allocation universe
 
-### 3. Convert governed MTA values to points
+### Convert governed MTA values to points
 
 - **Code:** `_recommended_point()`
 - **Algorithm responsibility:** Use a reliable point directly or the midpoint of an unreliable interval
 - **Why it is separate:** The initializer requires a scalar, while retaining an explicit warning that a range was collapsed
 
-### 4. Bridge touchpoints to Campaigns
+### Bridge touchpoints to Campaigns
 
 - **Code:** `_bridge_campaign_scores()`
 - **Algorithm responsibility:** Map the five-segment touchpoint's ad product to its Campaign and verify supporting historical entities
 - **Why it is separate:** MTA is at touchpoint grain, but the budget decision begins at Campaign grain
 
-### 5. Combine Outcomes
+### Combine Outcomes
 
 - **Code:** `_bridge_campaign_scores()`
 - **Algorithm responsibility:** Weight converted-user, purchase-count, and revenue contributions into a Campaign MTA score
 - **Why it is separate:** The three business Outcomes remain separate until an explicit weighted combination
 
-### 6. Calculate group count
+### Calculate group count
 
 - **Code:** `recommend_ad_group_count()`
 - **Algorithm responsibility:** Convert eligible-candidate counts and product capacities into the minimum feasible number of new groups
 - **Why it is separate:** Count is an execution-capacity calculation, not a performance prediction
 
-### 7. Allocate the seed
+### Allocate the seed
 
 - **Code:** `generate_budget_recommendation()`
 - **Algorithm responsibility:** Normalize Campaign scores and split each Campaign share equally among its anonymous new groups
 - **Why it is separate:** No evidence exists to distinguish future groups within the same Campaign
 
-### 8. Regenerate and validate
+### Regenerate and validate
 
 - **Code:** `validate_simulated_hierarchy()`
 - **Algorithm responsibility:** Reject forbidden fields, compare against a fresh deterministic result, and test conservation
 - **Why it is separate:** The checked file must be exactly reproducible and budget-only
 
-### 1. Verify Evidence Lineage before Calculation
+## Stage Detail <span class="status-label status-verified" aria-label="Verified"></span>
+
+Each stage above is decomposed here in the order it runs.
+
+### Verify Evidence Lineage before Calculation
 
 The command-line generator first calls `load_aligned_strategy_inputs()` in `src/hierarchy_validator.py`. Its critical evidence block is:
 
@@ -95,7 +100,7 @@ entity_rows = _read_csv(entity)                                     # 8
 
 The loader then verifies declared touchpoint and entity row counts, reporting window, marketplace, advertiser, Campaign Group, and the Campaign/ad-product relationship of every entity row. `_campaign_inputs()` adds exact-key validation, requires one enabled Campaign for each supported product, requires Outcome weights to sum to one, and requires the candidate pool to use the same lineage and `USE_ALL_ELIGIBLE` policy.
 
-### 2. Turn a Governed MTA Recommendation into One Scalar
+### Turn a Governed MTA Recommendation into One Scalar
 
 The attribution handoff contains either a reliable point or an unreliable interval. `_recommended_point()` handles both representations explicitly:
 
@@ -151,7 +156,7 @@ return (low + high) / 2.0, status                                  # 13
 
 The midpoint is a current implementation policy, not evidence that the center is more likely than the endpoints. A future optimizer may propagate uncertainty instead, but that is outside this initializer.
 
-### 3. Bridge Touchpoints to Historical Entities and Campaigns
+### Bridge Touchpoints to Historical Entities and Campaigns
 
 Each Multi-Touch Attribution (MTA) row is keyed by `AD_PRODUCT:FORMAT:PLACEMENT:CREATIVE:INTERACTION_TYPE`. `_touchpoint_product()` delegates five-segment validation and parsing to the canonical `mta_common` touchpoint adapter, then reads `ad_product` to find the one Campaign for that ad product. `_bridge_campaign_scores()` then finds historical entity rows matching both touchpoint and Campaign.
 
@@ -231,7 +236,7 @@ outcome_contributions[campaign_id][outcome] += allocated            # 8
 
 After all rows, the function also requires every touchpoint to contain all three Outcomes, every entity touchpoint to exist in attribution, and each Outcome's `recommended_value` total to equal one. These checks ensure the Campaign contributions form a complete allocation universe.
 
-### 4. Combine the Three Outcomes into a Campaign Score
+### Combine the Three Outcomes into a Campaign Score
 
 For Campaign $c$, the code calculates:
 
@@ -263,7 +268,7 @@ score = sum(                                                        # 2
 
 The recommender rejects a non-positive total Campaign score because it could not normalize such scores into a budget-share distribution.
 
-### 5. Derive the Minimum Feasible Number of New Ad Groups
+### Derive the Minimum Feasible Number of New Ad Groups
 
 `recommend_ad_group_count()` uses ceiling division:
 
@@ -305,7 +310,7 @@ $$
 
 This minimum is a feasibility check. It does not change the score-based seed allocation.
 
-### 6. Normalize Campaign Scores and Split within Each Campaign
+### Normalize Campaign Scores and Split within Each Campaign
 
 The main allocation block in `generate_budget_recommendation()` is:
 
@@ -364,7 +369,7 @@ for position in range(1, count + 1):                                # 6
 
 If a Campaign's score-based budget is below its calculated minimum, the code retains the seed but marks `INSUFFICIENT_BUDGET_FOR_MINIMUMS`; it does not steal budget from another Campaign or claim the plan is executable. If no Group budget is provided, it emits `BUDGET_BASELINE_NOT_PROVIDED` and omits monetary fields.
 
-### 7. Regenerate the Result and Verify Conservation
+### Regenerate the Result and Verify Conservation
 
 `validate_simulated_hierarchy()` does not validate only the JSON shape. It regenerates the expected result from the verified inputs, recursively finds the first type, field, length, or value difference, and rejects any output that is not exactly deterministic. It also recursively rejects forbidden strategy fields so a budget-only result cannot acquire targeting or activation content.
 
@@ -381,7 +386,7 @@ $$
 
 Lines 1 and 2 conserve each Campaign allocation across its new groups. Lines 3 and 4 conserve the complete Campaign Group in proportional and monetary units. The implementation uses `math.fsum()` and explicit absolute tolerances to account for floating-point representation while still rejecting material drift.
 
-### Current Deliverables
+## Current Deliverables <span class="status-label status-verified" aria-label="Verified"></span>
 
 - `strategy_request.json`: Group scope, four Campaigns, AMC lineage, Outcome weights, capacity, and minimum budget.
 - `candidate_pool.json`: eligible-candidate counts for each Campaign; it does not store specific candidate IDs.

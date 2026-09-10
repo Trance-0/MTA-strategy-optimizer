@@ -122,4 +122,4 @@ The adapter is implemented and tested. Against the current committed artifact it
 - [Contributed models](./index.md)
 - [Strategy output](../strategy-output.md)
 - [Running an evaluation](../running-an-evaluation.md)
-- [Campaign budget response model and optimizer](/en/strategy-recommendation/campaign-budget-optimizer.md)
+- [Campaign budget response model and optimizer](/en/strategy-recommendation/campaign-budget-optimizer/)

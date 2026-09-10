@@ -217,7 +217,7 @@ Before a strategy's output is accepted, the loader runs a three-stage validation
 
 **Check:** Evidence lineage (Secure Hash Algorithm 256-bit (SHA-256) hashes match), scope consistency, required files present
 
-**Failure behavior:** `HierarchyValidationError` — same exception class used by the [current initializer](/en/strategy-recommendation/module-overview/current-implementation#1-verify-evidence-lineage-before-calculation)
+**Failure behavior:** `HierarchyValidationError` — same exception class used by the [current initializer](/en/strategy-recommendation/module-overview/current-implementation#verify-evidence-lineage-before-calculation)
 
 #### 3. Output validation
 

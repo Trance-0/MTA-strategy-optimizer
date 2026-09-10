@@ -1,7 +1,7 @@
 ---
 title: Strategy Optimization Model
 description: Current budget initializer and future Ad Group revenue-optimization model
-compact: "Landing page for the strategy module: the IMPLEMENTED `generate_budget_recommendation()` seed in `src/budget_recommender.py`, the IMPLEMENTED Campaign response model and constrained optimizer in campaign-budget-optimizer.md, and still-PROPOSED Ad Group-level response and validation baselines. Read for orientation, not field detail."
+compact: "Landing page for the strategy module: the IMPLEMENTED `generate_budget_recommendation()` seed in `src/budget_recommender.py`, the IMPLEMENTED Campaign response model and constrained optimizer specified under campaign-budget-optimizer/, and still-PROPOSED Ad Group-level response and validation baselines. Read for orientation, not field detail."
 lang: en-US
 ---
 
@@ -77,7 +77,7 @@ The model is fitted in two stages — configured budget to actual spend, then ac
 
 The optimization variable is the **Campaign**. Ad Group budgets are not optimized, because the candidate pool carries counts rather than features that would distinguish one new Ad Group from another; every plan discloses this as `NOT_AD_GROUP_OPTIMIZED`.
 
-Read [Campaign Budget Response Model and Optimizer](campaign-budget-optimizer.md) for the fitted forms, the solver, the structured refusals, and the output contract.
+Read [Campaign Budget Response Model and Optimizer](campaign-budget-optimizer/) for the fitted forms, the solver, the structured refusals, and the output contract.
 
 Related files:
 

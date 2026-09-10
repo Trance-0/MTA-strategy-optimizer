@@ -279,7 +279,7 @@ Source: `modules/mta_common/src/legacy_adapters.py`
 
 ## Downstream Usage <span class="status-label status-recommendation" aria-label="Recommendation"></span>
 
-Two of these consumers now exist, in `modules/mta_strategy_recommendation` rather than here. Its response model consumes `CampaignEpisode` as its training row shape, and its budget optimizer reads `StrategyObjective`, `BudgetUsagePolicy`, and `BudgetConstraints` to decide a Campaign allocation. See [Campaign Budget Response Model and Optimizer](/en/strategy-recommendation/campaign-budget-optimizer.md).
+Two of these consumers now exist, in `modules/mta_strategy_recommendation` rather than here. Its response model consumes `CampaignEpisode` as its training row shape, and its budget optimizer reads `StrategyObjective`, `BudgetUsagePolicy`, and `BudgetConstraints` to decide a Campaign allocation. See [Campaign Budget Response Model and Optimizer](/en/strategy-recommendation/campaign-budget-optimizer/).
 
 The third consumer now exists too. `modules/mta_strategy_evaluation` uses `CampaignEpisode` the same way, holding observations beside a strategy's decision so a strategy can be scored without ground truth ever reaching the model that produced it. See [Evaluation layers](/en/strategy-evaluation/evaluation-layers.md).
 

@@ -2,6 +2,7 @@
 title: Initializer Source Files
 compact: "Code-level specification for hierarchy_validator.py, budget_recommender.py, generate_initial_budget.py, and validate_simulated_hierarchy.py: entry points, schemas, ordering, hashing, arithmetic, refusals, output publication, and verification commands."
 lang: en-US
+order: 20
 source_files: modules/mta_strategy_recommendation/src/hierarchy_validator.py, modules/mta_strategy_recommendation/src/budget_recommender.py, modules/mta_strategy_recommendation/src/generate_initial_budget.py, modules/mta_strategy_recommendation/src/validate_simulated_hierarchy.py
 test_files: modules/mta_strategy_recommendation/tests/test_hierarchy_validator.py
 ---

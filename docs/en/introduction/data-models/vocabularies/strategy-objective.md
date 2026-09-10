@@ -50,7 +50,7 @@ A future optimizer configured with this objective would maximize profit: attribu
 
 [Canonical Data Model](/en/introduction/data-models/index.md)'s Scope and Non-Goals section names "a budget optimizer that reads `StrategyObjective` and `BudgetUsagePolicy` and produces an allocation" as something this module deliberately does not implement. That optimizer is implemented in `modules/mta_strategy_recommendation`, which is exactly the separation the non-goal describes: this module supplies the vocabulary, another module supplies the mathematics.
 
-The [Campaign budget optimizer](/en/strategy-recommendation/campaign-budget-optimizer.md) models `MAXIMIZE_REVENUE` only. A `MAXIMIZE_PROFIT` request is refused with `PROFIT_OBJECTIVE_NOT_MODELED` rather than answered with a revenue model, because the fitted response predicts revenue and carries no margin.
+The [Campaign budget optimizer](/en/strategy-recommendation/campaign-budget-optimizer/) models `MAXIMIZE_REVENUE` only. A `MAXIMIZE_PROFIT` request is refused with `PROFIT_OBJECTIVE_NOT_MODELED` rather than answered with a revenue model, because the fitted response predicts revenue and carries no margin.
 
 ## Legacy Mapping <span class="status-label status-verified" aria-label="Verified"></span>
 

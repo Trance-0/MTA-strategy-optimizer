@@ -2,13 +2,14 @@
 title: Ad Group Initial-Budget Output Data Contract
 compact: "Field-by-field v4 schema of the IMPLEMENTED `outputs/initial_budget_recommendation.json`: `schema_version`, `mta_source_snapshot`, `budget_derivation`, `count_rationale`, `campaign_mta_score`, `budget_seed_share`, `ad_group_slot_id`, `execution_status`, warning codes, conservation identities. Read when parsing or asserting on that JSON."
 lang: en-US
+order: 50
 ---
 
 # Ad Group Initial-Budget Output Data Contract (v4)
 
 The canonical result is always saved at `modules/mta_strategy_recommendation/outputs/initial_budget_recommendation.json`. It is also the only submission baseline for automated tests; no second copy is maintained under `tests/`. Numeric values preserve the generator's original JSON numbers. A presentation layer may format decimals, but this version does not round to the currency's smallest unit or redistribute remainders.
 
-## 1. Current Sample
+## Current Sample
 
 ### Campaign Group
 
@@ -34,7 +35,7 @@ Count or definition: 34
 
 Count or definition: 1,000 USD
 
-## 2. Top-Level Fields
+## Top-Level Fields
 
 ### `schema_version`
 
@@ -78,7 +79,7 @@ Count and budget for four Campaigns
 
 The budget normalization scope is fixed to `ALL_AVAILABLE_MTA_TOUCHPOINTS`; six touchpoints are no longer selected manually.
 
-## 3. Campaign Output
+## Campaign Output
 
 Every key below is always emitted for every Campaign.
 
@@ -139,7 +140,7 @@ Scores and shares are stored at full float precision, so `campaign_mta_score` se
 
 `budget_derivation.mta_value_policy` is fixed to `RELIABLE_POINT_OR_UNRELIABLE_RANGE_MIDPOINT`: reliable rows use a point; unreliable rows use the midpoint of the AMC `[low,high]` range and output `UNRELIABLE_MTA_RANGE_MIDPOINT_USED`. The midpoint is only a representative initial-budget value, not an optimum or statistical-confidence conclusion.
 
-## 4. Ad Group Output
+## Ad Group Output
 
 ```json
 {
@@ -152,7 +153,7 @@ Scores and shares are stored at full float precision, so `campaign_mta_score` se
 
 A new group is only an anonymous budget-recipient slot. Output must not contain specific candidate IDs, Targeting, Audiences, activation actions, strategy roles, or historical Ad Group IDs.
 
-## 5. Conservation and Defaults
+## Conservation and Defaults
 
 $$
 \begin{aligned}

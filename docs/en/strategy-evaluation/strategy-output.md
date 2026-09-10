@@ -305,7 +305,7 @@ A failing report does not raise. `__post_init__` rejects what is structurally im
 
 ### Relationship to the Campaign budget optimizer
 
-`OptimizedBudgetPlan` in `modules/mta_strategy_recommendation/src/budget_optimizer.py` is the optimizer's own richer result: it carries expected revenue, marginal revenue, response support, and extrapolation flags per Campaign. `StrategyOutput` is the decision extracted from it. The optimizer is not changed to return `StrategyOutput`, and `strategy_projection.py` reads its artifact instead. See [Campaign Budget Response Model and Optimizer](/en/strategy-recommendation/campaign-budget-optimizer.md).
+`OptimizedBudgetPlan` in `modules/mta_strategy_recommendation/src/budget_optimizer.py` is the optimizer's own richer result: it carries expected revenue, marginal revenue, response support, and extrapolation flags per Campaign. `StrategyOutput` is the decision extracted from it. The optimizer is not changed to return `StrategyOutput`, and `strategy_projection.py` reads its artifact instead. See [Campaign Budget Response Model and Optimizer](/en/strategy-recommendation/campaign-budget-optimizer/).
 
 ### Relationship to the deterministic initializer
 
@@ -415,4 +415,4 @@ Source: `modules/mta_strategy_evaluation/src/strategy_projection.py`
 - [Evaluation layers](./evaluation-layers.md)
 - [Contributed models](./contributed-models/index.md)
 - [Canonical data model](/en/introduction/data-models/index.md)
-- [Campaign budget response model and optimizer](/en/strategy-recommendation/campaign-budget-optimizer.md)
+- [Campaign budget response model and optimizer](/en/strategy-recommendation/campaign-budget-optimizer/)

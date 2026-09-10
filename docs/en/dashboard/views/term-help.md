@@ -25,7 +25,7 @@ as pointer hover; Escape and focus departure close it. Documentation links open
 normally and remain keyboard reachable. Tests assert every registered path is
 an English documentation path.
 
-Optimization Log's fifth stage now reports the [Campaign budget optimizer](/en/strategy-recommendation/campaign-budget-optimizer.md) from its artifact rather than from a constant. When `outputs/campaign_strategy.json` is absent — the state of any checkout that has not run the research command — the stage reads `NOT RUN` and the initializer's seed remains the current recommendation. When the artifact is present the view shows the optimized allocation beside its evidence, and when the optimizer refused it shows the refusal and its reasons instead of an allocation. Every Campaign optimized outside the budget range its fit observed, and every Campaign whose curve was pooled from comparable Campaigns rather than its own history, is named rather than left implicit in a number.
+Optimization Log's fifth stage now reports the [Campaign budget optimizer](/en/strategy-recommendation/campaign-budget-optimizer/) from its artifact rather than from a constant. When `outputs/campaign_strategy.json` is absent — the state of any checkout that has not run the research command — the stage reads `NOT RUN` and the initializer's seed remains the current recommendation. When the artifact is present the view shows the optimized allocation beside its evidence, and when the optimizer refused it shows the refusal and its reasons instead of an allocation. Every Campaign optimized outside the budget range its fit observed, and every Campaign whose curve was pooled from comparable Campaigns rather than its own history, is named rather than left implicit in a number.
 
 ## Source Files
 

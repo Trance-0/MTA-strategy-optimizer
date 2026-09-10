@@ -211,7 +211,7 @@ class StrategyEvidence:
 
 #### `lineage`
 
-**Meaning:** Content hashes and scope of the evidence files, matching the pattern in the [current initializer](/en/strategy-recommendation/module-overview/current-implementation#1-verify-evidence-lineage-before-calculation)
+**Meaning:** Content hashes and scope of the evidence files, matching the pattern in the [current initializer](/en/strategy-recommendation/module-overview/current-implementation#verify-evidence-lineage-before-calculation)
 
 
 ### Input: `StrategyConstraints`
@@ -293,7 +293,7 @@ class StrategyAllocation:
 **Meaning:** Ordered, non-repeating warning codes (e.g., `NO_BUDGET_BASELINE_RELATIVE_SHARES_ONLY`)
 
 
-`CampaignAllocation` mirrors the current [Ad Group output contract](/en/strategy-recommendation/strategy-output-contract#4-ad-group-output):
+`CampaignAllocation` mirrors the current [Ad Group output contract](/en/strategy-recommendation/output-data-contract#ad-group-output):
 
 
 #### `campaign_id`

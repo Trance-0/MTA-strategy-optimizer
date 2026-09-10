@@ -40,12 +40,12 @@ const TERMS = [
   {
     aliases: ["Configured budget"],
     definition: "The authorized spend ceiling for a Campaign and reporting period.",
-    href: "/en/strategy-recommendation/campaign-budget-optimizer",
+    href: "/en/strategy-recommendation/campaign-budget-optimizer/data-collection-and-data-model",
   },
   {
     aliases: ["Actual spend"],
     definition: "The advertising cost delivered within a configured budget and reporting period.",
-    href: "/en/strategy-recommendation/campaign-budget-optimizer",
+    href: "/en/strategy-recommendation/campaign-budget-optimizer/data-collection-and-data-model",
   },
   {
     aliases: ["Contribution profit", "Contribution margin"],

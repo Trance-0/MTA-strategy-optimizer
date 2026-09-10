@@ -88,6 +88,9 @@ const sidebar = generateSidebar([
     collapseFromLevel: 2,
     rootGroupText: "Strategy Recommendation",
     rootGroupLink: "/en/strategy-recommendation/",
+    // Frontmatter order controls sort within directories
+    sortMenusByFrontmatterOrder: true,
+    frontmatterOrderDefaultValue: 100,
   },
   {
     documentRootPath: ".",

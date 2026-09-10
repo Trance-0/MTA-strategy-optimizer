@@ -284,7 +284,7 @@ The seed above allocates where no response evidence exists. Where a Campaign's b
 
 `episode_bridge` joins the research snapshot's observed records into `CampaignEpisode` values; `response_dataset` aggregates them into one row per Campaign-period; `response_model` fits a two-stage budget-to-spend-to-revenue curve per Campaign; and `budget_optimizer` allocates by equalizing marginal expected revenue at a single shadow price on budget. `modules/mta_strategy_recommendation/src/generate_campaign_strategy.py` runs the chain and writes `campaign_strategy.json`, which the dashboard's Optimization Log reads.
 
-See [Campaign Budget Response Model and Optimizer](../strategy-recommendation/campaign-budget-optimizer.md) for the fitted forms, the solver, and the output contract.
+See [Campaign Budget Response Model and Optimizer](../strategy-recommendation/campaign-budget-optimizer/) for the fitted forms, the solver, and the output contract.
 
 > [!NOTE]
 > Attribution is an input to the seed and never to the optimizer. Attribution divides credit for outcomes that already happened; budget response answers what changes when a budget changes. `response_dataset.FORBIDDEN_RESPONSE_FEATURES` enforces the boundary in code, and an `EvaluationEpisode` carrying simulator ground truth is rejected outright.

@@ -2,15 +2,16 @@
 title: Ad Group Counts and Output
 compact: "Detailed initializer arithmetic for capacity-derived Ad Group counts, equal within-Campaign budget splits, minimum budget effects, no-total-budget shares, conservation equations, and field-by-field reading of an Ad Group result."
 lang: en-US
+order: 20
 ---
 
 # Ad Group Counts and Output
 
-## 9. Step Six: Calculate How Many Ad Groups Each Campaign Needs
+## Step Six: Calculate How Many Ad Groups Each Campaign Needs
 
 MTA scores do not determine the Ad Group count; candidate counts and capacity rules do.
 
-### 9.1 SP and SB
+### SP and SB
 
 Search ad products use:
 
@@ -37,7 +38,7 @@ $$
 N_{\mathrm{SB}}=\max\!\left(1,\left\lceil\frac{4}{50}\right\rceil,\left\lceil\frac{4}{20}\right\rceil,\left\lceil\frac{4}{100}\right\rceil\right)=1
 $$
 
-### 9.2 SD and DSP
+### SD and DSP
 
 Display ad products use:
 
@@ -64,15 +65,13 @@ $$
 N_{\mathrm{DSP}}=\max\!\left(1,\left\lceil\frac{4}{20}\right\rceil,\left\lceil\frac{8}{50}\right\rceil,\left\lceil\frac{2}{50}\right\rceil\right)=1
 $$
 
-The current output is therefore:
-
-The resulting new Ad Group counts are SP = 1, SB = 1, SD = 1, and DSP = 1.
+The resulting new Ad Group counts are therefore SP = 1, SB = 1, SD = 1, and DSP = 1.
 
 This is the capacity lower bound and initial count recommendation derived from aggregate candidate counts. There are currently no specific candidate entities or new-group assignments, so this count does not prove that all valid Pairs will necessarily fit into these groups under real grouping constraints.
 
 If any capacity calculation exceeds `max_ad_groups`, the input is rejected rather than truncated to the maximum.
 
-## 10. Step Seven: Split Equally among New Ad Groups within Each Campaign
+## Step Seven: Split Equally among New Ad Groups within Each Campaign
 
 The current candidate pool contains only counts of Keywords, SKUs, Targets, Audiences, and similar objects. It contains no specific candidate IDs and no mapping between candidates and future `ad_group_slot_id` values.
 
@@ -120,7 +119,7 @@ All four current Campaigns have one new group, so each new-group budget equals i
 - **Initial budget share:** 0.2286028
 - **Initial daily budget (displayed to 4 decimal places):** 228.6028 USD
 
-### 10.1 Calculation with Multiple New Groups
+### Calculation with Multiple New Groups
 
 Suppose SP candidate counts cross a capacity boundary and the recommendation becomes two groups while its MTA score and the Campaign Group total budget remain unchanged:
 
@@ -128,7 +127,7 @@ For example, if the SP Campaign budget is 239.8318 USD and $N_{\mathrm{SP}}=2$, 
 
 Both new groups receive the same budget. The model does not fabricate a budget difference merely because an anonymous number is `NEW_AG_01` versus `NEW_AG_02`.
 
-## 11. How the Minimum Budget Affects Results
+## How the Minimum Budget Affects Results
 
 The current `minimum_daily_budget_per_ad_group` is 25 USD for every Ad Product.
 
@@ -150,7 +149,7 @@ The minimum budget currently checks execution status only. If a Campaign's alloc
 - marks `INSUFFICIENT_BUDGET_FOR_MINIMUMS`;
 - does not automatically reduce the Ad Group count or transfer budget from other Campaigns.
 
-## 12. Result without a Total Budget
+## Result without a Total Budget
 
 If the input omits `campaign_group.total_daily_budget`, the model can still calculate:
 
@@ -169,7 +168,7 @@ It also adds:
 
 It also adds the warning `NO_BUDGET_BASELINE_RELATIVE_SHARES_ONLY`.
 
-## 13. Budget Conservation Relationships
+## Budget Conservation Relationships
 
 The current generator and validator check:
 
@@ -192,7 +191,7 @@ $$
 
 JSON stores the original Python floating-point values, so a field may appear as `234.16689999999994`. This is a floating-point representation effect; the current version does not round to the currency's smallest unit or redistribute remainders.
 
-## 14. How to Read an Ad Group Output
+## How to Read an Ad Group Output
 
 Using the new SP group as an example:
 

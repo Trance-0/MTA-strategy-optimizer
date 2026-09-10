@@ -2,11 +2,12 @@
 title: Inputs and Campaign Scores
 compact: "Detailed initializer arithmetic from input artifacts through touchpoint attribution values, AMC entity bridging, three Outcome contributions, combined Campaign MTA scores, and normalized Campaign budget shares, with the committed worked example."
 lang: en-US
+order: 10
 ---
 
 # Inputs and Campaign Scores
 
-## 2. Data Used by the Current Calculation
+## Data Used by the Current Calculation
 
 Strategy-model paths in the following table are relative to the `modules/mta_strategy_recommendation` module root; MTA source-data paths are relative to the workspace root.
 
@@ -53,7 +54,7 @@ Ad Product: Sponsored Display
 
 Ad Product: Amazon DSP
 
-## 3. Overall Calculation Flow
+## Overall Calculation Flow
 
 <DrawioDiagram base="../current-budget-calculation-flow" alt="Current initial-budget calculation flow" />
 
@@ -69,7 +70,7 @@ Here, $B_{c,g}$ is the initial daily budget of a new Ad Group in Campaign $c$, $
 
 The following sections explain where every term in this formula comes from.
 
-## 4. Step One: Read the Attribution Value of Each MTA Touchpoint
+## Step One: Read the Attribution Value of Each MTA Touchpoint
 
 The MTA file's granularity is:
 
@@ -101,13 +102,13 @@ Thus, `recommended_value` represents the Outcome's attribution share across all 
 
 The current sample has 17 touchpoints and 3 Outcomes, so it reads 51 MTA rows; all 51 are `RELIABLE`.
 
-## 5. Step Two: Bridge to Historical Campaigns through the AMC Entity Table
+## Step Two: Bridge to Historical Campaigns through the AMC Entity Table
 
-### 5.1 Why the Bridge Is Needed
+### Why the Bridge Is Needed
 
 MTA touchpoints contain advertising attributes such as Ad Product, Format, Placement, Creative, and Interaction Type. Budget output, by contrast, is organized by Campaign and new Ad Group. The AMC entity-aggregate table identifies the Campaign and historical Ad Group that carried a historical touchpoint.
 
-### 5.2 Allocation within a Touchpoint
+### Allocation within a Touchpoint
 
 For touchpoint `t` and Outcome `o`, the code first finds AMC entity rows satisfying both conditions:
 
@@ -149,7 +150,7 @@ $$
 
 It then aggregates historical Ad Group credit to Campaign.
 
-### 5.3 The Bridge's Actual Role in the Current Budget
+### The Bridge's Actual Role in the Current Budget
 
 Currently, exactly one Campaign corresponds to each Ad Product. Therefore, after a touchpoint is allocated among historical entities and then aggregated back to Campaign, its total still equals the original MTA attribution value.
 
@@ -161,7 +162,7 @@ The AMC Bridge currently performs three main functions:
 
 Historical Ad Group weights in the Bridge are not passed directly to future new Ad Groups. New groups in the output use new anonymous `ad_group_slot_id` values and are not continuations of historical Ad Groups.
 
-## 6. Step Three: Obtain the Three Outcome Contributions for Each Campaign
+## Step Three: Obtain the Three Outcome Contributions for Each Campaign
 
 For Campaign `c` and Outcome `o`:
 
@@ -206,7 +207,7 @@ For example, SP's `converted_users=0.242017` means that, in the current MTA resu
 
 It does not mean 0.242017 real users, nor is it a prediction of incremental conversions after a budget increase.
 
-## 7. Step Four: Combine Three Outcomes into the Campaign MTA Score
+## Step Four: Combine Three Outcomes into the Campaign MTA Score
 
 Current input weights are:
 
@@ -255,7 +256,7 @@ Result: 1.0000000
 
 Because Campaign contributions sum to 1 for each Outcome and Outcome weights also sum to 1, the current `campaign_score_total=1.0`.
 
-## 8. Step Five: Convert Campaign Scores to Budget Shares
+## Step Five: Convert Campaign Scores to Budget Shares
 
 The Campaign budget share is:
 
