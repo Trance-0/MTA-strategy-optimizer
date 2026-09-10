@@ -1,7 +1,7 @@
 ---
 title: Version Log
 description: Release history and material changes for the maintained project
-compact: "Routes release history from VERSION to one page per patch, keeping 0.9.52–0.9.55 flat and older patches in minor-version folders; includes dates, material summaries, historical group links, and planned follow-ups."
+compact: "Routes release history from VERSION to one page per patch, keeping 0.9.53–0.9.56 flat and older patches in minor-version folders; includes dates, material summaries, historical group links, and planned follow-ups."
 order: 1
 ---
 
@@ -10,6 +10,11 @@ order: 1
 The project version is recorded in the repository-root `VERSION` file. Each page here is one small patch description covering a coherent change set, rather than a reproduction of every commit message. Every patch keeps its own permanent page; older minor versions are grouped into a collapsed folder per minor version instead of being compacted away.
 
 This section records **what** changed. See the [work log](../worklog/) for **who** did the work and when.
+
+## [0.9.56](0.9.56.md)
+
+- Date: 2026-09-10
+- Summary: Required the owner to be asked about a local Docker Compose preview before a major component or new feature is deployed, and published a numbered one-line index of all 107 repository rules with the date and author of each
 
 ## [0.9.55](0.9.55.md)
 
@@ -26,7 +31,7 @@ This section records **what** changed. See the [work log](../worklog/) for **who
 - Date: 2026-09-09
 - Summary: Made the Gitea mirror survive the intermittent 502 its reverse proxy returns during reference discovery, retrying only transport faults while leaving rejections and authentication failures immediate
 
-## [0.9.52](0.9.52.md)
+## [0.9.52](0.9/0.9.52.md)
 
 - Date: 2026-09-09
 - Summary: Stopped this repository renormalizing submodule line endings, which made the Gitea mirror's unfiltered `read-tree` snapshot fail its own unmodified-tree gate and would have invalidated the generator's recorded checksums

@@ -51,7 +51,8 @@ Current outputs should be understood as **historical evidence and a budget start
 9. [Development and verification guide](./development-guide.md): run the project and reproduce verification.
 10. [Workspace file-location management](./file-management.md): adding, moving, and archiving files.
 11. [Workspace assessment](./assessment.md): audited health, scale, and risks.
-12. [Work log roster](../../worklog/index.md): who is involved, their area, and their day-by-day record.
+12. [Repository rules index](./repository-rules.md): every rule the repository enforces, one sentence each, with its date and author.
+13. [Work log roster](../../worklog/index.md): who is involved, their area, and their day-by-day record.
 
 ## Entry Points by Topic
 
@@ -66,6 +67,10 @@ Current outputs should be understood as **historical evidence and a budget start
 ### File locations and movement rules
 
 [Workspace file-location management](./file-management.md)
+
+### Every repository rule in one sentence
+
+[Repository rules index](./repository-rules.md)
 
 ### Runnable modules and commands
 

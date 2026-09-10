@@ -130,6 +130,15 @@
 - Treat `_bmad/`, `_bmad-output/`, and installed `.agents/` bundles as historical or optional tooling only. Do not use their workflow scripts as the project development process unless the user explicitly requests BMad.
 - Use the repository's documented Git, Python, test, and documentation commands for normal development and verification.
 
+## Local preview before deployment
+
+- **When a change alters a major component or adds a feature, ask the owner whether to bring up a local Docker Compose stack for preview before the change is deployed.** Ask; do not start one unsupervised, and do not skip asking because the tests pass. Automated suites run with `DATABASE=false` in file mode, so they never exercise the database path a deployed instance actually uses.
+- A major component is one whose failure changes what a user sees or what the deployment serves: the Flask backend, the Vue dashboard, the PostgreSQL schema or its import, the pipeline stages, or the deployment configuration itself. A fix contained inside one module, a test, or a documentation page is not.
+- Preview through the existing `deploy/docker/compose.yaml` with the existing `deploy/docker/run.sh`. Do not write a second compose file, a helper script, or a preview-only Dockerfile for this.
+- The tracked `deploy/docker/defaults.env` ships `DATABASE=false` with empty `PG_*` fields, so a preview that must exercise the database takes its credentials from the git-ignored root `.env`, which the stack layers over those defaults at run time. Ask the owner for the values; never write a credential into `defaults.env`, `compose.yaml`, or any other tracked file.
+- Report what the preview showed — the pages opened, the database mode in effect, and what failed — before asking to deploy. A preview nobody looked at is not a check.
+- The human-readable index of every rule in this file, with the date and author of each, is `docs/en/introduction/repository-rules.md`. Add a line there in the same edit that adds a rule here.
+
 ## Version and change log
 
 - Keep the current project version in the repository-root `VERSION` file.
