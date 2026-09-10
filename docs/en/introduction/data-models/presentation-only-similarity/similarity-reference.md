@@ -1,7 +1,7 @@
 ---
 title: Similarity Reference
 description: A dashboard-facing "similar items" pointer, structurally isolated from every model-facing canonical class
-compact: "SimilarityReference is a presentation-only dataclass isolated from every model-facing class. The Campaigns dashboard emits the same fields from a transparent selector-profile heuristic for historical browsing only; scores never enter attribution, response, budget, outcome, or optimization inputs."
+compact: "SimilarityReference is a presentation-only dataclass isolated from every model-facing class. The Campaigns dashboard emits the same fields from a transparent selector-profile heuristic for historical browsing only; Budget and report-performance browsing remain separate; scores never enter model inputs."
 order: 10
 lang: en-US
 ---
@@ -198,8 +198,127 @@ The Campaigns dashboard computes equal-weight matches across the selector compon
 
 Implemented and tested: `SimilarityReference` validation and the four isolation guarantees are covered by `modules/mta_common/tests/test_similarity_isolation.py`. The Campaigns dashboard emits the corresponding JSON field shape for its modal and dashboard tests verify the threshold control and isolation label.
 
+## Dashboard MVP Specification <span class="status-label status-recommendation" aria-label="Recommendation"></span>
+
+The dashboard's historical similarity feature is an explicit two-step presentation
+layer and not a model or optimizer dependency. The first step is a browser-only
+selector heuristic that reads the already-loaded history rows and emits
+`SimilarityReference` objects for display. The second step is a user review of the
+matching candidates; the output remains read-only and no downstream optimization,
+budget recommendation, or attribution stage consumes it.
+
+### Directly implementable fields for the MVP
+
+The MVP may filter and score only the fields already present in the campaign
+history payload that the dashboard already loads:
+
+- `provider`
+- `product_id`
+- `campaign_id`
+- `ad_product`
+- `marketplace`
+- `report_date` and the selected date range
+- `run_id` when diagnostics are enabled
+- `budget_level`
+- `configured_budget`
+
+This is the safe implementation surface for the first release because it is backed
+by the current research rows and is not fabricated on the client.
+
+### Fields that are temporarily unavailable and must not be invented
+
+The following fields are only valid if the backend explicitly adds them to the
+research resource; they must not be created in the browser from guesses:
+
+- `advertiser_id`
+- `ad_group_id`
+- `creative_id`
+- `normalizedTouchpoint` as a canonical, stable identifier
+- `interaction_type` when the history row does not already carry it in the same
+  aggregated slice
+- Any `adProduct` value that is missing from the history payload itself
+
+If a field is absent from the dashboard data, the UI must render it as unavailable
+rather than silently synthesising it. The browser may display a filter group as
+disabled or empty when the backend has not surfaced the value, but it must not
+pretend the field existed.
+
+### Filter interaction contract
+
+The historical similarity modal is a grouped checkbox panel with a draft state. Each
+section contains a local filter set and a consistent action row with the following
+behaviour:
+
+- Select all: choose every visible option in the current section
+- Clear: remove every selection in the current section
+- Reset: restore the section to the default values for the current view
+- Apply: commit the draft selection and recompute the candidate list once
+
+A filter section remains draft-local until Apply is pressed. The user may move
+between sections without triggering a query on every toggle, so the final result is
+computed once per apply and can be read as a single consistent change.
+
+### Report performance without budget history
+
+If budget observations are absent, the Campaigns view can browse existing
+Campaign–product report rows using the [report-performance contract](/en/dashboard/historical-similarity#report-performance-fallback).
+These rows retain their original reporting periods and source identities, with
+unavailable budgets and unscored results when no profile is selected. The strict
+budget identity below applies to budget observations, not to this separate
+report-performance browsing mode.
+
+### Correct candidate grouping
+
+For the MVP, candidate grouping must use the actual historical identity of the row,
+not only the campaign label. The grouping key is:
+
+- `run_id`
+- `campaign_id`
+- `marketplace`
+- `advertiser_id`
+- `product_id`
+- `budget_level`
+- `report_date`
+
+This prevents unrelated advertiser, market, or budget-level histories from being
+folded together just because the campaign id or product id happens to match. A row
+that lacks one of these values must not be silently merged into another bucket;
+when the backend does not supply the value, the strict comparison must exclude it
+instead of manufacturing a match.
+
+### Similarity calculation
+
+The scoring rule for the MVP is intentionally transparent and display-only:
+
+1. Build the selector profile from the selected fields and the chosen subject.
+2. Score every selected component as a binary equality comparison, unless the field
+   is configured budget; budget uses a distance score.
+3. Compute `similarity_score` as the mean of the scored components.
+4. Clamp the budget distance score to `[0.0, 1.0]`.
+5. Keep only rows whose `similarity_score` is greater than or equal to the chosen
+   threshold.
+6. Sort descending by `similarity_score` and then by a deterministic tie-breaker such
+   as `comparable_id`, then `historical_period`.
+
+This remains a selector-profile heuristic rather than a learned model. It is shown
+only as an aid to historical research and is never accepted as model input.
+
+### Result and error states
+
+The modal must explicitly render all of the following states:
+
+- Loading: while the candidate slice is being filtered and grouped
+- Empty: when no historical reference passes the threshold or selected filters
+- Error: when the historical resource cannot be read or the payload is malformed
+- Success: a bounded list of scored historical references with a visible count
+
+The MVP uses a capped result window — for example, the first 20 or 50 matches after
+sorting — to keep rendering bounded on large history tables. The cap is a display
+limit only and does not alter the backend dataset or the optimizer inputs.
+
 ## Known Limitations <span class="status-label status-verified" aria-label="Verified"></span>
 
 - The dashboard heuristic is intentionally simple and user-driven; it is neither learned nor validated as a predictive similarity model.
 - `rationale` and `generated_by` use plain `str | None`, not the five-state `FieldAvailability` vocabulary the core model uses elsewhere (see [Field Availability](/en/introduction/data-models/vocabularies/field-availability.md)) — a deliberate simplification, since this is a presentation-only type with no requirement to distinguish *why* an optional display field is absent.
 - `subject_type` is a free string rather than a controlled vocabulary, since the set of entity types a future similarity process might compare across is not yet known; this may need to become a shared enum once a real similarity process exists.
+- The MVP is intentionally narrower than a full similarity engine: it does not claim to model latent similarity, and it cannot compensate for missing backend identifiers by synthesising them from the client.

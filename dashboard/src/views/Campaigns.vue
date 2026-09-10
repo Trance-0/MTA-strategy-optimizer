@@ -29,7 +29,7 @@ import * as theme from "../theme.js";
 
 const props = defineProps({ section: { type: String, default: "history" } });
 const emit = defineEmits(["navigate"]);
-const { data } = useDashboard();
+const { data, errorFor } = useDashboard();
 const { diagnosticsOn } = useDiagnostics();
 
 const tab = computed(() => props.section);
@@ -66,7 +66,7 @@ const campaignById = computed(() => new Map(
 ));
 
 const budgetHistory = computed(() =>
-  (research.value.history ?? []).map((row) => {
+  (Array.isArray(research.value.history) ? research.value.history : []).filter((row) => row && typeof row === "object").map((row) => {
     const campaign = campaignById.value.get(row.campaign_id) ?? {};
     return {
       ...row,
@@ -76,6 +76,23 @@ const budgetHistory = computed(() =>
     };
   }),
 );
+
+// Report rows remain separate from budget observations and preserve their period.
+const similarityUsesPerformance = computed(() => budgetHistory.value.length === 0);
+const reportPerformance = computed(() => (Array.isArray(data.value.entityBridge) ? data.value.entityBridge : [])
+  .filter((row) => row && typeof row === "object").map((row, index) => {
+    const adProduct = String(row.touchpoint ?? "").split(":")[0] || null;
+    const campaign = campaignById.value.get(row.campaign_id) ?? {};
+    return { ...row, product_id: row.sku_id || null, ad_product: adProduct,
+      normalizedTouchpoint: row.touchpoint || null, interaction_type: String(row.touchpoint ?? "").split(":")[4] || null,
+      provider: campaign.provider ?? (["AMAZON_DSP", "SPONSORED_BRANDS", "SPONSORED_DISPLAY", "SPONSORED_PRODUCTS"].includes(adProduct) ? "AMAZON_ADS" : null),
+      report_date: row.report_start_date, source_identity: JSON.stringify([row.report_start_date, row.report_end_date, row.marketplace, row.advertiser_id, row.campaign_id, row.sku_id, row.touchpoint, index]),
+      configured_budget: null, budget_level: null, actual_spend: row.cost,
+      total_revenue: row.reported_sales, contribution_profit: null,
+    };
+  }));
+const similarityHistory = computed(() => similarityUsesPerformance.value ? reportPerformance.value : budgetHistory.value);
+const similarityCampaignOptions = computed(() => distinct(similarityHistory.value, "campaign_id"));
 
 const historyDates = computed(() => distinct(budgetHistory.value, "report_date"));
 const historyProviders = computed(() => distinct(budgetHistory.value, "provider"));
@@ -210,60 +227,229 @@ const historicalColumns = [
   { key: "contribution_profit", label: "Contribution profit", format: "money" },
 ];
 
-const similarityMatches = computed(() => {
-  const selectedCampaign = campaignById.value.get(similarityCampaign.value) ?? {};
+const strictHistoricalIdentity = [
+  "run_id",
+  "campaign_id",
+  "marketplace",
+  "advertiser_id",
+  "product_id",
+  "budget_level",
+  "report_date",
+];
+
+const similarityFilterSections = computed(() => {
+  const historyRows = similarityHistory.value;
+  // Checkbox filters are multi-select: within one category the selected values are OR-ed
+  // together, while different categories are AND-ed together to narrow the candidate list.
+  const sections = [
+    {
+      key: "provider",
+      label: "Provider",
+      values: distinct(historyRows, "provider"),
+    },
+    {
+      key: "product_id",
+      label: "Product",
+      values: distinct(historyRows, "product_id"),
+    },
+    {
+      key: "ad_product",
+      label: "Ad product",
+      values: distinct(historyRows, "ad_product"),
+    },
+  ];
+  return sections.map((section) => ({
+    ...section,
+    values: Array.isArray(section.values) ? section.values : [],
+  }));
+});
+
+const similarityFilterDefaults = () => {
+  const defaults = {};
+  for (const section of similarityFilterSections.value) {
+    defaults[section.key] = [];
+  }
+  return defaults;
+};
+
+const similarityDraftFilters = ref(similarityFilterDefaults());
+const similarityAppliedFilters = ref(similarityFilterDefaults());
+const similaritySearch = ref({ provider: "", product_id: "", ad_product: "" });
+const similarityVisibleSections = computed(() => similarityFilterSections.value.map((section) => ({
+  ...section,
+  visibleValues: section.values.filter((value) => String(value).toLocaleLowerCase()
+    .includes((similaritySearch.value[section.key] ?? "").trim().toLocaleLowerCase())),
+})));
+const similarityHasPendingChanges = computed(() => similarityFilterSections.value.some(({ key }) => {
+  const draft = similarityDraftFilters.value[key] ?? [];
+  const applied = similarityAppliedFilters.value[key] ?? [];
+  return draft.length !== applied.length || draft.some((value) => !applied.includes(value));
+}));
+const similarityStatus = ref("idle");
+const similarityError = computed(() => Boolean(errorFor(["research-campaign-history", "entity-bridge"]))
+  || (data.value.entityBridge != null && (!Array.isArray(data.value.entityBridge)
+    || data.value.entityBridge.some((row) => !row || typeof row !== "object" || Array.isArray(row))))
+  || (research.value.history != null && (!Array.isArray(research.value.history)
+    || research.value.history.some((row) => !row || typeof row !== "object"))));
+
+const similarityMissingFields = computed(() => [
+  "advertiser_id", "ad_group_id", "creative_id", "normalizedTouchpoint", "interaction_type",
+].filter((field) => !similarityHistory.value.some((row) => row[field] != null && row[field] !== ""))
+  .map((field) => `${field} unavailable in this research slice.`));
+
+function similarityResetSection(key) {
+  if (!similarityFilterSections.value.some((section) => section.key === key)) return;
+  const defaults = similarityFilterDefaults();
+  similarityDraftFilters.value[key] = [...(defaults[key] ?? [])];
+  similaritySearch.value[key] = "";
+}
+
+function similaritySelectAll(key) {
+  const section = similarityVisibleSections.value.find((entry) => entry.key === key);
+  if (!section) return;
+  similarityDraftFilters.value[key] = [...new Set([
+    ...(similarityDraftFilters.value[key] ?? []), ...section.visibleValues,
+  ])];
+}
+
+function similarityClearSection(key) {
+  similarityDraftFilters.value[key] = [];
+}
+
+function similarityApplyFilters() {
+  const next = {};
+  for (const section of similarityFilterSections.value) {
+    next[section.key] = [...(similarityDraftFilters.value[section.key] ?? [])];
+  }
+  similarityAppliedFilters.value = next;
+  similarityStatus.value = "loading";
+  window.setTimeout(() => {
+    similarityStatus.value = "ready";
+  }, 0);
+}
+
+function similarityResetFilters() {
+  similarityCampaign.value = "";
+  similarityProduct.value = "";
+  similarityProvider.value = "";
+  similarityAdProduct.value = "";
+  similarityBudget.value = "";
+  similarityThreshold.value = 0.6;
+  similaritySearch.value = { provider: "", product_id: "", ad_product: "" };
+
+  const defaults = similarityFilterDefaults();
+  similarityDraftFilters.value = { ...defaults };
+  similarityAppliedFilters.value = { ...defaults };
+  similarityStatus.value = "ready";
+}
+
+const similarityActiveFilters = computed(() =>
+  Object.entries(similarityAppliedFilters.value).filter(([, values]) => Array.isArray(values) && values.length > 0),
+);
+
+function similarityRowMatches(row) {
+  if (!similarityActiveFilters.value.length) return true;
+  return similarityActiveFilters.value.every(([key, values]) => {
+    const rawValue = row[key];
+    if (rawValue === null || rawValue === undefined || rawValue === "") {
+      return false;
+    }
+    return values.some((value) => String(value) === String(rawValue));
+  });
+}
+
+const similarityAllMatches = computed(() => {
+  const selectedCampaign = campaignById.value.get(similarityCampaign.value)
+    ?? similarityHistory.value.find((row) => row.campaign_id === similarityCampaign.value) ?? {};
   const profile = {
     provider: similarityProvider.value || selectedCampaign.provider || null,
     product_id: similarityProduct.value || null,
     ad_product: similarityAdProduct.value || selectedCampaign.ad_product || null,
     budget: Number(similarityBudget.value) || null,
   };
+
+  if (similarityStatus.value === "loading") return [];
+  if (similarityError.value) return [];
+
   const candidates = new Map();
-  for (const row of budgetHistory.value) {
-    const key = [row.run_id, row.campaign_id, row.product_id, row.report_date].join("|");
+  // Historical identity must stay strict: run_id, campaign_id, marketplace,
+  // advertiser_id, product_id, budget_level, report_date. Different marketplaces,
+  // advertisers, or budget levels are never merged into one candidate bucket.
+  for (const row of similarityHistory.value) {
+    if (similarityUsesPerformance.value) {
+      if (row.campaign_id && row.product_id && row.marketplace && row.advertiser_id && row.report_date && row.report_end_date) candidates.set(row.source_identity, [row]);
+      continue;
+    }
+    const key = JSON.stringify(strictHistoricalIdentity.map((field) => row[field]));
+    const hasRequiredIdentity = Boolean(
+      row.run_id
+      && row.campaign_id
+      && row.marketplace
+      && row.advertiser_id
+      && row.product_id
+      && row.budget_level !== null
+      && row.budget_level !== undefined
+      && row.report_date,
+    );
+    if (!hasRequiredIdentity) {
+      continue;
+    }
     if (!candidates.has(key)) candidates.set(key, []);
     candidates.get(key).push(row);
   }
+
   return [...candidates.values()].map((rows) => {
     const first = rows[0];
     const components = [];
-    if (profile.provider) components.push(first.provider === profile.provider ? 1 : 0);
-    if (profile.product_id) components.push(first.product_id === profile.product_id ? 1 : 0);
-    if (profile.ad_product) components.push(first.ad_product === profile.ad_product ? 1 : 0);
-    if (profile.budget) {
-      const distance = Math.abs(Number(first.configured_budget ?? 0) - profile.budget);
-      components.push(Math.max(0, 1 - distance / Math.max(profile.budget, 1)));
+    for (const field of ["provider", "product_id", "ad_product"]) {
+      const selected = similarityAppliedFilters.value[field] ?? [];
+      if (selected.length) components.push(selected.some((value) => String(value) === String(first[field])) ? 1 : 0);
+      else if (profile[field]) components.push(first[field] === profile[field] ? 1 : 0);
+    }
+    if (!similarityUsesPerformance.value && similarityBudget.value !== "" && Number.isFinite(Number(similarityBudget.value))) {
+      const budget = Number(similarityBudget.value);
+      const distance = Math.abs(sum(rows, "configured_budget") - budget);
+      components.push(Math.max(0, Math.min(1, 1 - distance / Math.max(budget, 1))));
     }
     const score = components.length
       ? components.reduce((total, value) => total + value, 0) / components.length
-      : 0;
-    const subjectId = similarityCampaign.value || similarityProduct.value || "temporary-profile";
-    const comparableId = similarityCampaign.value
-      ? first.campaign_id
-      : (first.product_id || first.campaign_id);
+      : (similarityUsesPerformance.value ? null : 0);
+
+    const comparableId = similarityCampaign.value ? first.campaign_id : (first.product_id || first.campaign_id);
     return {
       subject_type: similarityCampaign.value ? "CAMPAIGN" : "PRODUCT",
-      subject_id: subjectId,
+      subject_id: similarityCampaign.value || similarityProduct.value || "temporary-profile",
       comparable_id: comparableId,
       similarity_score: score,
-      rationale: `Equal-weight match across ${components.length} selected profile component(s).`,
-      generated_by: "dashboard-selector-profile-v1",
+      rationale: "Presentation-only historical match; metadata only and not used in optimization.",
+      generated_by: "historical-similarity-selector",
       run_id: first.run_id,
       provider: first.provider,
+      ad_product: first.ad_product,
+      identity: first.source_identity ?? JSON.stringify(strictHistoricalIdentity.map((field) => first[field])),
       product_id: first.product_id,
       campaign_id: first.campaign_id,
-      historical_period: first.report_date,
-      budget: sum(rows, "configured_budget"),
-      spend: sum(rows, "actual_spend"),
-      revenue: sum(rows, "total_revenue"),
+      marketplace: first.marketplace,
+      historical_period: similarityUsesPerformance.value ? `${first.report_date} → ${first.report_end_date}` : first.report_date,
+      budget: similarityUsesPerformance.value ? null : sum(rows, "configured_budget"),
+      spend: rows.every((row) => row.actual_spend != null) ? sum(rows, "actual_spend") : null,
+      revenue: rows.every((row) => row.total_revenue != null) ? sum(rows, "total_revenue") : null,
       contribution_profit: rows.every((row) => row.contribution_profit != null)
-        ? sum(rows, "contribution_profit") : null,
-      touchpoint_summary: `${first.ad_product ?? 'Unknown'} · ${rows.length} budget level(s)`,
+        ? sum(rows, "contribution_profit")
+        : null,
+      touchpoint_summary: similarityUsesPerformance.value ? first.touchpoint : `${first.ad_product ?? "Unknown"} · ${rows.length} budget level(s)`,
     };
-  }).filter((row) => row.subject_id !== row.comparable_id)
-    .filter((row) => row.similarity_score >= similarityThreshold.value)
-    .sort((left, right) => right.similarity_score - left.similarity_score);
+  })
+    .filter((row) => !row.subject_id || row.subject_id !== row.comparable_id)
+    .filter((row) => row.similarity_score === null || row.similarity_score >= similarityThreshold.value)
+    .filter((row) => similarityRowMatches(row))
+    .sort((left, right) => right.similarity_score - left.similarity_score
+      || String(left.comparable_id).localeCompare(String(right.comparable_id))
+      || String(left.historical_period).localeCompare(String(right.historical_period))
+      || left.identity.localeCompare(right.identity));
 });
+
+const similarityMatches = computed(() => similarityAllMatches.value.slice(0, 20));
 
 const similarityColumns = [
   { key: "similarity_score", label: "Similarity", format: "percent" },
@@ -625,7 +811,7 @@ const pathColumns = [
  * index.
  */
 const historyRowKey = (row) =>
-  [row.run_id, row.campaign_id, row.product_id, row.report_date, row.budget_level]
+  [row.run_id, row.campaign_id, row.marketplace, row.advertiser_id, row.product_id, row.budget_level, row.report_date]
     .filter((part) => part !== null && part !== undefined && part !== "")
     .join(":");
 
@@ -716,10 +902,9 @@ const scopedRowKey = (row) =>
         </article>
       </template>
       <article v-else class="card empty-card">
-        <h2>No Campaign budget history</h2>
+        <h2>{{ reportPerformance.length ? "Historical ad performance available" : "No Campaign budget history" }}</h2>
         <p>
-          No Campaign has a recorded budget-versus-spend history in the current
-          reporting window. Budget planning is available in Budget Manager.
+          {{ reportPerformance.length ? `${reportPerformance.length} report rows are available. Open Find similar history to filter Campaigns, Products and Ad products. Configured budget is not recorded in these reports.` : "No Campaign has a recorded budget-versus-spend history in the current reporting window. Budget planning is available in Budget Manager." }}
         </p>
       </article>
     </template>
@@ -939,20 +1124,82 @@ const scopedRowKey = (row) =>
 
     <div v-if="similarityOpen" class="modal-backdrop" @click.self="similarityOpen = false">
       <section class="modal" role="dialog" aria-modal="true" aria-label="Historical similarity reference">
-        <div class="modal-head"><h2>Historical similarity reference</h2><button @click="similarityOpen = false">Close</button></div>
+        <div class="modal-head">
+          <h2>Historical similarity reference</h2>
+          <div class="modal-actions">
+            <button type="button" @click="similarityResetFilters">Reset all</button>
+            <button type="button" class="similarity-apply" @click="similarityApplyFilters">Apply filters</button>
+            <button @click="similarityOpen = false">Close</button>
+          </div>
+        </div>
         <div class="modal-body">
           <p><b>Historical reference only. Not used by attribution or strategy optimization.</b></p>
+          <p v-if="similarityUsesPerformance">Historical ad performance · Campaign–product report rows. Budget unavailable. Revenue is platform-reported sales; each row retains its full reporting period.</p>
           <div class="filter-row">
-            <div class="field"><label for="similar-campaign">Query Campaign</label><select id="similar-campaign" v-model="similarityCampaign"><option value="">Temporary profile</option><option v-for="value in historyCampaigns" :key="value">{{ value }}</option></select></div>
-            <div class="field"><label for="similar-product">Product</label><select id="similar-product" v-model="similarityProduct"><option value="">Any</option><option v-for="value in historyProducts" :key="value">{{ value }}</option></select></div>
-            <div class="field"><label for="similar-provider">Provider</label><select id="similar-provider" v-model="similarityProvider"><option value="">From Campaign / any</option><option v-for="value in historyProviders" :key="value">{{ value }}</option></select></div>
-            <div class="field"><label for="similar-ad-product">Ad product</label><select id="similar-ad-product" v-model="similarityAdProduct"><option value="">From Campaign / any</option><option v-for="value in historyAdProducts" :key="value">{{ value }}</option></select></div>
-            <div class="field"><label for="similar-budget">Configured budget</label><input id="similar-budget" v-model="similarityBudget" type="number" min="0" step="1" /></div>
+            <div class="field"><label for="similar-campaign">Query Campaign</label><select id="similar-campaign" v-model="similarityCampaign"><option value="">Temporary profile</option><option v-for="value in similarityCampaignOptions" :key="value">{{ value }}</option></select></div>
+            <div class="field"><label for="similar-budget">Configured budget</label><input id="similar-budget" :disabled="similarityUsesPerformance" v-model="similarityBudget" type="number" min="0" step="1" /></div>
             <div class="field"><label for="similar-threshold">Threshold {{ Number(similarityThreshold).toFixed(2) }}</label><input id="similar-threshold" v-model.number="similarityThreshold" type="range" min="0" max="1" step="0.05" /></div>
           </div>
-          <DataTable :columns="similarityColumns" :rows="similarityMatches" empty="No historical references meet this threshold." />
+
+          <p class="caption">Choose any values within each group; results must match every selected group. Leave a group empty to include all values.</p>
+          <p class="similarity-pending" role="status" aria-live="polite">{{ similarityHasPendingChanges ? 'Unapplied selections — click Apply filters to update results.' : 'Selections applied.' }}</p>
+          <div class="similarity-filter-groups">
+            <div v-for="section in similarityVisibleSections" :key="section.key" class="similarity-filter-group" role="group" :aria-label="section.label + ' filters'">
+              <div class="similarity-filter-header">
+                <strong>{{ section.label }}</strong>
+                <span class="caption">{{ (similarityDraftFilters[section.key] ?? []).length }} / {{ section.values.length }} selected</span>
+              </div>
+              <div>
+                <div v-if="section.values.length" class="similarity-filter-actions">
+                  <button type="button" @click="similaritySelectAll(section.key)" :disabled="!section.visibleValues.length">Select all</button>
+                  <button type="button" @click="similarityClearSection(section.key)">Clear</button>
+                  <button type="button" @click="similarityResetSection(section.key)">Reset</button>
+                </div>
+              </div>
+              <template v-if="section.values.length">
+                <input class="similarity-search" type="search" v-model="similaritySearch[section.key]" :aria-label="'Search ' + section.label + ' options'" :placeholder="'Search ' + section.label.toLowerCase() + '…'" />
+                <div class="similarity-option-list">
+                <label v-for="value in section.visibleValues" :key="`${section.key}-${value}`" class="checkbox-line">
+                  <input type="checkbox" :value="value" v-model="similarityDraftFilters[section.key]" />
+                  <span>{{ value }}</span>
+                </label>
+                <p v-if="!section.visibleValues.length" class="caption">No options match your search.</p>
+                </div>
+              </template>
+              <p v-else class="caption">No options available in the current research slice</p>
+            </div>
+          </div>
+
+          <p v-if="similarityStatus === 'loading'">Loading historical references…</p>
+          <p v-else-if="similarityStatus === 'error' || similarityError">Historical references are unavailable.</p>
+          <p v-else-if="similarityMatches.length === 0">No historical references meet this filter set.</p>
+          <p v-else>Showing {{ similarityMatches.length }} of {{ similarityAllMatches.length }} matches.</p>
+
+          <div v-if="similarityMissingFields.length" class="caption">
+            <p v-for="text in similarityMissingFields" :key="text">{{ text }}</p>
+          </div>
+
+          <DataTable v-if="similarityMatches.length" :columns="similarityColumns" :rows="similarityMatches" empty="No historical references meet this threshold." />
         </div>
       </section>
     </div>
   </section>
 </template>
+
+<style scoped>
+.modal-actions, .similarity-filter-header, .similarity-filter-actions {
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+}
+.similarity-filter-header { justify-content: space-between; }
+.similarity-filter-groups { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+.similarity-filter-group { border: 1px solid var(--border, #d8dee6); border-radius: 10px; padding: 14px; min-width: 0; }
+.similarity-filter-actions { margin: 10px 0; }
+.similarity-filter-actions button { font-size: 12px; padding: 5px 8px; }
+.similarity-search { width: 100%; box-sizing: border-box; margin-bottom: 10px; }
+.similarity-option-list { max-height: 220px; overflow-y: auto; }
+.checkbox-line { display: flex; align-items: flex-start; gap: 8px; padding: 7px 2px; cursor: pointer; overflow-wrap: anywhere; }
+.checkbox-line input { flex: 0 0 auto; width: auto; margin-top: 3px; }
+.similarity-pending { font-size: 13px; min-height: 20px; }
+.similarity-apply { font-weight: 700; }
+@media (max-width: 720px) { .similarity-filter-groups { grid-template-columns: 1fr; } }
+</style>

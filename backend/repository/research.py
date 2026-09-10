@@ -170,6 +170,19 @@ def _flatten_observation(item: Mapping[str, Any]) -> dict:
     field_availability = touchpoint.get("field_availability") or {}
     flattened = {**item, **scope}
     flattened["provider"] = touchpoint.get("provider") or item.get("provider")
+    flattened["marketplace"] = scope.get("marketplace") or item.get("marketplace")
+    flattened["advertiser_id"] = (
+        scope.get("advertiser_id")
+        or item.get("advertiser_id")
+        or touchpoint.get("advertiser_id")
+    )
+    flattened["campaign_id"] = scope.get("campaign_id") or item.get("campaign_id")
+    flattened["product_id"] = scope.get("product_id") or item.get("product_id")
+    flattened["budget_level"] = (
+        item.get("budget_level")
+        if item.get("budget_level") is not None
+        else scope.get("budget_level")
+    )
     flattened["touchpoint"] = (
         ":".join(
             [

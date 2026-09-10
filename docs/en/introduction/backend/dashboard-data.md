@@ -1,7 +1,7 @@
 ---
 title: Dashboard Data Endpoints
 description: Snapshot, reload, master-object, and repository behavior
-compact: "Specifies allow-listed dashboard resources, streamed server milestones, optimized Campaign-history queries, loader caches, research slices, structured timing, reload invalidation, compatibility snapshots, artifact precedence, immutable observations, editable master drafts, SQLAlchemy queries, and normalized JSON types."
+compact: "Specifies allow-listed dashboard resources, streamed server milestones, optimized Campaign-history queries, loader caches, research identity projection, structured timing, reload invalidation, compatibility snapshots, artifact precedence, immutable observations, editable master drafts, SQLAlchemy queries, and normalized JSON types."
 lang: en-US
 source_files: backend/api/dashboard.py, backend/repository/attribution.py, backend/repository/coercion.py, backend/repository/evaluation.py, backend/repository/history.py, backend/repository/master_data.py, backend/repository/research.py, backend/repository/snapshot.py, backend/repository/strategy.py, backend/tests/test_snapshot.py
 ---
@@ -148,6 +148,12 @@ Source: `backend/repository/master_data.py`, `backend/repository/research.py`
 - Behavior contract: Observation-only Campaign History reads do not reconstruct
   the entire research object in database mode; only the two heavy observation
   queries execute, with normalization after both return.
+- Identity projection: `_flatten_observation` preserves marketplace, campaign and
+  product from reporting scope with top-level fallback; advertiser comes from
+  scope, top level, then touchpoint. Budget level preserves top-level zero and
+  otherwise falls back to scope. Absent identities remain absent or null; the
+  dashboard excludes incomplete identities from strict similarity matching.
+- Verification: `python -m unittest backend.tests.test_research_identity`.
 - Dependencies: Backend repositories and database execution boundary.
 - Verification: Snapshot parity and master-route refusal tests.
 

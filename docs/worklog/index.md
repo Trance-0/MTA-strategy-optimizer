@@ -1,7 +1,7 @@
 ---
 title: Work Log
 description: Who is involved in this project, what they own, and where their day-by-day record lives
-compact: "Roster of everyone involved: yao-LLL (Jiahao Yao) attribution and strategy models before 2026-08-08, Trance-0 (Zheyuan Wu) project manager since, tianlc6-design (Tianle Chen) SQL database, Willow-sakura (Yi Liu) evaluation, Yayu Yu knowledge base. Read to find who owns an area."
+compact: "Roster of everyone involved: yao-LLL (Jiahao Yao) attribution and strategy models before 2026-08-08, Trance-0 (Zheyuan Wu) project manager since, tianlc6-design (Tianle Chen) SQL database, Willow-sakura (Yi Liu) evaluation, Yayu Yu knowledge base, Winnie historical filtering. Read to find who owns an area."
 order: 1
 ---
 
@@ -86,6 +86,12 @@ The 2026-08-08 boundary marks the handover of development ownership from Jiahao 
 
 - Owner: Yayu Yu
 - Where the work lands: [Research](../en/research/)
+
+### [`Winnie388`](./Winnie.md)
+
+- Name: Winnie
+- Responsibility: Historical similarity filters and report-performance browsing
+- Active period: September 2026
 
 ## Conventions
 

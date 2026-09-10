@@ -1,6 +1,6 @@
 ---
 title: Dashboard Views and Visual Contract
-compact: "Vue visual contract: seven route-controlled views, immediate backend-phased lazy-loading transitions, accessible terms, server-declared model selectors, artifact transfer, unified queued tasks, large-history-safe charts, and native Willow forecasting."
+compact: "Vue visual contract: seven route-controlled views, immediate backend-phased lazy-loading transitions, accessible terms, server-declared model selectors, artifact transfer, unified queued tasks, large-history-safe charts, searchable historical filters with report-performance fallback, and native Willow forecasting."
 lang: en-US
 source_files: dashboard/src/theme.js, dashboard/src/style.css, dashboard/src/lib/deployment.js, dashboard/src/lib/diagnostics.js, dashboard/src/lib/useJobs.js, dashboard/src/lib/willowGmvModel.js, dashboard/src/lib/terms.js, dashboard/src/views/CommandCenter.vue, dashboard/src/views/BudgetManager.vue, dashboard/src/views/Campaigns.vue, dashboard/src/views/CampaignOptimizer.vue, dashboard/src/views/OptimizationLog.vue, dashboard/src/views/KnowledgeBase.vue, dashboard/src/components/SidebarNav.vue, dashboard/src/components/TopBar.vue, dashboard/src/components/StageRunner.vue, dashboard/src/components/LoadingProgress.vue, dashboard/src/components/TermHelp.vue, dashboard/src/components/WillowGmvForecast.vue, dashboard/src/components/PlotlyChart.vue, dashboard/src/components/DataTable.vue, dashboard/src/components/EntityTable.vue, dashboard/src/components/ConfirmDialog.vue, dashboard/src/components/TableView.vue, dashboard/src/components/MetricRow.vue, dashboard/src/components/KeyValuePanel.vue, dashboard/src/components/ReliabilityBanner.vue, dashboard/src/lib/common.js
 ---
@@ -284,6 +284,11 @@ by attribution or strategy; that modal is the view's one remaining `DataTable`,
 because it is a fixed short list inside a dialog rather than a page of records.
 When no attribution artifact exists, the view displays “Attribution not
 available.”
+
+##### Historical similarity reference
+
+The [historical similarity specification](./historical-similarity.md) defines the
+checkbox interactions, strict candidate identities, scoring, and result states.
 
 Database histories may contain 100,000 rows and the view renders that complete
 selected history. Chart extrema therefore scan rows and fields iteratively with

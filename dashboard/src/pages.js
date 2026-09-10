@@ -49,7 +49,7 @@ export const PAGES = {
     crumb: "AI-MTA / Planning / Campaigns",
     defaultSection: "history",
     sections: {
-      history: ["shell", "research-campaign-history"],
+      history: ["shell", "research-campaign-history", "entity-bridge"],
       performance: ["shell", "performance"],
       bridge: ["shell", "entity-bridge"],
       paths: ["shell", "path-report"],

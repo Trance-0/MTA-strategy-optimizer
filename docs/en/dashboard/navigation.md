@@ -1,6 +1,6 @@
 ---
 title: Navigation Rail and Settings
-compact: "Navigation contract for canonical deep links, route-owned lazy resources, the flat rail, Settings General/Data source/Logging/Tasks tabs, a four-step schema doctor, runtime PostgreSQL schema selection, queued setup, write-only passwords, and default INFO logging."
+compact: "Navigation contract for canonical deep links, route-owned lazy resources including Campaign report performance, the flat rail, Settings General/Data source/Logging/Tasks tabs, a four-step schema doctor, runtime PostgreSQL schema selection, queued setup, write-only passwords, and default INFO logging."
 lang: en-US
 source_files: dashboard/src/pages.js, dashboard/src/App.vue, dashboard/src/main.js, dashboard/src/components/SettingsDialog.vue, dashboard/src/components/BackendTasks.vue, dashboard/src/components/SchemaRecovery.vue
 ---
@@ -71,7 +71,7 @@ with `shell`, which supplies deployment and report context.
 
 #### Campaigns
 
-- `campaigns/history`: `research-campaign-history`.
+- `campaigns/history`: `research-campaign-history` and `entity-bridge` (report-performance fallback).
 - `campaigns/performance`: `performance`.
 - `campaigns/bridge`: `entity-bridge`.
 - `campaigns/paths`: `path-report`.
