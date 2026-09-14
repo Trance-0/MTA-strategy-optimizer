@@ -1,7 +1,7 @@
 ---
 title: Dashboard Data Endpoints
 description: Snapshot, reload, master-object, and repository behavior
-compact: "Explicit dataset resource routing without database fallback, streamed progress and inclusive valid-date history windows with a 90-day default; parameterized database queries, window caches, typed coercion, runtime artifact precedence, immutable observations and editable drafts."
+compact: "Explicit dataset resource routing without database fallback, streamed progress and inclusive valid-date history windows with a 90-day default; parameterized database queries, bounded lazy-refresh buffers, shared concurrent loads, typed coercion, runtime artifact precedence, immutable observations and editable drafts."
 lang: en-US
 source_files: backend/api/dashboard.py, backend/repository/attribution.py, backend/repository/coercion.py, backend/repository/history.py, backend/repository/master_data.py, backend/repository/research.py, backend/repository/snapshot.py, backend/repository/strategy.py
 test_files: backend/tests/test_coercion.py, backend/tests/test_snapshot.py
@@ -44,7 +44,18 @@ JSON response remains available for compatibility and diagnostics.
 The route registry, not the backend, decides which resources a subsection
 needs. The backend registry decides what each accepted name can expose. This
 two-sided allow-list means a hash fragment cannot become a storage operation.
-Results are cached for ten minutes by underlying loader key. Research history
+Results are cached for ten minutes by underlying loader key. Expired values
+remain available for another ten minutes while one daemon refresh per key builds
+a replacement buffer. Publication is atomic; readers never see partial results.
+After that grace period readers wait for fresh data. Concurrent cold readers
+share one load, including its error. Freshness starts at load completion.
+Refresh failures retain the previous buffer and retry after 30 seconds while
+within grace; cold failures propagate. At most four background refreshes run
+and at most 64 completed entries are retained in least-recently-used order.
+Reload, successful jobs and configuration changes invalidate all buffers and
+advance a generation: an older in-flight load cannot repopulate the new cache.
+Caches are process-local and do not replace database readiness checks.
+Research history
 has a separate cache from research catalogues, so loading Providers cannot
 execute observation queries.
 

@@ -9,6 +9,8 @@ from __future__ import annotations
 import os
 import json
 import tempfile
+import threading
+from concurrent.futures import ThreadPoolExecutor
 import unittest
 from pathlib import Path
 from unittest.mock import patch
@@ -400,3 +402,71 @@ class SnapshotContractTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class BufferedCacheTests(unittest.TestCase):
+    """Check concurrency, stale publication and bounded buffer retention."""
+
+    def setUp(self):
+        snapshot.clear_caches()
+
+    def tearDown(self):
+        snapshot.clear_caches()
+
+    def test_cold_readers_share_one_load(self):
+        entered, release = threading.Event(), threading.Event()
+        calls = []
+        def producer():
+            calls.append(1)
+            entered.set()
+            self.assertTrue(release.wait(3))
+            return 42
+        with ThreadPoolExecutor(4) as pool:
+            first = pool.submit(snapshot.cached, "shared", producer)
+            self.assertTrue(entered.wait(3))
+            others = [pool.submit(snapshot.cached, "shared", producer) for _ in range(3)]
+            release.set()
+            self.assertEqual([first.result()] + [f.result() for f in others], [42] * 4)
+        self.assertEqual(len(calls), 1)
+
+    def test_stale_returns_before_refresh_and_clear_blocks_publication(self):
+        entered, release = threading.Event(), threading.Event()
+        snapshot.cached("stale", lambda: "old")
+        with snapshot._lock:
+            snapshot._cache["stale"] = (0, "old")
+        def producer():
+            entered.set()
+            self.assertTrue(release.wait(3))
+            return "outdated"
+        with patch.object(snapshot.time, "monotonic", return_value=601):
+            self.assertEqual(snapshot.cached("stale", producer), "old")
+            self.assertTrue(entered.wait(3))
+            with snapshot._lock:
+                pending = snapshot._inflight["stale"]
+            snapshot.clear_caches()
+            self.assertEqual(snapshot.cached("stale", lambda: "new"), "new")
+            release.set()
+            self.assertEqual(pending.result(3), "outdated")
+            self.assertEqual(snapshot.cached("stale", lambda: "wrong"), "new")
+
+    def test_refresh_failure_retains_buffer_and_cold_failure_retries(self):
+        snapshot.cached("failure", lambda: 1)
+        with snapshot._lock:
+            snapshot._cache["failure"] = (0, 1)
+        with patch.object(snapshot.time, "monotonic", return_value=601):
+            def fail():
+                raise ValueError("failed")
+            # Run publication directly to synchronize the failure deterministically.
+            from concurrent.futures import Future
+            pending = Future()
+            snapshot._produce("failure", fail, pending, snapshot._generation)
+            self.assertEqual(snapshot.cached("failure", fail), 1)
+            with self.assertRaises(ValueError):
+                snapshot.cached("cold", fail)
+            self.assertEqual(snapshot.cached("cold", lambda: 2), 2)
+
+    def test_cache_evicts_least_recently_used(self):
+        with patch.object(snapshot, "CACHE_MAX_ENTRIES", 2):
+            for key in ("a", "b", "a", "c"):
+                snapshot.cached(key, lambda: 1)
+            self.assertEqual(list(snapshot._cache), ["a", "c"])

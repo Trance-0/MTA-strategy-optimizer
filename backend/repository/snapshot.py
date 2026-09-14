@@ -16,6 +16,9 @@ Data flow:
 from __future__ import annotations
 
 import re
+import logging
+from collections import OrderedDict
+from concurrent.futures import Future
 import threading
 import time
 from datetime import date, timedelta
@@ -47,31 +50,83 @@ from backend.repository.strategy import (
 #: process appears without a restart.
 CACHE_TTL_SECONDS = 600.0
 
-_cache: dict[str, tuple[float, Any]] = {}
+# Bound retained buffers and refresh workers independently; cold loads execute
+# on their requesting thread so nested resource loaders cannot deadlock a pool.
+CACHE_MAX_ENTRIES = 64
+CACHE_STALE_SECONDS = 600.0
+CACHE_RETRY_SECONDS = 30.0
+_cache: OrderedDict[str, tuple[float, Any]] = OrderedDict()
+_inflight: dict[str, Future] = {}
+_retry_after: dict[str, float] = {}
+_generation = 0
+_refresh_slots = threading.BoundedSemaphore(4)
 _lock = threading.Lock()
 
 
+def _produce(key, producer, future, generation, background=False):
+    """Build off-lock and publish only into the generation that requested it."""
+    try:
+        value = producer()
+        with _lock:
+            if generation == _generation:
+                _cache[key] = (time.monotonic(), value)
+                _cache.move_to_end(key)
+                _retry_after.pop(key, None)
+                while len(_cache) > CACHE_MAX_ENTRIES:
+                    evicted, _ = _cache.popitem(last=False)
+                    _retry_after.pop(evicted, None)
+        future.set_result(value)
+    except BaseException as error:
+        with _lock:
+            if generation == _generation and key in _cache:
+                _retry_after[key] = time.monotonic() + CACHE_RETRY_SECONDS
+        future.set_exception(error)
+        if background:
+            logging.getLogger(__name__).warning("Resource refresh failed for %s", key)
+    finally:
+        with _lock:
+            if _inflight.get(key) is future:
+                del _inflight[key]
+        if background:
+            _refresh_slots.release()
+
+
 def cached(key: str, producer: Callable[[], Any]) -> Any:
-    """Run `producer` at most once per time-to-live, keyed by loader name."""
-    now = time.monotonic()
+    """Share cold loads and serve a bounded stale buffer during lazy refresh."""
     with _lock:
+        now = time.monotonic()
         hit = _cache.get(key)
-        if hit is not None and now - hit[0] < CACHE_TTL_SECONDS:
+        if hit is not None:
+            _cache.move_to_end(key)
+            if now - hit[0] < CACHE_TTL_SECONDS:
+                return hit[1]
+        future = _inflight.get(key)
+        generation = _generation
+        if hit is not None and now - hit[0] < CACHE_TTL_SECONDS + CACHE_STALE_SECONDS:
+            if future is None and now >= _retry_after.get(key, 0) and _refresh_slots.acquire(False):
+                future = Future()
+                _inflight[key] = future
+                threading.Thread(target=_produce, args=(key, producer, future, generation, True),
+                                 name="resource-refresh", daemon=True).start()
             return hit[1]
-    # Produced outside the lock: a loader takes hundreds of milliseconds and
-    # holding the lock across it would serialise every concurrent reader behind
-    # the slowest one. Two requests racing the same cold key both compute it,
-    # which costs one duplicate read and keeps the readers independent.
-    value = producer()
-    with _lock:
-        _cache[key] = (now, value)
-    return value
+        owner = future is None
+        if owner:
+            future = Future()
+            _inflight[key] = future
+    # Waiters share both the completed value and errors without holding the lock.
+    if owner:
+        _produce(key, producer, future, generation)
+    return future.result()
 
 
 def clear_caches() -> None:
-    """Drop every cached result so the next read hits the source again."""
+    """Invalidate buffers and prevent earlier loads from republishing them."""
+    global _generation
     with _lock:
+        _generation += 1
         _cache.clear()
+        _retry_after.clear()
+        _inflight.clear()
 
 
 #: One entry per compatibility-snapshot key, in payload order.
