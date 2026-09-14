@@ -24,8 +24,10 @@
  *     src/lib/useDashboard.js -> here (results)
  *     src/lib/useJobs.js      -> here (runs)
  */
-import { computed, onMounted, ref } from "vue";
+import { computed, onMounted, onBeforeUnmount, ref, watch } from "vue";
 
+import TermHelp from "../components/TermHelp.vue";
+import { optimizeCampaign, IS_STATIC } from "../api/client.js";
 import EntityTable from "../components/EntityTable.vue";
 import MetricRow from "../components/MetricRow.vue";
 import PlotlyChart from "../components/PlotlyChart.vue";
@@ -337,7 +339,38 @@ const shiftRows = computed(() => sortBy(shift.value, "delta_pp", "desc"));
 // Strategy optimization: the fitted response model's plan
 // ---------------------------------------------------------------------------
 
-const strategy = computed(() => data.value.campaignStrategy ?? {});
+const campaignQuery = new URLSearchParams(window.location.search);
+const selectedCampaign = campaignQuery.get("campaignId") || "";
+const selectedMarketplace = campaignQuery.get("marketplace") || "";
+const campaignSource = campaignQuery.get("campaignSource") || "legacy";
+const scopedPreview = computed(() => Boolean(selectedCampaign) && model.value === "optimization");
+const preview = ref(null);
+const previewBusy = ref(false);
+const previewError = ref("");
+let previewGeneration = 0;
+const optimizerHelp = {
+  definition: "Fits two saturating curves from ordinary historical observations: budget to spend, then spend to revenue. The constrained solver maximizes predicted revenue within the budget limit. This preview uses only the selected Campaign and defaults to its largest observed budget; predictions are not guaranteed or causal outcomes.",
+  href: "/en/strategy-recommendation/campaign-budget-optimizer/",
+};
+async function computeCampaign() {
+  const token = ++previewGeneration;
+  preview.value = null; previewError.value = ""; previewBusy.value = false;
+  if (!scopedPreview.value) return;
+  if ((selectedDatasetId.value || "legacy") !== campaignSource) {
+    previewError.value = "The selected source changed. Open Optimize from the Campaign in the current source.";
+    return;
+  }
+  previewBusy.value = true;
+  try {
+    const result = await optimizeCampaign({ campaignId: selectedCampaign, marketplace: selectedMarketplace,
+      ...(selectedDatasetId.value ? { datasetId: selectedDatasetId.value } : {}) });
+    if (token === previewGeneration) preview.value = result;
+  } catch (error) { if (token === previewGeneration) previewError.value = error.message; }
+  finally { if (token === previewGeneration) previewBusy.value = false; }
+}
+watch([scopedPreview, selectedDatasetId], computeCampaign, { immediate: true });
+onBeforeUnmount(() => { previewGeneration += 1; });
+const strategy = computed(() => scopedPreview.value ? preview.value ?? {} : data.value.campaignStrategy ?? {});
 const plan = computed(() => strategy.value.optimized_strategy ?? {});
 const hasPlan = computed(() => Boolean(plan.value.recommendation_type));
 const isOptimized = computed(() => Boolean(plan.value.is_optimized));
@@ -587,10 +620,20 @@ const evaluationAvailable = computed(
       </button>
     </div>
 
-    <WorkbenchRunner v-if="selectedDatasetId" :key="`${selectedDatasetId}:${model}`" :stage="model" />
+    <article v-if="scopedPreview" class="card">
+      <div class="card-head"><h2>Optimize {{ selectedCampaign }}</h2><TermHelp :term="optimizerHelp" /></div>
+      <div class="card-body"><p>{{ selectedMarketplace }} · {{ campaignSource === 'legacy' ? 'Configured source' : campaignSource }} · Historical Campaign strategy</p>
+        <p>Maximize predicted revenue within the largest observed daily budget. Uses this Campaign’s complete daily history and reports a model-based recommendation.</p>
+        <p v-if="previewBusy" role="status">Fitting historical response and computing the strategy…</p>
+        <p v-if="previewError" role="alert">{{ previewError }}</p>
+        <p v-if="preview">{{ preview.observation_count }} observations · {{ evidenceWindow }}</p>
+        <div class="rec-actions"><button :disabled="previewBusy || IS_STATIC" @click="computeCampaign">Recompute strategy</button></div>
+      </div>
+    </article>
+    <WorkbenchRunner v-else-if="selectedDatasetId" :key="`${selectedDatasetId}:${model}`" :stage="model" />
     <article v-else-if="stages[model]" class="card">
       <div class="card-head">
-        <h2>Run {{ stages[model].label }}</h2>
+        <h2>Run {{ stages[model].label }} <TermHelp v-if="model === 'optimization'" :term="optimizerHelp" /></h2>
         <span class="sub">{{ stages[model].script || "No runnable script" }}</span>
       </div>
       <div class="card-body">
@@ -608,7 +651,7 @@ const evaluationAvailable = computed(
       </div>
     </article>
 
-    <section v-if="selectedDatasetId" class="panel" aria-label="Displayed result provenance">
+    <section v-if="selectedDatasetId && !scopedPreview" class="panel" aria-label="Displayed result provenance">
       <template v-if="data.runProvenance?.[model]">
         <h2>Displayed {{ model }} result</h2>
         <p>Run {{ data.runProvenance[model].id }} · Completed {{ data.runProvenance[model].finishedAt }} · Plan revision {{ data.runProvenance[model].revision ?? 'No saved plan' }}</p>
@@ -617,7 +660,7 @@ const evaluationAvailable = computed(
       </template>
       <p v-else>Not run for this dataset. No stored {{ model }} result is displayed.</p>
     </section>
-    <p v-if="model !== 'evaluation'" class="caption">
+    <p v-if="model !== 'evaluation' && !scopedPreview" class="caption">
       Stored result evidence · {{ evidenceWindow }} · {{ symbol.trim() }}.
       Historical date filters do not refit these models or change their stored predictions.
     </p>
@@ -886,7 +929,7 @@ const evaluationAvailable = computed(
         </div>
       </article>
 
-      <article v-else class="card empty-card">
+      <article v-else-if="!scopedPreview" class="card empty-card">
         <h2>No optimized strategy</h2>
         <p>
           Not run. The budget response models have not been fitted against the current

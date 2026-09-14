@@ -1117,7 +1117,7 @@ test("Campaigns exposes history filters and presentation-only similarity", () =>
     assert.match(CAMPAIGNS, new RegExp(field));
   }
   assert.match(CAMPAIGNS, /row\.similarity_score >= similarityThreshold\.value/);
-  assert.match(CAMPAIGNS, /type="range" min="0" max="1" step="0\.05"/);
+  assert.match(CAMPAIGNS, /type="number" min="0" max="1" step="0\.05"/);
   assert.match(CAMPAIGNS, /row\.subject_id !== row\.comparable_id/);
   // Attribution output belongs to Campaign Optimizer, which owns the models
   // that produce it. This explorer restated that in a card carrying no figure

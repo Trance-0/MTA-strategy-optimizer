@@ -185,3 +185,10 @@ export function routeResources(page, section) {
 /** Where the app points a reader who wants the source or the specification. */
 export const REPO_URL = "https://github.com/Trance-0/MTA-strategy-optimizer";
 export const DOCS_URL = "https://trance-0.github.io/MTA-strategy-optimizer/docs";
+
+
+/** Preserve source and Campaign scope when opening its read-only optimizer. */
+export function campaignOptimizerHref(campaignId, marketplace, source = "legacy") {
+  const query = new URLSearchParams({ campaignId, marketplace: marketplace || "", campaignSource: source || "legacy" });
+  return `?${query}#/optimizer/optimization`;
+}

@@ -668,3 +668,6 @@ export async function stopSchemaOperation() {
   if (!response.ok) throw new Error(result.message ?? "No schema operation is running.");
   return result;
 }
+
+/** Fit a read-only strategy preview for one explicitly selected Campaign. */
+export const optimizeCampaign = payload => workbenchRequest("/api/models/optimize", "POST", payload);

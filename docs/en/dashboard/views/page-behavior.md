@@ -1,6 +1,6 @@
 ---
 title: Page Behavior
-compact: "Source-aware Campaign rankings, distributions, filtered exports, model evidence, executable plans, formal evaluation and retained run history; shared LogViewer and bounded history windows."
+compact: "Campaign optimizer links, automatic scoped historical fits, configurable similarity grouping and algorithm tooltips; source-aware rankings, distributions, filtered exports, model evidence, executable plans, formal evaluation and retained run history; shared LogViewer and bounded history windows."
 source_files: dashboard/src/views/CommandCenter.vue, dashboard/src/views/BudgetManager.vue, dashboard/src/views/Campaigns.vue, dashboard/src/views/CampaignOptimizer.vue, dashboard/src/views/OptimizationLog.vue
 ---
 
@@ -251,3 +251,29 @@ and export retain all observations. Response support, observed budget range,
 source-row count and missing evidence remain readable without hover. Backend
 initial/recommended allocations and expected revenues retain exact values.
 Verification: `dashboard/tests/analysis_views.test.js` and the dashboard suite.
+
+
+## Campaign optimization entry and similarity controls
+
+Each Campaign history row and the Campaign catalogue exposes an Optimize link
+carrying Uniform Resource Locator (URL) query fields `campaignId`, `marketplace`, and `campaignSource`
+(the dataset identifier or `legacy`) to `#/optimizer/optimization`. The optimizer
+shows the selected identity and automatically requests the read-only selected
+Campaign preview. A source mismatch refuses computation; source changes and
+late responses cannot replace the current result. General pipeline runners and
+stored-result provenance are hidden for this scoped preview. A Recompute action
+uses the same identity; failures show their reason and never a stale plan.
+
+The similarity modal provides a clustering-method select and numeric similarity
+threshold from zero to one (default 0.6). Gower profile radius uses the arithmetic
+mean of selected categorical exact-match scores and budget proximity `max(0, 1 - abs(candidate - query) / max(candidate, query, 1))`.
+A missing candidate budget scores zero rather than matching a zero query.
+Strict profile radius uses the minimum of those component scores. The selected
+profile is the cluster center; only other Campaign observations meeting the
+threshold appear. These are reference groups, not fitted response-model inputs.
+Invalid thresholds yield a visible validation message and no matches. Zero
+budget is a valid query value; absent budget adds no score component.
+
+Shared TermHelp popovers explain each grouping rule and the two-stage saturating
+budget-to-spend-to-revenue model with its constrained solver. Controls use
+setting rows, with the label and helper on the left and the control on the right.

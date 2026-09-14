@@ -8,15 +8,16 @@ import * as charts from '../src/lib/chartData.js';
 import * as theme from '../src/theme.js';
 
 // Evaluate the existing single-file view's script with a fixture resource store.
-function view(name, snapshot, exposed) {
+function view(name, snapshot, exposed, overrides = {}) {
   const text = readFileSync(new URL(`../src/views/${name}.vue`, import.meta.url), 'utf8');
   const script = text.split('<script setup>')[1].split('</script>')[0]
     .replace(/import[\s\S]*?from\s+["'][^"']+["'];/g, '');
   const env = { ...common, ...charts, computed, ref, watch, nextTick, theme,
+    window: { location: { search: "" } }, URLSearchParams, onBeforeUnmount() {},
     defineProps: () => ({ section: 'performance' }), defineEmits: () => () => {},
-    useDashboard: () => ({ data: ref(snapshot), historyWindow: ref({}), setHistoryWindow() {} }),
+    useDashboard: () => ({ data: ref(snapshot), selectedDatasetId: ref(""), historyWindow: ref({}), setHistoryWindow() {} }),
     useDiagnostics: () => ({ diagnosticsOn: ref(false) }), onMounted() {},
-    useJobs: () => ({ stages: ref({}) }),
+    useJobs: () => ({ stages: ref({}) }), ...overrides,
   };
   return new Function(...Object.keys(env), `${script}\nreturn { ${exposed} };`)(...Object.values(env));
 }
@@ -113,4 +114,55 @@ test('EntityTable export uses all searched and sorted rows before paging', () =>
   assert.equal(table.sorted.value[0].cost, 19);
   assert.equal(table.sorted.value.at(-1).cost, 0);
   assert.match(text, /downloadCsv\(columns, sorted,/);
+});
+
+
+test('similarity grouping distinguishes mean and strict thresholds and rejects invalid values', () => {
+  const v = view('Campaigns', { ...base, simulationResearch: { history: [
+    { campaign_id: 'B', provider: 'AMAZON_ADS', ad_product: 'Other', configured_budget: 100 },
+  ] } }, 'similarityProvider, similarityAdProduct, similarityThreshold, clusteringMethod, similarityMatches');
+  v.similarityProvider.value = 'AMAZON_ADS';
+  v.similarityAdProduct.value = 'Search';
+  v.similarityThreshold.value = 0.5;
+  assert.equal(v.similarityMatches.value.length, 1);
+  v.clusteringMethod.value = 'strict';
+  assert.equal(v.similarityMatches.value.length, 0);
+  v.similarityThreshold.value = -1;
+  assert.equal(v.similarityMatches.value.length, 0);
+  v.similarityThreshold.value = '';
+  assert.equal(v.similarityMatches.value.length, 0);
+});
+
+
+test('campaign navigation encodes identity and automatic preview ignores late results after source change', async () => {
+  const { campaignOptimizerHref } = await import('../src/pages.js');
+  const href = campaignOptimizerHref('A&B', 'US', 'ds_one');
+  assert.equal(new URLSearchParams(href.split('#')[0]).get('campaignId'), 'A&B');
+  assert.ok(href.endsWith('#/optimizer/optimization'));
+  const selected = ref('ds_one');
+  let resolve;
+  let submitted;
+  const v = view('CampaignOptimizer', base, 'preview, previewError, previewBusy', {
+    window: { location: { search: '?campaignId=A&marketplace=US&campaignSource=ds_one' } },
+    defineProps: () => ({ section: 'optimization' }),
+    useDashboard: () => ({ data: ref(base), selectedDatasetId: selected }),
+    optimizeCampaign: body => { submitted = body; return new Promise(done => { resolve = done; }); },
+  });
+  assert.deepEqual(submitted, { campaignId: 'A', marketplace: 'US', datasetId: 'ds_one' });
+  selected.value = 'ds_two';
+  await nextTick();
+  resolve({ campaign_id: 'A' });
+  await Promise.resolve();
+  assert.equal(v.preview.value, null);
+  assert.match(v.previewError.value, /source changed/);
+  assert.equal(v.previewBusy.value, false);
+});
+
+
+test('a zero budget query matches observed zero but never absent budget', () => {
+  const v = view('Campaigns', { ...base, simulationResearch: { history: [
+    { campaign_id: 'zero', configured_budget: 0 }, { campaign_id: 'missing', configured_budget: null },
+  ] } }, 'similarityBudget, similarityThreshold, similarityMatches');
+  v.similarityBudget.value = '0'; v.similarityThreshold.value = 1;
+  assert.deepEqual(v.similarityMatches.value.map(row => row.campaign_id), ['zero']);
 });

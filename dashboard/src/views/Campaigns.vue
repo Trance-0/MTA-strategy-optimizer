@@ -10,6 +10,8 @@
 import { computed, nextTick, ref, watch } from "vue";
 
 import { aggregatePerformance, safeRatio, downloadCsv } from "../lib/chartData.js";
+import TermHelp from "../components/TermHelp.vue";
+import { campaignOptimizerHref } from "../pages.js";
 import EntityTable from "../components/EntityTable.vue";
 import MetricRow from "../components/MetricRow.vue";
 import PlotlyChart from "../components/PlotlyChart.vue";
@@ -30,7 +32,7 @@ import * as theme from "../theme.js";
 
 const props = defineProps({ section: { type: String, default: "history" } });
 const emit = defineEmits(["navigate"]);
-const { data, setHistoryWindow } = useDashboard();
+const { data, setHistoryWindow, selectedDatasetId } = useDashboard();
 const { diagnosticsOn } = useDiagnostics();
 
 const tab = computed(() => props.section);
@@ -124,6 +126,16 @@ const similarityProvider = ref("");
 const similarityAdProduct = ref("");
 const similarityBudget = ref("");
 const similarityThreshold = ref(0.6);
+const clusteringMethod = ref("gower");
+const validThreshold = computed(() => typeof similarityThreshold.value === "number" && Number.isFinite(similarityThreshold.value) && similarityThreshold.value >= 0 && similarityThreshold.value <= 1);
+const clusteringHelp = computed(() => ({
+  definition: clusteringMethod.value === "strict"
+    ? "Strict profile radius groups observations only when every selected profile component meets the threshold. One mismatch can exclude a reference."
+    : "Gower profile radius groups observations by mean similarity: categorical values match exactly; budget proximity decreases with relative distance. The threshold controls the radius around your profile.",
+  href: "/en/dashboard/views/page-behavior",
+}));
+const optimizerLink = row => campaignOptimizerHref(row.campaign_id, row.marketplace, selectedDatasetId.value);
+
 
 const campaignById = computed(() => new Map(
   (research.value.campaigns ?? []).map((item) => [item.campaign_id, item]),
@@ -403,12 +415,13 @@ const historicalColumns = [
 ];
 
 const similarityMatches = computed(() => {
+  if (!validThreshold.value) return [];
   const selectedCampaign = campaignById.value.get(similarityCampaign.value) ?? {};
   const profile = {
     provider: similarityProvider.value || selectedCampaign.provider || null,
     product_id: similarityProduct.value || null,
     ad_product: similarityAdProduct.value || selectedCampaign.ad_product || null,
-    budget: Number(similarityBudget.value) || null,
+    budget: similarityBudget.value === "" ? null : Number(similarityBudget.value),
   };
   const candidates = new Map();
   for (const row of budgetHistory.value) {
@@ -422,12 +435,14 @@ const similarityMatches = computed(() => {
     if (profile.provider) components.push(first.provider === profile.provider ? 1 : 0);
     if (profile.product_id) components.push(first.product_id === profile.product_id ? 1 : 0);
     if (profile.ad_product) components.push(first.ad_product === profile.ad_product ? 1 : 0);
-    if (profile.budget) {
-      const distance = Math.abs(Number(first.configured_budget ?? 0) - profile.budget);
-      components.push(Math.max(0, 1 - distance / Math.max(profile.budget, 1)));
+    if (profile.budget !== null && Number.isFinite(profile.budget) && profile.budget >= 0) {
+      const budget = first.configured_budget;
+      const known = typeof budget === "number" && Number.isFinite(budget) && budget >= 0;
+      const distance = known ? Math.abs(budget - profile.budget) : 0;
+      components.push(known ? Math.max(0, 1 - distance / Math.max(profile.budget, budget, 1)) : 0);
     }
     const score = components.length
-      ? components.reduce((total, value) => total + value, 0) / components.length
+      ? clusteringMethod.value === "strict" ? Math.min(...components) : components.reduce((total, value) => total + value, 0) / components.length
       : 0;
     const subjectId = similarityCampaign.value || similarityProduct.value || "temporary-profile";
     const comparableId = similarityCampaign.value
@@ -438,8 +453,8 @@ const similarityMatches = computed(() => {
       subject_id: subjectId,
       comparable_id: comparableId,
       similarity_score: score,
-      rationale: `Equal-weight match across ${components.length} selected profile component(s).`,
-      generated_by: "dashboard-selector-profile-v1",
+      rationale: `${clusteringMethod.value === "strict" ? "Minimum" : "Mean"} similarity across ${components.length} selected profile component(s).`,
+      generated_by: `dashboard-profile-${clusteringMethod.value}-v2`,
       run_id: first.run_id,
       provider: first.provider,
       product_id: first.product_id,
@@ -965,7 +980,7 @@ const scopedRowKey = (row) =>
               :row-key="historyRowKey"
               noun="observation"
               empty="No observations match the current filters."
-            />
+            ><template #actions="{ row }"><a :href="optimizerLink(row)" :aria-label="`Optimize ${row.campaign_id} in ${row.marketplace}`">Optimize</a></template></EntityTable>
           </div>
         </article>
         <article class="card">
@@ -1225,8 +1240,13 @@ const scopedRowKey = (row) =>
             <div class="field"><label for="similar-provider">Provider</label><select id="similar-provider" v-model="similarityProvider"><option value="">From Campaign / any</option><option v-for="value in historyProviders" :key="value">{{ value }}</option></select></div>
             <div class="field"><label for="similar-ad-product">Ad product</label><select id="similar-ad-product" v-model="similarityAdProduct"><option value="">From Campaign / any</option><option v-for="value in historyAdProducts" :key="value">{{ value }}</option></select></div>
             <div class="field"><label for="similar-budget">Configured budget</label><input id="similar-budget" v-model="similarityBudget" type="number" min="0" step="1" /></div>
-            <div class="field"><label for="similar-threshold">Threshold {{ Number(similarityThreshold).toFixed(2) }}</label><input id="similar-threshold" v-model.number="similarityThreshold" type="range" min="0" max="1" step="0.05" /></div>
+
           </div>
+          <div class="setting-group">
+            <div class="setting-row"><div class="setting-label"><label for="clustering-method">Clustering method</label><TermHelp :term="clusteringHelp" /><small>Group references around the query profile; strict matching requires every component to qualify.</small></div><div class="setting-control"><select id="clustering-method" v-model="clusteringMethod"><option value="gower">Gower profile radius</option><option value="strict">Strict profile radius</option></select></div></div>
+            <div class="setting-row"><div class="setting-label"><label for="similar-threshold">Similarity threshold</label><small>Use 0 to include all references or 1 to require an exact profile match.</small></div><div class="setting-control"><input id="similar-threshold" v-model.number="similarityThreshold" type="number" min="0" max="1" step="0.05" :aria-invalid="!validThreshold" /></div></div>
+          </div>
+          <p v-if="!validThreshold" role="alert">Enter a similarity threshold between 0 and 1.</p>
           <!--
             Paged rather than rendered whole. A selected Campaign makes every
             observation sharing its Provider score 1.0, so the match list is

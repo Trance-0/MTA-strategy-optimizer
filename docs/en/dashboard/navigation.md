@@ -1,6 +1,6 @@
 ---
 title: Navigation Rail and Settings
-compact: "Eight lazy page imports and canonical deep links; Settings loads independently of dashboard data and restores deployment identity on refresh; Knowledge Base tabs, schema doctor, recovery, protected configuration, queued tasks, shared copyable LogViewer and package-native database imports."
+compact: "Eight lazy page imports, canonical deep links and campaignOptimizerHref source-preserving query links; Settings loads independently of dashboard data and restores deployment identity on refresh; Knowledge Base tabs, schema doctor, recovery, protected configuration, queued tasks, shared copyable LogViewer and package-native database imports."
 lang: en-US
 source_files: dashboard/src/pages.js, dashboard/src/App.vue, dashboard/src/main.js, dashboard/src/views/Settings.vue, dashboard/src/components/BackendTasks.vue, dashboard/src/components/SchemaRecovery.vue
 ---
@@ -368,3 +368,8 @@ Source: `dashboard/src/components/SchemaRecovery.vue`
 - Verification: `backend/tests/test_schema_recovery.py` for the offers it can
   receive, `dashboard/tests/dashboard.test.js` for its presence under the error
   card and the absence of the command it replaced.
+
+
+`campaignOptimizerHref(campaignId, marketplace, source)` produces an encoded
+query carrying Campaign identity and source plus `#/optimizer/optimization`.
+Query values never become resource or storage identifiers.

@@ -35,6 +35,7 @@ Areas owned by others are recorded on their own pages: the [Data Generator confi
 
 ### Completed
 
+- Added source-preserving Campaign optimizer links, automatic ordinary-history fitting, configurable similarity grouping and numeric thresholds with algorithm tooltips; verified 198 backend tests, 179 dashboard tests, documentation build and the PostgreSQL Docker browser preview, including explicit refusals for unavailable historical evidence.
 - Added bounded backend buffers with background refresh, shared concurrent loads and generation-safe invalidation; verified 194 backend tests and the local PostgreSQL Docker preview, with a repeated 18.4 MB history response taking 0.69 seconds versus 2.19 seconds cold.
 
 ## 2026-09-10

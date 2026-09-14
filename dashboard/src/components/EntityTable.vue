@@ -235,7 +235,7 @@ defineExpose({ clearSelection });
                 >{{ sort.direction === "asc" ? "▲" : "▼" }}</span>
               </button>
             </th>
-            <th v-if="editable || deletable" class="row-actions-head">Actions</th>
+            <th v-if="editable || deletable || $slots.actions" class="row-actions-head">Actions</th>
           </tr>
         </thead>
         <tbody>
@@ -266,7 +266,8 @@ defineExpose({ clearSelection });
               </span>
               <template v-else>{{ renderCell(column, row) }}</template>
             </td>
-            <td v-if="editable || deletable" class="row-actions">
+            <td v-if="editable || deletable || $slots.actions" class="row-actions">
+              <slot name="actions" :row="row" />
               <button
                 v-if="editable"
                 class="btn small"

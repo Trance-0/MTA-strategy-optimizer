@@ -37,6 +37,8 @@ Data flow:
 from __future__ import annotations
 
 import time
+import math
+from datetime import date
 from dataclasses import asdict
 from pathlib import Path
 from typing import Any
@@ -311,21 +313,30 @@ def optimize(body: dict | None = None) -> dict:
     from backend.config import research_snapshot_path
 
     body = body or {}
-    snapshot_path = _resolve_input(
-        body.get("researchSnapshot"), research_snapshot_path()
-    )
-    if snapshot_path is None:
-        raise ModelUnavailableError(
-            "Fitting a budget response curve needs the same Campaign observed "
-            "at several budget levels, which a single reporting window does "
-            "not carry. Configure MTA_SIM_DATA_DIR with a research snapshot, "
-            "or supply researchSnapshot in the request body."
+    scoped = "campaignId" in body
+    if scoped:
+        dataset = _campaign_history_dataset(body)
+        # The automatic preview stays within observed support by default.
+        body = dict(body)
+        ceiling = max(row.configured_budget for row in dataset)
+        body.setdefault("totalBudget", ceiling)
+        body.setdefault("maximumBudget", ceiling)
+    else:
+        snapshot_path = _resolve_input(
+            body.get("researchSnapshot"), research_snapshot_path()
         )
+        if snapshot_path is None:
+            raise ModelUnavailableError(
+                "Fitting a budget response curve needs the same Campaign observed "
+                "at several budget levels, which a single reporting window does "
+                "not carry. Configure MTA_SIM_DATA_DIR with a research snapshot, "
+                "or supply researchSnapshot in the request body."
+            )
 
-    snapshot = load_mta_sim_research_snapshot(snapshot_path)
-    dataset = build_campaign_response_dataset(
-        campaign_episodes_from_research_snapshot(snapshot)
-    )
+        snapshot = load_mta_sim_research_snapshot(snapshot_path)
+        dataset = build_campaign_response_dataset(
+            campaign_episodes_from_research_snapshot(snapshot)
+        )
     if not len(dataset):
         raise ModelUnavailableError(
             "No Campaign-period observations were found in the research "
@@ -339,7 +350,7 @@ def optimize(body: dict | None = None) -> dict:
         total_budget = sum(item["initial_budget"] for item in initial["allocations"])
     else:
         total_budget = float(total_budget)
-        if total_budget <= 0:
+        if not math.isfinite(total_budget) or total_budget <= 0:
             raise ModelRequestError("totalBudget must be a positive number.")
 
     policy_name = body.get("budgetUsagePolicy") or BudgetUsagePolicy.SPEND_FULL_BUDGET.value
@@ -389,7 +400,112 @@ def optimize(body: dict | None = None) -> dict:
         "optimized_strategy": plan.to_dict(),
         "response_models": response_models_to_dict(models),
         "observation_count": len(dataset),
+        **({"campaign_id": body["campaignId"], "marketplace": body["marketplace"],
+            "dataset_id": body.get("datasetId"),
+            "response_observations": [
+                {**{key: getattr(row, key) for key in (
+                    "campaign_id", "marketplace", "currency", "report_start_date",
+                    "report_end_date", "intervention_id", "configured_budget",
+                    "actual_spend", "total_revenue")}, "report_date": row.report_start_date}
+                for row in dataset]} if scoped else {}),
     }
+
+
+def _campaign_history_dataset(body):
+    """Adapt ordinary source observations into one scoped response dataset."""
+    from backend.config import use_database, research_snapshot_path
+    from backend.repository.snapshot import cached
+    from modules.mta_common.src.enums import Provider
+    from modules.mta_strategy_recommendation.src.response_dataset import (
+        CampaignResponseDataset, CampaignResponseObservation,
+    )
+    campaign_id, marketplace = body.get("campaignId"), body.get("marketplace")
+    if not isinstance(campaign_id, str) or not campaign_id.strip() or not isinstance(marketplace, str) or not marketplace.strip():
+        raise ModelRequestError("campaignId and marketplace are required for a Campaign preview.")
+
+    if "datasetId" not in body and use_database():
+        from backend.database import sql
+        # Aggregate ordinary outcomes before joining so product/touchpoint rows
+        # cannot multiply the assigned budget. All user values remain bound.
+        def read():
+            rows = sql("""
+                select b.*, o.total_revenue
+                from mta_sim_budget_observation b
+                left join (
+                    select run_id, campaign_id, marketplace, report_date, budget_level,
+                           case when count(*) = count(total_revenue)
+                                then sum(total_revenue) else null end as total_revenue
+                    from mta_sim_outcome_observation
+                    where evaluation_only = false and campaign_id = :campaign
+                      and marketplace = :marketplace
+                    group by run_id, campaign_id, marketplace, report_date, budget_level
+                ) o using (run_id, campaign_id, marketplace, report_date, budget_level)
+                where b.campaign_id = :campaign and b.marketplace = :marketplace
+                order by b.run_id, b.report_date, b.budget_level
+            """, {"campaign": campaign_id, "marketplace": marketplace})
+            metadata = sql("select * from mta_sim_campaign where campaign_id = :campaign",
+                           {"campaign": campaign_id})
+            return rows, metadata
+        rows, metadata = cached(f"campaign-fit:{(campaign_id, marketplace)!r}", read)
+    else:
+        import json
+        from backend.services.datasets import dataset_inputs, research_observation_key
+        if "datasetId" in body:
+            # Preserve digest verification and never substitute a legacy source.
+            try:
+                research = dataset_inputs(body["datasetId"]).get("research") or {}
+            except Exception as error:
+                raise ModelUnavailableError("The selected dataset is unavailable or changed.") from error
+        else:
+            path = research_snapshot_path()
+            if path is None:
+                raise ModelUnavailableError("This source has no ordinary Campaign budget history.")
+            research = json.loads(path.read_text(encoding="utf-8"))
+        metadata = [item for run in research.get("simulation_runs", []) for item in run.get("campaigns", [])
+                    if item.get("campaign_id") == campaign_id]
+        outcomes = {}
+        for item in research.get("outcome_observations", []):
+            outcomes.setdefault(research_observation_key(item), []).append(item.get("total_revenue"))
+        rows = []
+        for budget in research.get("budget_observations", []):
+            scope = budget.get("reporting_scope") or {}
+            if budget.get("campaign_id") != campaign_id or scope.get("marketplace") != marketplace:
+                continue
+            values = outcomes.get(research_observation_key(budget), [])
+            revenue = sum(values) if values and all(isinstance(v, (int, float)) for v in values) else None
+            rows.append({**budget, **scope, "total_revenue": revenue})
+    if not rows or not metadata:
+        raise ModelUnavailableError("No ordinary observations exist for this Campaign and marketplace.")
+    if len({(row.get("advertiser_id"), row.get("currency")) for row in rows}) != 1:
+        raise ModelRequestError("Campaign history mixes advertisers or currencies; select an isolated dataset.")
+    observations = []
+    seen = set()
+    for row in rows:
+        start = str(row.get("report_start_date") or row.get("report_date"))
+        end = str(row.get("report_end_date") or start)
+        if date.fromisoformat(start) != date.fromisoformat(end):
+            raise ModelUnavailableError("Daily optimization requires daily historical observations.")
+        values = [row.get(field) for field in ("configured_budget", "actual_spend", "total_revenue")]
+        if any(value is None or not math.isfinite(float(value)) or float(value) < 0 for value in values):
+            raise ModelUnavailableError("Campaign history lacks valid budget, spend or matching ordinary revenue at its budget levels. Evaluation-only outcomes cannot substitute for ordinary evidence.")
+        identity = (row.get("run_id"), start, end, row.get("budget_level"))
+        if identity in seen:
+            raise ModelRequestError("Campaign history contains repeated budget-period observations.")
+        seen.add(identity)
+        candidates = [item for item in metadata if not row.get("run_id") or item.get("run_id") == row.get("run_id")]
+        meta = (candidates or metadata)[0]
+        if str(meta.get("status", "ACTIVE")).upper() not in {"ACTIVE", "ENABLED"}:
+            raise ModelUnavailableError("This Campaign is not active; no active-budget recommendation is available.")
+        # Delivery counts are unused by fitting and omitted from the public projection.
+        observations.append(CampaignResponseObservation(
+            campaign_id=campaign_id, marketplace=marketplace, report_start_date=start,
+            report_end_date=end, currency=row["currency"], provider=Provider(meta["provider"]),
+            ad_product=meta["ad_product"], campaign_status=meta.get("status", "ACTIVE"),
+            configured_budget=float(values[0]), actual_spend=float(values[1]),
+            total_revenue=float(values[2]), impressions=0, clicks=0,
+            intervention_id=str(identity),
+        ))
+    return CampaignResponseDataset(tuple(observations))
 
 
 def _initial_strategy(dataset: Any) -> dict:

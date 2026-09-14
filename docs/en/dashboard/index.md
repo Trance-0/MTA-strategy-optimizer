@@ -1,7 +1,7 @@
 ---
 title: Dashboard
 description: The Vue dashboard's architecture, its dual data source contract, and where each topic is documented
-compact: "Vue/Flask client boundary for registered datasets, plans, runs and generator transport; useDashboard.js preserves source identity through cache generations, progress, history windows, reloads and late responses; static builds refuse mutations."
+compact: "Vue/Flask client boundary and optimizeCampaign transport for scoped previews; registered datasets, plans, runs and generator transport; useDashboard.js preserves source identity through cache generations, progress, history windows, reloads and late responses; static builds refuse mutations."
 lang: en-US
 source_files: dashboard/src/api/client.js, dashboard/src/lib/useDashboard.js
 test_files: dashboard/tests/dashboard_store.test.js, dashboard/tests/dashboard.test.js
@@ -291,3 +291,8 @@ Tests: `dashboard/tests/dashboard.test.js`
 - Behavior contract: Every test runs without a database and without a browser, so a clean checkout can run the whole suite. It covers the navigation registration contract; the entity table's paging and identity-keyed selection; the run options and refusals; and the snapshot invariants — real booleans rather than the string `"false"`, dates as `YYYY-MM-DD`, absent text as `null` rather than `""`, finite numbers rather than strings, the five touchpoint segments, and that the whole snapshot survives JSON serialisation unchanged. Several tests assert against **source text** rather than a rendered component, because the suite runs without a Document Object Model (DOM): they pin contracts a reader cannot see in a screenshot — that a progress bar's `aria-valuenow` and its visible percentage read one value, that a phase pattern still matches a line the Python actually prints, that the offered budget policies are the ones the enum declares. Two of those read Python sources directly, because the contract they pin is now owned by `backend/services/`; the reader is the client, so the test stays here.
 - Dependencies: Node's built-in test runner. No database.
 - Verification: `npm test` in `dashboard/`; the exact passing count is printed by the command.
+
+
+`optimizeCampaign(payload)` posts the selected Campaign preview configuration
+to `/api/models/optimize`, uses the common JSON error handling, and refuses
+static deployments before making a request.

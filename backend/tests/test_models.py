@@ -167,3 +167,56 @@ class ModelEndpointTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class CampaignPreviewTests(unittest.TestCase):
+    """Verify real scoped fitting, source isolation and ordinary-only outcomes."""
+
+    def research(self):
+        import math
+        budgets, outcomes = [], []
+        for index, budget in enumerate((20, 40, 80, 120, 160)):
+            scope = {"advertiser_id": "account", "marketplace": "US", "currency": "USD",
+                     "report_start_date": f"2026-01-0{index + 1}", "report_end_date": f"2026-01-0{index + 1}"}
+            spend = 100 * (1 - math.exp(-budget / 100))
+            common = {"campaign_id": "A", "budget_level": budget / 80, "reporting_scope": scope}
+            budgets.append({**common, "configured_budget": budget, "actual_spend": spend})
+            outcomes.append({**common, "total_revenue": 10 + 500 * (1 - math.exp(-spend / 40))})
+        return {"simulation_runs": [{"campaigns": [{"campaign_id": "A", "provider": "AMAZON_ADS", "ad_product": "Sponsored Products", "status": "ACTIVE"}]}],
+                "budget_observations": budgets, "outcome_observations": outcomes,
+                "evaluation_outcome_observations": [{"total_revenue": 999999999}]}
+
+    def test_selected_campaign_fits_real_history_without_evaluation_truth(self):
+        from backend.services.models import optimize
+        with patch("backend.services.datasets.dataset_inputs", return_value={"research": self.research()}):
+            result = optimize({"datasetId": "selected", "campaignId": "A", "marketplace": "US"})
+        self.assertEqual(result["campaign_id"], "A")
+        self.assertEqual(result["observation_count"], 5)
+        self.assertEqual(result["response_observations"][0]["report_date"], "2026-01-01")
+        self.assertNotIn("impressions", result["response_observations"][0])
+        self.assertEqual(result["optimized_strategy"]["allocated_budget"], 160)
+        self.assertEqual([row["campaign_id"] for row in result["optimized_strategy"]["allocations"]], ["A"])
+        self.assertLess(result["optimized_strategy"]["expected_optimized_revenue"], 1000)
+
+    def test_unknown_source_never_falls_back(self):
+        from backend.services.models import optimize, ModelUnavailableError
+        with patch("backend.services.datasets.dataset_inputs", side_effect=ValueError("missing")):
+            with self.assertRaises(ModelUnavailableError):
+                optimize({"datasetId": "unknown", "campaignId": "A", "marketplace": "US"})
+
+    def test_missing_ordinary_revenue_refuses_instead_of_using_evaluation(self):
+        from backend.services.models import optimize, ModelUnavailableError
+        research = self.research(); research["outcome_observations"] = []
+        with patch("backend.services.datasets.dataset_inputs", return_value={"research": research}):
+            with self.assertRaises(ModelUnavailableError):
+                optimize({"datasetId": "selected", "campaignId": "A", "marketplace": "US"})
+
+    def test_scope_and_finite_values_are_validated(self):
+        from backend.services.models import optimize, ModelRequestError, ModelUnavailableError
+        research = self.research()
+        with patch("backend.services.datasets.dataset_inputs", return_value={"research": research}):
+            with self.assertRaises(ModelRequestError):
+                optimize({"datasetId": "selected", "campaignId": "A"})
+            research["budget_observations"][0]["actual_spend"] = float("nan")
+            with self.assertRaises(ModelUnavailableError):
+                optimize({"datasetId": "selected", "campaignId": "A", "marketplace": "US"})

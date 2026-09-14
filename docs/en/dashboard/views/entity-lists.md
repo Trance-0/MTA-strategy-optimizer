@@ -1,6 +1,6 @@
 ---
 title: "Canonical Entities Are Lists, Not Prose"
-compact: "EntityTable paging, filtered exports, identity-keyed editing and archive confirmation; shared chrome with deployment identity independent of editing permission and registered-dataset status."
+compact: "EntityTable row action slots, paging, filtered exports, identity-keyed editing and archive confirmation; shared chrome with deployment identity independent of editing permission and registered-dataset status."
 source_files: dashboard/src/components/SidebarNav.vue, dashboard/src/components/TopBar.vue, dashboard/src/components/DataTable.vue, dashboard/src/components/EntityTable.vue, dashboard/src/components/ConfirmDialog.vue, dashboard/src/components/TableView.vue, dashboard/src/components/MetricRow.vue, dashboard/src/components/KeyValuePanel.vue, dashboard/src/components/ReliabilityBanner.vue
 ---
 
@@ -127,3 +127,8 @@ value is **Build mismatch**; a missing or `unknown` value is **Identity
 incomplete**. The values are selectable monospace text so an operator can copy
 them into a deployment report. A static build states that no backend is
 connected rather than comparing the dashboard against itself.
+
+
+The optional `actions` scoped slot receives `{row}` and adds an Actions column
+without requiring edit or delete permissions. Campaign views use it for the
+identity-preserving Optimize link.

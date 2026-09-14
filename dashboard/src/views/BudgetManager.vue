@@ -21,6 +21,7 @@ import PlotlyChart from "../components/PlotlyChart.vue";
 import ReliabilityBanner from "../components/ReliabilityBanner.vue";
 import { OUTCOME_LABELS, currencySymbol, sortBy } from "../lib/common.js";
 import { buildTemplate } from "../lib/masterObjectFields.js";
+import { campaignOptimizerHref } from "../pages.js";
 import { useDashboard } from "../lib/useDashboard.js";
 import { useDeployment } from "../lib/deployment.js";
 import { useDiagnostics } from "../lib/diagnostics.js";
@@ -32,7 +33,7 @@ import * as theme from "../theme.js";
 
 const props = defineProps({ section: { type: String, default: "overview" } });
 const emit = defineEmits(["navigate"]);
-const { data, reload } = useDashboard();
+const { data, reload, selectedDatasetId } = useDashboard();
 const { writable, readOnlyReason } = useDeployment();
 const { diagnosticsOn } = useDiagnostics();
 const research = computed(() => data.value.simulationResearch ?? {});
@@ -882,6 +883,7 @@ const slotColumns = [
             @delete="requestDelete"
             @delete-many="requestBatchDelete"
           >
+            <template v-if="section === 'campaigns'" #actions="{ row }"><a :href="campaignOptimizerHref(row.campaign_id, row.marketplace || row.reporting_scope?.marketplace || data.dashboardContext?.marketplace, selectedDatasetId)">Optimize {{ row.campaign_id }}</a></template>
             <template v-if="databaseEditing" #toolbar-start>
               <button class="btn primary" @click="openEditor(section)">
                 Add {{ SECTIONS.find(([key]) => key === section)?.[1] }} draft

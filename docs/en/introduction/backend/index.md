@@ -1,7 +1,7 @@
 ---
 title: Backend API
 description: Flask service boundary and model route family
-compact: "Backend service map for `backend/`: Flask owns runtime data access, serves the Vue client contract, runs three model jobs including strategy evaluation, and exposes synchronous attribution, recommendation, and attribution-evaluation endpoints. Routes share JSON error rules."
+compact: "Backend service map for `backend/`: Flask owns runtime data access, serves the Vue client contract, runs three model jobs including strategy evaluation, and exposes synchronous attribution, recommendation, scoped Campaign historical optimization and attribution-evaluation endpoints. Routes share JSON error rules."
 lang: en-US
 source_files: backend/api/models.py, backend/services/models.py
 test_files: backend/tests/test_models.py
@@ -64,7 +64,8 @@ Source: `backend/services/models.py`
 - Responsibility: Loads model-facing data without a ground-truth field, runs
   registered attribution models, invokes the strategy initializer or
   optimizer, and passes ground truth only to the evaluator.
-- Inputs: The fields specified on the three endpoint configuration pages;
+- Inputs: The fields specified on the three endpoint configuration pages, including
+  campaignId/marketplace/datasetId for isolated historical optimization;
   omitted paths resolve to committed reports or `MTA_SIM_DATA_DIR`.
 - Outputs: JSON-serializable standard attribution rows, budget plans, and
   evaluation reports; no files are written.
