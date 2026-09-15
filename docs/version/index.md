@@ -1,7 +1,7 @@
 ---
 title: Version Log
 description: Release history and material changes for the maintained project
-compact: "Routes release history from VERSION to one page per patch, keeping 0.9.56–0.9.59 flat and older patches in minor-version folders; includes dates, material summaries, historical group links, and planned follow-ups."
+compact: "Routes release history from VERSION to one page per patch, keeping 0.9.57–0.9.60 flat and older patches in minor-version folders; includes dates, material summaries, historical group links, and planned follow-ups."
 order: 1
 ---
 
@@ -10,6 +10,11 @@ order: 1
 The project version is recorded in the repository-root `VERSION` file. Each page here is one small patch description covering a coherent change set, rather than a reproduction of every commit message. Every patch keeps its own permanent page; older minor versions are grouped into a collapsed folder per minor version instead of being compacted away.
 
 This section records **what** changed. See the [work log](../worklog/) for **who** did the work and when.
+
+## [0.9.60](0.9.60.md)
+
+- Date: 2026-09-15
+- Summary: Repaired baseline history matching and enabled full compatible history, transferred fits and observed baseline recommendations for Campaign previews.
 
 ## [0.9.59](0.9.59.md)
 
@@ -26,7 +31,7 @@ This section records **what** changed. See the [work log](../worklog/) for **who
 - Date: 2026-09-10
 - Summary: Replaced the Campaign budget optimizer page with a five-page specification an agent can rebuild the implementation from — model, assumptions, data collection, fit, solver, and artifact — and removed every numbered heading in the strategy section, repairing the links and the sidebar order that numbering had been standing in for
 
-## [0.9.56](0.9.56.md)
+## [0.9.56](0.9/0.9.56.md)
 
 - Date: 2026-09-10
 - Summary: Required the owner to be asked about a local Docker Compose preview before a major component or new feature is deployed, and published a numbered one-line index of all 107 repository rules with the date and author of each

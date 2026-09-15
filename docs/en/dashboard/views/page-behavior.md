@@ -1,6 +1,6 @@
 ---
 title: Page Behavior
-compact: "Campaign optimizer links, automatic scoped historical fits, configurable similarity grouping and algorithm tooltips; source-aware rankings, distributions, filtered exports, model evidence, executable plans, formal evaluation and retained run history; shared LogViewer and bounded history windows."
+compact: "Campaign optimizer links, automatic scoped historical fits, full-history references, empirical baseline recommendations and algorithm tooltips; source-aware rankings, distributions, filtered exports, model evidence, executable plans, formal evaluation and retained run history; shared LogViewer and bounded history windows."
 source_files: dashboard/src/views/CommandCenter.vue, dashboard/src/views/BudgetManager.vue, dashboard/src/views/Campaigns.vue, dashboard/src/views/CampaignOptimizer.vue, dashboard/src/views/OptimizationLog.vue
 ---
 
@@ -277,3 +277,18 @@ budget is a valid query value; absent budget adds no score component.
 Shared TermHelp popovers explain each grouping rule and the two-stage saturating
 budget-to-spend-to-revenue model with its constrained solver. Controls use
 setting rows, with the label and helper on the left and the control on the right.
+
+
+### Full-history strategy references
+
+The selected Campaign optimizer offers a History source setting: Full dataset
+(default) searches all compatible ordinary history; This Campaign restricts the
+search. Changing it recomputes the preview and invalidates older responses.
+Display target/reference counts and donor Campaign identifiers. Distinguish a
+fitted strategy from a Historical baseline recommendation: the latter displays
+its suggested budget and observed averages plus the insufficient-variation reason,
+without a predicted uplift claim. Tooltips explain both outcomes and compatibility
+boundaries. Similarity-display filters remain independent of model evidence.
+
+Transferred response plots and tables include the donor records with their
+original Campaign identifiers; they are never presented as target observations.

@@ -148,7 +148,7 @@ test('campaign navigation encodes identity and automatic preview ignores late re
     useDashboard: () => ({ data: ref(base), selectedDatasetId: selected }),
     optimizeCampaign: body => { submitted = body; return new Promise(done => { resolve = done; }); },
   });
-  assert.deepEqual(submitted, { campaignId: 'A', marketplace: 'US', datasetId: 'ds_one' });
+  assert.deepEqual(submitted, { campaignId: 'A', marketplace: 'US', historyMode: 'full', datasetId: 'ds_one' });
   selected.value = 'ds_two';
   await nextTick();
   resolve({ campaign_id: 'A' });
@@ -165,4 +165,29 @@ test('a zero budget query matches observed zero but never absent budget', () => 
   ] } }, 'similarityBudget, similarityThreshold, similarityMatches');
   v.similarityBudget.value = '0'; v.similarityThreshold.value = 1;
   assert.deepEqual(v.similarityMatches.value.map(row => row.campaign_id), ['zero']);
+});
+
+
+test('history-source changes recompute and invalidate older previews', async () => {
+  const calls = [];
+  const v = view('CampaignOptimizer', base, 'historyMode, preview', {
+    window: { location: { search: '?campaignId=A&marketplace=CA&campaignSource=legacy' } },
+    defineProps: () => ({ section: 'optimization' }),
+    optimizeCampaign: body => new Promise(resolve => calls.push({ body, resolve })),
+  });
+  assert.equal(calls[0].body.historyMode, 'full');
+  v.historyMode.value = 'campaign';
+  await nextTick();
+  assert.equal(calls[1].body.historyMode, 'campaign');
+  calls[1].resolve({ observation_count: 2 }); await Promise.resolve();
+  calls[0].resolve({ observation_count: 100 }); await Promise.resolve();
+  assert.equal(v.preview.value.observation_count, 2);
+});
+
+test('transferred model evidence retains donor campaign identity', () => {
+  const campaignStrategy = { response_models: { campaign_models: { B: {
+    campaign_id: 'B', diagnostics: { support: 'POOLED_TRANSFER', pooled_campaign_ids: ['A'] },
+  } } }, response_observations: [ { campaign_id: 'A', configured_budget: 100 }, { campaign_id: 'unrelated' } ] };
+  const v = view('CampaignOptimizer', { ...base, campaignStrategy }, 'responseObservations');
+  assert.deepEqual(v.responseObservations.value.map(row => row.campaign_id), ['A']);
 });

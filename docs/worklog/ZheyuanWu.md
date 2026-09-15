@@ -31,6 +31,12 @@ Areas owned by others are recorded on their own pages: the [Data Generator confi
 
 ---
 
+## 2026-09-15
+
+### Completed
+
+- Repaired ordinary baseline outcome matching and added full comparable-history Campaign strategies with transparent transferred fits or observed baseline recommendations; verified 201 backend tests, 181 dashboard tests and all 80 campaign-marketplace responses through the PostgreSQL Docker proxy. Browser automation was unavailable; no database records were changed.
+
 ## 2026-09-14
 
 ### Completed

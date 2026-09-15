@@ -1,7 +1,7 @@
 ---
 title: Recommendation Endpoint Configuration
 description: Budget initialization and response-model optimization request contracts
-compact: "Configures `POST /api/models/recommend` and `/api/models/optimize`: default or supplied strategy inputs, deterministic non-optimized Ad Group budget seed, research snapshot path, total budget, usage policy, Campaign floors and ceilings, campaign-scoped observed-history fitting and response-model result fields."
+compact: "Configures `POST /api/models/recommend` and `/api/models/optimize`: default or supplied strategy inputs, deterministic non-optimized Ad Group budget seed, research snapshot path, total budget, usage policy, Campaign floors and ceilings, baseline matching, full-history transfer and empirical fallback and response-model result fields."
 lang: en-US
 ---
 
@@ -39,36 +39,41 @@ historical budget, spend, and revenue observations.
 
 ### Selected Campaign preview
 
-`POST /api/models/optimize` also accepts `campaignId`, required `marketplace`,
-and optional `datasetId`. This branch uses only the named registered dataset
-or the configured legacy source; it never falls back to another source. It
-ignores chart filters and fits all available history for that Campaign and
-marketplace. An unknown, empty or inactive identity is refused. No artifact is written.
+`POST /api/models/optimize` accepts `campaignId`, required `marketplace`, optional
+`datasetId`, and `historyMode` (`full` by default or `campaign`). Only the named
+source is read. Full mode searches its entire recorded date range for comparable
+Campaigns with the same advertiser, marketplace, currency, provider and ad product;
+campaign mode uses the target alone. Chart dates and similarity-display thresholds
+do not truncate this evidence. Unknown or inactive targets are refused.
 
-The backend adapts one ordinary budget-period observation into
-`CampaignResponseObservation`, then fits the existing response model and solver.
-Database reads join budget records to summed **non-evaluation** outcomes by run,
-Campaign, marketplace, date and budget level. Registered and file inputs join
-ordinary outcomes by full reporting scope and budget level. Budget and spend
-are counted once while revenue is summed across observed products/touchpoints.
-Missing, negative or nonfinite budget, spend or revenue is refused, as are
-mixed advertisers or currencies and non-daily periods. No attribution,
-similarity score or evaluation-only outcome enters fitting. Observation counts
-and dates describe this exact Campaign's evidence.
+Ordinary outcomes are aggregated before joining to budgets on run, Campaign,
+advertiser, marketplace, currency, date and budget level. A null outcome budget
+level denotes the baseline only: match it to level 1, or a null budget level,
+never to every experimental arm. Exact explicit-level outcomes take precedence.
+Registered/file records follow the same rule using complete reporting scopes.
+Evaluation-only outcomes are never read. Invalid or unmatched rows are excluded,
+not allowed to invalidate the entire history; repeated budget identities remain
+an error. All model observations must be finite, nonnegative and daily.
 
-The default authorized budget and per-Campaign ceiling are the largest observed
-configured budget, avoiding extrapolation unless the caller explicitly supplies
-a larger ceiling. Only this Campaign is optimized; unsupported fits are refused
-instead of borrowing another Campaign's history. The result adds `campaign_id`,
-`marketplace`, `dataset_id`, `response_observations`, and `observation_count`.
-It is the revenue-maximizing allocation under the fitted model and budget limit,
-not a claim of a causal or globally optimal real-world strategy.
+Fit the target's own usable history first. If it cannot support a response curve,
+full mode fits the comparable history and labels the transferred response
+`POOLED_TRANSFER`, retaining the donor Campaign identifiers. The allocation always
+belongs only to the selected Campaign. Donors retain their original identities in
+`response_observations`; `history_selection` reports the mode, target and reference
+counts and donor identifiers. No cross-currency or cross-account transfer occurs.
 
-Database observation tables whose ordinary outcomes do not identify the varied
-budget levels cannot support this preview; evaluation-only arms are never
-substituted for missing ordinary evidence.
+When valid observations exist but lack sufficient budget variation for a curve,
+return a successful `HISTORICAL_BASELINE` recommendation with `is_optimized: false`.
+Its `historical_recommendation` contains the target, recommended budget, observed
+mean spend and revenue, and an explicit insufficient-variation explanation. Use
+target observations when available, otherwise the comparable pool. Choose the
+observed budget with greatest mean revenue (ties choose the smaller budget),
+within the authorized budget and floors/ceilings. Never claim predicted uplift
+or a fitted optimum for this fallback. No valid evidence or no feasible observed
+budget still yields an actionable refusal.
 
-The public response observation projection contains Campaign, marketplace,
-currency, start/end dates, `report_date` (the start), intervention identity,
-configured budget, spend and total revenue. Delivery counts are not loaded by
-this adapter, are unused by the fitter, and are omitted from public observations.
+Default authorization and ceiling use the maximum valid selected historical
+budget. `initial_strategy` and any optimized allocation name only the target.
+Public response observations expose original Campaign identity, marketplace,
+currency, dates including `report_date`, intervention identity, budget, spend and
+ordinary revenue; unavailable delivery counts are omitted. No artifact is written.

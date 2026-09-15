@@ -344,12 +344,13 @@ const selectedCampaign = campaignQuery.get("campaignId") || "";
 const selectedMarketplace = campaignQuery.get("marketplace") || "";
 const campaignSource = campaignQuery.get("campaignSource") || "legacy";
 const scopedPreview = computed(() => Boolean(selectedCampaign) && model.value === "optimization");
+const historyMode = ref("full");
 const preview = ref(null);
 const previewBusy = ref(false);
 const previewError = ref("");
 let previewGeneration = 0;
 const optimizerHelp = {
-  definition: "Fits two saturating curves from ordinary historical observations: budget to spend, then spend to revenue. The constrained solver maximizes predicted revenue within the budget limit. This preview uses only the selected Campaign and defaults to its largest observed budget; predictions are not guaranteed or causal outcomes.",
+  definition: "Fits two saturating curves from ordinary historical observations: budget to spend, then spend to revenue. The constrained solver maximizes predicted revenue within the budget limit. Full dataset searches compatible history across all dates in the same account, marketplace, currency, provider and ad product. With sufficient variation it fits a transferred response; otherwise it returns an observed historical baseline without claiming an optimum.",
   href: "/en/strategy-recommendation/campaign-budget-optimizer/",
 };
 async function computeCampaign() {
@@ -362,13 +363,13 @@ async function computeCampaign() {
   }
   previewBusy.value = true;
   try {
-    const result = await optimizeCampaign({ campaignId: selectedCampaign, marketplace: selectedMarketplace,
+    const result = await optimizeCampaign({ campaignId: selectedCampaign, marketplace: selectedMarketplace, historyMode: historyMode.value,
       ...(selectedDatasetId.value ? { datasetId: selectedDatasetId.value } : {}) });
     if (token === previewGeneration) preview.value = result;
   } catch (error) { if (token === previewGeneration) previewError.value = error.message; }
   finally { if (token === previewGeneration) previewBusy.value = false; }
 }
-watch([scopedPreview, selectedDatasetId], computeCampaign, { immediate: true });
+watch([scopedPreview, selectedDatasetId, historyMode], computeCampaign, { immediate: true });
 onBeforeUnmount(() => { previewGeneration += 1; });
 const strategy = computed(() => scopedPreview.value ? preview.value ?? {} : data.value.campaignStrategy ?? {});
 const plan = computed(() => strategy.value.optimized_strategy ?? {});
@@ -466,7 +467,9 @@ const activeAllocation = computed(() =>
 );
 const responseObservations = computed(() =>
   (strategy.value.response_observations ?? []).filter(
-    (row) => row.campaign_id === activeResponseCampaign.value,
+    (row) => row.campaign_id === activeResponseCampaign.value ||
+      (activeResponseModel.value.diagnostics?.support === "POOLED_TRANSFER" &&
+       (activeResponseModel.value.diagnostics?.pooled_campaign_ids ?? []).includes(row.campaign_id)),
   ),
 );
 
@@ -504,6 +507,7 @@ const responseValueColumns = computed(() => [
   { key: "expected_revenue", label: "Expected revenue", format: "money", currency: symbol.value },
 ]);
 const responseObservationColumns = computed(() => [
+  { key: "campaign_id", label: "Observed Campaign" },
   { key: "report_date", label: "Date" }, { key: "intervention_id", label: "Intervention" },
   { key: "configured_budget", label: "Budget", format: "money", currency: symbol.value },
   { key: "actual_spend", label: "Spend", format: "money", currency: symbol.value },
@@ -623,10 +627,18 @@ const evaluationAvailable = computed(
     <article v-if="scopedPreview" class="card">
       <div class="card-head"><h2>Optimize {{ selectedCampaign }}</h2><TermHelp :term="optimizerHelp" /></div>
       <div class="card-body"><p>{{ selectedMarketplace }} · {{ campaignSource === 'legacy' ? 'Configured source' : campaignSource }} · Historical Campaign strategy</p>
-        <p>Maximize predicted revenue within the largest observed daily budget. Uses this Campaign’s complete daily history and reports a model-based recommendation.</p>
+        <p>Use valid historical records to recommend a daily budget. Full dataset includes compatible Campaigns across the complete recorded period.</p>
+        <div class="setting-group"><div class="setting-row"><div class="setting-label"><label for="optimizer-history-mode">History source</label><small>Full dataset uses compatible Campaign records when this Campaign has insufficient history.</small></div><div class="setting-control"><select id="optimizer-history-mode" v-model="historyMode"><option value="full">Full dataset · similar history</option><option value="campaign">This Campaign only</option></select></div></div></div>
+        <p v-if="preview?.history_selection">{{ preview.history_selection.target_observation_count }} own observations · {{ preview.history_selection.reference_observation_count }} comparable observations. Reference Campaigns: {{ preview.history_selection.reference_campaign_ids.join(', ') || 'None' }}.</p>
         <p v-if="previewBusy" role="status">Fitting historical response and computing the strategy…</p>
         <p v-if="previewError" role="alert">{{ previewError }}</p>
-        <p v-if="preview">{{ preview.observation_count }} observations · {{ evidenceWindow }}</p>
+        <p v-if="preview">{{ preview.observation_count }} valid observations · {{ evidenceWindow }}. {{ preview.history_selection?.excluded_observation_count ?? 0 }} unmatched or invalid observations excluded.</p>
+        <section v-if="preview?.historical_recommendation" aria-label="Historical baseline recommendation">
+          <h3>Historical baseline recommendation</h3>
+          <p>{{ preview.historical_recommendation.reason }}</p>
+          <div class="setting-row"><div class="setting-label">Recommended daily budget</div><div class="setting-control">{{ theme.money(preview.historical_recommendation.recommended_budget, symbol) }}</div></div>
+          <p>Reference averages at this budget: spend {{ theme.money(preview.historical_recommendation.mean_observed_spend, symbol) }}, revenue {{ theme.money(preview.historical_recommendation.mean_observed_revenue, symbol) }} across {{ preview.historical_recommendation.observation_count }} observations.</p>
+        </section>
         <div class="rec-actions"><button :disabled="previewBusy || IS_STATIC" @click="computeCampaign">Recompute strategy</button></div>
       </div>
     </article>
@@ -909,7 +921,7 @@ const evaluationAvailable = computed(
         </article>
       </template>
 
-      <article v-else-if="hasPlan" class="card">
+      <article v-else-if="hasPlan && !strategy.historical_recommendation" class="card">
         <div class="card-head">
           <h2>No allocation was produced</h2>
         </div>

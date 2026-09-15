@@ -218,5 +218,51 @@ class CampaignPreviewTests(unittest.TestCase):
             with self.assertRaises(ModelRequestError):
                 optimize({"datasetId": "selected", "campaignId": "A"})
             research["budget_observations"][0]["actual_spend"] = float("nan")
+            result = optimize({"datasetId": "selected", "campaignId": "A", "marketplace": "US"})
+            self.assertEqual(result["observation_count"], 4)
+            self.assertEqual(result["history_selection"]["excluded_observation_count"], 1)
+
+
+    def test_full_history_transfers_to_target_without_relabeling_public_evidence(self):
+        import copy
+        from backend.services.models import optimize, ModelUnavailableError
+        research = self.research()
+        research["simulation_runs"][0]["campaigns"].append({"campaign_id": "B", "provider": "AMAZON_ADS", "ad_product": "Sponsored Products", "status": "ACTIVE"})
+        target = copy.deepcopy(research["budget_observations"][0]); target["campaign_id"] = "B"
+        research["budget_observations"].append(target)
+        with patch("backend.services.datasets.dataset_inputs", return_value={"research": research}):
+            result = optimize({"datasetId": "selected", "campaignId": "B", "marketplace": "US"})
+            self.assertTrue(result["optimized_strategy"]["is_optimized"])
+            self.assertEqual(result["optimized_strategy"]["allocations"][0]["campaign_id"], "B")
+            self.assertEqual(result["history_selection"]["reference_campaign_ids"], ["A"])
+            self.assertEqual({row["campaign_id"] for row in result["response_observations"]}, {"A"})
+            self.assertEqual(result["response_models"]["campaign_models"]["B"]["diagnostics"]["support"], "POOLED_TRANSFER")
             with self.assertRaises(ModelUnavailableError):
-                optimize({"datasetId": "selected", "campaignId": "A", "marketplace": "US"})
+                optimize({"datasetId": "selected", "campaignId": "B", "marketplace": "US", "historyMode": "campaign"})
+
+    def test_unleveled_outcomes_match_only_baseline_and_return_historical_reference(self):
+        import copy
+        from backend.services.models import optimize
+        research = self.research()
+        base = copy.deepcopy(research["budget_observations"][2])
+        research["budget_observations"] = [base, {**base, "budget_level": 1.5, "configured_budget": 120}]
+        outcome = copy.deepcopy(research["outcome_observations"][2]); outcome.pop("budget_level")
+        research["outcome_observations"] = [outcome]
+        with patch("backend.services.datasets.dataset_inputs", return_value={"research": research}):
+            result = optimize({"datasetId": "selected", "campaignId": "A", "marketplace": "US"})
+        self.assertEqual(result["observation_count"], 1)
+        self.assertEqual(result["historical_recommendation"]["recommended_budget"], 80)
+        self.assertEqual(result["optimized_strategy"]["recommendation_type"], "HISTORICAL_BASELINE")
+        self.assertFalse(result["optimized_strategy"]["is_optimized"])
+
+    def test_full_history_excludes_other_accounts_and_currencies(self):
+        import copy
+        from backend.services.models import optimize, ModelUnavailableError
+        research = self.research()
+        research["simulation_runs"][0]["campaigns"].append({"campaign_id": "B", "provider": "AMAZON_ADS", "ad_product": "Sponsored Products"})
+        target = copy.deepcopy(research["budget_observations"][0]); target["campaign_id"] = "B"
+        target["reporting_scope"]["advertiser_id"] = "other"
+        research["budget_observations"].append(target)
+        with patch("backend.services.datasets.dataset_inputs", return_value={"research": research}):
+            with self.assertRaises(ModelUnavailableError):
+                optimize({"datasetId": "selected", "campaignId": "B", "marketplace": "US"})
