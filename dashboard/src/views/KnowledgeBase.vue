@@ -20,11 +20,6 @@ import { useDashboard } from "../lib/useDashboard.js";
 import { routeResources } from "../pages.js";
 import { money } from "../theme.js";
 
-import {
-  DEFAULT_ONTOLOGY_REVIEW_SCENARIO,
-  loadOntologyReviewFixtures,
-} from "../lib/ontologyReviewFixtures.js";
-
 const props = defineProps({ section: { type: String, default: "vocabulary" } });
 const emit = defineEmits(["navigate"]);
 const { data, ensureResources, selectedDatasetId } = useDashboard();
