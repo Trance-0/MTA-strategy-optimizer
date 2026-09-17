@@ -343,7 +343,13 @@ const campaignQuery = new URLSearchParams(window.location.search);
 const selectedCampaign = ref(campaignQuery.get("campaignId") || "");
 const selectedMarketplace = ref(campaignQuery.get("marketplace") || data.value.dataset?.scope?.marketplace || data.value.dashboardContext?.marketplace || "");
 const campaignSource = ref(campaignQuery.get("campaignSource") || selectedDatasetId.value || "legacy");
-const scopedPreview = computed(() => Boolean(selectedCampaign.value) && model.value === "optimization");
+const campaignSearchError = computed(() => {
+  const query = campaignSearch.value.trim();
+  return query && !matchingCampaigns.value.length
+    ? `No Campaign matches “${query}”. Clear the search or enter an identifier, name, provider, or ad product from the catalogue.`
+    : "";
+});
+const scopedPreview = computed(() => Boolean(selectedCampaign.value) && !campaignSearchError.value && model.value === "optimization");
 const campaignSearch = ref("");
 const campaignOptions = computed(() => {
   const unique = new Map();
@@ -385,7 +391,7 @@ async function computeCampaign() {
   const token = ++previewGeneration;
   preview.value = null; previewError.value = ""; previewBusy.value = false;
   if (!scopedPreview.value || !selectedMarketplace.value.trim()) return;
-  if (inputError.value) return;
+  if (inputError.value || campaignSearchError.value) return;
   if ((selectedDatasetId.value || "legacy") !== campaignSource.value) {
     previewError.value = "The selected source changed. Open Optimize from the Campaign in the current source.";
     return;
@@ -403,6 +409,12 @@ async function computeCampaign() {
 // Numeric edits invalidate old results immediately; submit only on Recompute.
 watch([initialBudget, similarityThreshold], () => {
   previewGeneration += 1; preview.value = null; previewBusy.value = false;
+  previewError.value = "";
+}, { flush: "sync" });
+watch(campaignSearch, () => {
+  previewGeneration += 1;
+  preview.value = null;
+  previewBusy.value = false;
   previewError.value = "";
 }, { flush: "sync" });
 watch(selectedDatasetId, () => {
@@ -669,9 +681,10 @@ const evaluationAvailable = computed(
     <article v-if="model === 'optimization'" class="card">
       <div class="card-head"><h2>Select Campaign to optimize</h2></div>
       <div class="card-body setting-group">
-        <div class="setting-row"><div class="setting-label"><label for="optimizer-campaign-search">Find Campaign</label><small>Type a name, identifier, provider or ad product to narrow the choices.</small></div><div class="setting-control"><input id="optimizer-campaign-search" v-model="campaignSearch" type="search" placeholder="Type to match Campaigns" /></div></div>
+        <div class="setting-row"><div class="setting-label"><label for="optimizer-campaign-search">Find Campaign</label><small>Type a name, identifier, provider or ad product to narrow the choices.</small></div><div class="setting-control"><input id="optimizer-campaign-search" v-model="campaignSearch" type="search" placeholder="Type to match Campaigns" :aria-invalid="Boolean(campaignSearchError)" /></div></div>
         <div class="setting-row"><div class="setting-label"><label for="optimizer-campaign">Campaign</label><small>Select the Campaign that will receive the strategy recommendation.</small></div><div class="setting-control"><select id="optimizer-campaign" v-model="selectedCampaign" @change="chooseCampaign"><option value="">Select a Campaign</option><option v-if="selectedCampaign && !matchingCampaigns.some(row => row.campaign_id === selectedCampaign)" :value="selectedCampaign">{{ selectedCampaign }} · current selection</option><option v-for="row in matchingCampaigns" :key="row.campaign_id" :value="row.campaign_id">{{ row.campaign_name || row.campaign_id }} · {{ row.campaign_id }}</option></select></div></div>
-        <p v-if="!matchingCampaigns.length" role="status">No Campaigns match this search.</p>
+        <p v-if="campaignSearchError" role="alert">{{ campaignSearchError }}</p>
+        <p v-else-if="!campaignOptions.length" role="status">Campaign catalogue is still loading.</p>
         <div class="setting-row"><div class="setting-label"><label for="optimizer-marketplace">Marketplace</label><small>Use the recorded marketplace code, such as US or CA.</small></div><div class="setting-control"><input id="optimizer-marketplace" v-model.lazy="selectedMarketplace" type="text" /></div></div>
       </div>
     </article>

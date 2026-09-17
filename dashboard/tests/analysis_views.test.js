@@ -222,7 +222,7 @@ test('Campaign selector matches on typing and changing target ignores old result
     { campaign_id: 'A', campaign_name: 'Alpha', provider: 'AMAZON_ADS' },
     { campaign_id: 'B', campaign_name: 'Bravo', ad_product: 'Search' },
   ] } };
-  const v = view('CampaignOptimizer', snapshot, 'selectedCampaign, campaignSearch, matchingCampaigns, chooseCampaign, preview, initialBudget', {
+  const v = view('CampaignOptimizer', snapshot, 'selectedCampaign, campaignSearch, matchingCampaigns, campaignSearchError, chooseCampaign, preview, initialBudget', {
     window: { location: { search: '?campaignId=A&marketplace=US&campaignSource=legacy' } },
     defineProps: () => ({ section: 'optimization' }),
     optimizeCampaign: body => new Promise(resolve => calls.push({ body, resolve })),
@@ -238,4 +238,6 @@ test('Campaign selector matches on typing and changing target ignores old result
   calls[0].resolve({ campaign_id: 'A' }); await Promise.resolve();
   assert.equal(v.preview.value.campaign_id, 'B');
   v.campaignSearch.value = 'missing'; assert.equal(v.matchingCampaigns.value.length, 0);
+  assert.match(v.campaignSearchError.value, /No Campaign matches/);
+  v.campaignSearch.value = 'alpha'; assert.equal(v.campaignSearchError.value, '');
 });
