@@ -1,6 +1,6 @@
 ---
 title: Page Behavior
-compact: "Campaign optimizer links, automatic scoped historical fits, full-history references, empirical baseline recommendations and algorithm tooltips; source-aware rankings, distributions, filtered exports, model evidence, executable plans, formal evaluation and retained run history; shared LogViewer and bounded history windows."
+compact: "Campaign optimizer links, automatic scoped historical fits, editable initial budget and similarity threshold, full-history references, baseline recommendations and algorithm tooltips; source-aware rankings, distributions, filtered exports, model evidence, executable plans, formal evaluation and retained run history; shared LogViewer and bounded history windows."
 source_files: dashboard/src/views/CommandCenter.vue, dashboard/src/views/BudgetManager.vue, dashboard/src/views/Campaigns.vue, dashboard/src/views/CampaignOptimizer.vue, dashboard/src/views/OptimizationLog.vue
 ---
 
@@ -292,3 +292,35 @@ boundaries. Similarity-display filters remain independent of model evidence.
 
 Transferred response plots and tables include the donor records with their
 original Campaign identifiers; they are never presented as target observations.
+
+
+### Editable optimizer inputs
+
+The selected Campaign preview adds setting rows for Initial daily budget and
+Similarity threshold. The initial budget may be blank for the historical default;
+otherwise it must be finite and positive. Its helper distinguishes the comparison
+baseline from the authorized budget cap. The threshold defaults to zero, accepts
+zero through one, and is disabled for This Campaign only. A tooltip explains the
+budget-proximity rule and the fixed compatibility boundaries. Show the effective
+initial budget returned by the server. Editing either number clears the previous
+result, invalidates in-flight responses and asks the user to Recompute strategy;
+it does not submit on each keystroke. Invalid inputs disable recomputation and
+show an inline explanation. Requests include only a nonblank initial budget and
+the effective threshold. Source/history-mode changes retain automatic computation.
+
+
+### Searchable target Campaign selection
+
+The optimization tab always exposes a Campaign selector, including when opened
+without a Campaign link. A native search field filters a native select as the
+reader types, matching Campaign identifier, name, provider and ad product without
+case sensitivity. Deduplicate catalogue records by Campaign identifier and sort
+by identifier. Typing filters options without changing the selected target; a
+selection automatically recomputes for that target and clears its previous result.
+Keep the existing marketplace from the link or source context, and show an editable
+marketplace field so a catalogue lacking per-marketplace identity is not assigned
+a guessed market. Empty Campaign or marketplace makes no model request.
+Changing the dataset clears Campaign selection and results; choosing an entry
+binds the preview to the current source. Initial budget resets on Campaign change.
+The source catalogue and existing selection stay visible while filtering; no match
+is explicitly reported. Input controls keep native focus and keyboard behavior.

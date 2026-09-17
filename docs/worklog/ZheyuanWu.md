@@ -31,6 +31,12 @@ Areas owned by others are recorded on their own pages: the [Data Generator confi
 
 ---
 
+## 2026-09-18
+
+### Completed
+
+- Added the source-aware searchable Campaign selector and smart matching controls to the optimizer; verified Docker catalogue/API behavior, 17 backend model tests and 183 dashboard tests.
+
 ## 2026-09-15
 
 ### Completed

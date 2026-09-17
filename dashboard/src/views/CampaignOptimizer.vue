@@ -340,11 +340,39 @@ const shiftRows = computed(() => sortBy(shift.value, "delta_pp", "desc"));
 // ---------------------------------------------------------------------------
 
 const campaignQuery = new URLSearchParams(window.location.search);
-const selectedCampaign = campaignQuery.get("campaignId") || "";
-const selectedMarketplace = campaignQuery.get("marketplace") || "";
-const campaignSource = campaignQuery.get("campaignSource") || "legacy";
-const scopedPreview = computed(() => Boolean(selectedCampaign) && model.value === "optimization");
+const selectedCampaign = ref(campaignQuery.get("campaignId") || "");
+const selectedMarketplace = ref(campaignQuery.get("marketplace") || data.value.dataset?.scope?.marketplace || data.value.dashboardContext?.marketplace || "");
+const campaignSource = ref(campaignQuery.get("campaignSource") || selectedDatasetId.value || "legacy");
+const scopedPreview = computed(() => Boolean(selectedCampaign.value) && model.value === "optimization");
+const campaignSearch = ref("");
+const campaignOptions = computed(() => {
+  const unique = new Map();
+  for (const row of data.value.simulationResearch?.campaigns ?? []) {
+    if (row.campaign_id) unique.set(row.campaign_id, row);
+  }
+  return [...unique.values()].sort((a, b) => a.campaign_id.localeCompare(b.campaign_id));
+});
+const matchingCampaigns = computed(() => {
+  const query = campaignSearch.value.trim().toLowerCase();
+  return campaignOptions.value.filter(row => [row.campaign_id, row.campaign_name, row.provider, row.ad_product]
+    .some(value => String(value ?? "").toLowerCase().includes(query)));
+});
+function chooseCampaign() {
+  campaignSource.value = selectedDatasetId.value || "legacy";
+  initialBudget.value = "";
+}
 const historyMode = ref("full");
+const initialBudget = ref("");
+const similarityThreshold = ref(0);
+const inputError = computed(() => {
+  if (initialBudget.value !== "" && (typeof initialBudget.value !== "number" || !Number.isFinite(initialBudget.value) || initialBudget.value <= 0)) return "Enter an initial budget greater than zero, or leave it blank for the historical default.";
+  if (historyMode.value === "full" && (typeof similarityThreshold.value !== "number" || !Number.isFinite(similarityThreshold.value) || similarityThreshold.value < 0 || similarityThreshold.value > 1)) return "Enter a similarity threshold between 0 and 1.";
+  return "";
+});
+const similarityHelp = {
+  definition: "References must match account, marketplace, currency, provider and ad product. Budget similarity is 1 minus the absolute budget difference divided by the larger budget (at least 1). Zero includes all compatible budgets; one requires an exact budget match. Your initial budget is the reference when entered; otherwise the Campaign baseline is used. Own history is retained.",
+  href: "/en/introduction/backend/recommendation",
+};
 const preview = ref(null);
 const previewBusy = ref(false);
 const previewError = ref("");
@@ -356,20 +384,34 @@ const optimizerHelp = {
 async function computeCampaign() {
   const token = ++previewGeneration;
   preview.value = null; previewError.value = ""; previewBusy.value = false;
-  if (!scopedPreview.value) return;
-  if ((selectedDatasetId.value || "legacy") !== campaignSource) {
+  if (!scopedPreview.value || !selectedMarketplace.value.trim()) return;
+  if (inputError.value) return;
+  if ((selectedDatasetId.value || "legacy") !== campaignSource.value) {
     previewError.value = "The selected source changed. Open Optimize from the Campaign in the current source.";
     return;
   }
   previewBusy.value = true;
   try {
-    const result = await optimizeCampaign({ campaignId: selectedCampaign, marketplace: selectedMarketplace, historyMode: historyMode.value,
+    const result = await optimizeCampaign({ campaignId: selectedCampaign.value, marketplace: selectedMarketplace.value.trim(), historyMode: historyMode.value,
+      similarityThreshold: historyMode.value === "full" ? similarityThreshold.value : 0,
+      ...(initialBudget.value === "" ? {} : { initialBudget: initialBudget.value }),
       ...(selectedDatasetId.value ? { datasetId: selectedDatasetId.value } : {}) });
     if (token === previewGeneration) preview.value = result;
   } catch (error) { if (token === previewGeneration) previewError.value = error.message; }
   finally { if (token === previewGeneration) previewBusy.value = false; }
 }
-watch([scopedPreview, selectedDatasetId, historyMode], computeCampaign, { immediate: true });
+// Numeric edits invalidate old results immediately; submit only on Recompute.
+watch([initialBudget, similarityThreshold], () => {
+  previewGeneration += 1; preview.value = null; previewBusy.value = false;
+  previewError.value = "";
+}, { flush: "sync" });
+watch(selectedDatasetId, () => {
+  selectedCampaign.value = ""; campaignSearch.value = "";
+  campaignSource.value = selectedDatasetId.value || "legacy";
+  initialBudget.value = "";
+  selectedMarketplace.value = data.value.dataset?.scope?.marketplace || data.value.dashboardContext?.marketplace || "";
+}, { flush: "sync" });
+watch([scopedPreview, selectedCampaign, selectedMarketplace, selectedDatasetId, historyMode], computeCampaign, { immediate: true });
 onBeforeUnmount(() => { previewGeneration += 1; });
 const strategy = computed(() => scopedPreview.value ? preview.value ?? {} : data.value.campaignStrategy ?? {});
 const plan = computed(() => strategy.value.optimized_strategy ?? {});
@@ -624,11 +666,27 @@ const evaluationAvailable = computed(
       </button>
     </div>
 
+    <article v-if="model === 'optimization'" class="card">
+      <div class="card-head"><h2>Select Campaign to optimize</h2></div>
+      <div class="card-body setting-group">
+        <div class="setting-row"><div class="setting-label"><label for="optimizer-campaign-search">Find Campaign</label><small>Type a name, identifier, provider or ad product to narrow the choices.</small></div><div class="setting-control"><input id="optimizer-campaign-search" v-model="campaignSearch" type="search" placeholder="Type to match Campaigns" /></div></div>
+        <div class="setting-row"><div class="setting-label"><label for="optimizer-campaign">Campaign</label><small>Select the Campaign that will receive the strategy recommendation.</small></div><div class="setting-control"><select id="optimizer-campaign" v-model="selectedCampaign" @change="chooseCampaign"><option value="">Select a Campaign</option><option v-if="selectedCampaign && !matchingCampaigns.some(row => row.campaign_id === selectedCampaign)" :value="selectedCampaign">{{ selectedCampaign }} · current selection</option><option v-for="row in matchingCampaigns" :key="row.campaign_id" :value="row.campaign_id">{{ row.campaign_name || row.campaign_id }} · {{ row.campaign_id }}</option></select></div></div>
+        <p v-if="!matchingCampaigns.length" role="status">No Campaigns match this search.</p>
+        <div class="setting-row"><div class="setting-label"><label for="optimizer-marketplace">Marketplace</label><small>Use the recorded marketplace code, such as US or CA.</small></div><div class="setting-control"><input id="optimizer-marketplace" v-model.lazy="selectedMarketplace" type="text" /></div></div>
+      </div>
+    </article>
     <article v-if="scopedPreview" class="card">
       <div class="card-head"><h2>Optimize {{ selectedCampaign }}</h2><TermHelp :term="optimizerHelp" /></div>
       <div class="card-body"><p>{{ selectedMarketplace }} · {{ campaignSource === 'legacy' ? 'Configured source' : campaignSource }} · Historical Campaign strategy</p>
         <p>Use valid historical records to recommend a daily budget. Full dataset includes compatible Campaigns across the complete recorded period.</p>
         <div class="setting-group"><div class="setting-row"><div class="setting-label"><label for="optimizer-history-mode">History source</label><small>Full dataset uses compatible Campaign records when this Campaign has insufficient history.</small></div><div class="setting-control"><select id="optimizer-history-mode" v-model="historyMode"><option value="full">Full dataset · similar history</option><option value="campaign">This Campaign only</option></select></div></div></div>
+        <div class="setting-group">
+          <div class="setting-row"><div class="setting-label"><label for="optimizer-initial-budget">Initial daily budget</label><small>Comparison baseline in the selected currency; leave blank to use history. This does not change the authorized budget cap.</small></div><div class="setting-control"><input id="optimizer-initial-budget" v-model.number="initialBudget" type="number" min="0.01" step="0.01" placeholder="Historical default" :aria-invalid="initialBudget !== '' && Boolean(inputError)" /></div></div>
+          <div class="setting-row"><div class="setting-label"><label for="optimizer-similarity-threshold">Similarity threshold</label><TermHelp :term="similarityHelp" /><small>0 includes all compatible budgets; 1 requires an exact budget match. Applies to Full dataset references.</small></div><div class="setting-control"><input id="optimizer-similarity-threshold" v-model.number="similarityThreshold" type="number" min="0" max="1" step="0.05" :disabled="historyMode !== 'full'" :aria-invalid="historyMode === 'full' && Boolean(inputError)" /></div></div>
+        </div>
+        <p v-if="inputError" role="alert">{{ inputError }}</p>
+        <p v-else-if="!preview && !previewBusy && !previewError" role="status">Select Recompute strategy to apply these settings.</p>
+        <p v-if="preview">Initial daily budget used: {{ theme.money(preview.initial_strategy?.allocations?.[0]?.initial_budget, symbol) }}.</p>
         <p v-if="preview?.history_selection">{{ preview.history_selection.target_observation_count }} own observations · {{ preview.history_selection.reference_observation_count }} comparable observations. Reference Campaigns: {{ preview.history_selection.reference_campaign_ids.join(', ') || 'None' }}.</p>
         <p v-if="previewBusy" role="status">Fitting historical response and computing the strategy…</p>
         <p v-if="previewError" role="alert">{{ previewError }}</p>
@@ -639,7 +697,7 @@ const evaluationAvailable = computed(
           <div class="setting-row"><div class="setting-label">Recommended daily budget</div><div class="setting-control">{{ theme.money(preview.historical_recommendation.recommended_budget, symbol) }}</div></div>
           <p>Reference averages at this budget: spend {{ theme.money(preview.historical_recommendation.mean_observed_spend, symbol) }}, revenue {{ theme.money(preview.historical_recommendation.mean_observed_revenue, symbol) }} across {{ preview.historical_recommendation.observation_count }} observations.</p>
         </section>
-        <div class="rec-actions"><button :disabled="previewBusy || IS_STATIC" @click="computeCampaign">Recompute strategy</button></div>
+        <div class="rec-actions"><button :disabled="previewBusy || IS_STATIC || Boolean(inputError) || !selectedMarketplace.trim()" @click="computeCampaign">Recompute strategy</button></div>
       </div>
     </article>
     <WorkbenchRunner v-else-if="selectedDatasetId" :key="`${selectedDatasetId}:${model}`" :stage="model" />

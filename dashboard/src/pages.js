@@ -63,7 +63,7 @@ export const PAGES = {
     defaultSection: "attribution",
     sections: {
       attribution: ["shell", "attribution"],
-      optimization: ["shell", "strategy"],
+      optimization: ["shell", "strategy", "research-campaigns"],
       evaluation: ["shell", "evaluation"],
     },
     icon: '<path d="M5 17l4-5 3 2 6-8M15 6h3v3" stroke="currentColor" stroke-width="1.7"/>',

@@ -362,6 +362,10 @@ def optimize(body: dict | None = None) -> dict:
         models = {target_id: target_model}
         initial_rows = target_rows or dataset.observations
         initial = _initial_strategy(CampaignResponseDataset(tuple(replace(row, campaign_id=target_id) for row in initial_rows)))
+        if body.get("initialBudget") not in (None, ""):
+            allocation = initial["allocations"][0]
+            allocation.update(initial_budget=float(body["initialBudget"]),
+                              current_budget=float(body["initialBudget"]), allocation_basis="USER_SPECIFIED")
     else:
         initial = _initial_strategy(dataset)
     total_budget = body.get("totalBudget")
@@ -459,6 +463,12 @@ def _campaign_history_dataset(body):
     from modules.mta_strategy_recommendation.src.response_dataset import CampaignResponseDataset, CampaignResponseObservation
     campaign_id, marketplace = body.get("campaignId"), body.get("marketplace")
     mode = body.get("historyMode", "full")
+    initial_budget = body.get("initialBudget")
+    if initial_budget not in (None, "") and (not _valid_history_number(initial_budget) or initial_budget <= 0):
+        raise ModelRequestError("initialBudget must be a finite positive number.")
+    threshold = body.get("similarityThreshold", 0)
+    if not _valid_history_number(threshold) or threshold > 1:
+        raise ModelRequestError("similarityThreshold must be a number between 0 and 1.")
     if not isinstance(campaign_id, str) or not campaign_id.strip() or not isinstance(marketplace, str) or not marketplace.strip():
         raise ModelRequestError("campaignId and marketplace are required for a Campaign preview.")
     if mode not in {"full", "campaign"}:
@@ -534,6 +544,13 @@ def _campaign_history_dataset(body):
     segments = {(item.get("provider"), item.get("ad_product")) for item in target_meta}
     if len(segments) != 1:
         raise ModelRequestError("Campaign history has conflicting provider or ad product metadata.")
+    # Similarity uses decision-time budgets only, never outcome or truth values.
+    baseline_values = [item.get("baseline_daily_budget") for item in target_meta
+                       if _valid_history_number(item.get("baseline_daily_budget")) and item["baseline_daily_budget"] > 0]
+    budget_values = baseline_values or [row["configured_budget"] for row in target
+        if _valid_history_number(row.get("configured_budget")) and row["configured_budget"] > 0]
+    reference_budget = float(initial_budget) if initial_budget not in (None, "") else (
+        sum(budget_values) / len(budget_values) if budget_values else 0)
     metadata_by_key = {(item.get("run_id"), item.get("campaign_id")): item for item in metadata}
     observations, seen, excluded = [], set(), 0
     for row in rows:
@@ -559,6 +576,11 @@ def _campaign_history_dataset(body):
         if not valid_dates or not all(_valid_history_number(value) for value in values):
             excluded += 1
             continue
+        if row["campaign_id"] != campaign_id:
+            proximity = max(0, 1 - abs(values[0] - reference_budget) / max(values[0], reference_budget, 1))
+            if proximity < threshold:
+                excluded += 1
+                continue
         identity = (row.get("run_id"), row["campaign_id"], start, end, row.get("budget_level"))
         if identity in seen:
             raise ModelRequestError("Campaign history contains repeated budget-period observations.")
@@ -574,7 +596,8 @@ def _campaign_history_dataset(body):
         raise ModelUnavailableError("No valid ordinary history matches this selection. Choose Full dataset or supply matching observed budget and outcome records.")
     own = [row for row in observations if row.campaign_id == campaign_id]
     return CampaignResponseDataset(tuple(observations)), {
-        "mode": mode, "target_observation_count": len(own),
+        "mode": mode, "similarity_threshold": threshold, "reference_budget": reference_budget,
+        "target_observation_count": len(own),
         "reference_observation_count": len(observations) - len(own),
         "reference_campaign_ids": sorted({row.campaign_id for row in observations if row.campaign_id != campaign_id}),
         "excluded_observation_count": excluded,

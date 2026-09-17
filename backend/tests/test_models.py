@@ -266,3 +266,27 @@ class CampaignPreviewTests(unittest.TestCase):
         with patch("backend.services.datasets.dataset_inputs", return_value={"research": research}):
             with self.assertRaises(ModelUnavailableError):
                 optimize({"datasetId": "selected", "campaignId": "B", "marketplace": "US"})
+
+
+    def test_initial_budget_and_similarity_threshold_change_the_request(self):
+        import copy
+        from backend.services.models import optimize, ModelUnavailableError, ModelRequestError
+        research = self.research()
+        research["simulation_runs"][0]["campaigns"].append({"campaign_id": "B", "provider": "AMAZON_ADS", "ad_product": "Sponsored Products"})
+        target = copy.deepcopy(research["budget_observations"][0]); target["campaign_id"] = "B"
+        research["budget_observations"].append(target)
+        with patch("backend.services.datasets.dataset_inputs", return_value={"research": research}):
+            body = {"datasetId": "selected", "campaignId": "B", "marketplace": "US", "initialBudget": 80, "similarityThreshold": 1}
+            result = optimize(body)
+            self.assertEqual(result["observation_count"], 1)
+            self.assertEqual(result["initial_strategy"]["allocations"][0]["initial_budget"], 80)
+            self.assertEqual(result["initial_strategy"]["allocations"][0]["allocation_basis"], "USER_SPECIFIED")
+            self.assertEqual(result["history_selection"]["similarity_threshold"], 1)
+            self.assertEqual(result["historical_recommendation"]["recommended_budget"], 80)
+            with self.assertRaises(ModelUnavailableError):
+                optimize({**body, "initialBudget": 81})
+            for fields in ({"initialBudget": -1}, {"initialBudget": float("inf")}, {"similarityThreshold": 1.1}, {"similarityThreshold": True}):
+                with self.assertRaises(ModelRequestError):
+                    optimize({**body, **fields})
+            own = optimize({**body, "campaignId": "A", "initialBudget": 81})
+            self.assertEqual(own["observation_count"], 5)

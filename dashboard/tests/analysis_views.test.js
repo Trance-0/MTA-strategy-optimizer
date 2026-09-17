@@ -148,13 +148,13 @@ test('campaign navigation encodes identity and automatic preview ignores late re
     useDashboard: () => ({ data: ref(base), selectedDatasetId: selected }),
     optimizeCampaign: body => { submitted = body; return new Promise(done => { resolve = done; }); },
   });
-  assert.deepEqual(submitted, { campaignId: 'A', marketplace: 'US', historyMode: 'full', datasetId: 'ds_one' });
+  assert.deepEqual(submitted, { campaignId: 'A', marketplace: 'US', historyMode: 'full', similarityThreshold: 0, datasetId: 'ds_one' });
   selected.value = 'ds_two';
   await nextTick();
   resolve({ campaign_id: 'A' });
   await Promise.resolve();
   assert.equal(v.preview.value, null);
-  assert.match(v.previewError.value, /source changed/);
+  assert.equal(v.previewError.value, '');
   assert.equal(v.previewBusy.value, false);
 });
 
@@ -190,4 +190,52 @@ test('transferred model evidence retains donor campaign identity', () => {
   } } }, response_observations: [ { campaign_id: 'A', configured_budget: 100 }, { campaign_id: 'unrelated' } ] };
   const v = view('CampaignOptimizer', { ...base, campaignStrategy }, 'responseObservations');
   assert.deepEqual(v.responseObservations.value.map(row => row.campaign_id), ['A']);
+});
+
+
+test('optimizer inputs validate, submit and invalidate in-flight results', async () => {
+  const calls = [];
+  const v = view('CampaignOptimizer', base, 'initialBudget, similarityThreshold, inputError, computeCampaign, preview', {
+    window: { location: { search: '?campaignId=A&marketplace=US&campaignSource=legacy' } },
+    defineProps: () => ({ section: 'optimization' }),
+    optimizeCampaign: body => new Promise(resolve => calls.push({ body, resolve })),
+  });
+  v.initialBudget.value = 150; v.similarityThreshold.value = 0.8;
+  calls[0].resolve({ observation_count: 999 }); await Promise.resolve();
+  assert.equal(v.preview.value, null);
+  const pending = v.computeCampaign();
+  assert.equal(calls[1].body.initialBudget, 150);
+  assert.equal(calls[1].body.similarityThreshold, 0.8);
+  calls[1].resolve({ observation_count: 2 }); await pending;
+  v.similarityThreshold.value = 2;
+  assert.equal(v.preview.value, null);
+  assert.match(v.inputError.value, /between 0 and 1/);
+  await v.computeCampaign(); assert.equal(calls.length, 2);
+  v.similarityThreshold.value = 0; v.initialBudget.value = -1;
+  assert.match(v.inputError.value, /greater than zero/);
+});
+
+
+test('Campaign selector matches on typing and changing target ignores old results', async () => {
+  const calls = [];
+  const snapshot = { ...base, simulationResearch: { campaigns: [
+    { campaign_id: 'A', campaign_name: 'Alpha', provider: 'AMAZON_ADS' },
+    { campaign_id: 'B', campaign_name: 'Bravo', ad_product: 'Search' },
+  ] } };
+  const v = view('CampaignOptimizer', snapshot, 'selectedCampaign, campaignSearch, matchingCampaigns, chooseCampaign, preview, initialBudget', {
+    window: { location: { search: '?campaignId=A&marketplace=US&campaignSource=legacy' } },
+    defineProps: () => ({ section: 'optimization' }),
+    optimizeCampaign: body => new Promise(resolve => calls.push({ body, resolve })),
+  });
+  v.campaignSearch.value = 'bRa';
+  assert.deepEqual(v.matchingCampaigns.value.map(row => row.campaign_id), ['B']);
+  assert.equal(v.selectedCampaign.value, 'A');
+  v.initialBudget.value = 150;
+  v.selectedCampaign.value = 'B'; v.chooseCampaign(); await nextTick();
+  assert.equal(v.initialBudget.value, '');
+  assert.equal(calls[1].body.campaignId, 'B');
+  calls[1].resolve({ campaign_id: 'B' }); await Promise.resolve();
+  calls[0].resolve({ campaign_id: 'A' }); await Promise.resolve();
+  assert.equal(v.preview.value.campaign_id, 'B');
+  v.campaignSearch.value = 'missing'; assert.equal(v.matchingCampaigns.value.length, 0);
 });

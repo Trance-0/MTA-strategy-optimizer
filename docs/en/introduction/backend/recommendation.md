@@ -1,7 +1,7 @@
 ---
 title: Recommendation Endpoint Configuration
 description: Budget initialization and response-model optimization request contracts
-compact: "Configures `POST /api/models/recommend` and `/api/models/optimize`: default or supplied strategy inputs, deterministic non-optimized Ad Group budget seed, research snapshot path, total budget, usage policy, Campaign floors and ceilings, baseline matching, full-history transfer and empirical fallback and response-model result fields."
+compact: "Configures `POST /api/models/recommend` and `/api/models/optimize`: default or supplied strategy inputs, deterministic non-optimized Ad Group budget seed, research snapshot path, total budget, usage policy, Campaign floors and ceilings, initialBudget and similarityThreshold controls, full-history transfer and empirical fallback and response-model result fields."
 lang: en-US
 ---
 
@@ -77,3 +77,23 @@ budget. `initial_strategy` and any optimized allocation name only the target.
 Public response observations expose original Campaign identity, marketplace,
 currency, dates including `report_date`, intervention identity, budget, spend and
 ordinary revenue; unavailable delivery counts are omitted. No artifact is written.
+
+
+#### Initial budget and optimizer similarity threshold
+
+Scoped requests accept optional `initialBudget` (finite positive number) and
+`similarityThreshold` (finite number from zero to one, default zero). Blank or
+omitted initial budget keeps the historical comparison baseline. A supplied
+initial budget replaces the target initial/current allocation and marks its
+basis `USER_SPECIFIED`; it does not change the authorized budget or ceiling.
+The response's `initial_strategy` records the effective value.
+
+Full-history references keep the existing exact account, marketplace, currency,
+provider and ad-product boundaries. Within those boundaries, donor observations
+must have budget proximity `max(0, 1 - abs(budget - reference) / max(budget, reference, 1))`
+at least the threshold. The reference is `initialBudget` when supplied, otherwise
+the target's positive configured baseline from metadata, falling back to the mean
+of its valid positive budget records. Own observations are never threshold-filtered.
+`history_selection` reports `similarity_threshold` and `reference_budget`.
+In campaign-only mode the threshold has no effect. No surviving evidence yields
+an actionable refusal. These selection parameters do not become model features.
