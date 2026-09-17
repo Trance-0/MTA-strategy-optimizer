@@ -1,6 +1,6 @@
 ---
 title: Page Behavior
-compact: "Campaign optimizer links, automatic scoped historical fits, editable initial budget and similarity threshold, full-history references, baseline recommendations and algorithm tooltips; source-aware rankings, distributions, filtered exports, model evidence, executable plans, formal evaluation and retained run history; shared LogViewer and bounded history windows."
+compact: "Native Campaign autocomplete with stable settings, optimizer links, automatic scoped historical fits, editable initial budget and similarity threshold, full-history references, baseline recommendations and algorithm tooltips; source-aware rankings, distributions, filtered exports, model evidence, executable plans, formal evaluation and retained run history; shared LogViewer and bounded history windows."
 source_files: dashboard/src/views/CommandCenter.vue, dashboard/src/views/BudgetManager.vue, dashboard/src/views/Campaigns.vue, dashboard/src/views/CampaignOptimizer.vue, dashboard/src/views/OptimizationLog.vue
 ---
 
@@ -311,16 +311,16 @@ the effective threshold. Source/history-mode changes retain automatic computatio
 
 ### Searchable target Campaign selection
 
-The optimization tab always exposes a Campaign selector, including when opened
-without a Campaign link. A native search field filters a native select as the
-reader types, matching Campaign identifier, name, provider and ad product without
-case sensitivity. Deduplicate catalogue records by Campaign identifier and sort
-by identifier. Typing filters options without changing the selected target; a
-selection automatically recomputes for that target and clears its previous result.
-Keep the existing marketplace from the link or source context, and show an editable
-marketplace field so a catalogue lacking per-marketplace identity is not assigned
-a guessed market. Empty Campaign or marketplace makes no model request.
-Changing the dataset clears Campaign selection and results; choosing an entry
-binds the preview to the current source. Initial budget resets on Campaign change.
-The source catalogue and existing selection stay visible while filtering; no match
-is explicitly reported. Input controls keep native focus and keyboard behavior.
+The optimization tab uses one native text input backed by a datalist, like a
+country picker. Typing filters Campaign suggestions by identifier, name, provider
+or ad product without case sensitivity. Selecting a suggestion commits its exact
+Campaign identifier and recalculates; a unique exact name also resolves to its
+identifier. Partial or unknown text never becomes a model request. An unmatched
+value shows inline feedback. Empty input asks the reader to choose a Campaign.
+
+Marketplace, history source, initial budget, similarity threshold and Recompute
+remain mounted and visible throughout typing, empty input and no-match states.
+Recompute is disabled until a valid Campaign is selected. There is no separate
+search field and select, and no switching to pipeline controls while typing.
+Dataset changes clear the selection. Initial budget resets only when the target
+changes. Native input/datalist focus and keyboard behavior are preserved.

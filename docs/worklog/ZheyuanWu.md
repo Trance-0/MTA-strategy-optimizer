@@ -35,6 +35,7 @@ Areas owned by others are recorded on their own pages: the [Data Generator confi
 
 ### Completed
 
+- Corrected Campaign selection to one native autocomplete with stable optimizer settings; verified 184 dashboard tests including uni/unixxxx matching and rebuilt the Docker preview.
 - Validated the optimizer Campaign search field on change, displayed matching options and unknown-value alerts, blocked invalid requests and verified 183 dashboard tests plus the production build.
 
 ## 2026-09-18

@@ -349,8 +349,8 @@ const campaignSearchError = computed(() => {
     ? `No Campaign matches “${query}”. Clear the search or enter an identifier, name, provider, or ad product from the catalogue.`
     : "";
 });
-const scopedPreview = computed(() => Boolean(selectedCampaign.value) && !campaignSearchError.value && model.value === "optimization");
-const campaignSearch = ref("");
+const scopedPreview = computed(() => model.value === "optimization");
+const campaignSearch = ref(selectedCampaign.value);
 const campaignOptions = computed(() => {
   const unique = new Map();
   for (const row of data.value.simulationResearch?.campaigns ?? []) {
@@ -363,6 +363,18 @@ const matchingCampaigns = computed(() => {
   return campaignOptions.value.filter(row => [row.campaign_id, row.campaign_name, row.provider, row.ad_product]
     .some(value => String(value ?? "").toLowerCase().includes(query)));
 });
+function onCampaignInput(event) {
+  campaignSearch.value = event.target.value;
+  const query = campaignSearch.value.trim().toLowerCase();
+  const exactId = campaignOptions.value.find(row => row.campaign_id.toLowerCase() === query);
+  const exactNames = campaignOptions.value.filter(row => String(row.campaign_name ?? "").toLowerCase() === query);
+  const match = exactId ?? (exactNames.length === 1 ? exactNames[0] : null);
+  const next = match?.campaign_id ?? "";
+  if (next !== selectedCampaign.value) {
+    selectedCampaign.value = next;
+    if (next) chooseCampaign();
+  }
+}
 function chooseCampaign() {
   campaignSource.value = selectedDatasetId.value || "legacy";
   initialBudget.value = "";
@@ -390,7 +402,7 @@ const optimizerHelp = {
 async function computeCampaign() {
   const token = ++previewGeneration;
   preview.value = null; previewError.value = ""; previewBusy.value = false;
-  if (!scopedPreview.value || !selectedMarketplace.value.trim()) return;
+  if (!scopedPreview.value || !selectedCampaign.value || !selectedMarketplace.value.trim()) return;
   if (inputError.value || campaignSearchError.value) return;
   if ((selectedDatasetId.value || "legacy") !== campaignSource.value) {
     previewError.value = "The selected source changed. Open Optimize from the Campaign in the current source.";
@@ -681,15 +693,19 @@ const evaluationAvailable = computed(
     <article v-if="model === 'optimization'" class="card">
       <div class="card-head"><h2>Select Campaign to optimize</h2></div>
       <div class="card-body setting-group">
-        <div class="setting-row"><div class="setting-label"><label for="optimizer-campaign-search">Find Campaign</label><small>Type a name, identifier, provider or ad product to narrow the choices.</small></div><div class="setting-control"><input id="optimizer-campaign-search" v-model="campaignSearch" type="search" placeholder="Type to match Campaigns" :aria-invalid="Boolean(campaignSearchError)" /></div></div>
-        <div class="setting-row"><div class="setting-label"><label for="optimizer-campaign">Campaign</label><small>Select the Campaign that will receive the strategy recommendation.</small></div><div class="setting-control"><select id="optimizer-campaign" v-model="selectedCampaign" @change="chooseCampaign"><option value="">Select a Campaign</option><option v-if="selectedCampaign && !matchingCampaigns.some(row => row.campaign_id === selectedCampaign)" :value="selectedCampaign">{{ selectedCampaign }} · current selection</option><option v-for="row in matchingCampaigns" :key="row.campaign_id" :value="row.campaign_id">{{ row.campaign_name || row.campaign_id }} · {{ row.campaign_id }}</option></select></div></div>
-        <p v-if="campaignSearchError" role="alert">{{ campaignSearchError }}</p>
-        <p v-else-if="!campaignOptions.length" role="status">Campaign catalogue is still loading.</p>
+        <div class="setting-row">
+          <div class="setting-label"><label for="optimizer-campaign">Campaign</label><small>Type to filter suggestions, then choose a Campaign.</small></div>
+          <div class="setting-control">
+            <input id="optimizer-campaign" type="text" list="optimizer-campaign-options" :value="campaignSearch" @input="onCampaignInput" autocomplete="off" placeholder="Type to search Campaigns" :aria-invalid="Boolean(campaignSearchError)" aria-describedby="optimizer-campaign-feedback" />
+            <datalist id="optimizer-campaign-options"><option v-for="row in matchingCampaigns" :key="row.campaign_id" :value="row.campaign_id" :label="[row.campaign_name, row.provider, row.ad_product].filter(Boolean).join(' · ')" /></datalist>
+          </div>
+        </div>
+        <p id="optimizer-campaign-feedback" role="status" aria-live="polite">{{ campaignSearchError || (!campaignOptions.length ? 'No Campaigns are available in this source.' : !selectedCampaign ? 'Choose a Campaign from the suggestions.' : 'Selected Campaign: ' + selectedCampaign) }}</p>
         <div class="setting-row"><div class="setting-label"><label for="optimizer-marketplace">Marketplace</label><small>Use the recorded marketplace code, such as US or CA.</small></div><div class="setting-control"><input id="optimizer-marketplace" v-model.lazy="selectedMarketplace" type="text" /></div></div>
       </div>
     </article>
     <article v-if="scopedPreview" class="card">
-      <div class="card-head"><h2>Optimize {{ selectedCampaign }}</h2><TermHelp :term="optimizerHelp" /></div>
+      <div class="card-head"><h2>Optimize {{ selectedCampaign || "Campaign" }}</h2><TermHelp :term="optimizerHelp" /></div>
       <div class="card-body"><p>{{ selectedMarketplace }} · {{ campaignSource === 'legacy' ? 'Configured source' : campaignSource }} · Historical Campaign strategy</p>
         <p>Use valid historical records to recommend a daily budget. Full dataset includes compatible Campaigns across the complete recorded period.</p>
         <div class="setting-group"><div class="setting-row"><div class="setting-label"><label for="optimizer-history-mode">History source</label><small>Full dataset uses compatible Campaign records when this Campaign has insufficient history.</small></div><div class="setting-control"><select id="optimizer-history-mode" v-model="historyMode"><option value="full">Full dataset · similar history</option><option value="campaign">This Campaign only</option></select></div></div></div>
@@ -710,7 +726,7 @@ const evaluationAvailable = computed(
           <div class="setting-row"><div class="setting-label">Recommended daily budget</div><div class="setting-control">{{ theme.money(preview.historical_recommendation.recommended_budget, symbol) }}</div></div>
           <p>Reference averages at this budget: spend {{ theme.money(preview.historical_recommendation.mean_observed_spend, symbol) }}, revenue {{ theme.money(preview.historical_recommendation.mean_observed_revenue, symbol) }} across {{ preview.historical_recommendation.observation_count }} observations.</p>
         </section>
-        <div class="rec-actions"><button :disabled="previewBusy || IS_STATIC || Boolean(inputError) || !selectedMarketplace.trim()" @click="computeCampaign">Recompute strategy</button></div>
+        <div class="rec-actions"><button :disabled="previewBusy || IS_STATIC || Boolean(inputError) || !selectedCampaign || Boolean(campaignSearchError) || !selectedMarketplace.trim()" @click="computeCampaign">Recompute strategy</button></div>
       </div>
     </article>
     <WorkbenchRunner v-else-if="selectedDatasetId" :key="`${selectedDatasetId}:${model}`" :stage="model" />

@@ -21,7 +21,7 @@ function view(name, snapshot, exposed, overrides = {}) {
   };
   return new Function(...Object.keys(env), `${script}\nreturn { ${exposed} };`)(...Object.values(env));
 }
-const base = { adsDaily: [], entityBridge: [], pathReport: [], comparisonTouchpoints: [], comparisonSummary: [], recommendedAttribution: [], attributionResults: [] };
+const base = { simulationResearch: { campaigns: [{ campaign_id: "A" }] }, adsDaily: [], entityBridge: [], pathReport: [], comparisonTouchpoints: [], comparisonSummary: [], recommendedAttribution: [], attributionResults: [] };
 
 test('ranking folds 100,000 categories into seven plus Other without losing observations', () => {
   const rows = Array.from({ length: 100000 }, (_, i) => ({ touchpoint: `T${i}`, cost: i, sales: i * 2 }));
@@ -240,4 +240,32 @@ test('Campaign selector matches on typing and changing target ignores old result
   v.campaignSearch.value = 'missing'; assert.equal(v.matchingCampaigns.value.length, 0);
   assert.match(v.campaignSearchError.value, /No Campaign matches/);
   v.campaignSearch.value = 'alpha'; assert.equal(v.campaignSearchError.value, '');
+});
+
+
+test('country-style Campaign autocomplete filters without hiding settings or submitting partial text', async () => {
+  const calls = [];
+  const snapshot = { ...base, simulationResearch: { campaigns: [
+    { campaign_id: 'US', campaign_name: 'United States' },
+    { campaign_id: 'FR', campaign_name: 'France' },
+  ] } };
+  const v = view('CampaignOptimizer', snapshot, 'onCampaignInput, matchingCampaigns, selectedCampaign, campaignSearchError, scopedPreview, initialBudget', {
+    window: { location: { search: '?marketplace=US' } },
+    defineProps: () => ({ section: 'optimization' }),
+    optimizeCampaign: body => { calls.push(body); return Promise.resolve({}); },
+  });
+  v.initialBudget.value = 150;
+  v.onCampaignInput({ target: { value: 'uni' } }); await nextTick();
+  assert.deepEqual(v.matchingCampaigns.value.map(row => row.campaign_id), ['US']);
+  assert.equal(v.scopedPreview.value, true);
+  assert.equal(calls.length, 0);
+  v.onCampaignInput({ target: { value: 'unixxxx' } }); await nextTick();
+  assert.equal(v.matchingCampaigns.value.length, 0);
+  assert.match(v.campaignSearchError.value, /No Campaign matches/);
+  assert.equal(v.scopedPreview.value, true);
+  assert.equal(v.initialBudget.value, 150);
+  assert.equal(calls.length, 0);
+  v.onCampaignInput({ target: { value: 'US' } }); await nextTick();
+  assert.equal(v.selectedCampaign.value, 'US');
+  assert.equal(calls[0].campaignId, 'US');
 });
