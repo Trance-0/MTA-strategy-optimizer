@@ -3,6 +3,7 @@
  * Display four snapshot-backed operational references beside the separately
  * imported, checksum-verified canonical R5 review fixtures.
  */
+import OntologyReviewPipeline from "../components/OntologyReviewPipeline.vue"; 
 import { computed, nextTick, onUnmounted, ref, watch } from "vue";
 import DataTable from "../components/DataTable.vue";
 import KeyValuePanel from "../components/KeyValuePanel.vue";
