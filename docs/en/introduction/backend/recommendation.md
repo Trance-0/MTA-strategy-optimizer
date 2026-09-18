@@ -97,3 +97,10 @@ of its valid positive budget records. Own observations are never threshold-filte
 `history_selection` reports `similarity_threshold` and `reference_budget`.
 In campaign-only mode the threshold has no effect. No surviving evidence yields
 an actionable refusal. These selection parameters do not become model features.
+
+When a Campaign has no budget observation of its own, a supplied `initialBudget`
+is sufficient to initialize it. The selected Campaign's provider and ad product
+setup define the compatible touchpoint-history segment; donor observations supply
+the empirical reference, while the allocation and recommendation remain named
+for the selected Campaign. The supplied budget becomes the authorized default
+and is never silently replaced by a donor's observed budget.

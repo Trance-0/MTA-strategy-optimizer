@@ -318,8 +318,10 @@ def optimize(body: dict | None = None) -> dict:
         dataset, history_selection = _campaign_history_dataset(body)
         # The automatic preview stays within observed support by default.
         body = dict(body)
-        ceiling = max(row.configured_budget for row in dataset)
-        body.setdefault("totalBudget", ceiling)
+        observed_ceiling = max(row.configured_budget for row in dataset)
+        requested_budget = float(body["initialBudget"]) if body.get("initialBudget") not in (None, "") else observed_ceiling
+        ceiling = max(observed_ceiling, requested_budget)
+        body.setdefault("totalBudget", requested_budget)
         body.setdefault("maximumBudget", ceiling)
     else:
         snapshot_path = _resolve_input(
@@ -416,8 +418,13 @@ def optimize(body: dict | None = None) -> dict:
         groups = {}
         for row in eligible:
             groups.setdefault(row.configured_budget, []).append(row)
-        budget, records = max(groups.items(), key=lambda item: (
-            sum(row.total_revenue for row in item[1]) / len(item[1]), -item[0]))
+        if body.get("initialBudget") not in (None, ""):
+            budget = float(body["initialBudget"])
+            nearest = min(groups, key=lambda value: abs(value - budget))
+            records = groups[nearest]
+        else:
+            budget, records = max(groups.items(), key=lambda item: (
+                sum(row.total_revenue for row in item[1]) / len(item[1]), -item[0]))
         historical_recommendation = {
             "campaign_id": target_id, "recommended_budget": budget,
             "mean_observed_spend": sum(row.actual_spend for row in records) / len(records),
@@ -533,12 +540,27 @@ def _campaign_history_dataset(body):
             revenue = sum(values) if values and all(_valid_history_number(v) for v in values) else None
             rows.append({**budget, **scope, "total_revenue": revenue})
     target = [row for row in rows if row.get("campaign_id") == campaign_id]
-    if not target:
-        raise ModelUnavailableError("No budget records exist for this Campaign and marketplace.")
-    accounts = {(row.get("advertiser_id"), row.get("currency")) for row in target}
+    # A user-supplied initial budget is enough to initialize a Campaign that has
+    # no budget observation yet; comparable touchpoint history supplies the fit.
+    # Without that explicit intervention the optimizer cannot invent a target
+    # budget from a missing record.
+    if not target and initial_budget in (None, ""):
+        raise ModelUnavailableError("No budget records exist for this Campaign and marketplace. Enter an initial budget to optimize from compatible touchpoint history.")
+    account_rows = target or rows
+    accounts = {(row.get("advertiser_id"), row.get("currency")) for row in account_rows}
     if len(accounts) != 1:
         raise ModelRequestError("Campaign history mixes advertisers or currencies; select an isolated dataset.")
     target_meta = [item for item in metadata if item.get("campaign_id") == campaign_id]
+    if not target_meta and initial_budget not in (None, ""):
+        # A newly configured Campaign can have touchpoint setup but no budget
+        # observation. The selector supplies its setup so compatible history
+        # can still fit a response without inventing a target observation.
+        provider = body.get("campaignProvider")
+        ad_product = body.get("campaignAdProduct")
+        if isinstance(provider, str) and provider.strip() and isinstance(ad_product, str) and ad_product.strip():
+            target_meta = [{"campaign_id": campaign_id, "provider": provider.strip(),
+                            "ad_product": ad_product.strip(), "status": "ACTIVE",
+                            "baseline_daily_budget": float(initial_budget)}]
     if not target_meta or any(str(item.get("status", "ACTIVE")).upper() not in {"ACTIVE", "ENABLED"} for item in target_meta):
         raise ModelUnavailableError("The selected Campaign is unknown or inactive.")
     segments = {(item.get("provider"), item.get("ad_product")) for item in target_meta}

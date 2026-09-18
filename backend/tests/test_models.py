@@ -290,3 +290,17 @@ class CampaignPreviewTests(unittest.TestCase):
                     optimize({**body, **fields})
             own = optimize({**body, "campaignId": "A", "initialBudget": 81})
             self.assertEqual(own["observation_count"], 5)
+
+    def test_missing_target_budget_uses_supplied_touchpoint_setup(self):
+        from backend.services.models import optimize
+        research = self.research()
+        with patch("backend.services.datasets.dataset_inputs", return_value={"research": research}):
+            result = optimize({
+                "datasetId": "selected", "campaignId": "NEW-DISPLAY", "marketplace": "US",
+                "initialBudget": 80, "campaignProvider": "AMAZON_ADS",
+                "campaignAdProduct": "Sponsored Products",
+            })
+        self.assertEqual(result["initial_strategy"]["allocations"][0]["initial_budget"], 80)
+        self.assertEqual(result["history_selection"]["target_observation_count"], 0)
+        self.assertEqual(result["history_selection"]["reference_observation_count"], 5)
+        self.assertEqual(result["optimized_strategy"]["allocations"][0]["campaign_id"], "NEW-DISPLAY")

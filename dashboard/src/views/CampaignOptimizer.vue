@@ -363,6 +363,7 @@ const matchingCampaigns = computed(() => {
   return campaignOptions.value.filter(row => [row.campaign_id, row.campaign_name, row.provider, row.ad_product]
     .some(value => String(value ?? "").toLowerCase().includes(query)));
 });
+const selectedCampaignRecord = computed(() => campaignOptions.value.find(row => row.campaign_id === selectedCampaign.value) ?? {});
 function onCampaignInput(event) {
   campaignSearch.value = event.target.value;
   const query = campaignSearch.value.trim().toLowerCase();
@@ -413,6 +414,8 @@ async function computeCampaign() {
     const result = await optimizeCampaign({ campaignId: selectedCampaign.value, marketplace: selectedMarketplace.value.trim(), historyMode: historyMode.value,
       similarityThreshold: historyMode.value === "full" ? similarityThreshold.value : 0,
       ...(initialBudget.value === "" ? {} : { initialBudget: initialBudget.value }),
+      ...(selectedCampaignRecord.value.provider ? { campaignProvider: selectedCampaignRecord.value.provider } : {}),
+      ...(selectedCampaignRecord.value.ad_product ? { campaignAdProduct: selectedCampaignRecord.value.ad_product } : {}),
       ...(selectedDatasetId.value ? { datasetId: selectedDatasetId.value } : {}) });
     if (token === previewGeneration) preview.value = result;
   } catch (error) { if (token === previewGeneration) previewError.value = error.message; }
@@ -611,6 +614,17 @@ const responseCurveTraces = computed(() => {
     hovertemplate: `%{text}<br>Budget ${symbol.value}%{x:,.2f}<br>Expected revenue ${symbol.value}%{y:,.2f}<extra></extra>`,
   });
   return traces;
+});
+const historicalBaselineTraces = computed(() => {
+  const item = strategy.value.historical_recommendation;
+  if (!item || !Number.isFinite(item.recommended_budget) || !Number.isFinite(item.mean_observed_revenue)) return [];
+  return [{
+    type: "scatter", mode: "markers+text", name: "Historical recommendation",
+    x: [item.recommended_budget], y: [item.mean_observed_revenue],
+    text: ["Recommended"], textposition: "top center",
+    marker: { color: theme.MODEL_COLORS.recommended, size: 14 },
+    hovertemplate: `Observed recommendation<br>Budget ${symbol.value}%{x:,.2f}<br>Mean revenue ${symbol.value}%{y:,.2f}<extra></extra>`,
+  }];
 });
 const responseCurveLayout = computed(() => {
   const observed = activeResponseModel.value.diagnostics?.observed_budget_range;
@@ -892,6 +906,13 @@ const evaluationAvailable = computed(
 
     <!-- 2. MTA strategy optimization -->
     <template v-if="model === 'optimization'">
+      <article v-if="scopedPreview && strategy.historical_recommendation" class="card">
+        <div class="card-head"><h2>Historical strategy reference</h2><span class="sub">Selected budget on observed evidence</span></div>
+        <div class="card-body">
+          <PlotlyChart :traces="historicalBaselineTraces" :layout="responseCurveLayout" label="Historical recommended budget and mean observed revenue" />
+          <p class="caption">The marker shows the recommended observed budget and mean revenue. It is an empirical reference because this Campaign has no fitted response curve.</p>
+        </div>
+      </article>
       <template v-if="hasPlan && isOptimized">
         <MetricRow :items="planMetrics" />
 

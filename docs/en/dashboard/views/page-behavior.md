@@ -293,6 +293,12 @@ boundaries. Similarity-display filters remain independent of model evidence.
 Transferred response plots and tables include the donor records with their
 original Campaign identifiers; they are never presented as target observations.
 
+When only a Historical baseline is available, render a single recommendation
+marker at the selected or user-entered budget and its mean observed revenue.
+Label it empirical and omit a fitted curve. A fitted response renders its curve,
+observed points, initial-budget marker and optimized-budget marker on the same
+plot; marker labels and tooltips identify which points are model decisions.
+
 
 ### Editable optimizer inputs
 

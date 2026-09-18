@@ -1,7 +1,7 @@
 ---
 title: Version Log
 description: Release history and material changes for the maintained project
-compact: "Routes release history from VERSION to one page per patch, keeping 0.9.60–0.9.63 flat and older patches in minor-version folders; includes dates, material summaries, historical group links, and planned follow-ups."
+compact: "Routes release history from VERSION to one page per patch, keeping 0.9.61–0.9.64 flat and older patches in minor-version folders; includes dates, material summaries, historical group links, and planned follow-ups."
 order: 1
 ---
 
@@ -10,6 +10,11 @@ order: 1
 The project version is recorded in the repository-root `VERSION` file. Each page here is one small patch description covering a coherent change set, rather than a reproduction of every commit message. Every patch keeps its own permanent page; older minor versions are grouped into a collapsed folder per minor version instead of being compacted away.
 
 This section records **what** changed. See the [work log](../worklog/) for **who** did the work and when.
+
+## [0.9.64](0.9.64.md)
+
+- Date: 2026-09-18
+- Summary: Allowed user-budget initialization without own budget rows and added empirical recommendation markers.
 
 ## [0.9.63](0.9.63.md)
 
@@ -26,7 +31,7 @@ This section records **what** changed. See the [work log](../worklog/) for **who
 - Date: 2026-09-18
 - Summary: Added a searchable Campaign selector and smart matching controls to the strategy optimizer.
 
-## [0.9.60](0.9.60.md)
+## [0.9.60](0.9/0.9.60.md)
 
 - Date: 2026-09-15
 - Summary: Repaired baseline history matching and enabled full compatible history, transferred fits and observed baseline recommendations for Campaign previews.

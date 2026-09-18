@@ -269,3 +269,14 @@ test('country-style Campaign autocomplete filters without hiding settings or sub
   assert.equal(v.selectedCampaign.value, 'US');
   assert.equal(calls[0].campaignId, 'US');
 });
+
+test('historical recommendation exposes a plotted budget marker', () => {
+  const v = view('CampaignOptimizer', {
+    ...base,
+    campaignStrategy: { historical_recommendation: {
+      recommended_budget: 520, mean_observed_revenue: 3100,
+    } },
+  }, 'historicalBaselineTraces');
+  assert.equal(v.historicalBaselineTraces.value[0].x[0], 520);
+  assert.equal(v.historicalBaselineTraces.value[0].y[0], 3100);
+});
