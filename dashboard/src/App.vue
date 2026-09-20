@@ -17,7 +17,7 @@ import SidebarNav from "./components/SidebarNav.vue";
 import TopBar from "./components/TopBar.vue";
 import KnowledgeBase from "./views/KnowledgeBase.vue";
 import SchemaRecovery from "./components/SchemaRecovery.vue";
-import DatasetContext from "./components/DatasetContext.vue";
+import GuidedTour from "./components/GuidedTour.vue";
 import { IS_STATIC, fetchSettings } from "./api/client.js";
 import { useDashboard } from "./lib/useDashboard.js";
 import { useDeployment } from "./lib/deployment.js";
@@ -243,7 +243,6 @@ const docsHref = computed(() => (IS_STATIC ? "./docs/" : `${DOCS_URL}/`));
       />
 
       <div class="content">
-        <DatasetContext />
         <!--
           Stated once, at the top of every view, rather than at each control it
           governs. A reader who cannot edit should learn that from the page,
@@ -296,6 +295,7 @@ const docsHref = computed(() => (IS_STATIC ? "./docs/" : `${DOCS_URL}/`));
       </div>
     </main>
 
+    <GuidedTour />
     <div class="toast" :class="{ show: toast }">{{ toast }}</div>
   </div>
 </template>

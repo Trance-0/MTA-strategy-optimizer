@@ -19,6 +19,7 @@ const { available: storageAvailable, catalogueError: storageError, reason: stora
 
 import LogViewer from "../components/LogViewer.vue";
 import BackendTasks from "../components/BackendTasks.vue";
+import TutorialLauncher from "../components/TutorialLauncher.vue";
 import {
   fetchSchemaOperation,
   fetchSettings,
@@ -513,7 +514,7 @@ function setLevel(level) {
 
 <template>
   <section class="settings-page card" aria-label="Settings">
-      <div class="tabs settings-tabs" role="tablist" aria-label="Settings sections">
+      <div class="tabs settings-tabs" role="tablist" aria-label="Settings sections" data-tour="settings-tabs">
         <button
           class="tab"
           role="tab"
@@ -528,6 +529,7 @@ function setLevel(level) {
           role="tab"
           :aria-selected="tab === 'source'"
           :class="{ active: tab === 'source' }"
+          data-tour="settings-tab-source"
           @click="navigate('source')"
         >
           Data source
@@ -553,6 +555,25 @@ function setLevel(level) {
       </div>
 
       <div class="settings-body modal-body">
+        <!--
+          First on the first tab, because a reader who does not yet know what
+          this application does needs the tour before it needs the build
+          identity underneath it.
+        -->
+        <section
+          v-if="tab === 'general'"
+          class="setting-group"
+          aria-label="Getting started"
+        >
+          <header>
+            <div>
+              <h3>Getting started</h3>
+              <p class="caption">A guided walkthrough of the pages and the order to use them in.</p>
+            </div>
+          </header>
+          <TutorialLauncher />
+        </section>
+
         <!--
           Six read-only values rather than six options, but the same row: the
           name on the left, the value on the right. A reader who has learned
@@ -617,7 +638,7 @@ function setLevel(level) {
             <p>{{ runtime.executionAvailable ? 'Server model execution is enabled.' : runtime.executionReason }}</p>
             <div class="rec-actions"><button class="btn" @click="Promise.all([refreshDatasets(), refreshCapabilities()])">Check analysis storage</button><a class="btn" href="#/generator/import">Import data</a><a class="btn" href="#/optimizer/optimization">Model controls</a></div>
           </section>
-          <div class="doctor-steps" aria-label="Database setup steps">
+          <div class="doctor-steps" aria-label="Database setup steps" data-tour="database-doctor">
             <span v-for="step in doctorSteps" :key="step.number" :class="step.state">
               <b>{{ step.number }}</b>
               <span>{{ step.label }}<small>{{ step.state }}</small></span>
@@ -630,7 +651,7 @@ function setLevel(level) {
             than a deployment setting, which is why it is offered here and not
             beside the connection fields.
           -->
-          <section class="setting-group" aria-label="Active source">
+          <section class="setting-group" aria-label="Active source" data-tour="active-source">
             <header v-if="state">
               <div>
                 <h3>{{ state.status.label }}</h3>
@@ -647,7 +668,7 @@ function setLevel(level) {
                 </small>
               </span>
               <span class="setting-control">
-                <button class="btn" :disabled="busy" @click="requestReload">Reload data</button>
+                <button class="btn" :disabled="busy" data-tour="reload-data" @click="requestReload">Reload data</button>
               </span>
             </div>
             <label class="setting-row toggle">
@@ -954,7 +975,7 @@ cp sample.env .env      # set DATABASE=true and the PG_* values
             buttons and the route cannot disagree.
           -->
           <template v-if="!hosted && state">
-            <section class="setting-group" aria-label="Schema setup">
+            <section class="setting-group" aria-label="Schema setup" data-tour="schema-setup">
               <header>
                 <div>
                   <h3>Schema setup</h3>

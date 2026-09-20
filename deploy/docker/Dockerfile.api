@@ -45,10 +45,17 @@ COPY externa[l]/mta_sim_dataset/ZheyuanWu/simulations/ \
 COPY externa[l]/mta_sim_dataset/ZheyuanWu/examples/ \
      external/mta_sim_dataset/ZheyuanWu/examples/
 
+# /pipeline-output must exist in the image owned by the runtime user: Docker
+# initializes a fresh named volume from the image directory's ownership, and
+# without this line the volume is created root-owned, every write probe from
+# uid 10001 fails, and each pipeline stage reports itself unavailable. An
+# already-initialized root-owned volume must be removed once
+# (`docker volume rm marketing-roi-analysis-pipeline-output`) to pick this up.
 RUN groupadd --gid 10001 app \
     && useradd --uid 10001 --gid app --no-create-home \
         --home-dir /nonexistent --shell /usr/sbin/nologin app \
-    && chown -R app:app /application
+    && mkdir -p /pipeline-output \
+    && chown -R app:app /application /pipeline-output
 
 USER 10001:10001
 EXPOSE 8501

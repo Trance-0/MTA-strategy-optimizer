@@ -1,6 +1,7 @@
 <script setup>
 /**
- * The page header: the view's title, its breadcrumb, and the report window.
+ * The page header: the view's title, its breadcrumb, the analysis-source
+ * selector, and the report window.
  *
  * The layout is the reference prototype's TopBar (by Rouxin Jin). The tags on
  * the right carry the deployment, the report window, and the marketplace,
@@ -8,8 +9,11 @@
  * window the charts beneath it do not cover.
  *
  * The deployment tag leads, because which deployment this is governs how every
- * other number on the page may be used.
+ * other number on the page may be used. The dataset selector sits beside the
+ * tags so switching the analysis source is one header control on every page
+ * rather than a card repeated above each view.
  */
+import DatasetContext from "./DatasetContext.vue";
 defineProps({
   title: { type: String, required: true },
   crumb: { type: String, default: "" },
@@ -32,6 +36,7 @@ defineProps({
       <div class="crumb">{{ crumb }}</div>
     </div>
     <div class="top-right">
+      <DatasetContext />
       <span
         v-if="deploymentLabel"
         class="tag"

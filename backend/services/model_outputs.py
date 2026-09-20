@@ -17,7 +17,11 @@ from pathlib import Path
 
 from sqlalchemy import delete, select
 
-from backend.config import pipeline_output_directory, use_database
+from backend.config import (
+    pipeline_output_directory,
+    pipeline_output_remedy,
+    use_database,
+)
 from backend.database import engine, orm_rows, table_exists
 from dashboard.models import ModelArtifact
 from modules.mta_attribution.src.attribution_model_comparison import (
@@ -74,9 +78,7 @@ def artifact_directory(stage: str) -> Path:
     if stage not in ARTIFACTS:
         raise ArtifactError(f"Unknown stage: {stage}.")
     if root is None:
-        raise ArtifactError(
-            "PIPELINE_OUTPUT_DIR must name a writable runtime directory."
-        )
+        raise ArtifactError(pipeline_output_remedy())
     return root / DIRECTORIES[stage]
 
 

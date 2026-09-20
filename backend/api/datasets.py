@@ -9,6 +9,7 @@ from functools import wraps
 
 from flask import Blueprint, jsonify, request
 
+from backend.config import pipeline_output_remedy
 from backend.services import datasets
 
 blueprint = Blueprint("datasets", __name__)
@@ -68,7 +69,8 @@ def list_registered():
     try:
         return jsonify(datasets=datasets.list_datasets(), available=True, reason="")
     except datasets.DatasetStorageError:
-        return jsonify(datasets=[], available=False, reason="Dataset runtime storage is unavailable.")
+        return jsonify(datasets=[], available=False,
+                       reason=f"Dataset registry storage is unavailable. {pipeline_output_remedy()}")
 
 
 @blueprint.get("/api/datasets/templates")

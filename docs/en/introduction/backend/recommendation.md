@@ -1,7 +1,7 @@
 ---
 title: Recommendation Endpoint Configuration
 description: Budget initialization and response-model optimization request contracts
-compact: "Configures `POST /api/models/recommend` and `/api/models/optimize`: default or supplied strategy inputs, deterministic non-optimized Ad Group budget seed, research snapshot path, total budget, usage policy, Campaign floors and ceilings, initialBudget and similarityThreshold controls, full-history transfer and empirical fallback and response-model result fields."
+compact: "Configures `POST /api/models/recommend` and `/api/models/optimize`: default or supplied strategy inputs, deterministic non-optimized Ad Group budget seed, research snapshot path, total budget, usage policy, Campaign floors and ceilings, initialBudget and similarityThreshold controls, null-budget-level outcome joining, lossy GENERIC provider mapping, full-history transfer and empirical fallback and response-model result fields."
 lang: en-US
 ---
 
@@ -48,12 +48,20 @@ do not truncate this evidence. Unknown or inactive targets are refused.
 
 Ordinary outcomes are aggregated before joining to budgets on run, Campaign,
 advertiser, marketplace, currency, date and budget level. A null outcome budget
-level denotes the baseline only: match it to level 1, or a null budget level,
-never to every experimental arm. Exact explicit-level outcomes take precedence.
+level denotes the day's ordinary observation under whichever single budget arm
+was active: the simulator emits exactly one budget observation per
+Campaign-day, so a null-level outcome joins that day's budget row at any level.
+Exact explicit-level outcomes take precedence over the null-level fallback.
 Registered/file records follow the same rule using complete reporting scopes.
 Evaluation-only outcomes are never read. Invalid or unmatched rows are excluded,
 not allowed to invalidate the entire history; repeated budget identities remain
 an error. All model observations must be finite, nonnegative and daily.
+
+Compatibility filtering compares the source's raw provider profile strings, so
+a synthetic profile such as `SYNTHETIC_FULL` only ever matches itself. The
+serialized observation then maps that profile to the canonical `Provider`
+vocabulary lossily — `AMAZON_ADS` stays itself, everything else becomes
+`GENERIC` — mirroring the research adapter, instead of refusing the request.
 
 Fit the target's own usable history first. If it cannot support a response curve,
 full mode fits the comparable history and labels the transferred response

@@ -169,7 +169,12 @@ Source: `modules/mta_standard/src/mta_sim_generator_adapter.py`
   `export_mta_sim_dataset_to_postgresql(...)` invokes the external package's
   explicit PostgreSQL writer for an already accepted configuration; it accepts
   connection information only from the backend and never from a browser path
-  or dynamically supplied writer reference.
+  or dynamically supplied writer reference. Both single-scope preparers
+  validate the uploaded or generated CSV headers against the canonical
+  MTA-SIM field tuples and reject rows missing required scope fields
+  (`marketplace`, `advertiser_id`/`accountId`, `path`/`reportDate`) with a
+  `ValueError` naming the file, row number, and missing fields, rather than
+  leaking a raw `KeyError` from a drifted report.
 - Inputs: Submodule path, configuration, output directory, and generator
   variant; or explicit uploaded path, performance, destination paths, and an
   optional exact marketplace selection; or a backend-owned PostgreSQL

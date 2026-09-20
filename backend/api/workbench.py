@@ -11,7 +11,12 @@ from functools import wraps
 
 from flask import Blueprint, jsonify, request, send_file
 
-from backend.config import is_hosted, pipeline_output_directory, pipeline_runs_enabled
+from backend.config import (
+    is_hosted,
+    pipeline_output_directory,
+    pipeline_output_remedy,
+    pipeline_runs_enabled,
+)
 from backend.services import datasets, workbench
 
 
@@ -54,7 +59,7 @@ def _capabilities():
     writable = writable and recovery_error is None
     executable = writable and not is_hosted() and pipeline_runs_enabled()
     return {"storageAvailable": bool(writable), "executionAvailable": bool(executable),
-            "storageReason": None if writable else recovery_error or "Configure a writable PIPELINE_OUTPUT_DIR.",
+            "storageReason": None if writable else recovery_error or pipeline_output_remedy(),
             "executionReason": None if executable else "Model execution requires writable storage and enabled server execution."}
 
 

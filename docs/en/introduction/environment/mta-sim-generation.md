@@ -1,7 +1,7 @@
 ---
 title: Generate MTA-SIM Data
 description: Run the pinned ZheyuanWu generator and adapt its output for local models
-compact: "Governs `modules/mta_standard/src/generate_mta_sim_dataset.py` with `--variant baseline|regional`, `--config`, `--output`, the `external/mta_sim_dataset` submodule, and the files written to `generated/mta_sim/`: `amc_path_report.csv`, `dataset_manifest.json`, `validation_report.json`, `model_input_amc_path_report.csv`, `model_evaluation_ground_truth.csv`. Read when generating new synthetic data."
+compact: "Governs `modules/mta_standard/src/generate_mta_sim_dataset.py` with `--variant baseline|regional`, `--config`, `--output`, the `external/mta_sim_dataset` submodule, the KFC scenario configurations under `config/mta_sim/` including the merged `kfc-global.json`, and the generated output files. Read when generating new synthetic data."
 lang: en-US
 source_files: modules/mta_standard/src/generate_mta_sim_dataset.py
 ---
@@ -87,6 +87,57 @@ Owner: Local adapter. Role: Daily windows aggregated into one model scope.
 Owner: Local adapter. Role: Ground-truth scope normalized for separate evaluation.
 
 The original generator files are never rewritten by the adapter. Generated output is ignored by Git; only deliberately reviewed synthetic public fixtures may be committed.
+
+## KFC scenario configurations
+
+The tracked configurations under `config/mta_sim/` define the synthetic KFC
+scenario family. `kfc-multi-provider.base.json` carries the shared campaigns,
+providers, touchpoints, products, and path scenarios; the regional files
+`kfc-us.json`, `kfc-europe.json`, and `kfc-asia.json` extend it with one
+marketplace and currency each, keeping the three-level scheduled budget
+experiment (`0.75, 1.0, 1.25`). Three levels satisfy the fitter's minimum
+distinct-budget requirement but give the response curve almost no support
+between and beyond them, which is why strategies fitted from the regional
+schemes are weak.
+
+`kfc-global.json` is the merged single-scope scheme for strategy optimization:
+one `GLOBAL` marketplace in United States Dollars (USD), the same six
+campaigns across the three provider families, and a nine-level randomized
+budget experiment (`0.5` through `1.6`, `assignment_type: RANDOMIZED`). Each
+day draws one arm per Campaign, so a year of history observes every Campaign
+at nine distinct budgets with dozens of days each — dense support for the
+budget-response fit. The canonical data model holds one advertiser, one
+marketplace, and one currency per scope, so this merged scheme replaces the
+three regional schemes for cross-provider optimization rather than combining
+their differently denominated observations.
+
+## Latest integration check (2026-09-18)
+
+The documented baseline toy command was run from an empty caller-owned output
+directory. The pinned generator produced 12 performance rows, 4 aggregated
+paths, and 4 five-segment touchpoints for marketplace `TOY` from 2025-01-01
+through 2025-01-03. The local adapter created
+`model_input_amc_path_report.csv` and `model_evaluation_ground_truth.csv`; the
+ground-truth file remained separate from `MtaSimDataset`.
+
+The generated bundle was then registered through the upload path as an
+immutable `generated` dataset. Registration validated all performance, path,
+and research rows and reported performance, attribution, and history as
+available. Attribution ran through the registered-workbench command and
+published Markov, Shapley, comparison, and recommended-attribution outputs.
+
+The three-day toy research snapshot has one budget level per Campaign, so the
+response optimizer correctly returned `is_optimized: false` with an
+insufficient-support reason. That is a valid strategy refusal, not an
+allocation of zero. A direct evaluation run therefore records the optimizer as
+skipped; the evaluation artifact is still written with the refusal reason and
+the optional contributed model reports `insufficient_data` for its three-row
+panel.
+
+The larger `research-10k.json` preset was also checked. It generates multiple
+marketplaces, and the standardized local model intentionally refuses that
+bundle until a marketplace is selected or the reports are split. This is the
+documented single-scope boundary, not a parser failure.
 
 ## Dashboard generation workflow <span class="status-label status-verified" aria-label="Verified"></span>
 

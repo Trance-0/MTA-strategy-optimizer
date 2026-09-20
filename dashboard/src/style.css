@@ -168,25 +168,10 @@ code {
   min-height: 0;
 }
 
-/* In the column every group is open, so the wrapper and the item list draw no
-   box of their own: `contents` leaves the heading and the buttons as direct
-   children of `.nav`, which is the layout the rail has always had. The two
-   elements exist for the bar, where a group becomes a disclosure. */
-.nav-group,
-.nav-group-items {
-  display: contents;
-}
-
-.nav-group-items[hidden] {
+/* The wide column is the navigation: every destination is visible and one
+   click away, so the narrow layout's menu button does not exist here. */
+.nav-menu-trigger {
   display: none;
-}
-
-.nav-label {
-  font-size: 8px;
-  letter-spacing: 0.9px;
-  color: var(--rail-dim);
-  text-align: center;
-  margin: 12px 0 5px;
 }
 
 .nav-item {
@@ -2199,7 +2184,7 @@ tbody tr.selected:hover {
     z-index: 30;
     flex-direction: row;
     align-items: center;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     gap: 0 4px;
     padding: 0 10px;
     border-bottom: 1px solid var(--rail-rule);
@@ -2225,118 +2210,100 @@ tbody tr.selected:hover {
     margin-top: 0;
   }
 
-  .nav {
-    flex-direction: row;
-    flex-wrap: nowrap;
-    align-items: center;
-    padding: 6px 0;
-    overflow-x: auto;
-    overflow-y: hidden;
-    flex: 1 1 auto;
-    gap: 2px;
-  }
-
   /*
-   * A multi-page group collapses into one labelled disclosure. Six items
-   * flattened into the row lost the grouping entirely -- OVERVIEW, PLANNING,
-   * and INSIGHTS were hidden and the views ran together as one undifferentiated
-   * strip -- so the bar carries three controls that name their section and open
-   * the items beneath it. `relative` is the panel's containing block; the
-   * single-page group keeps `display: contents` and stays an item on the bar,
-   * because opening a list to choose its only entry is friction.
+   * One menu, not one per section. Eight destinations do not fit a phone-width
+   * row, and splitting them into several section menus made the reader open
+   * two before finding a page. So the whole flat list collapses behind the
+   * single trigger below, and opening it drops the same eight items down as a
+   * list. The sticky bar is already positioned, so it is the dropped list's
+   * containing block.
    */
-  .nav-group.collapsible {
-    display: block;
-    position: relative;
-    flex: 0 0 auto;
-  }
-
-  .nav-label {
-    display: none;
-  }
-
-  .nav-group-trigger {
+  .nav-menu-trigger {
     display: flex;
     align-items: center;
-    gap: 5px;
+    gap: 7px;
+    flex: 1 1 auto;
+    min-width: 0;
     border: 0;
     background: transparent;
-    color: var(--rail-text);
-    font-size: 11.5px;
+    color: #fff;
+    font-size: 12.5px;
     font-weight: 600;
-    letter-spacing: 0.6px;
-    padding: 6px 10px;
-    min-height: 36px;
+    padding: 8px 10px;
+    min-height: 40px;
     border-radius: 7px;
     transition: background-color 0.12s ease;
   }
 
-  .nav-group-trigger:hover {
-    background: #ffffff0f;
-    color: #fff;
-  }
-
-  /* A closed disclosure still says the reader is inside it, so the active view
-     is never invisible just because its group is shut. */
-  .nav-group-trigger.current {
-    background: var(--rail-active);
-    color: #fff;
-  }
-
-  .nav-group.open > .nav-group-trigger {
+  .nav-menu-trigger:hover,
+  .nav-menu-trigger.open {
     background: #ffffff1a;
-    color: #fff;
+  }
+
+  /* The trigger names the page the reader is on, so a closed menu still says
+     where they are rather than only that a menu exists. */
+  .nav-menu-trigger > span {
+    flex: 1 1 auto;
+    min-width: 0;
+    text-align: left;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .nav-menu-trigger > svg:first-child {
+    width: 18px;
+    height: 18px;
+    flex: none;
   }
 
   .nav-chevron {
-    width: 13px;
-    height: 13px;
+    width: 14px;
+    height: 14px;
     flex: none;
     transition: transform 0.15s ease;
   }
 
-  .nav-group.open .nav-chevron {
+  .nav-menu-trigger.open .nav-chevron {
     transform: rotate(180deg);
   }
 
-  /* The open panel floats over the content rather than growing the bar: a bar
-     that reflows the page on every open is the tall block this layout exists
-     to avoid. */
-  .nav-group.collapsible > .nav-group-items {
-    display: flex;
-    flex-direction: column;
-    position: absolute;
-    top: calc(100% + 4px);
-    left: 0;
-    z-index: 40;
-    min-width: 168px;
-    padding: 5px;
-    border: 1px solid var(--rail-rule);
-    border-radius: 9px;
-    background: var(--navy);
-    box-shadow: 0 12px 28px #0b1b3a4d;
-  }
-
-  .nav-group.collapsible > .nav-group-items[hidden] {
+  /* Closed by default; the trigger reveals it. It floats over the content
+     rather than growing the bar, because a bar that reflows the page on every
+     open is the tall block this layout exists to avoid. */
+  .nav {
     display: none;
   }
 
-  /* Inside the panel the items are a list again, so they read left-aligned
-     rather than centred as they do on the bar. */
-  .nav-group.collapsible .nav-item {
-    width: 100%;
-    justify-content: flex-start;
+  .nav.open {
+    display: flex;
+    flex-direction: column;
+    position: absolute;
+    top: 100%;
+    left: 10px;
+    right: 10px;
+    z-index: 40;
+    padding: 6px;
+    gap: 2px;
+    border: 1px solid var(--rail-rule);
+    border-radius: 10px;
+    background: var(--navy);
+    box-shadow: 0 14px 32px #0b1b3a59;
+    max-height: min(70vh, 460px);
+    overflow-y: auto;
   }
 
+  /* Inside the dropped menu the items are a list, so they read left-aligned
+     with their labels rather than centred as they do in the wide column. */
   .nav-item {
-    width: auto;
+    width: 100%;
     flex: 0 0 auto;
     flex-direction: row;
-    justify-content: center;
+    justify-content: flex-start;
     text-align: left;
-    min-height: 36px;
-    padding: 6px 10px;
-    gap: 7px;
+    min-height: 40px;
+    padding: 8px 10px;
+    gap: 9px;
   }
 
   .nav-item svg {
@@ -2375,35 +2342,12 @@ tbody tr.selected:hover {
 }
 
 /*
- * Narrower still, the item labels go and the rail becomes icons only. Eight
- * labelled items plus the status block cannot share a phone-width row without
- * wrapping into the same tall block the bar exists to avoid; the title
- * attribute and the header's own heading keep each item identifiable.
+ * Narrower still, the bar gives up the decoration around the menu rather than
+ * the menu itself. The destinations already live in a dropped list, which has
+ * the full width for its labels and is unreadable without them, so the item
+ * labels stay at every width.
  */
 @media (max-width: 620px) {
-  .nav-item span {
-    display: none;
-  }
-
-  /* An open panel is a list, not a bar: it has the width for its labels and is
-     unreadable without them, so the icons-only rule above stops at its edge. */
-  .nav-group.collapsible .nav-item span {
-    display: inline;
-  }
-
-  .nav-item {
-    padding: 6px 8px;
-  }
-
-  /* The group names shorten but do not go. They are the only thing naming a
-     section once its items are behind a disclosure, and a bare chevron names
-     nothing. */
-  .nav-group-trigger {
-    padding: 6px 8px;
-    font-size: 10.5px;
-    letter-spacing: 0.3px;
-  }
-
   .brand {
     padding-right: 8px;
     margin-right: 2px;
@@ -2419,7 +2363,9 @@ tbody tr.selected:hover {
     padding: 0 15px;
   }
 
-  .top-right {
+  /* The tags give way on a narrow viewport; the analysis-source selector
+     stays, because losing it would strand the reader on one source. */
+  .top-right > .tag {
     display: none;
   }
 
@@ -2817,8 +2763,99 @@ tbody tr.selected:hover {
   }
 }
 
+/* Guided tutorial: a spotlight mask, a progress strip at the top, and a step
+   card beside the highlight. The overlay is mounted by App.vue rather than a
+   routed view, so changing pages during a lesson cannot unmount it. */
+.tutorial-root { position: fixed; inset: 0; z-index: 80; pointer-events: none; }
+/* Four panels around the highlight rather than one sheet with a hole: the
+   highlighted element keeps its own colours, focus ring, and hover states
+   because nothing is drawn over it. They animate between positions so the
+   spotlight reads as travelling rather than jumping. */
+.tutorial-mask {
+  position: absolute;
+  background: rgba(17, 24, 39, 0.58);
+  pointer-events: auto;
+  transition: top .28s cubic-bezier(.4, 0, .2, 1), left .28s cubic-bezier(.4, 0, .2, 1),
+    width .28s cubic-bezier(.4, 0, .2, 1), height .28s cubic-bezier(.4, 0, .2, 1),
+    bottom .28s cubic-bezier(.4, 0, .2, 1), right .28s cubic-bezier(.4, 0, .2, 1);
+}
+.tutorial-mask-full { inset: 0; }
+/* The ring traces the cutout. It ignores pointer events, so the control it
+   frames is the one thing on the page the reader can still press. An action
+   step pulses more insistently, because that ring is an instruction. */
+.tutorial-ring {
+  position: absolute;
+  border: 2px solid var(--blue, #2563eb);
+  border-radius: 10px;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, .25);
+  pointer-events: none;
+  transition: top .28s cubic-bezier(.4, 0, .2, 1), left .28s cubic-bezier(.4, 0, .2, 1),
+    width .28s cubic-bezier(.4, 0, .2, 1), height .28s cubic-bezier(.4, 0, .2, 1);
+}
+.tutorial-ring.action { animation: tutorial-pulse 1.5s ease-in-out infinite; }
+@keyframes tutorial-pulse {
+  0%, 100% { box-shadow: 0 0 0 3px rgba(37, 99, 235, .30); }
+  50% { box-shadow: 0 0 0 9px rgba(37, 99, 235, .12); }
+}
+/* "Your turn": an action step is completed by doing the thing, so the card
+   says so rather than offering a button that would do it for the reader. */
+.tutorial-kind { display: inline-block; margin-bottom: 6px; padding: 2px 8px; border-radius: 999px; background: var(--blue, #2563eb); color: #fff; font-size: 10px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; }
+.tutorial-hint { margin: 10px 0 0; font-size: 12.5px; color: var(--sub); }
+.tutorial-hint.act { color: var(--blue, #2563eb); font-weight: 650; }
+.tutorial-blocked { margin: 8px 0 0; font-size: 12px; color: var(--amber, #946200); }
+/* Stated on the step that has the reader look at or choose real records, so a
+   reader learning to trust these numbers is told what they are at the moment
+   they are looking at them. */
+.tutorial-demo { margin: 10px 0 0; padding: 7px 9px; border-radius: 7px; background: var(--gray, #f1f4f9); color: var(--sub); font-size: 11.5px; line-height: 1.45; }
+.tutorial-bar { position: absolute; top: 0; left: 0; right: 0; padding: 10px 22px 8px; background: rgba(255, 255, 255, 0.98); border-bottom: 1px solid var(--line); box-shadow: 0 4px 16px rgba(15, 23, 42, 0.14); pointer-events: auto; }
+.tutorial-bar-head { display: flex; align-items: center; gap: 10px; max-width: 1180px; margin: 0 auto; }
+.tutorial-eyebrow { color: var(--sub); font-size: 10px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+.tutorial-bar-head > b { color: var(--text); font-size: 14px; }
+.tutorial-count { color: var(--sub); font-size: 12px; margin-right: auto; }
+.tutorial-bar-actions { display: flex; gap: 7px; margin-left: auto; }
+.tutorial-progress { display: flex; gap: 4px; max-width: 1180px; margin: 8px auto 0; }
+.tutorial-progress span { height: 4px; flex: 1 1 0; border-radius: 3px; background: #d7dde7; }
+.tutorial-progress span.done { background: var(--blue, #2563eb); }
+.tutorial-panel { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -42%); width: 560px; max-width: calc(100vw - 32px); max-height: calc(100vh - 150px); overflow: auto; padding: 22px 24px 18px; border: 1px solid var(--line); border-radius: 14px; background: #fff; box-shadow: 0 20px 55px rgba(15, 23, 42, 0.28); pointer-events: auto; }
+/* Anchored beside its highlight: the inline style supplies the position, so
+   the centring transform must not also apply. */
+.tutorial-step.anchored { top: auto; left: auto; transform: none; max-height: min(58vh, 420px); padding: 18px 20px 14px; transition: top .28s cubic-bezier(.4, 0, .2, 1), left .28s cubic-bezier(.4, 0, .2, 1); }
+.tutorial-step.anchored h3 { font-size: 16px; }
+.tutorial-step.anchored > p { font-size: 13px; }
+@keyframes tutorial-card-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+.tutorial-panel h3 { margin: 0 0 10px; color: var(--text); font-size: 19px; }
+.tutorial-panel > p { margin: 9px 0; color: var(--text); font-size: 14px; line-height: 1.6; }
+.tutorial-picker { width: 620px; }
+.tutorial-picker > .caption { margin-bottom: 14px; }
+.tutorial-section { display: block; width: 100%; margin-top: 9px; padding: 13px 14px; border: 1px solid var(--line); border-radius: 9px; background: #fff; color: var(--text); text-align: left; cursor: pointer; }
+.tutorial-section:hover, .tutorial-section:focus-visible { border-color: var(--blue, #2563eb); background: #f6f9ff; outline: none; }
+.tutorial-section-head { display: flex; align-items: center; gap: 8px; }
+.tutorial-section-head b { font-size: 14px; }
+.tutorial-section small { display: block; margin-top: 5px; color: var(--sub); font-size: 12px; line-height: 1.45; }
+.tutorial-done, .tutorial-minutes { margin-left: auto; color: var(--sub); font-size: 10px; font-weight: 700; }
+.tutorial-done { color: #18794e; }
+@media (max-width: 760px) {
+  .tutorial-bar { padding: 9px 12px 7px; }
+  .tutorial-bar-head { flex-wrap: wrap; }
+  .tutorial-eyebrow { flex-basis: 100%; }
+  .tutorial-count { margin-left: auto; }
+  .tutorial-bar-actions { width: 100%; justify-content: flex-end; }
+  .tutorial-panel { top: 54%; max-height: calc(100vh - 180px); padding: 18px; }
+}
+
 /* Source controls share existing palette and stack without horizontal overflow. */
-.dataset-context { margin-bottom: 20px; }
+/* The analysis-source selector lives in the top bar beside the deployment
+   tags: one compact row on every page instead of a card above each view. */
+.topbar-dataset { display: flex; align-items: center; gap: 7px; position: relative; min-width: 0; }
+.topbar-dataset select { max-width: 260px; min-width: 0; font-size: 12px; padding: 5px 8px; border: 1px solid var(--line); border-radius: 8px; background: #fff; color: var(--text); }
+.topbar-dataset-details { position: relative; }
+.topbar-dataset-details summary { cursor: pointer; font-size: 12px; color: var(--sub); list-style: none; padding: 5px 8px; border: 1px solid var(--line); border-radius: 8px; }
+.topbar-dataset-details summary::-webkit-details-marker { display: none; }
+.topbar-dataset-popover { position: absolute; right: 0; top: calc(100% + 6px); z-index: 30; width: 360px; max-width: 80vw; background: #fff; border: 1px solid var(--line); border-radius: 10px; box-shadow: 0 8px 24px rgba(15, 23, 42, 0.12); padding: 12px 14px; overflow-wrap: anywhere; }
+.topbar-dataset-popover p { margin: 4px 0; font-size: 12px; }
+.topbar-dataset-error { position: absolute; right: 0; top: calc(100% + 6px); z-index: 30; margin: 0; max-width: 360px; background: #fff; border: 1px solid var(--bad, #b91c1c); border-radius: 8px; padding: 6px 10px; font-size: 12px; color: var(--bad, #b91c1c); overflow-wrap: anywhere; }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+@media (max-width: 1080px) { .topbar-dataset select { max-width: 170px; } }
 .page-grid > * { min-width: 0; }
 .page-grid :where(p, h2, h3) { overflow-wrap: anywhere; }
 .page-grid select { min-width: 0; max-width: 100%; }
@@ -2827,7 +2864,6 @@ tbody tr.selected:hover {
 .workbench-toolbar .field { flex: 1 1 220px; min-width: 0; }
 .workbench-toolbar select { max-width: 100%; }
 .workbench-json { white-space: pre-wrap; overflow-wrap: anywhere; max-height: 420px; overflow: auto; font-size: 12px; }
-.dataset-context p, .dataset-context details { overflow-wrap: anywhere; }
 fieldset { border: 0; padding: 0; min-width: 0; }
 @media (max-width: 760px) { .workbench-toolbar { align-items: stretch; flex-direction: column; } .workbench-toolbar .field { flex-basis: auto; } }
 

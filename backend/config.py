@@ -160,6 +160,26 @@ def pipeline_output_directory() -> Path | None:
     return root
 
 
+def pipeline_output_remedy() -> str:
+    """The operator remedy shown when the runtime directory is unwritable.
+
+    Names the concrete path rather than only the variable, so a reader who has
+    never seen ``PIPELINE_OUTPUT_DIR`` still learns which directory to fix.
+    The Docker note covers the common cause there: a named volume initialized
+    root-owned by an image built before the mount point was chowned.
+    """
+    _load_env()
+    value = os.getenv("PIPELINE_OUTPUT_DIR", "").strip()
+    path = value or str(DEFAULT_PIPELINE_OUTPUT_DIR)
+    return (
+        f"The server cannot write its runtime output directory ({path}). "
+        "Grant the service user write permission on that directory, or set "
+        "PIPELINE_OUTPUT_DIR to a directory it can write. In the Docker "
+        "stack, remove the stale volume with `docker volume rm "
+        "marketing-roi-analysis-pipeline-output` and restart the stack."
+    )
+
+
 def pipeline_artifact_path(relative: str, fallback: Path) -> Path:
     """Prefer a completed runtime artifact, otherwise use the baseline path."""
     root = pipeline_output_directory()

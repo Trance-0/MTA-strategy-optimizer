@@ -36,6 +36,7 @@ from backend.config import (
     ATTRIBUTION_OUTPUT_DIR,
     REPO_ROOT,
     pipeline_output_directory,
+    pipeline_output_remedy,
 )
 from backend.services.model_datasets import (
     DatasetError,
@@ -417,7 +418,7 @@ def jobs_state(execution_enabled: bool = True, database_enabled: bool = True) ->
                 )
                 if not execution_enabled
                 else (
-                    "PIPELINE_OUTPUT_DIR must name a writable runtime directory."
+                    pipeline_output_remedy()
                     if pipeline_output_directory() is None
                     else (
                         "No compatible server-owned dataset is available for this model."
@@ -453,7 +454,7 @@ def start_refusal(
     if not writable:
         return {
             "code": "runtime_unwritable",
-            "message": "PIPELINE_OUTPUT_DIR must name a writable runtime directory.",
+            "message": pipeline_output_remedy(),
         }
     if active_job(stage) is not None:
         return {

@@ -123,6 +123,11 @@ class CommittedArtifactTest(unittest.TestCase):
             ],
         )
 
+    def test_rounding_residual_is_reconciled_at_the_adapter_boundary(self) -> None:
+        document = _document(CAMPAIGN_STRATEGY_ARTIFACT)
+        output = strategy_output_from_campaign_strategy(document)
+        self.assertTrue(output.conservation().is_conserving)
+
 
 class RefusalTest(unittest.TestCase):
     """A refusal is reported with its reason, never scored as a zero."""
@@ -172,6 +177,21 @@ class RefusalTest(unittest.TestCase):
         with self.assertRaises(StrategyProjectionError):
             strategy_output_from_initial_budget(
                 {"campaigns": [{"campaign_id": "C-1", "budget_seed_share": 1.0}]},
+                currency="USD",
+            )
+
+    def test_missing_campaign_keys_raise_projection_errors(self) -> None:
+        with self.assertRaisesRegex(StrategyProjectionError, "campaign_id"):
+            strategy_output_from_initial_budget(
+                {
+                    "campaigns": [{}],
+                    "mta_source_snapshot": {
+                        "marketplace": "US",
+                        "advertiser_id": "A",
+                        "report_start_date": "2026-01-01",
+                        "report_end_date": "2026-01-01",
+                    },
+                },
                 currency="USD",
             )
 

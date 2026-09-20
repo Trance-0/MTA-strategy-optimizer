@@ -232,7 +232,7 @@ Which build and data source are active, how can the database be inspected or
 prepared, what requests were logged, and which backend tasks are running? The
 four deep-linked tabs render as a normal page rather than a modal.
 
-Continue with [Views and visual contract](./views/index.md) for the reliability rule every view honors, the colour and chart system, and the per-component specification. The rail that switches between them, and its settings module, are specified on [Navigation rail and settings](./navigation.md).
+Continue with [Views and visual contract](./views/index.md) for the reliability rule every view honors, the colour and chart system, and the per-component specification. The rail that switches between them, and its settings module, are specified on [Navigation rail and settings](./navigation.md). The walkthrough Settings launches, which teaches the pipeline by having the reader press the real controls, is specified on [Guided tutorial](./guided-tutorial.md).
 
 ## Registered dataset context
 

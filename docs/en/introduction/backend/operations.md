@@ -127,6 +127,15 @@ value must resolve to a directory the process can create and write. A failed
 probe makes the stage unavailable with the configuration remedy; the server
 never falls back to a tracked module output directory.
 
+The unavailable message must state the remedy for a reader who does not know
+the variable: it names the configured path, states that the server process
+cannot write it, and tells the operator to either grant the service user write
+permission on that directory or point `PIPELINE_OUTPUT_DIR` at one it can
+write. In the Docker stack the usual cause is a named volume initialized
+root-owned by an image built before the directory was chowned; the remedy
+line names `docker volume rm marketing-roi-analysis-pipeline-output` followed
+by a rebuild.
+
 ### Model artifacts
 
 Each stage declares an exact output allow-list. Attribution has its five

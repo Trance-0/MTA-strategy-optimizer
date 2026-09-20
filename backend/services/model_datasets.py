@@ -21,7 +21,11 @@ from decimal import Decimal
 from pathlib import Path
 from typing import Any
 
-from backend.config import pipeline_output_directory, research_snapshot_path
+from backend.config import (
+    pipeline_output_directory,
+    pipeline_output_remedy,
+    research_snapshot_path,
+)
 from backend.database import sql, table_exists
 from modules.mta_attribution.config import AMAZON_ADS_REPORT_FILE, AMC_REPORT_FILE
 from modules.mta_attribution.src.synthetic_event_pipeline import ADS_FIELDS
@@ -80,10 +84,7 @@ def prepare_dataset(stage: str, dataset: dict[str, str]) -> PreparedDataset:
     """Materialize a revalidated selection below the configured runtime root."""
     runtime = pipeline_output_directory()
     if runtime is None:
-        raise DatasetError(
-            "PIPELINE_OUTPUT_DIR must name a writable directory before models "
-            "can prepare database inputs."
-        )
+        raise DatasetError(pipeline_output_remedy())
     if dataset.get("source") == "files":
         return _prepare_file_dataset(stage, dataset)
     target = runtime / "datasets" / stage

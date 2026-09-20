@@ -1,7 +1,7 @@
 ---
 title: Version Log
 description: Release history and material changes for the maintained project
-compact: "Routes release history from VERSION to one page per patch, keeping 0.9.61–0.9.64 flat and older patches in minor-version folders; includes dates, material summaries, historical group links, and planned follow-ups."
+compact: "Routes release history from VERSION to one page per patch, keeping 0.9.70–0.9.73 flat and older patches in minor-version folders; includes dates, material summaries, historical group links, and planned follow-ups."
 order: 1
 ---
 
@@ -11,22 +11,67 @@ The project version is recorded in the repository-root `VERSION` file. Each page
 
 This section records **what** changed. See the [work log](../worklog/) for **who** did the work and when.
 
-## [0.9.64](0.9.64.md)
+## [0.9.73](0.9.73.md)
+
+- Date: 2026-09-18
+- Summary: Replaced the tutorial's dead-end disabled-control message with a setup step that advances by itself, per-step remedies, and a demonstration-data notice.
+
+## [0.9.72](0.9.72.md)
+
+- Date: 2026-09-18
+- Summary: Made the tutorial interactive: the mask blocks everything but one real control, and pressing it performs the real operation and advances the step.
+
+## [0.9.71](0.9.71.md)
+
+- Date: 2026-09-18
+- Summary: Gave the tutorial a spotlight mask that highlights the element each step teaches, scrolls it into view, and animates between controls.
+
+## [0.9.70](0.9.70.md)
+
+- Date: 2026-09-18
+- Summary: Rebuilt the guided tutorial as a section picker with a grey veil and top progress bar, and moved its state out of Settings so a lesson survives its own navigation.
+
+## [0.9.69](0.9/0.9.69.md)
+
+- Date: 2026-09-18
+- Summary: Removed the rail's section grouping and collapsed the whole flat destination list behind one menu button in the narrow layout.
+
+## [0.9.68](0.9/0.9.68.md)
+
+- Date: 2026-09-18
+- Summary: Grouped the navigation rail so the narrow bar collapses each section into a disclosure, and added the guided first-run tour to Settings General.
+
+## [0.9.67](0.9/0.9.67.md)
+
+- Date: 2026-09-18
+- Summary: Fixed the root-owned pipeline-output Docker volume that disabled every pipeline stage and log tab, and made the runtime-directory unavailable messages name the path and remedy.
+
+## [0.9.66](0.9/0.9.66.md)
+
+- Date: 2026-09-18
+- Summary: Added the merged kfc-global scenario, the top-bar dataset selector, the Touchpoint budget plan panel, and fixed budget-level outcome joining and provider mapping in the campaign history loader.
+
+## [0.9.65](0.9/0.9.65.md)
+
+- Date: 2026-09-18
+- Summary: Hardened the generator-report adapter and strategy projection with bounded validation errors and share-residual reconciliation; recorded the from-scratch integration check.
+
+## [0.9.64](0.9/0.9.64.md)
 
 - Date: 2026-09-18
 - Summary: Allowed user-budget initialization without own budget rows and added empirical recommendation markers.
 
-## [0.9.63](0.9.63.md)
+## [0.9.63](0.9/0.9.63.md)
 
 - Date: 2026-09-18
 - Summary: Replaced Campaign search/select with native autocomplete and kept optimizer fields visible while typing.
 
-## [0.9.62](0.9.62.md)
+## [0.9.62](0.9/0.9.62.md)
 
 - Date: 2026-09-18
 - Summary: Validated Campaign search input and surfaced unknown typed Campaigns before strategy requests.
 
-## [0.9.61](0.9.61.md)
+## [0.9.61](0.9/0.9.61.md)
 
 - Date: 2026-09-18
 - Summary: Added a searchable Campaign selector and smart matching controls to the strategy optimizer.

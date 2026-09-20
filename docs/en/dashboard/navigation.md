@@ -1,8 +1,8 @@
 ---
 title: Navigation Rail and Settings
-compact: "Eight lazy page imports, searchable optimizer campaign catalogue, canonical deep links and campaignOptimizerHref source-preserving query links; Settings loads independently of dashboard data and restores deployment identity on refresh; Knowledge Base tabs, schema doctor, recovery, protected configuration, queued tasks, shared copyable LogViewer and package-native database imports."
+compact: "Eight lazy page imports, one flat ungrouped rail collapsing behind a single menu button below 1024px, canonical deep links and campaignOptimizerHref source-preserving query links; Settings General launches the guided tutorial specified separately; schema doctor, recovery, protected configuration, queued tasks, shared copyable LogViewer and package-native database imports."
 lang: en-US
-source_files: dashboard/src/pages.js, dashboard/src/App.vue, dashboard/src/main.js, dashboard/src/views/Settings.vue, dashboard/src/components/BackendTasks.vue, dashboard/src/components/SchemaRecovery.vue
+source_files: dashboard/src/pages.js, dashboard/src/App.vue, dashboard/src/main.js, dashboard/src/components/SidebarNav.vue, dashboard/src/views/Settings.vue, dashboard/src/components/BackendTasks.vue, dashboard/src/components/SchemaRecovery.vue
 ---
 
 # Navigation Rail and Settings
@@ -12,9 +12,10 @@ The rail is the shell around the eight pages listed on [Dashboard](./index.md#th
 ## Navigation Rail <span class="status-label status-verified" aria-label="Verified"></span>
 
 The sidebar is one navy column of eight stacked destination buttons, with the
-active item filled. It has no `OVERVIEW`, `PLANNING`, or `INSIGHTS` section
-labels and no group containers. Data Generator follows Command Center; the
-remaining destinations keep their existing relative order.
+active item filled. It has no section labels and no group containers: the rail
+is the flat `PAGE_KEYS` order and nothing else, so every destination is visible
+and one click away. Data Generator follows Command Center; the remaining
+destinations keep their existing relative order.
 
 `src/pages.js` is the single place a view is registered. A page key appears
 there, in `PAGE_KEYS`, and in `App.vue`'s component map;
@@ -95,12 +96,28 @@ dashboard resource dependency, so recovery survives a failing data source.
 
 ### Below the wide breakpoint
 
-At `1024px` the rail becomes a sticky, horizontally scrollable bar. The same
-flat order is retained, and no disclosure or group state is introduced. The
-selected destination stays visible through horizontal scrolling and carries
-`aria-current="page"`. Both the single-column shell track and navigation
-element have zero minimums, so the rail's own overflow scrolls without widening
-the document or any page beneath it.
+At `1024px` the rail becomes a sticky bar holding the brand, one menu button,
+and the status. The eight destinations do not fit that row, so the whole list
+collapses behind that single button — one menu, never one per section, because
+splitting the destinations across several menus makes the reader open two
+before finding a page. The bar does not wrap; wrapping is what turned it back
+into the tall block this layout exists to avoid.
+
+The trigger names the page the reader is currently on, so a closed menu still
+says where they are rather than only that a menu exists, and it carries
+`aria-expanded` with `aria-controls` naming the navigation element. Opening it
+drops the same flat list over the content, scrolling within its own bounded
+height rather than growing the bar. Choosing a destination closes it,
+navigating by any other route closes it, and `Escape` closes it from anywhere
+inside the rail. The selected destination carries `aria-current="page"`. Both
+the single-column shell track and navigation element have zero minimums, so
+nothing here widens the document or any page beneath it.
+
+Item labels survive at every width, including below `620px`: the destinations
+now live in a dropped list, which has the full width for its labels and is
+unreadable without them. The narrowest breakpoint gives up the decoration
+around the menu — the brand padding and the status label — rather than the
+menu itself.
 
 ### The Settings page
 
@@ -112,7 +129,7 @@ it shows the active source, a status dot, whether logging is on, and the Docs an
 Repo links.
 
 The Settings page has four deep-linked tabs. **General** is first and contains
-basic deployment identity only. **Data source** owns a four-step database doctor.
+the guided tutorial and basic deployment identity. **Data source** owns a four-step database doctor.
 **Logging** owns request-log capture and inspection. **Tasks** owns long-running
 service history, detail logs, queue state, copy, and stop controls. Deployment
 identity appears nowhere in the latter three tabs.
@@ -133,6 +150,21 @@ up, stay available on a protected deployment: both act on the database the
 platform already pointed the service at, and neither rewrites a credential.
 Withholding them there would leave the one deployment whose readers have no
 shell as the one deployment with no way to prepare a schema at all.
+
+#### General
+
+The first group is **Getting started**, holding the guided tutorial as one
+option row: the name and its helper sentence on the left, **Start tutorial**
+on the right, with a line beneath it counting the completed sections. The
+deployment identity group follows it.
+
+The tutorial teaches by having the reader operate the application: a step
+masks everything except one real control and is completed by pressing it,
+which performs the real operation. It runs over every page rather than inside
+this one, so its state lives outside the routed views and its overlay is
+rendered by the shell. [Guided Tutorial](./guided-tutorial.md) specifies its
+sections, its action and note steps, its spotlight geometry, and the
+`data-tour` anchors it points at.
 
 #### Data source
 
@@ -305,6 +337,17 @@ Source: `dashboard/src/main.js`, `dashboard/src/App.vue`, `dashboard/src/pages.j
 - Behavior contract: `src/pages.js` is the single place a page and its subsections are registered, and `tests/dashboard.test.js` asserts that `PAGES`, `PAGE_KEYS`, route parsing, canonical serialization, defaults, and `App.vue`'s component map agree. Data Generator follows Command Center and Settings is the last destination. No group label, group container, or separate Settings foot button is rendered. Reload exists only on the Data source tab. Canonical hashes have the form `#/page/section`; reader navigation uses `pushState`, normalization uses `replaceState`, and Back and Forward restore the selected subsection. `App.vue` requests only the current route's resource declaration before mounting that page and passes the selected subsection plus a navigation event to tabbed pages. It renders loading, error, and loaded states itself, and a `database_unavailable` error links to `#/settings/source` while carrying `SchemaRecovery.vue` beneath it. The shell's general read-only data-operation notice is suppressed on Settings and Data Generator; Data Generator owns separate capability state and may still run in local file mode. Header context comes from the small `shell` resource on data pages. Settings remains reachable independently of that resource.
 - Dependencies: Vue 3.
 - Verification: `dashboard/tests/dashboard.test.js` for the registration contract; the rendered result is verified in a real browser for all eight pages.
+
+### `src/components/SidebarNav.vue`
+
+Source: `dashboard/src/components/SidebarNav.vue`
+
+- Responsibility: Render the rail's eight flat destinations and its status-only foot, and own whether the narrow layout's single menu is open.
+- Inputs: The `current` page key, the status object, the logging flag, and the documentation and repository links; `PAGE_KEYS` and `PAGES` from `src/pages.js`.
+- Outputs: A `go` event carrying the chosen page key. It renders no route and writes no location itself.
+- Behavior contract: One `.nav-item` per key in `PAGE_KEYS`, in that order, with no grouping element of any kind. A single `.nav-menu-trigger` carries `aria-expanded` and `aria-controls="rail-destinations"` naming the `.nav` element it reveals, and displays `PAGES[current].title` so a closed menu still names the current page. The stylesheet hides the trigger in the wide column and hides `.nav` in the bar until it carries `open`, so which layout is in force is a CSS decision and the markup is the same in both. Choosing a destination clears `menuOpen` before emitting `go`, a change of `current` clears it, and `Escape` anywhere in the rail clears it. Every item carries `:aria-label` and `title` from `PAGES[key].title`.
+- Dependencies: Vue 3; the rail and bar rules in `src/style.css`.
+- Verification: `dashboard/tests/dashboard.test.js`; the collapse is verified in a real browser at the bar and narrow widths.
 
 ### `src/views/Settings.vue` and `src/components/BackendTasks.vue`
 

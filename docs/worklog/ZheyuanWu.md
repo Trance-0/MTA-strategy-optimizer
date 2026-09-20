@@ -35,6 +35,14 @@ Areas owned by others are recorded on their own pages: the [Data Generator confi
 
 ### Completed
 
+- Collapsed the whole flat rail behind one menu button in the narrow layout, and rebuilt the guided tutorial as an interactive walkthrough whose mask blocks every click except the highlighted control, with setup steps that advance on a readiness check, per-step remedies instead of dead ends, and a demonstration-data notice; verified 191 dashboard tests, the production build, and the served bundles.
+- Fixed the root-owned pipeline-output Docker volume that disabled every pipeline stage and log tab, chowned the mount point in Dockerfile.api, and made every runtime-directory unavailable message name the concrete path and remedy; verified all three stages run with streamed logs in the rebuilt stack.
+- Ran the from-scratch integration check (generate, upload, attribute, optimize, evaluate), hardened the generator-report and strategy-projection adapters, added the merged kfc-global scenario previewed through a local Docker PostgreSQL export into the derived `mta_kfc_global` schema, fixed null-budget-level outcome joining and non-canonical provider mapping, moved the dataset selector into the top bar, and added the Touchpoint budget plan panel; verified 581 module, 203 backend and 185 dashboard tests.
+
+## 2026-09-18
+
+### Completed
+
 - Enabled user-budget initialization for Campaigns without budget rows, preserved the entered budget, and added empirical recommendation markers; verified Docker KFC API behavior, 18 backend tests, 185 dashboard tests and the production build.
 - Corrected Campaign selection to one native autocomplete with stable optimizer settings; verified 184 dashboard tests including uni/unixxxx matching and rebuilt the Docker preview.
 - Validated the optimizer Campaign search field on change, displayed matching options and unknown-value alerts, blocked invalid requests and verified 183 dashboard tests plus the production build.

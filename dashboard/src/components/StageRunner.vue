@@ -70,7 +70,7 @@ function elapsed(record) {
 </script>
 
 <template>
-  <div class="stage-runner">
+  <div class="stage-runner" data-tour="stage-runner">
     <div class="filter-row">
       <div class="field">
         <label :for="`stage-${stage.key}-dataset`">Data</label>
@@ -120,6 +120,7 @@ function elapsed(record) {
         <button
           class="btn primary"
           :disabled="running || busy"
+          :data-tour="`run-${stage.key}`"
           @click="emit('start', options)"
         >
           {{ running ? "Running…" : `Run ${stage.label}` }}

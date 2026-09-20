@@ -60,7 +60,7 @@ watch([selectedDatasetId, () => props.stage], () => {
 onBeforeUnmount(() => { generation += 1; clearTimeout(timer); });
 </script>
 <template>
-  <article class="card">
+  <article class="card" data-tour="stage-runner">
     <div class="card-head"><h2>Run {{ stage }}</h2><span class="sub">{{ selectedDataset?.name }}</span></div>
     <div class="card-body">
       <p>Inputs are frozen from this dataset. Historical chart filters do not refit the model. <a href="#/budget/plans">Save a reusable budget plan</a></p>

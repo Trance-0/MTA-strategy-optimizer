@@ -498,19 +498,35 @@ def _campaign_history_dataset(body):
                 select b.*, o.total_revenue
                 from mta_sim_budget_observation b
                 left join lateral (
+                    -- Ordinary daily outcomes carry a null budget_level: the
+                    -- day's revenue was observed under whichever budget arm
+                    -- was active that day. When the day holds exactly one
+                    -- budget row (the simulator's scheduled and randomized
+                    -- shapes), the null-level outcome joins it at any level;
+                    -- a multi-arm day keeps the baseline-only match so one
+                    -- outcome cannot be counted under several arms.
                     select total_revenue from ordinary o
                     where o.run_id = b.run_id and o.campaign_id = b.campaign_id
                       and o.advertiser_id = b.advertiser_id and o.marketplace = b.marketplace
                       and o.currency = b.currency and o.report_date = b.report_date
                       and (o.budget_level is not distinct from b.budget_level
-                           or (o.budget_level is null and b.budget_level = 1))
+                           or (o.budget_level is null
+                               and (b.budget_level = 1
+                                    or not exists (
+                                        select 1 from mta_sim_budget_observation b2
+                                        where b2.run_id = b.run_id and b2.campaign_id = b.campaign_id
+                                          and b2.advertiser_id = b.advertiser_id
+                                          and b2.marketplace = b.marketplace
+                                          and b2.currency = b.currency
+                                          and b2.report_date = b.report_date
+                                          and b2.budget_level is distinct from b.budget_level))))
                     order by o.budget_level nulls last limit 1
                 ) o on true
                 where b.marketplace = :marketplace
                 order by b.run_id, b.campaign_id, b.report_date, b.budget_level
             """, {"marketplace": marketplace})
             return rows, sql("select * from mta_sim_campaign order by run_id, campaign_id")
-        rows, metadata = cached(f"campaign-history-v2:{marketplace}", read)
+        rows, metadata = cached(f"campaign-history-v3:{marketplace}", read)
     else:
         import json
         from backend.services.datasets import dataset_inputs, research_observation_key
@@ -528,17 +544,25 @@ def _campaign_history_dataset(body):
         outcomes = {}
         for item in research.get("outcome_observations", []):
             outcomes.setdefault((item.get("run_id"), research_observation_key(item)), []).append(item.get("total_revenue"))
+        scoped = [budget for budget in research.get("budget_observations", [])
+                  if (budget.get("reporting_scope") or {}).get("marketplace") == marketplace]
+        # Days holding several budget arms keep the baseline-only match for
+        # unleveled outcomes, so one outcome cannot be counted under several
+        # arms; a single-arm day joins its unleveled outcome at any level.
+        day_arms = {}
+        for budget in scoped:
+            key = research_observation_key(budget)
+            day_arms.setdefault((budget.get("run_id"), key[0], *key[2:]), set()).add(key[1])
         rows = []
-        for budget in research.get("budget_observations", []):
-            scope = budget.get("reporting_scope") or {}
-            if scope.get("marketplace") != marketplace:
-                continue
+        for budget in scoped:
             key = research_observation_key(budget)
             values = outcomes.get((budget.get("run_id"), key))
-            if values is None and key[1] == 1:
-                values = outcomes.get((budget.get("run_id"), (key[0], None, *key[2:])))
+            if values is None:
+                arms = day_arms.get((budget.get("run_id"), key[0], *key[2:]), set())
+                if key[1] == 1 or len(arms) == 1:
+                    values = outcomes.get((budget.get("run_id"), (key[0], None, *key[2:])))
             revenue = sum(values) if values and all(_valid_history_number(v) for v in values) else None
-            rows.append({**budget, **scope, "total_revenue": revenue})
+            rows.append({**budget, **(budget.get("reporting_scope") or {}), "total_revenue": revenue})
     target = [row for row in rows if row.get("campaign_id") == campaign_id]
     # A user-supplied initial budget is enough to initialize a Campaign that has
     # no budget observation yet; comparable touchpoint history supplies the fit.
@@ -607,9 +631,15 @@ def _campaign_history_dataset(body):
         if identity in seen:
             raise ModelRequestError("Campaign history contains repeated budget-period observations.")
         seen.add(identity)
+        # Simulator provider profiles outside the canonical vocabulary map
+        # lossily to GENERIC, matching mta_sim_research_adapter._provider.
+        # Compatibility filtering above already used the raw profile string,
+        # so a GENERIC-mapped Campaign still only matches its own profile.
+        provider = (Provider.AMAZON_ADS if str(meta["provider"]) == "AMAZON_ADS"
+                    else Provider.GENERIC)
         observations.append(CampaignResponseObservation(
             campaign_id=row["campaign_id"], marketplace=marketplace, report_start_date=start,
-            report_end_date=end, currency=row["currency"], provider=Provider(meta["provider"]),
+            report_end_date=end, currency=row["currency"], provider=provider,
             ad_product=meta["ad_product"], campaign_status=meta.get("status", "ACTIVE"),
             configured_budget=float(values[0]), actual_spend=float(values[1]), total_revenue=float(values[2]),
             impressions=0, clicks=0, intervention_id=str(identity),

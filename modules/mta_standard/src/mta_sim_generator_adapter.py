@@ -28,7 +28,12 @@ from pathlib import Path
 from types import ModuleType
 from typing import Any
 
-from .dataloader import MtaSimDataset, load_mta_sim_dataset
+from .dataloader import (
+    MTA_SIM_ADS_FIELDS,
+    MTA_SIM_PATH_REPORT_FIELDS,
+    MtaSimDataset,
+    load_mta_sim_dataset,
+)
 from .touchpoint_adapter import SimulatorConfig
 
 
@@ -278,9 +283,31 @@ def prepare_single_scope_path_report(
     """
 
     path_fields, path_rows = _read_csv(source_path_report)
-    _, performance_rows = _read_csv(performance_report)
+    performance_fields, performance_rows = _read_csv(performance_report)
+    if tuple(path_fields) != MTA_SIM_PATH_REPORT_FIELDS:
+        raise ValueError(
+            f"{source_path_report}: path report header must exactly match "
+            f"{list(MTA_SIM_PATH_REPORT_FIELDS)}; got={path_fields}"
+        )
+    if tuple(performance_fields) != MTA_SIM_ADS_FIELDS:
+        raise ValueError(
+            f"{performance_report}: performance report header must exactly match "
+            f"{list(MTA_SIM_ADS_FIELDS)}; got={performance_fields}"
+        )
     if not path_rows or not performance_rows:
         raise ValueError("generated path and performance tables must not be empty")
+
+    for label, rows, required in (
+        ("path", path_rows, ("marketplace", "advertiser_id", "path")),
+        ("performance", performance_rows, ("marketplace", "accountId", "reportDate")),
+    ):
+        for number, row in enumerate(rows, start=2):
+            missing = [field for field in required if not str(row.get(field, "")).strip()]
+            if missing:
+                raise ValueError(
+                    f"{label} report row {number} is missing required fields: "
+                    f"{', '.join(missing)}"
+                )
 
     marketplaces = {row["marketplace"].strip() for row in performance_rows}
     advertisers = {row["accountId"].strip() for row in performance_rows}
@@ -354,6 +381,16 @@ def prepare_single_scope_reports(
     destination_performance = Path(destination_performance_report)
     path_fields, path_rows = _read_csv(source_path)
     performance_fields, performance_rows = _read_csv(source_performance)
+    if tuple(path_fields) != MTA_SIM_PATH_REPORT_FIELDS:
+        raise ValueError(
+            f"{source_path}: path report header must exactly match "
+            f"{list(MTA_SIM_PATH_REPORT_FIELDS)}; got={path_fields}"
+        )
+    if tuple(performance_fields) != MTA_SIM_ADS_FIELDS:
+        raise ValueError(
+            f"{source_performance}: performance report header must exactly match "
+            f"{list(MTA_SIM_ADS_FIELDS)}; got={performance_fields}"
+        )
     if not path_rows or not performance_rows:
         raise ValueError("uploaded path and performance tables must not be empty")
 

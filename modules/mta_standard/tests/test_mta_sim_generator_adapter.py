@@ -157,6 +157,21 @@ class MtaSimGeneratorAdapterTests(unittest.TestCase):
             "CPM",
         )
 
+    def test_report_header_and_required_field_errors_are_bounded(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            paths = fixtures.write_dataset(root)
+            broken = root / "broken.csv"
+            broken.write_text("marketplace,accountId\nUS,acct\n", encoding="utf-8")
+            with self.assertRaisesRegex(ValueError, "header must exactly match"):
+                prepare_single_scope_reports(
+                    broken,
+                    paths["ads_performance"],
+                    root / "path.csv",
+                    root / "ads.csv",
+                    marketplace=fixtures.MARKETPLACE,
+                )
+
 
 if __name__ == "__main__":
     unittest.main()

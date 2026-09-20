@@ -1,6 +1,6 @@
 ---
 title: Page Behavior
-compact: "Native Campaign autocomplete with stable settings, optimizer links, automatic scoped historical fits, editable initial budget and similarity threshold, full-history references, baseline recommendations and algorithm tooltips; source-aware rankings, distributions, filtered exports, model evidence, executable plans, formal evaluation and retained run history; shared LogViewer and bounded history windows."
+compact: "Native Campaign autocomplete with stable settings, optimizer links, automatic scoped historical fits, editable initial budget and similarity threshold, full-history references, baseline recommendations, the Touchpoint budget plan panel and algorithm tooltips; source-aware rankings, distributions, filtered exports, model evidence, executable plans, formal evaluation and retained run history; shared LogViewer and bounded history windows."
 source_files: dashboard/src/views/CommandCenter.vue, dashboard/src/views/BudgetManager.vue, dashboard/src/views/Campaigns.vue, dashboard/src/views/CampaignOptimizer.vue, dashboard/src/views/OptimizationLog.vue
 ---
 
@@ -191,7 +191,18 @@ The attribution tab shows Markov against Shapley per touchpoint, the governed
 recommendation, and the budget shift the recommendation implies; the
 optimization tab shows the allocation, its evidence, and its extrapolation and
 pooled-transfer warnings; the evaluation tab renders the formal evaluation report, its strategy-run
-identity, checks, comparisons and skipped reasons. Each tab declares the run options its stage accepts — a report window for
+identity, checks, comparisons and skipped reasons.
+
+The optimization tab also loads the attribution resource and, when a Campaign
+preview has decided a budget — an optimized allocation or, failing that, a
+historical baseline recommendation — renders a Touchpoint budget plan: the
+decided daily budget stated in one sentence, then one row per touchpoint whose
+recommended-attribution key (which leads with the ad product) matches the
+selected Campaign's `ad_product`, with credit share renormalized within that
+subset, the resulting daily amount, and the row's reliability verdict. Any
+UNRELIABLE row adds a warning that the split is indicative, not budgeting
+authority. The panel is a restatement — optimizer total × attributed credit —
+never a third model, and renders only when matching recommended rows exist. Each tab declares the run options its stage accepts — a report window for
 attribution, a budget usage policy and total budget for optimization — and
 those option values are the same names `normalizeOptions()` validates on the
 server, so the offered controls and the accepted arguments cannot diverge

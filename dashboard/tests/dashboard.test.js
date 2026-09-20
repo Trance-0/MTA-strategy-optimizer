@@ -56,6 +56,18 @@ const BACKEND_TASKS = readFileSync(
   resolve(HERE, "..", "src", "components", "BackendTasks.vue"),
   "utf8",
 );
+const GUIDED_TOUR = readFileSync(
+  resolve(HERE, "..", "src", "components", "GuidedTour.vue"),
+  "utf8",
+);
+const TUTORIAL_LAUNCHER = readFileSync(
+  resolve(HERE, "..", "src", "components", "TutorialLauncher.vue"),
+  "utf8",
+);
+const TUTORIAL_STATE = readFileSync(
+  resolve(HERE, "..", "src", "lib", "useTutorial.js"),
+  "utf8",
+);
 const DATA_GENERATOR = readFileSync(
   resolve(HERE, "..", "src", "views", "DataGenerator.vue"),
   "utf8",
@@ -118,6 +130,14 @@ const CAMPAIGN_OPTIMIZER = readFileSync(
 );
 const STAGE_RUNNER = readFileSync(
   resolve(HERE, "..", "src", "components", "StageRunner.vue"),
+  "utf8",
+);
+const DATASET_CONTEXT = readFileSync(
+  resolve(HERE, "..", "src", "components", "DatasetContext.vue"),
+  "utf8",
+);
+const WORKBENCH_RUNNER = readFileSync(
+  resolve(HERE, "..", "src", "components", "WorkbenchRunner.vue"),
   "utf8",
 );
 const WILLOW_FORECAST = readFileSync(
@@ -221,6 +241,134 @@ test("every subsection declares only allow-listed lazy resources", () => {
   }
 });
 
+test("the guided tour steers real routes and changes nothing", () => {
+  // Every step must name a route the shell can render, or the tour would
+  // navigate a first-time reader to a page that does not exist.
+  const hashes = [...TUTORIAL_STATE.matchAll(/hash: "(#\/[^"]+)"/g)].map((match) => match[1]);
+  assert.ok(hashes.length >= 12, "the tutorial must cover the three selectable sections");
+  for (const hash of hashes) {
+    const [, pageKey, sectionKey] = hash.split("/");
+    assert.ok(PAGES[pageKey], `${hash} names no registered page`);
+    assert.ok(
+      Object.keys(PAGES[pageKey].sections).includes(sectionKey),
+      `${hash} names no subsection of ${pageKey}`,
+    );
+  }
+  // The tour explains; it must not act. A step that started a stage or wrote a
+  // setting would make a walkthrough destructive on a live deployment.
+  assert.doesNotMatch(TUTORIAL_STATE, /startJob|saveSettings|selectDataset|requestReload/);
+  // It is offered from Settings, and only from there.
+  assert.match(SETTINGS_DIALOG, /<TutorialLauncher \/>/);
+  assert.match(SETTINGS_DIALOG, /aria-label="Getting started"/);
+  assert.match(TUTORIAL_LAUNCHER, /Start tutorial/);
+  assert.match(TUTORIAL_STATE, /TUTORIAL_SECTIONS/);
+  assert.match(GUIDED_TOUR, /Choose what to learn/);
+});
+
+test("the tutorial spotlights real elements rather than describing them", () => {
+  // A step names a data-tour anchor; the overlay cuts that element out of its
+  // mask and scrolls it into view. An anchor named by a step but present in no
+  // component would dim the whole screen and teach nothing.
+  const targets = [...TUTORIAL_STATE.matchAll(/target: "([^"]+)"/g)].map((match) => match[1]);
+  assert.ok(targets.length >= 10, "most steps must point at a control, not just a page");
+  const markup = [
+    CAMPAIGN_OPTIMIZER,
+    SETTINGS_DIALOG,
+    DATASET_CONTEXT,
+    STAGE_RUNNER,
+    WORKBENCH_RUNNER,
+  ].join("\n");
+  // Some anchors are bound from a loop, so the attribute in the source is a
+  // template. Reduce those to the literal prefix they can produce.
+  const bound = [...markup.matchAll(/:data-tour="`([^`$]*)\$\{/g)].map((match) => match[1]);
+  for (const target of new Set(targets)) {
+    const literal = markup.includes(`data-tour="${target}"`);
+    const templated = bound.some((prefix) => target.startsWith(prefix));
+    assert.ok(literal || templated, `no component carries data-tour="${target}"`);
+  }
+  // Four panels around the element, not one sheet over it: the highlighted
+  // control must keep its own colours and stay clickable.
+  assert.match(GUIDED_TOUR, /tutorial-mask/);
+  assert.match(GUIDED_TOUR, /tutorial-ring/);
+  assert.match(GUIDED_TOUR, /scrollIntoView/);
+  assert.match(GUIDED_TOUR, /getBoundingClientRect/);
+  assert.match(STYLE_CSS, /\.tutorial-ring \{[^}]*pointer-events: none/);
+  assert.match(STYLE_CSS, /@keyframes tutorial-pulse/);
+  // The spotlight animates between positions rather than jumping.
+  assert.match(STYLE_CSS, /\.tutorial-mask \{[^}]*transition:/);
+  // The mask must take pointer events, because swallowing every click outside
+  // the cutout is what makes an action step's control the only one available.
+  assert.match(STYLE_CSS, /\.tutorial-mask \{[^}]*pointer-events: auto/);
+});
+
+test("an action step is completed by pressing the real control", () => {
+  // The tutorial must not offer a Next button beside a description of a
+  // button: the reader presses the actual control, which performs the actual
+  // operation, and that click is what advances the step.
+  const kinds = [...TUTORIAL_STATE.matchAll(/kind: "(\w+)"/g)].map((match) => match[1]);
+  assert.ok(kinds.includes("action"), "no step asks the reader to do anything");
+  assert.ok(kinds.includes("note"), "steps with no control must still be expressible");
+  for (const kind of new Set(kinds)) {
+    assert.ok(["action", "input", "note"].includes(kind), `unknown step kind ${kind}`);
+  }
+  // Every action step must name the control it expects to be clicked.
+  const steps = [...TUTORIAL_STATE.matchAll(/kind: "action",[\s\S]*?\},/g)].map((m) => m[0]);
+  for (const entry of steps) {
+    assert.match(entry, /target: "[^"]+"/, "an action step names no control");
+  }
+  // The listener runs on the target and does not cancel the event, so the
+  // application's own handler still fires: one click both runs and advances.
+  assert.match(GUIDED_TOUR, /addEventListener\("click", onTargetClick/);
+  assert.doesNotMatch(GUIDED_TOUR, /preventDefault\(\)/);
+  // No Next on an action step, and the arrow key must not skip one either.
+  assert.match(GUIDED_TOUR, /v-if="!isAction && !isInput"/);
+  assert.match(GUIDED_TOUR, /ArrowRight" && !isAction\.value && !isInput/);
+  // A control that cannot be used must offer a way past rather than trap the
+  // reader, but only where the step allows it.
+  assert.match(GUIDED_TOUR, /isAction && step\.optional && blocked/);
+  assert.match(TUTORIAL_STATE, /optional: true/);
+  // The card measures itself so it can flip to the side with room.
+  assert.match(GUIDED_TOUR, /offsetHeight/);
+});
+
+test("a step whose control needs setup teaches the setup instead of stalling", () => {
+  // "This control is disabled, so the step cannot be completed here" named a
+  // problem and offered nothing. An action that can be blocked must carry its
+  // own remedy, and the setup it depends on must be a step of its own.
+  assert.doesNotMatch(GUIDED_TOUR, /cannot be completed here/);
+  assert.match(GUIDED_TOUR, /recoveryHint/);
+  assert.match(TUTORIAL_STATE, /recover: \{/);
+  // Every action step that may be blocked states what to do about it.
+  const actions = [...TUTORIAL_STATE.matchAll(/kind: "action",[\s\S]*?\n {6}\},/g)].map((m) => m[0]);
+  for (const entry of actions) {
+    assert.ok(
+      /recover: \{/.test(entry) || /optional: true/.test(entry),
+      "an action step can block with neither a remedy nor a skip",
+    );
+  }
+  // An input step waits for a named readiness check and advances by itself,
+  // so the reader is never asked to press Continue for work already done.
+  const inputs = [...TUTORIAL_STATE.matchAll(/kind: "input",[\s\S]*?\n {6}\},/g)].map((m) => m[0]);
+  assert.ok(inputs.length, "no step guides the reader through a required setup");
+  for (const entry of inputs) {
+    const until = /until: "(\w+)"/.exec(entry);
+    assert.ok(until, "an input step names no readiness check");
+    assert.match(
+      TUTORIAL_STATE,
+      new RegExp(`READINESS[\\s\\S]*${until[1]}\\(`),
+      `READINESS has no ${until[1]} check`,
+    );
+  }
+  assert.match(GUIDED_TOUR, /watchReadiness/);
+  assert.match(GUIDED_TOUR, /watchEnablement/);
+  // Wherever the lesson has the reader look at or choose real records, it
+  // states that the data is synthetic.
+  assert.match(TUTORIAL_STATE, /DEMO_NOTICE/);
+  assert.match(TUTORIAL_STATE, /demonstration only/);
+  assert.match(TUTORIAL_STATE, /demo: true/);
+  assert.match(GUIDED_TOUR, /step\.demo/);
+});
+
 test("Settings is a routed page and Reload lives only inside it", () => {
   assert.ok(PAGES.settings, "settings has no icon entry");
   assert.equal(PAGE_KEYS.at(-1), "settings", "settings must be the final routed page");
@@ -237,8 +385,38 @@ test("page keys are unique, flat, and place Data Generator after Command Center"
   assert.equal(new Set(PAGE_KEYS).size, PAGE_KEYS.length);
   assert.ok(PAGE_KEYS.includes(DEFAULT_PAGE));
   assert.deepEqual(PAGE_KEYS.slice(0, 2), ["overview", "generator"]);
+});
+
+test("the rail is one flat list with no sections", () => {
+  // Grouping the destinations made the reader open two menus to find a page.
+  // The rail is the flat PAGE_KEYS order and nothing else.
   assert.match(SIDEBAR_NAV, /v-for="key in PAGE_KEYS"/);
-  assert.doesNotMatch(SIDEBAR_NAV, /PAGE_GROUPS|nav-group|nav-label|OVERVIEW|INSIGHTS/);
+  assert.doesNotMatch(SIDEBAR_NAV, /NAV_GROUPS|nav-group|nav-label|OVERVIEW|PLANNING|INSIGHTS/);
+  assert.doesNotMatch(STYLE_CSS, /\.nav-group|\.nav-label/);
+});
+
+test("the narrow layout collapses the whole rail behind one menu", () => {
+  // One trigger for all eight destinations, revealed only below the bar
+  // breakpoint; the wide column is the navigation and needs no menu.
+  assert.match(SIDEBAR_NAV, /class="nav-menu-trigger"/);
+  assert.match(SIDEBAR_NAV, /:aria-expanded="menuOpen"/);
+  assert.match(SIDEBAR_NAV, /aria-controls="rail-destinations"/);
+  assert.match(SIDEBAR_NAV, /id="rail-destinations"/);
+  // Choosing a destination, or arriving at one, must close the menu; an open
+  // menu would otherwise cover the page it just navigated to.
+  assert.match(SIDEBAR_NAV, /function choose\(key\) \{\s*menuOpen\.value = false;/);
+  assert.match(SIDEBAR_NAV, /watch\(\(\) => props\.current/);
+  assert.match(SIDEBAR_NAV, /event\.key === "Escape"/);
+  // Hidden in the wide column, shown and dropped over the content in the bar.
+  const wide = STYLE_CSS.slice(0, STYLE_CSS.indexOf("@media (max-width: 1024px)"));
+  assert.match(wide, /\.nav-menu-trigger \{\s*display: none/);
+  const narrow = STYLE_CSS.slice(STYLE_CSS.indexOf("@media (max-width: 1024px)"));
+  assert.match(narrow, /\.nav-menu-trigger \{[^}]*display: flex/);
+  assert.match(narrow, /\.nav \{\s*display: none/);
+  assert.match(narrow, /\.nav\.open \{[^}]*position: absolute/);
+  // The dropped list is a list: its labels must survive at every width.
+  const narrowest = STYLE_CSS.slice(STYLE_CSS.indexOf("@media (max-width: 620px)"));
+  assert.doesNotMatch(narrowest, /\.nav-item span \{\s*display: none/);
 });
 
 // ---------------------------------------------------------------------------
@@ -788,17 +966,16 @@ test("the dashboard never presents its data as generated or simulated", () => {
 test("the rail becomes a bar, not a tall block, below the wide breakpoint", () => {
   // Stacking the rail's vertical layout at full width pushed the dashboard
   // below the fold on a narrow screen, so every view opened on an empty
-  // screen. The bar keeps navigation on one row and returns the height.
+  // screen. The bar keeps navigation to one row -- a brand, one menu button,
+  // and the status -- and returns the rest of the height to the content.
   const narrow = STYLE_CSS.slice(STYLE_CSS.indexOf("@media (max-width: 1024px)"));
   assert.match(narrow, /grid-template-columns: minmax\(0, 1fr\)/);
   assert.match(narrow, /\.sidebar \{[^}]*flex-direction: row/);
   assert.match(narrow, /\.sidebar \{[^}]*position: sticky/);
-  assert.match(narrow, /\.nav \{[^}]*flex-direction: row/);
-  assert.match(narrow, /\.nav \{[^}]*overflow-x: auto/);
+  // The bar must not wrap: wrapping is how it became the tall block again.
+  assert.match(narrow, /\.sidebar \{[^}]*flex-wrap: nowrap/);
   assert.match(STYLE_CSS, /\.nav \{[^}]*min-width: 0/);
 
-  // Labels are dropped only at the narrowest width, so the buttons must carry
-  // their own accessible name rather than relying on the visible text.
   assert.match(STYLE_CSS, /@media \(max-width: 620px\)/);
   assert.match(SIDEBAR_NAV, /:aria-label="PAGES\[key\]\.title"/);
   assert.ok(PAGE_KEYS.includes("settings"));

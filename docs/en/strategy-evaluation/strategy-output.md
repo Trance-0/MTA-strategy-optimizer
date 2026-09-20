@@ -404,7 +404,8 @@ Source: `modules/mta_strategy_evaluation/src/strategy_projection.py`
 - Responsibility: Read the two committed strategy artifacts and return `StrategyOutput` values, raising rather than fabricating when an artifact cannot honestly be projected.
 - Inputs: Parsed `initial_budget_recommendation.json` and `campaign_strategy.json` documents, or paths to them.
 - Outputs: `strategy_output_from_initial_budget(document)`, `strategy_output_from_campaign_strategy(document)`, `load_strategy_outputs(directory)`, and `StrategyProjectionError`.
-- Error handling: raises `StrategyProjectionError` when a document is empty, when `optimized_strategy.is_optimized` is false (naming `infeasibility_reasons`), or when an optimized plan carries no `response_observations` from which to recover marketplace and dates.
+- Error handling: raises `StrategyProjectionError` when a document is empty, when `optimized_strategy.is_optimized` is false (naming `infeasibility_reasons`), when required Campaign or Ad Group identifiers are missing, or when an optimized plan carries no `response_observations` from which to recover marketplace and dates. Missing files and read failures are reported by artifact name without private paths.
+- Serialization compatibility: optimizer budgets are serialized to six decimals. The adapter assigns any resulting representational share residual to the final Campaign so the canonical `StrategyOutput` conservation check remains exact without changing the budget amounts.
 - Determinism: Campaign order follows the artifact's own order in both readers, never alphabetical, matching how `backend/repository/strategy.py` reassembles the same documents.
 - Dependencies: `strategy_output.py`; `modules/mta_common/src/enums.py`, `lineage.py`, `reporting_scope.py`; Python standard library `json` and `pathlib`.
 - Verification: `modules/mta_strategy_evaluation/tests/test_strategy_projection.py`.

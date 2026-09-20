@@ -119,6 +119,17 @@ def _text(value: Any) -> str | None:
     return text or None
 
 
+def _required_text(value: Any, *, field: str, context: str) -> str:
+    """Require a non-empty artifact field before building a canonical model."""
+
+    text = _text(value)
+    if text is None:
+        raise StrategyProjectionError(
+            f"{context} requires a non-empty {field}"
+        )
+    return text
+
+
 def _provider(value: Any) -> Provider | None:
     """Coerce a provider name, leaving an unknown one unset rather than guessed."""
 
@@ -157,7 +168,7 @@ def strategy_output_from_initial_budget(
             f"{INITIAL_BUDGET_ARTIFACT} is empty; the initializer has not run"
         )
     campaigns = document.get("campaigns") or []
-    if not campaigns:
+    if not isinstance(campaigns, list) or not campaigns:
         raise StrategyProjectionError(
             f"{INITIAL_BUDGET_ARTIFACT} allocates to no Campaign"
         )
@@ -182,7 +193,11 @@ def strategy_output_from_initial_budget(
 
     decisions = tuple(
         CampaignBudgetDecision(
-            campaign_id=str(row["campaign_id"]),
+            campaign_id=_required_text(
+                row.get("campaign_id") if isinstance(row, Mapping) else None,
+                field="campaign_id",
+                context=f"{INITIAL_BUDGET_ARTIFACT} campaign {index}",
+            ),
             budget_share=_number(row.get("budget_seed_share")) or 0.0,
             budget=_number(row.get("campaign_budget_seed")),
             execution_status=_text(row.get("execution_status")) or "EXECUTABLE",
@@ -191,7 +206,11 @@ def strategy_output_from_initial_budget(
             ),
             ad_groups=tuple(
                 AdGroupBudgetSlot(
-                    ad_group_slot_id=str(slot["ad_group_slot_id"]),
+                    ad_group_slot_id=_required_text(
+                        slot.get("ad_group_slot_id") if isinstance(slot, Mapping) else None,
+                        field="ad_group_slot_id",
+                        context=f"{INITIAL_BUDGET_ARTIFACT} campaign {index} Ad Group",
+                    ),
                     budget_share=_number(slot.get("budget_seed_share")) or 0.0,
                     allocation_basis=_text(slot.get("allocation_basis")),
                     budget=_number(slot.get("initial_daily_budget")),
@@ -199,7 +218,7 @@ def strategy_output_from_initial_budget(
                 for slot in (row.get("recommended_ad_groups") or [])
             ),
         )
-        for row in campaigns
+        for index, row in enumerate(campaigns, start=1)
     )
 
     derivation = document.get("budget_derivation") or {}
@@ -276,7 +295,7 @@ def strategy_output_from_campaign_strategy(
         )
 
     allocations = plan.get("allocations") or []
-    if not allocations:
+    if not isinstance(allocations, list) or not allocations:
         raise StrategyProjectionError(
             f"{CAMPAIGN_STRATEGY_ARTIFACT} allocates to no Campaign"
         )
@@ -314,9 +333,13 @@ def strategy_output_from_campaign_strategy(
             context.setdefault(identifier, dict(row))
 
     allocated_total = _number(plan.get("allocated_budget")) or 0.0
-    decisions = tuple(
+    raw_decisions = [
         CampaignBudgetDecision(
-            campaign_id=str(row["campaign_id"]),
+            campaign_id=_required_text(
+                row.get("campaign_id") if isinstance(row, Mapping) else None,
+                field="campaign_id",
+                context=f"{CAMPAIGN_STRATEGY_ARTIFACT} allocation {index}",
+            ),
             budget_share=(
                 (_number(row.get("optimized_budget")) or 0.0) / allocated_total
                 if allocated_total > 0
@@ -335,8 +358,27 @@ def strategy_output_from_campaign_strategy(
             ad_groups=(),
             decision_basis=_text(plan.get("allocation_basis")),
         )
-        for row in allocations
-    )
+        for index, row in enumerate(allocations, start=1)
+    ]
+    # The optimizer serializes monetary allocations to six decimals. Rebuilding
+    # shares from those rounded budgets can leave a tiny residual (for example
+    # 0.999999999) that is outside StrategyOutput's strict conservation
+    # tolerance. Put that representational residual on the final allocation;
+    # this changes no serialized budget and keeps the canonical decision valid.
+    share_total = sum(decision.budget_share for decision in raw_decisions)
+    if raw_decisions and share_total != 1.0:
+        last = raw_decisions[-1]
+        raw_decisions[-1] = CampaignBudgetDecision(
+            campaign_id=last.campaign_id,
+            budget_share=last.budget_share + (1.0 - share_total),
+            budget=last.budget,
+            execution_status=last.execution_status,
+            decision_basis=last.decision_basis,
+            ad_product=last.ad_product,
+            provider=last.provider,
+            ad_groups=last.ad_groups,
+        )
+    decisions = tuple(raw_decisions)
 
     excluded = [str(item) for item in (plan.get("excluded_campaign_ids") or [])]
     warnings = tuple(f"EXCLUDED_CAMPAIGN:{item}" for item in excluded)
@@ -442,7 +484,7 @@ def _attempt(
         return ProjectionAttempt(
             artifact=artifact,
             strategy_id=strategy_id,
-            error=f"{path} does not exist; that strategy has not been run",
+            error=f"{artifact} does not exist; that strategy has not been run",
         )
     try:
         document = json.loads(path.read_text(encoding="utf-8"))
@@ -450,7 +492,7 @@ def _attempt(
         return ProjectionAttempt(
             artifact=artifact,
             strategy_id=strategy_id,
-            error=f"{path} could not be read: {type(error).__name__}: {error}",
+            error=f"{artifact} could not be read: {type(error).__name__}: {error}",
         )
     try:
         return ProjectionAttempt(

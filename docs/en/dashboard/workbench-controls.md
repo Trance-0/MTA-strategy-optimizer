@@ -1,6 +1,6 @@
 ---
 title: Analysis Workbench Controls
-compact: "Dataset selection/import, revisioned plan forms, retained run controls, formal evaluation and history components; shared workbench store cold-route hydration, race protection, offline capability recovery and static refusals."
+compact: "Dataset selection/import, revisioned plan forms, retained run controls, formal evaluation and history components; the top-bar compact dataset selector in DatasetContext.vue, shared workbench store cold-route hydration, race protection, offline capability recovery and static refusals."
 source_files: dashboard/src/lib/useWorkbench.js, dashboard/src/components/DatasetContext.vue, dashboard/src/components/DatasetImport.vue, dashboard/src/components/BudgetPlans.vue, dashboard/src/components/WorkbenchRunner.vue, dashboard/src/components/RunHistory.vue, dashboard/src/components/EvaluationReport.vue
 ---
 
@@ -39,9 +39,14 @@ Source: `dashboard/src/components/DatasetContext.vue`, `dashboard/src/components
 
 Responsibility: accessible dataset selector and standard-file import journey.
 Inputs are list/detail/template/validation/publication responses. Outputs are
-explicit selection or import requests. Selector lists legacy source separately,
-states name/source/window/currency/row counts and capability reasons, and remains
-outside route error branches. Import lets the user supply performance and optional
+explicit selection or import requests. The selector renders inside the top
+bar (`TopBar.vue`) as one compact row — select, Refresh, Import, and a Details
+disclosure — rather than as a card above every routed view; scope, capability
+reasons, and provenance open from the Details popover, and selection or
+catalogue errors surface in an anchored alert. Selector lists legacy source
+separately, states name/source/window/currency/row counts and capability
+reasons, and remains outside route error branches because the header renders
+before any view. Import lets the user supply performance and optional
 paths/research, download templates, preview at most 20 rows per role, inspect
 field issues and per-stage capability reasons before publication, then import. Editing an input invalidates its earlier preview.
 An invalid or partial import never becomes selected. Success offers Use for

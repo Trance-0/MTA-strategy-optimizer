@@ -137,6 +137,27 @@ Source: `backend/repository/evaluation.py`
 
 The stage runs and writes its artifact. Both committed strategies project and both conserve. Layer three does not run, for the reason given in [Evaluation Layers](./evaluation-layers.md), and the contributed model returns insufficient data on the current artifact.
 
+## Latest generated integration check (2026-09-18)
+
+An empty runtime was populated through the generator and registered-dataset
+upload path using a resolved single-marketplace `research-10k.json` profile
+(US, 2026-01-01 through 2026-09-07, 5 Campaign replications). The registered
+dataset contained 3,500 performance rows, 1,750 path rows, 20 Campaigns, and
+5,000 budget observations. Attribution and optimization both completed; the
+optimizer wrote an optimized Campaign strategy for an authorized budget of
+2,000 United States dollars (USD). Evaluation projected and conserved that optimizer strategy and ran
+the observed-history comparison. The independent deterministic initializer
+was correctly reported as skipped because no initializer artifact was part of
+the registered run. The contributed multitask model reported
+`auxiliary_labels_unavailable`; the canonical response dataset has no
+per-advertising-type impressions or attributed-unit labels for that head.
+
+The adapter reconciles the last allocation share after reading six-decimal
+optimizer budgets, so rounding residuals such as `0.999999999` do not become a
+false conservation failure. Missing strategy identifiers and malformed report
+headers now produce bounded adapter errors instead of raw `KeyError` or path
+leakage in public evaluation messages.
+
 ## Known Limitations <span class="status-label status-verified" aria-label="Verified"></span>
 
 - Without a research snapshot the observed episodes come from `campaign_strategy.json`, so the evaluation covers only the two Campaigns the optimizer ran on, not the four in the deterministic seed. Those two are reported and the rest are named as unobserved.

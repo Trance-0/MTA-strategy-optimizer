@@ -666,6 +666,58 @@ const allocationWaterfallLayout = computed(() => theme.layout({
 }));
 
 // ---------------------------------------------------------------------------
+// Touchpoint budget plan: the decided Campaign budget split across the
+// Campaign's own touchpoints by recommended attributed credit. This is the
+// panel that answers "given my budget, how much goes to each touchpoint?" --
+// the optimizer decides the Campaign's daily total, attribution divides it.
+// ---------------------------------------------------------------------------
+
+/** The Campaign daily budget the displayed result decided on. */
+const decidedBudget = computed(() => {
+  if (!scopedPreview.value) return null;
+  const allocation = allocations.value.find((row) => row.campaign_id === selectedCampaign.value);
+  if (allocation && Number.isFinite(allocation.optimized_budget)) return allocation.optimized_budget;
+  const item = strategy.value.historical_recommendation;
+  return item && Number.isFinite(item.recommended_budget) ? item.recommended_budget : null;
+});
+
+/**
+ * Attribution touchpoint keys lead with the ad product, so the selected
+ * Campaign's `ad_product` scopes the recommended rows to the touchpoints that
+ * Campaign can actually buy. Shares are renormalized within that subset.
+ */
+const touchpointPlan = computed(() => {
+  if (!Number.isFinite(decidedBudget.value)) return [];
+  const adProduct = String(selectedCampaignRecord.value.ad_product ?? "").toUpperCase();
+  if (!adProduct) return [];
+  const rows = data.value.recommendedAttribution.filter((row) =>
+    row.outcome === "converted_users" &&
+    String(row.touchpoint ?? "").toUpperCase().startsWith(`${adProduct}:`) &&
+    Number.isFinite(row.official_share));
+  const total = rows.reduce((sum, row) => sum + row.official_share, 0);
+  if (!total) return [];
+  return rows
+    .map((row) => ({
+      touchpoint: row.touchpoint,
+      share: row.official_share / total,
+      budget: (row.official_share / total) * decidedBudget.value,
+      reliability_status: row.reliability_status,
+    }))
+    .sort((a, b) => b.share - a.share);
+});
+
+const touchpointPlanColumns = computed(() => [
+  { key: "touchpoint", label: "Touchpoint", format: (value) => shortTouchpoint(value), width: "34%" },
+  { key: "share", label: "Credit share", format: "percent" },
+  { key: "budget", label: "Daily budget", format: "money", currency: symbol.value },
+  { key: "reliability_status", label: "Reliability", tone: (value) => statusTone(value) },
+]);
+
+const touchpointPlanUnreliable = computed(() =>
+  touchpointPlan.value.some((row) => String(row.reliability_status).toUpperCase() === "UNRELIABLE"),
+);
+
+// ---------------------------------------------------------------------------
 // Strategy evaluation
 // ---------------------------------------------------------------------------
 
@@ -690,7 +742,7 @@ const evaluationAvailable = computed(
       backend with writable runtime storage provides execution controls.
     </p>
 
-    <div class="tabs" role="tablist" aria-label="Models">
+    <div class="tabs" role="tablist" aria-label="Models" data-tour="model-tabs">
       <button
         v-for="entry in MODEL_TABS"
         :key="entry.key"
@@ -698,13 +750,14 @@ const evaluationAvailable = computed(
         role="tab"
         :aria-selected="model === entry.key"
         :class="{ active: model === entry.key }"
+        :data-tour="`model-tab-${entry.key}`"
         @click="emit('navigate', entry.key)"
       >
         {{ entry.label }}
       </button>
     </div>
 
-    <article v-if="model === 'optimization'" class="card">
+    <article v-if="model === 'optimization'" class="card" data-tour="optimizer-campaign-card">
       <div class="card-head"><h2>Select Campaign to optimize</h2></div>
       <div class="card-body setting-group">
         <div class="setting-row">
@@ -722,8 +775,8 @@ const evaluationAvailable = computed(
       <div class="card-head"><h2>Optimize {{ selectedCampaign || "Campaign" }}</h2><TermHelp :term="optimizerHelp" /></div>
       <div class="card-body"><p>{{ selectedMarketplace }} · {{ campaignSource === 'legacy' ? 'Configured source' : campaignSource }} · Historical Campaign strategy</p>
         <p>Use valid historical records to recommend a daily budget. Full dataset includes compatible Campaigns across the complete recorded period.</p>
-        <div class="setting-group"><div class="setting-row"><div class="setting-label"><label for="optimizer-history-mode">History source</label><small>Full dataset uses compatible Campaign records when this Campaign has insufficient history.</small></div><div class="setting-control"><select id="optimizer-history-mode" v-model="historyMode"><option value="full">Full dataset · similar history</option><option value="campaign">This Campaign only</option></select></div></div></div>
-        <div class="setting-group">
+        <div class="setting-group" data-tour="optimizer-history-mode"><div class="setting-row"><div class="setting-label"><label for="optimizer-history-mode">History source</label><small>Full dataset uses compatible Campaign records when this Campaign has insufficient history.</small></div><div class="setting-control"><select id="optimizer-history-mode" v-model="historyMode"><option value="full">Full dataset · similar history</option><option value="campaign">This Campaign only</option></select></div></div></div>
+        <div class="setting-group" data-tour="optimizer-budget">
           <div class="setting-row"><div class="setting-label"><label for="optimizer-initial-budget">Initial daily budget</label><small>Comparison baseline in the selected currency; leave blank to use history. This does not change the authorized budget cap.</small></div><div class="setting-control"><input id="optimizer-initial-budget" v-model.number="initialBudget" type="number" min="0.01" step="0.01" placeholder="Historical default" :aria-invalid="initialBudget !== '' && Boolean(inputError)" /></div></div>
           <div class="setting-row"><div class="setting-label"><label for="optimizer-similarity-threshold">Similarity threshold</label><TermHelp :term="similarityHelp" /><small>0 includes all compatible budgets; 1 requires an exact budget match. Applies to Full dataset references.</small></div><div class="setting-control"><input id="optimizer-similarity-threshold" v-model.number="similarityThreshold" type="number" min="0" max="1" step="0.05" :disabled="historyMode !== 'full'" :aria-invalid="historyMode === 'full' && Boolean(inputError)" /></div></div>
         </div>
@@ -740,7 +793,7 @@ const evaluationAvailable = computed(
           <div class="setting-row"><div class="setting-label">Recommended daily budget</div><div class="setting-control">{{ theme.money(preview.historical_recommendation.recommended_budget, symbol) }}</div></div>
           <p>Reference averages at this budget: spend {{ theme.money(preview.historical_recommendation.mean_observed_spend, symbol) }}, revenue {{ theme.money(preview.historical_recommendation.mean_observed_revenue, symbol) }} across {{ preview.historical_recommendation.observation_count }} observations.</p>
         </section>
-        <div class="rec-actions"><button :disabled="previewBusy || IS_STATIC || Boolean(inputError) || !selectedCampaign || Boolean(campaignSearchError) || !selectedMarketplace.trim()" @click="computeCampaign">Recompute strategy</button></div>
+        <div class="rec-actions"><button data-tour="optimizer-recompute" :disabled="previewBusy || IS_STATIC || Boolean(inputError) || !selectedCampaign || Boolean(campaignSearchError) || !selectedMarketplace.trim()" @click="computeCampaign">Recompute strategy</button></div>
       </div>
     </article>
     <WorkbenchRunner v-else-if="selectedDatasetId" :key="`${selectedDatasetId}:${model}`" :stage="model" />
@@ -791,12 +844,14 @@ const evaluationAvailable = computed(
         </div>
       </div>
 
-      <ReliabilityBanner
-        :status="status"
-        :reason="verdict.reliability_reason || ''"
-      />
+      <div data-tour="attribution-verdict">
+        <ReliabilityBanner
+          :status="status"
+          :reason="verdict.reliability_reason || ''"
+        />
+      </div>
 
-      <article class="card">
+      <article class="card" data-tour="attribution-disagreement">
         <div class="card-head">
           <h2>Markov–Shapley disagreement</h2>
           <span class="sub">{{ OUTCOME_LABELS[outcome] }} · longest connector is the largest gap</span>
@@ -824,7 +879,7 @@ const evaluationAvailable = computed(
         </div>
       </article>
 
-      <article class="card">
+      <article class="card" data-tour="attribution-recommended">
         <div class="card-head">
           <h2>Recommended attribution</h2>
           <span class="sub">The governed value</span>
@@ -913,10 +968,43 @@ const evaluationAvailable = computed(
           <p class="caption">The marker shows the recommended observed budget and mean revenue. It is an empirical reference because this Campaign has no fitted response curve.</p>
         </div>
       </article>
+      <article v-if="scopedPreview && touchpointPlan.length" class="card" data-tour="touchpoint-plan">
+        <div class="card-head">
+          <h2>Touchpoint budget plan</h2>
+          <span class="sub">The decided budget, divided by attributed credit</span>
+        </div>
+        <div class="card-body">
+          <p>
+            Put <b>{{ theme.money(decidedBudget, symbol) }}</b> per day on
+            <b>{{ selectedCampaign }}</b
+            >. By recommended attributed credit for converted users, that budget
+            divides across this Campaign's touchpoints as:
+          </p>
+          <EntityTable
+            :row-key="row => row.touchpoint"
+            noun="touchpoint budget"
+            :columns="touchpointPlanColumns"
+            :rows="touchpointPlan"
+            empty="No recommended attribution rows match this Campaign's ad product."
+          />
+          <div v-if="touchpointPlanUnreliable" class="notice warn">
+            At least one touchpoint's attribution verdict is UNRELIABLE, so its
+            share is a disputed estimate. Treat the split as indicative, not as
+            budgeting authority.
+          </div>
+          <p class="caption">
+            The optimizer decides the Campaign's daily total from its fitted
+            budget response; attribution divides credit for conversions that
+            already happened. This panel multiplies the two, restated as a
+            spend split. It is a reading aid, not a third model, and the
+            attribution stage must have run on this source for it to appear.
+          </p>
+        </div>
+      </article>
       <template v-if="hasPlan && isOptimized">
         <MetricRow :items="planMetrics" />
 
-        <article class="card">
+        <article class="card" data-tour="response-curve">
           <div class="card-head">
             <h2>Campaign response curve</h2>
             <span class="sub">Observed points, fitted response, and decision</span>
