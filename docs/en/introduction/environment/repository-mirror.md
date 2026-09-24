@@ -1,21 +1,30 @@
 ---
-title: GitHub to Gitea Publication
-compact: "mirror-to-gitea.yml prepares a main/master snapshot before one atomic mirror push. Gitea receives the default branch and its master alias only; every other branch and tag is deleted before publication and pruned from the destination. Specifies pinned files, deterministic provenance, validation and the manual Run workflow procedure. Submodule bytes are excluded from end-of-line conversion because the snapshot import applies no filter, and publication retries a transient gateway fault but never a refusal."
-source_files: .github/workflows/mirror-to-gitea.yml, .gitattributes
+title: GitHub to Gitea and Gitee Publication
+compact: "mirror-to-gitea.yml and mirror-to-gitee.yml publish atomic main/master deployment snapshots with pinned first-level submodule files, no nested Git links, and no other branches or tags. Specifies deterministic provenance, validation, retries, credentials, direct Gitee access and manual verification."
+source_files: .github/workflows/mirror-to-gitea.yml, .github/workflows/mirror-to-gitee.yml, .gitattributes
 ---
 
-# GitHub to Gitea Publication
+# GitHub to Gitea and Gitee Publication
 
-GitHub owns authored code and submodule pins. Gitea is a generated deployment
-mirror of one branch: its default branch (`main`) contains one child of the
+GitHub owns authored code and submodule pins. Gitea and Gitee each provide a
+generated deployment mirror of one branch: its default branch (`main`) contains one child of the
 GitHub commit with the pins expanded into ordinary files, and `master` is an
-alias for the same commit. Yunxiao clones this `main`. Gitea carries no other
-branch and no tag. There is no separate snapshot branch and no development on
-Gitea.
+alias for the same commit. Yunxiao clones Gitea `main`. Neither mirror carries another
+branch or any tag. There is no separate snapshot branch and no development on
+either mirror.
 
 ## Publication contract
 
-The existing workflow contains the complete operation inline:
+Both workflows contain the same complete operation inline. Gitee at
+`https://gitee.com/cross-industry-ai-applications/mat-08.git` must publish the
+same file paths, modes and bytes as Gitea at
+`https://git.trance-0.com/Trance-0/MTA-strategy-optimizer` when both runs use the
+same GitHub revision and submodule pins. The steps below apply to both hosts.
+Snapshot author names and workflow provenance identify the destination, so
+commit identifiers can differ while the root tree identifiers must match.
+Gitee uses direct access: its Git transport disables configured proxies and
+sets both no-proxy environment forms for `gitee.com`. Local remote verification
+must likewise bypass proxies for both mirror hosts.
 
 1. Clone GitHub into a temporary bare repository. Freeze the default branch and
    its exact commit from this clone. The clone is a working copy only; which
@@ -80,11 +89,11 @@ remain serialized with `cancel-in-progress: false`.
 
 After the workflow change is committed and pushed to GitHub `main`:
 
-1. Open the repository's **Actions** tab and select **Mirror GitHub to Gitea**.
+1. Open the repository's **Actions** tab and select **Mirror GitHub to Gitea** or **Mirror GitHub to Gitee**.
 2. Choose **Run workflow**, select `main`, then **Run workflow**.
 3. Wait for snapshot preparation, atomic publication and reference verification
    to succeed. Do not deploy from a failed or unfinished mirror run.
-4. Open Gitea `main`. Its latest message must begin with
+4. Open the selected destination’s `main`. Its latest message must begin with
    `snapshot: materialize submodules`; the generator's toy configuration must
    be browsable as an ordinary file.
 5. Apply the [Yunxiao settings](../backend/yunxiao-ecs.md), then run that pipeline.
@@ -102,15 +111,20 @@ address or `owner/repository.git` on `gitea.com`; embedded credentials and
 invalid addresses fail. A temporary runner-local askpass file supplies the
 secrets from the environment and is removed on exit. It is not a repository file.
 
+Gitee retains `GITEE_USERNAME`, `GITEE_PASSWORD` and `GITEE_REPOSITORY`.
+Its destination accepts only a complete secure `gitee.com` address or
+`owner/repository.git`. Credentials remain in GitHub repository secrets and
+are supplied through the same temporary askpass mechanism.
+
 ## Source Files
 
-### `.github/workflows/mirror-to-gitea.yml`
+### Mirror workflows
 
-Source: `.github/workflows/mirror-to-gitea.yml`
+Source: `.github/workflows/mirror-to-gitea.yml`, `.github/workflows/mirror-to-gitee.yml`
 
 - Responsibility: Prepare and publish the full mirror using the inline sequence above.
-- Inputs: Push, delete, manual or scheduled trigger and existing Gitea secrets.
-- Outputs: Verified final Gitea references or a failed job. Missing secrets
+- Inputs: Push, delete, manual or scheduled trigger and the corresponding destination secrets.
+- Outputs: Verified final destination references or a failed job. Missing secrets
   retain the existing unconfigured warning and perform no publication.
 - Dependencies: Git and Python on the GitHub runner; no project helper script.
 - Verification: Parse configuration, check Bash syntax, exercise the inline
@@ -132,3 +146,9 @@ the retry cannot mask a real refusal. Rejecting one reference or failing prepara
 destination reference. One-off verification helpers stay in ignored
 `/.agent-scratch/` and are deleted after use. Only the production Action proves
 Gitea authentication, permissions and actual webhook behavior.
+
+Run the same disposable source through both workflow bodies and compare root
+tree identifiers. Verify that invalid generator configuration changes neither
+destination, and that rerunning unchanged input preserves each snapshot.
+Only successful production runs against the same source revision establish
+that the two live mirrors now contain identical files.

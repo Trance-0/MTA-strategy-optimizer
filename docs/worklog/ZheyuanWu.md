@@ -1,7 +1,7 @@
 ---
 title: Zheyuan Wu (Trance-0)
 description: Project manager work log covering the pipeline, dashboard, deployment, and documentation set
-compact: "Zheyuan Wu's project-management work log: MTA-SIM integration, the mta_common canonical data model, the DNN attribution model, the Vue dashboard and Flask backend, PostgreSQL schemas, container and Yunxiao deployment, the GitHub/Gitea mirrors, GitHub Pages, and the documentation set with its repository rules."
+compact: "Zheyuan Wu's project-management work log: MTA-SIM integration, the mta_common canonical data model, the DNN attribution model, the Vue dashboard and Flask backend, PostgreSQL schemas, container and Yunxiao deployment, the GitHub/Gitea/Gitee mirrors, GitHub Pages, and the documentation set with its repository rules."
 order: 10
 lang: en-US
 ---
@@ -13,7 +13,7 @@ lang: en-US
 > Git author: `Zheyuan Wu <60459821+Trance-0@users.noreply.github.com>`
 > Role: Project manager — pipeline, dashboard, deployment, and the documentation set
 > Active period: Since 2026-08-03; development ownership handed over from [Jiahao Yao](./JiahaoYao.md) on 2026-08-08
-> Last updated: 2026-09-10
+> Last updated: 2026-09-24
 
 Entries are reconstructed from Git history. They record the change set behind each commit, not a separate narrative.
 
@@ -30,6 +30,12 @@ Took over development ownership on 2026-08-08 and has authored the majority of t
 Areas owned by others are recorded on their own pages: the [Data Generator configuration workflow](./ChenghaoJin.md), the [SQL database](./TianleChen.md), the [evaluation models](./YiLiu.md), and the [knowledge base and research](./YayuYu.md).
 
 ---
+
+## 2026-09-24
+
+### Completed
+
+- Aligned the Gitee mirror with Gitea deployment snapshots, including pinned first-level submodule files, direct Gitee access, atomic publication, pruning and validation; updated the specification and verified equal local fixture trees, deterministic replay and unchanged destinations on invalid configuration.
 
 ## 2026-09-18
 
