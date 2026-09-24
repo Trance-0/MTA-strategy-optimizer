@@ -1,7 +1,7 @@
 ---
 title: Version Log
 description: Release history and material changes for the maintained project
-compact: "Routes release history from VERSION to one page per patch, keeping 0.9.71–0.9.74 flat and older patches in minor-version folders; includes dates, material summaries, historical group links, and planned follow-ups."
+compact: "Routes release history from VERSION to one page per patch, keeping 0.9.72–0.9.75 flat and older patches in minor-version folders; includes dates, material summaries, historical group links, and planned follow-ups."
 order: 1
 ---
 
@@ -10,6 +10,11 @@ order: 1
 The project version is recorded in the repository-root `VERSION` file. Each page here is one small patch description covering a coherent change set, rather than a reproduction of every commit message. Every patch keeps its own permanent page; older minor versions are grouped into a collapsed folder per minor version instead of being compacted away.
 
 This section records **what** changed. See the [work log](../worklog/) for **who** did the work and when.
+
+## [0.9.75](0.9.75.md)
+
+- Date: 2026-09-24
+- Summary: Restored verified Ontology Review fixtures and fail-closed states, repaired the dashboard deployment test gate, and checked the local Docker preview in database mode.
 
 ## [0.9.74](0.9.74.md)
 
@@ -26,7 +31,7 @@ This section records **what** changed. See the [work log](../worklog/) for **who
 - Date: 2026-09-18
 - Summary: Made the tutorial interactive: the mask blocks everything but one real control, and pressing it performs the real operation and advances the step.
 
-## [0.9.71](0.9.71.md)
+## [0.9.71](0.9/0.9.71.md)
 
 - Date: 2026-09-18
 - Summary: Gave the tutorial a spotlight mask that highlights the element each step teaches, scrolls it into view, and animates between controls.

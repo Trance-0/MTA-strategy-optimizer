@@ -35,6 +35,7 @@ Areas owned by others are recorded on their own pages: the [Data Generator confi
 
 ### Completed
 
+- Restored the documented verified Ontology Review fixture view after the endpoint-driven integration broke two deployment tests; verified all 191 dashboard tests, the production build and the rebuilt Docker preview in database mode, including conflict and missing-policy semantics without browser console errors.
 - Aligned the Gitee mirror with Gitea deployment snapshots, including pinned first-level submodule files, direct Gitee access, atomic publication, pruning and validation; updated the specification and verified equal local fixture trees, deterministic replay and unchanged destinations on invalid configuration.
 
 ## 2026-09-18

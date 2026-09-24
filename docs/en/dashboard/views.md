@@ -1,6 +1,6 @@
 ---
 title: Dashboard Views and Visual Contract
-compact: "Shared presentation topics and preserved KnowledgeBase, ontologyReviewFixtures, WillowGmvForecast and willowGmvModel contracts. The common views, tables, Settings and charts are specified in linked topic pages."
+compact: "KnowledgeBase and ontologyReviewFixtures enforce lazy, checksum-verified review display without Review endpoints or mock fallback. Also owns WillowGmvForecast and willowGmvModel; links shared presentation, table, Settings and chart contracts."
 lang: en-US
 source_files: dashboard/src/views/KnowledgeBase.vue, dashboard/src/lib/ontologyReviewFixtures.js, dashboard/src/lib/willowGmvModel.js, dashboard/src/components/WillowGmvForecast.vue
 ---
@@ -20,6 +20,9 @@ backend-owned ontology or recompute attribution, budgets, or verdicts. The
 separate fifth Ontology Review tab remains a display-only exception: it reads
 five checksum-verified canonical R5 fixtures prepared by the
 [static delivery process](./deployment.md#canonical-ontology-review-fixtures).
+The production route must use `ontologyReviewFixtures.js` directly; it must not
+mount an endpoint-driven review pipeline or substitute unverified mock payloads
+when loading fails. This remains true when another Knowledge Base tab is open.
 It never calls a Review Application Programming Interface (API), calculates a
 ratio, compares a threshold, or infers a verdict.
 
